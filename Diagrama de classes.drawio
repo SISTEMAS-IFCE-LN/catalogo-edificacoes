@@ -413,8 +413,16 @@
         <mxCell id="oMqMcYjuJzow-8HasYvk-138" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" parent="oMqMcYjuJzow-8HasYvk-135" vertex="1">
           <mxGeometry y="52" width="220" height="8" as="geometry" />
         </mxCell>
+        <mxCell id="OTeUxRtdMDQrurlMtC8x-42" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;endArrow=block;endFill=0;endSize=18;" edge="1" parent="1" source="oMqMcYjuJzow-8HasYvk-139" target="OTeUxRtdMDQrurlMtC8x-33">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="-298" y="1260" />
+              <mxPoint x="250" y="1260" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
         <mxCell id="oMqMcYjuJzow-8HasYvk-139" value="Equipamento" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="41" y="2370" width="399" height="112" as="geometry" />
+          <mxGeometry x="-413" y="1400" width="399" height="112" as="geometry" />
         </mxCell>
         <mxCell id="oMqMcYjuJzow-8HasYvk-140" value="- tipo: Enum" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="oMqMcYjuJzow-8HasYvk-139" vertex="1">
           <mxGeometry y="26" width="399" height="26" as="geometry" />
