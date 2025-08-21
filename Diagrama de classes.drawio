@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:142.0) Gecko/20100101 Firefox/142.0" version="28.1.1">
   <diagram name="Página-1" id="ipJrho4G7TK4O845WhP8">
-    <mxGraphModel dx="1789" dy="497" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="2407" dy="816" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -153,8 +153,11 @@
         <mxCell id="oMqMcYjuJzow-8HasYvk-51" value="+ calcularAreaTriangular(Decimal, Decimal): Decimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="oMqMcYjuJzow-8HasYvk-46" vertex="1">
           <mxGeometry y="112" width="352" height="26" as="geometry" />
         </mxCell>
+        <mxCell id="OTeUxRtdMDQrurlMtC8x-44" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;endArrow=diamondThin;endFill=1;endSize=18;" edge="1" parent="1" source="oMqMcYjuJzow-8HasYvk-52" target="exAqQuM0ZR2GrrIMMWwe-14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
         <mxCell id="oMqMcYjuJzow-8HasYvk-52" value="Luminaria" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="628" y="1160" width="350" height="242" as="geometry" />
+          <mxGeometry x="-390" y="160" width="350" height="242" as="geometry" />
         </mxCell>
         <mxCell id="oMqMcYjuJzow-8HasYvk-53" value="- tipoLampada: Enum" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="oMqMcYjuJzow-8HasYvk-52" vertex="1">
           <mxGeometry y="26" width="350" height="26" as="geometry" />
@@ -171,7 +174,7 @@
         <mxCell id="oMqMcYjuJzow-8HasYvk-57" value="- quantidadeLampada: Integer" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="oMqMcYjuJzow-8HasYvk-52" vertex="1">
           <mxGeometry y="130" width="350" height="26" as="geometry" />
         </mxCell>
-        <mxCell id="exAqQuM0ZR2GrrIMMWwe-13" value="- potenciaLampada: Integer" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="oMqMcYjuJzow-8HasYvk-52" vertex="1">
+        <mxCell id="exAqQuM0ZR2GrrIMMWwe-13" value="- potenciaLampadaWatts: Decimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="oMqMcYjuJzow-8HasYvk-52" vertex="1">
           <mxGeometry y="156" width="350" height="26" as="geometry" />
         </mxCell>
         <mxCell id="oMqMcYjuJzow-8HasYvk-58" value="- aletas: Boolean" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="oMqMcYjuJzow-8HasYvk-52" vertex="1">
@@ -180,7 +183,7 @@
         <mxCell id="oMqMcYjuJzow-8HasYvk-59" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" parent="oMqMcYjuJzow-8HasYvk-52" vertex="1">
           <mxGeometry y="208" width="350" height="8" as="geometry" />
         </mxCell>
-        <mxCell id="exAqQuM0ZR2GrrIMMWwe-15" value="+ calcularPotenciaLuminaria: Integer" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="oMqMcYjuJzow-8HasYvk-52" vertex="1">
+        <mxCell id="exAqQuM0ZR2GrrIMMWwe-15" value="+ calcularPotenciaLuminaria: Decimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="oMqMcYjuJzow-8HasYvk-52" vertex="1">
           <mxGeometry y="216" width="350" height="26" as="geometry" />
         </mxCell>
         <mxCell id="oMqMcYjuJzow-8HasYvk-60" value="&lt;div&gt;&lt;span style=&quot;font-weight: normal;&quot;&gt;«enum»&lt;/span&gt;&lt;/div&gt;&lt;div&gt;&lt;b&gt;TipoPiso&lt;/b&gt;&lt;/div&gt;" style="swimlane;fontStyle=0;childLayout=stackLayout;horizontal=1;startSize=30;fillColor=none;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
@@ -422,12 +425,12 @@
           </mxGeometry>
         </mxCell>
         <mxCell id="oMqMcYjuJzow-8HasYvk-139" value="Equipamento" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="-413" y="1400" width="399" height="112" as="geometry" />
+          <mxGeometry x="-413" y="1400" width="399" height="138" as="geometry" />
         </mxCell>
         <mxCell id="oMqMcYjuJzow-8HasYvk-140" value="- tipo: Enum" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="oMqMcYjuJzow-8HasYvk-139" vertex="1">
           <mxGeometry y="26" width="399" height="26" as="geometry" />
         </mxCell>
-        <mxCell id="OTeUxRtdMDQrurlMtC8x-10" value="- cargaWatts: Decimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="oMqMcYjuJzow-8HasYvk-139">
+        <mxCell id="OTeUxRtdMDQrurlMtC8x-10" value="- potenciaWatts: Decimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="oMqMcYjuJzow-8HasYvk-139">
           <mxGeometry y="52" width="399" height="26" as="geometry" />
         </mxCell>
         <mxCell id="oMqMcYjuJzow-8HasYvk-141" value="- quantidade: Integer" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="oMqMcYjuJzow-8HasYvk-139" vertex="1">
@@ -435,6 +438,9 @@
         </mxCell>
         <mxCell id="oMqMcYjuJzow-8HasYvk-142" value="" style="line;strokeWidth=1;fillColor=none;align=left;verticalAlign=middle;spacingTop=-1;spacingLeft=3;spacingRight=3;rotatable=0;labelPosition=right;points=[];portConstraint=eastwest;strokeColor=inherit;" parent="oMqMcYjuJzow-8HasYvk-139" vertex="1">
           <mxGeometry y="104" width="399" height="8" as="geometry" />
+        </mxCell>
+        <mxCell id="OTeUxRtdMDQrurlMtC8x-43" value="+ calcularPotenciaLuminaria: Decimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="oMqMcYjuJzow-8HasYvk-139">
+          <mxGeometry y="112" width="399" height="26" as="geometry" />
         </mxCell>
         <mxCell id="oMqMcYjuJzow-8HasYvk-143" value="Bandeirola" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="628" y="908" width="350" height="86" as="geometry" />
