@@ -1,6 +1,6 @@
 <mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:142.0) Gecko/20100101 Firefox/142.0" version="28.1.1">
   <diagram name="Página-1" id="ipJrho4G7TK4O845WhP8">
-    <mxGraphModel dx="2407" dy="816" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1441" dy="317" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -88,7 +88,7 @@
           <mxGeometry y="104" width="400" height="8" as="geometry" />
         </mxCell>
         <mxCell id="oMqMcYjuJzow-8HasYvk-28" value="&lt;span style=&quot;font-weight: normal;&quot;&gt;«abstract»&lt;/span&gt;&lt;div&gt;Ambiente&lt;/div&gt;" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=40;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="41" y="520" width="400" height="412" as="geometry" />
+          <mxGeometry x="41" y="520" width="400" height="438" as="geometry" />
         </mxCell>
         <mxCell id="oMqMcYjuJzow-8HasYvk-29" value="- nome: String" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="oMqMcYjuJzow-8HasYvk-28" vertex="1">
           <mxGeometry y="40" width="400" height="26" as="geometry" />
@@ -134,6 +134,9 @@
         </mxCell>
         <mxCell id="oMqMcYjuJzow-8HasYvk-45" value="+ calcularAreaTeto(List&amp;lt;Teto&amp;gt;): Decimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" parent="oMqMcYjuJzow-8HasYvk-28" vertex="1">
           <mxGeometry y="386" width="400" height="26" as="geometry" />
+        </mxCell>
+        <mxCell id="OTeUxRtdMDQrurlMtC8x-47" value="+ calcularCargaAmbiente: Decimal" style="text;strokeColor=none;fillColor=none;align=left;verticalAlign=top;spacingLeft=4;spacingRight=4;overflow=hidden;rotatable=0;points=[[0,0.5],[1,0.5]];portConstraint=eastwest;whiteSpace=wrap;html=1;" vertex="1" parent="oMqMcYjuJzow-8HasYvk-28">
+          <mxGeometry y="412" width="400" height="26" as="geometry" />
         </mxCell>
         <mxCell id="oMqMcYjuJzow-8HasYvk-46" value="Area" style="swimlane;fontStyle=1;align=center;verticalAlign=top;childLayout=stackLayout;horizontal=1;startSize=26;horizontalStack=0;resizeParent=1;resizeParentMax=0;resizeLast=0;collapsible=1;marginBottom=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="628" y="520" width="352" height="138" as="geometry" />
