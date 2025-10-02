@@ -1,0 +1,299 @@
+@startuml Ambientes Internos
+' Configurações para um visual mais limpo
+skinparam classAttributeIconSize 0
+hide empty members
+left to right direction
+
+' ---------- ENUMS GERAIS ----------
+enum Abertura {
+    CORRER
+    ABRIR
+    MAXIAR
+    PIVOTANTE
+    FIXA
+    GUILHOTINA
+    BASCULANTE
+    VAO_ABERTO
+}
+
+enum MaterialEsquadria {
+    ALUMINIO_VIDRO
+    VIDRO
+    ALUMINIO
+    FERRO
+    FERRO_VIDRO
+    MADEIRA_VENEZIANA
+    COBOGO
+    MADEIRA_PARANA
+    MADEIRA_FICHA
+    MADEIRA_MACICA
+    VAZIO
+}
+
+enum Revestimento {
+    PINTURA
+    CERAMICA
+    CARPETE
+    TEXTURA
+    VAZIO
+}
+
+enum TipoParede {
+    ALVENARIA
+    GESSO
+    DRYWALL
+    DIVISORIA_MADEIRA
+}
+
+enum TipoPiso {
+    INDUSTRIAL
+    PORCELANATO
+    CIMENTADO
+    CERAMICO
+    CARPETE
+}
+
+enum TipoTeto {
+    LAJE_PLANA_CONCRETO
+    LAJE_PLANA_PRE_FABRICADA
+    LAJE_INCLINADA_CONCRETO
+    LAJE_INCLINADA_PRE_FABRICADA
+    FORRO_GESSO
+    FORRO_GESSO_ACARTONADO
+    FORRO_PVC
+    TELHADO
+}
+
+enum TipoEquipamento {
+    COMPUTADOR
+    AR_CONDICIONADO
+    PROJETOR
+    EXTINTOR
+    EQUIPAMENTO_LABORATORIAL
+}
+
+enum TipoCompEletrico {
+    TOMADA_MONOFASICA_10A
+    TOMADA_MONOFASICA_20A
+    TOMADA_TRIFASICA
+    INTERRUPTOR_SIMPLES
+    INTERRUPTOR_DUPLO
+    INTERRUPTOR_TRIPLO
+    QUADRO_ELETRICO
+    INVERSOR
+    TRANSFORMADOR
+}
+
+enum TipoCompLogico {
+    TOMADA_RJ45
+    RACK
+    ACCESS_POINT
+}
+
+enum TipoCompHidrossanitario {
+    LAVATORIO_LOUCA
+    MICTORIO
+    VASO_SANITARIO
+    CHUVEIRO
+    RALO
+    CUBA_INOX_BANCADA
+    CUBA_LOUCA_BANCADA
+    CAIXA_INCENDIO
+}
+
+' ---------- ENUMS PARA LUMINARIA ----------
+enum TipoLampada {
+    LED
+    FLUORESCENTE
+    VAPOR_METALICO
+    OUTRO
+}
+
+enum FormatoLampada {
+    TUBULAR_120CM
+    TUBULAR_60CM
+    COMPACTA
+    PLAFON
+    REFLETOR
+    OUTRO
+}
+
+enum Instalacao {
+    EMBUTIR
+    SOBREPOR
+    PENDENTE
+    OUTRO
+}
+
+enum MaterialPredominante {
+    METAL
+    PLASTICO
+    OUTRO
+}
+
+
+' ---------- FORMAS GEOMÉTRICAS ----------
+abstract class FormaGeometrica {
+  + calcularArea(): Decimal
+}
+
+class Retangulo extends FormaGeometrica {
+  - base: Decimal
+  - altura: Decimal
+  --
+  + calcularArea(): Decimal
+}
+
+class Triangulo extends FormaGeometrica {
+  - base: Decimal
+  - altura: Decimal
+  --
+  + calcularArea(): Decimal
+}
+
+
+' ---------- CLASSES PRINCIPAIS E ABSTRATAS ----------
+abstract class Ambiente {
+  - nome: String
+  - localizacao: String
+  --
+  + calcularAreaPortas(): Decimal
+  + calcularAreaJanelas(): Decimal
+  + calcularAreaParedes(): Decimal
+  + calcularAreaPiso(): Decimal
+  + calcularAreaTeto(): Decimal
+  + calcularCargaAmbiente(): Decimal
+}
+
+abstract class Componente {
+  - quantidade: Integer
+}
+
+
+' ---------- HIERARQUIA DE ELEMENTOS CONSTRUTIVOS ----------
+abstract class ElementoConstrutivo {
+  + calcularAreaTotal(): Decimal
+}
+
+abstract class ElementoConstrutivoAcabado extends ElementoConstrutivo {
+  - revestimento: Revestimento
+}
+
+class Parede extends ElementoConstrutivoAcabado {
+  - tipo: TipoParede
+}
+
+class Piso extends ElementoConstrutivo {
+  - tipo: TipoPiso
+}
+
+class Teto extends ElementoConstrutivoAcabado {
+  - tipo: TipoTeto
+}
+
+
+' ---------- HIERARQUIA DE ESQUADRIAS ----------
+abstract class Esquadria {
+  - abertura: Abertura
+  - materialEsquadria: MaterialEsquadria
+  - peitoril: Decimal
+  --
+  + calcularArea(): Decimal
+}
+
+class Porta extends Esquadria {
+}
+
+class Janela extends Esquadria {
+}
+
+
+' ---------- OUTROS ELEMENTOS E PARTES ----------
+class Luminaria {
+  - tipoLampada: TipoLampada
+  - formatoLampada: FormatoLampada
+  - instalacao: Instalacao
+  - materialPredominante: MaterialPredominante
+  - descricao: String
+  - quantidadeLampada: Integer
+  - potenciaLampadaWatts: Decimal
+  - aletas: Boolean
+  --
+  + calcularPotenciaLuminaria(): Decimal
+}
+
+class Folha {
+  - quantidade: Integer
+  - movel: Boolean
+}
+
+class Bandeirola {
+  - abertura: Abertura
+}
+
+class Visor {
+}
+
+
+' ---------- COMPONENTES (SUBCLASSES) ----------
+Componente <|-- CompEletrico
+Componente <|-- CompHidrossanitario
+Componente <|-- CompLogico
+Componente <|-- Equipamento
+
+class CompEletrico {
+  - tipo: TipoCompEletrico
+}
+class CompHidrossanitario {
+  - tipo: TipoCompHidrossanitario
+}
+class CompLogico {
+  - tipo: TipoCompLogico
+}
+class Equipamento {
+  - tipo: TipoEquipamento
+  - potenciaWatts: Decimal
+  - quantidade: Integer
+}
+
+
+' ---------- RELACIONAMENTOS (COMPOSIÇÃO) ----------
+' Ambiente com seus elementos principais
+Ambiente "1" *-- "0..*" Piso : - pisos
+Ambiente "1" *-- "0..*" Parede : - paredes
+Ambiente "1" *-- "0..*" Teto : - tetos
+Ambiente "1" *-- "0..*" Porta : - portas
+Ambiente "1" *-- "0..*" Janela : - janelas
+Ambiente "1" *-- "0..*" Luminaria : - luminarias
+Ambiente "1" *-- "0..*" Componente : - componentes
+
+' Esquadrias com suas partes
+Esquadria "1" *-- "0..*" Folha : - folhas
+Esquadria "1" *-- "0..1" Bandeirola : - bandeirola
+Porta "1" *-- "0..*" Visor : - visores
+
+' Composição com Formas Geométricas
+ElementoConstrutivo "1" *-- "1..*" FormaGeometrica : - areas
+Esquadria "1" *-- "1" FormaGeometrica : - area
+Folha "1" *-- "1" FormaGeometrica : - area
+Bandeirola "1" *-- "1" FormaGeometrica : - area
+Visor "1" *-- "1" FormaGeometrica : - area
+
+
+' ---------- RELACIONAMENTOS (ASSOCIAÇÃO COM ENUMS) ----------
+Parede -- TipoParede
+Piso -- TipoPiso
+Teto -- TipoTeto
+ElementoConstrutivoAcabado -- Revestimento
+Esquadria -- Abertura
+Esquadria -- MaterialEsquadria
+Bandeirola -- Abertura
+Equipamento -- TipoEquipamento
+CompEletrico -- TipoCompEletrico
+CompLogico -- TipoCompLogico
+CompHidrossanitario -- TipoCompHidrossanitario
+Luminaria -- TipoLampada
+Luminaria -- FormatoLampada
+Luminaria -- Instalacao
+Luminaria -- MaterialPredominante
+@enduml
