@@ -1,6 +1,6 @@
 package br.edu.ifce.ambientes_internos.model.service
 
-import br.edu.ifce.ambientes_internos.model.domain.Hello
+import br.edu.ifce.ambientes_internos.model.Hello
 import org.springframework.stereotype.Service
 
 @Service
