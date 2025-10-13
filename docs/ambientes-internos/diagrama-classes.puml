@@ -1,299 +1,222 @@
 @startuml Ambientes Internos
-' Configurações para um visual mais limpo
+' Configurações
 skinparam classAttributeIconSize 0
 hide empty members
 left to right direction
 
 ' ---------- ENUMS GERAIS ----------
-enum Abertura {
-    CORRER
-    ABRIR
-    MAXIAR
-    PIVOTANTE
-    FIXA
-    GUILHOTINA
-    BASCULANTE
-    VAO_ABERTO
-}
+enum Abertura
+enum MaterialEsquadria
+enum Revestimento
+enum TipoParede
+enum TipoPiso
+enum TipoTeto
+enum TipoEquipamento
+enum TipoInstalacaoEletrica
+enum TipoInstalacaoLogica
+enum TipoInstalacaoHidrossanitaria
+enum TipoLampada
+enum FormatoLampada
+enum FixacaoLuminaria
+enum MaterialLuminaria
+enum MaterialPeitoril
 
-enum MaterialEsquadria {
-    ALUMINIO_VIDRO
-    VIDRO
-    ALUMINIO
-    FERRO
-    FERRO_VIDRO
-    MADEIRA_VENEZIANA
-    COBOGO
-    MADEIRA_PARANA
-    MADEIRA_FICHA
-    MADEIRA_MACICA
-    VAZIO
-}
-
-enum Revestimento {
-    PINTURA
-    CERAMICA
-    CARPETE
-    TEXTURA
-    VAZIO
-}
-
-enum TipoParede {
-    ALVENARIA
-    GESSO
-    DRYWALL
-    DIVISORIA_MADEIRA
-}
-
-enum TipoPiso {
-    INDUSTRIAL
-    PORCELANATO
-    CIMENTADO
-    CERAMICO
-    CARPETE
-}
-
-enum TipoTeto {
-    LAJE_PLANA_CONCRETO
-    LAJE_PLANA_PRE_FABRICADA
-    LAJE_INCLINADA_CONCRETO
-    LAJE_INCLINADA_PRE_FABRICADA
-    FORRO_GESSO
-    FORRO_GESSO_ACARTONADO
-    FORRO_PVC
-    TELHADO
-}
-
-enum TipoEquipamento {
-    COMPUTADOR
-    AR_CONDICIONADO
-    PROJETOR
-    EXTINTOR
-    EQUIPAMENTO_LABORATORIAL
-}
-
-enum TipoCompEletrico {
-    TOMADA_MONOFASICA_10A
-    TOMADA_MONOFASICA_20A
-    TOMADA_TRIFASICA
-    INTERRUPTOR_SIMPLES
-    INTERRUPTOR_DUPLO
-    INTERRUPTOR_TRIPLO
-    QUADRO_ELETRICO
-    INVERSOR
-    TRANSFORMADOR
-}
-
-enum TipoCompLogico {
-    TOMADA_RJ45
-    RACK
-    ACCESS_POINT
-}
-
-enum TipoCompHidrossanitario {
-    LAVATORIO_LOUCA
-    MICTORIO
-    VASO_SANITARIO
-    CHUVEIRO
-    RALO
-    CUBA_INOX_BANCADA
-    CUBA_LOUCA_BANCADA
-    CAIXA_INCENDIO
-}
-
-' ---------- ENUMS PARA LUMINARIA ----------
-enum TipoLampada {
-    LED
-    FLUORESCENTE
-    VAPOR_METALICO
+' ---------- ENUMS DE EXTINTOR (NOVO) ----------
+enum TipoExtintor {
+    AGUA
+    CO2
+    PO_QUIMICO
     OUTRO
 }
-
-enum FormatoLampada {
-    TUBULAR_120CM
-    TUBULAR_60CM
-    COMPACTA
-    PLAFON
-    REFLETOR
-    OUTRO
-}
-
-enum Instalacao {
-    EMBUTIR
-    SOBREPOR
-    PENDENTE
-    OUTRO
-}
-
-enum MaterialPredominante {
-    METAL
-    PLASTICO
-    OUTRO
+enum ClasseIncendio {
+    A
+    B
+    C
+    D
+    K
 }
 
 
-' ---------- FORMAS GEOMÉTRICAS ----------
-abstract class FormaGeometrica {
-  + calcularArea(): Decimal
-}
-
-class Retangulo extends FormaGeometrica {
-  - base: Decimal
-  - altura: Decimal
+' ---------- GEOMETRIA ----------
+abstract class Geometria {
+  + id: Long?
+  + base: BigDecimal
+  + altura: BigDecimal
+  + repeticao: Int
   --
-  + calcularArea(): Decimal
+  + {abstract} calcularAreaM2(): BigDecimal
+  + calcularAreaTotalM2(): BigDecimal
 }
-
-class Triangulo extends FormaGeometrica {
-  - base: Decimal
-  - altura: Decimal
-  --
-  + calcularArea(): Decimal
-}
+class Retangular extends Geometria
+class Triangular extends Geometria
 
 
-' ---------- CLASSES PRINCIPAIS E ABSTRATAS ----------
+' ---------- CLASSE AMBIENTE ----------
 abstract class Ambiente {
-  - nome: String
-  - localizacao: String
+  + id: Long?
+  + nome: String
+  + localizacao: String
+  + capacidade: Int
+  + informacaoAdicional: String
   --
-  + calcularAreaPortas(): Decimal
-  + calcularAreaJanelas(): Decimal
-  + calcularAreaParedes(): Decimal
-  + calcularAreaPiso(): Decimal
-  + calcularAreaTeto(): Decimal
-  + calcularCargaAmbiente(): Decimal
-}
-
-abstract class Componente {
-  - quantidade: Integer
+  + calcularAreaParedesM2(): BigDecimal
+  + calcularAreaPisosM2(): BigDecimal
+  + calcularAreaPortasM2(): BigDecimal
+  + calcularAreaJanelasM2(): BigDecimal
+  + calcularCargaAmbiente(): BigDecimal
 }
 
 
 ' ---------- HIERARQUIA DE ELEMENTOS CONSTRUTIVOS ----------
 abstract class ElementoConstrutivo {
-  + calcularAreaTotal(): Decimal
-}
-
-abstract class ElementoConstrutivoAcabado extends ElementoConstrutivo {
-  - revestimento: Revestimento
-}
-
-class Parede extends ElementoConstrutivoAcabado {
-  - tipo: TipoParede
-}
-
-class Piso extends ElementoConstrutivo {
-  - tipo: TipoPiso
-}
-
-class Teto extends ElementoConstrutivoAcabado {
-  - tipo: TipoTeto
-}
-
-
-' ---------- HIERARQUIA DE ESQUADRIAS ----------
-abstract class Esquadria {
-  - abertura: Abertura
-  - materialEsquadria: MaterialEsquadria
-  - peitoril: Decimal
+  + id: Long?
+  + quantidade: Int
+  + informacaoAdicional: String
   --
-  + calcularArea(): Decimal
+  + calcularAreaTotal(): BigDecimal
+}
+class Parede extends ElementoConstrutivo {
+  + tipo: TipoParede
+  + revestimento: Revestimento
+}
+class Piso extends ElementoConstrutivo {
+  + tipo: TipoPiso
+}
+class Teto extends ElementoConstrutivo {
+  + tipo: TipoTeto
+  + revestimento: Revestimento
 }
 
+
+' ---------- HIERARQUIA DE ESQUADRIAS (PADRÃO COMPOSITE) ----------
+abstract class Esquadria {
+  + id: Long?
+  + informacaoAdicional: String
+  --
+  + obterQuantidadeFolhas(): Int
+  + calcularAreaFolhasM2(): BigDecimal
+  ' ... outros métodos ...
+}
 class Porta extends Esquadria {
+ + calcularVaoUtil(): BigDecimal
 }
-
 class Janela extends Esquadria {
 }
 
+abstract class ComponenteEsquadria {
+  + id: Long?
+  + material: MaterialEsquadria
+  + informacaoAdicional: String
+}
+class Folha extends ComponenteEsquadria {
+  + abertura: Abertura
+}
+class Bandeirola extends ComponenteEsquadria {
+  + abertura: Abertura
+}
+class Guarnicao extends ComponenteEsquadria {
+  + espessura: BigDecimal
+}
 
-' ---------- OUTROS ELEMENTOS E PARTES ----------
-class Luminaria {
-  - tipoLampada: TipoLampada
-  - formatoLampada: FormatoLampada
-  - instalacao: Instalacao
-  - materialPredominante: MaterialPredominante
-  - descricao: String
-  - quantidadeLampada: Integer
-  - potenciaLampadaWatts: Decimal
-  - aletas: Boolean
+class Peitoril {
+  + id: Long?
+  + altura: BigDecimal
+  + material: MaterialPeitoril
+  + informacaoAdicional: String
+}
+
+
+' ---------- HIERARQUIA DE COMPONENTES ----------
+abstract class Componente {
+  + id: Long?
+  + quantidade: Int
+  + informacaoAdicional: String
+}
+abstract class ComponenteEletrico extends Componente {
+  + {abstract} calcularPotenciaWatts(): BigDecimal
+}
+class Equipamento extends ComponenteEletrico {
+  + tipo: TipoEquipamento
+  + potenciaWatts: BigDecimal
+}
+class Luminaria extends ComponenteEletrico {
+  + material: MaterialLuminaria
+  + fixacao: FixacaoLuminaria
+  + quantidadeLampadas: Int
+  + aletada: Boolean
   --
-  + calcularPotenciaLuminaria(): Decimal
+  + calcularPotenciaLuminariaWatts(): BigDecimal
 }
-
-class Folha {
-  - quantidade: Integer
-  - movel: Boolean
+class Lampada {
+    + id: Long?
+    + tipo: TipoLampada
+    + formato: FormatoLampada
+    + potenciaWatts: BigDecimal
 }
-
-class Bandeirola {
-  - abertura: Abertura
+class InstalacaoEletrica extends Componente {
+    + tipo: TipoInstalacaoEletrica
+    + capacidade: BigDecimal
+    + unidadeCapacidade: String
 }
-
-class Visor {
+class InstalacaoLogica extends Componente {
+    + tipo: TipoInstalacaoLogica
 }
-
-
-' ---------- COMPONENTES (SUBCLASSES) ----------
-Componente <|-- CompEletrico
-Componente <|-- CompHidrossanitario
-Componente <|-- CompLogico
-Componente <|-- Equipamento
-
-class CompEletrico {
-  - tipo: TipoCompEletrico
+class InstalacaoHidrossanitaria extends Componente {
+    + tipo: TipoInstalacaoHidrossanitaria
+    + pontoHidraulico: Int
+    + pontoSanitario: Int
 }
-class CompHidrossanitario {
-  - tipo: TipoCompHidrossanitario
-}
-class CompLogico {
-  - tipo: TipoCompLogico
-}
-class Equipamento {
-  - tipo: TipoEquipamento
-  - potenciaWatts: Decimal
-  - quantidade: Integer
+class Extintor extends Componente {
+    + capacidade: String
+    + unidadeCapacidade: String
+    + tipo: TipoExtintor
 }
 
 
-' ---------- RELACIONAMENTOS (COMPOSIÇÃO) ----------
-' Ambiente com seus elementos principais
+' ---------- RELACIONAMENTOS ----------
+' Herança
+Componente <|-- Extintor
+
+' Ambiente com seus Elementos
 Ambiente "1" *-- "0..*" Piso : - pisos
 Ambiente "1" *-- "0..*" Parede : - paredes
 Ambiente "1" *-- "0..*" Teto : - tetos
 Ambiente "1" *-- "0..*" Porta : - portas
 Ambiente "1" *-- "0..*" Janela : - janelas
-Ambiente "1" *-- "0..*" Luminaria : - luminarias
 Ambiente "1" *-- "0..*" Componente : - componentes
+Ambiente "1" *-- "0..*" ComponenteEletrico : - componentesEletricos
 
-' Esquadrias com suas partes
-Esquadria "1" *-- "0..*" Folha : - folhas
-Esquadria "1" *-- "0..1" Bandeirola : - bandeirola
-Porta "1" *-- "0..*" Visor : - visores
+' Composição com Geometria
+ElementoConstrutivo "1" *-- "1..*" Geometria : - geometrias
+Esquadria "1" *-- "1" Geometria : - geometria
+ComponenteEsquadria "1" *-- "1" Geometria : - geometria
+Peitoril "1" *-- "1" Geometria : - geometria
 
-' Composição com Formas Geométricas
-ElementoConstrutivo "1" *-- "1..*" FormaGeometrica : - areas
-Esquadria "1" *-- "1" FormaGeometrica : - area
-Folha "1" *-- "1" FormaGeometrica : - area
-Bandeirola "1" *-- "1" FormaGeometrica : - area
-Visor "1" *-- "1" FormaGeometrica : - area
+' Composição de Esquadria
+Esquadria "1" *-- "0..*" ComponenteEsquadria : - componentes
+Janela "1" *-- "1" Peitoril : - peitoril
 
+' Composição de Luminaria
+Luminaria "1" *-- "1" Lampada : - lampada
 
-' ---------- RELACIONAMENTOS (ASSOCIAÇÃO COM ENUMS) ----------
+' Associações com Enums
 Parede -- TipoParede
+Parede -- Revestimento
 Piso -- TipoPiso
 Teto -- TipoTeto
-ElementoConstrutivoAcabado -- Revestimento
-Esquadria -- Abertura
-Esquadria -- MaterialEsquadria
+Teto -- Revestimento
+ComponenteEsquadria -- MaterialEsquadria
+Folha -- Abertura
 Bandeirola -- Abertura
+Peitoril -- MaterialPeitoril
 Equipamento -- TipoEquipamento
-CompEletrico -- TipoCompEletrico
-CompLogico -- TipoCompLogico
-CompHidrossanitario -- TipoCompHidrossanitario
-Luminaria -- TipoLampada
-Luminaria -- FormatoLampada
-Luminaria -- Instalacao
-Luminaria -- MaterialPredominante
+Lampada -- TipoLampada
+Lampada -- FormatoLampada
+Luminaria -- MaterialLuminaria
+Luminaria -- FixacaoLuminaria
+InstalacaoEletrica -- TipoInstalacaoEletrica
+InstalacaoLogica -- TipoInstalacaoLogica
+InstalacaoHidrossanitaria -- TipoInstalacaoHidrossanitaria
+Extintor -- TipoExtintor
+Extintor "1" *-- "1..*" ClasseIncendio : - classesIncendio
 @enduml
