@@ -7,34 +7,63 @@ abstract class Esquadria(
     var id: Long?,
     var geometria: Geometria,
     val componentes: MutableList<ComponenteEsquadria>,
+    var quantidade: Int,
     var informacaoAdicional: String
 ) {
 
-    fun obterQuantidadeFolhas(): Int {
+    fun obterQuantidadeFolhasPorEsquadria(): Int {
         throw NotImplementedError("Metodo não implementado")
     }
 
-    fun calcularAreaFolhasM2(): BigDecimal {
+    fun obterQuantidadeTotalFolhas(): Int {
         throw NotImplementedError("Metodo não implementado")
     }
 
-    fun obterQuantidadeBandeirolas(): Int {
+    fun calcularAreaFolhasPorEsquadriaM2(): BigDecimal {
         throw NotImplementedError("Metodo não implementado")
     }
 
-    fun calcularAreaBandeirolasM2(): BigDecimal {
+    fun calcularAreaTotalFolhasM2(): BigDecimal {
         throw NotImplementedError("Metodo não implementado")
     }
 
-    fun obterQuantidadeGuarnicoes(): Int {
+    fun obterQuantidadeBandeirolasPorEsquadria(): Int {
         throw NotImplementedError("Metodo não implementado")
     }
 
-    fun calcularAreaGuarnicoesM2(): BigDecimal {
+    fun obterQuantidadeTotalBandeirolas(): Int {
         throw NotImplementedError("Metodo não implementado")
     }
 
-    fun calcularComprimentoGuarnicoes(): BigDecimal {
+    fun calcularAreaBandeirolasPorEsquadriaM2(): BigDecimal {
+        throw NotImplementedError("Metodo não implementado")
+    }
+
+    fun calcularAreaTotalBandeirolasM2(): BigDecimal {
+        throw NotImplementedError("Metodo não implementado")
+    }
+
+    fun obterQuantidadeGuarnicoesPorEsquadria(): Int {
+        throw NotImplementedError("Metodo não implementado")
+    }
+
+    fun obterQuantidadeTotalGuarnicoes(): Int {
+        throw NotImplementedError("Metodo não implementado")
+    }
+
+    fun calcularAreaGuarnicoesPorEsquadriaM2(): BigDecimal {
+        throw NotImplementedError("Metodo não implementado")
+    }
+
+    fun calcularAreaTotalGuarnicoesM2(): BigDecimal {
+        throw NotImplementedError("Metodo não implementado")
+    }
+
+    fun calcularComprimentoGuarnicoesPorEsquadriaM(): BigDecimal {
+        throw NotImplementedError("Metodo não implementado")
+    }
+
+    fun calcularComprimentoTotalGuarnicoesM(): BigDecimal {
         throw NotImplementedError("Metodo não implementado")
     }
 

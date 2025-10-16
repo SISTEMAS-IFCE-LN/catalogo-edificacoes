@@ -5,10 +5,10 @@ import br.edu.ifce.ambientes_internos.model.domain.geometrias.Geometria
 import java.math.BigDecimal
 
 class Peitoril(
-    var id: Long? = null,
     var geometria: Geometria,
     var altura: BigDecimal,
     var material: MaterialPeitoril,
-    var informacaoAdicional: String = ""
+    var informacaoAdicional: String = "",
+    var id: Long? = null
 ) {
 }

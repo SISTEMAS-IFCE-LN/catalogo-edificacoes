@@ -7,6 +7,7 @@ abstract class ComponenteEsquadria(
     var id: Long?,
     var geometria: Geometria,
     var material: MaterialEsquadria,
+    var quantidade: Int,
     var informacaoAdicional: String
 ) {
 }

@@ -5,10 +5,11 @@ import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.MaterialEsqu
 import br.edu.ifce.ambientes_internos.model.domain.geometrias.Geometria
 
 class Folha(
-    id: Long? = null,
     geometria: Geometria,
     material: MaterialEsquadria,
     var abertura: Abertura,
-    informacaoAdicional: String = ""
-): ComponenteEsquadria(id, geometria, material, informacaoAdicional) {
+    quantidade: Int = 1,
+    informacaoAdicional: String = "",
+    id: Long? = null
+): ComponenteEsquadria(id, geometria, material, quantidade, informacaoAdicional) {
 }
