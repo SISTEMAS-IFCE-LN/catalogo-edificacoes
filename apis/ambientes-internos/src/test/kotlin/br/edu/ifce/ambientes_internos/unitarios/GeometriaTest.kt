@@ -1,9 +1,8 @@
-package br.edu.ifce.ambientes_internos.unitarios.geometrias
+package br.edu.ifce.ambientes_internos.unitarios
 
 import br.edu.ifce.ambientes_internos.model.domain.geometrias.Retangular
 import br.edu.ifce.ambientes_internos.model.domain.geometrias.Triangular
 import java.math.BigDecimal
-import java.math.RoundingMode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

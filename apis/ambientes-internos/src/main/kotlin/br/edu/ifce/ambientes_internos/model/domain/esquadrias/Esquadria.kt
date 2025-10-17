@@ -43,11 +43,11 @@ abstract class Esquadria(
         throw NotImplementedError("Metodo não implementado")
     }
 
-    fun obterQuantidadeGuarnicoesPorEsquadria(): Int {
+    fun calcularComprimentoGuarnicoesPorEsquadriaM(): BigDecimal {
         throw NotImplementedError("Metodo não implementado")
     }
 
-    fun obterQuantidadeTotalGuarnicoes(): Int {
+    fun calcularComprimentoTotalGuarnicoesM(): BigDecimal {
         throw NotImplementedError("Metodo não implementado")
     }
 
@@ -56,14 +56,6 @@ abstract class Esquadria(
     }
 
     fun calcularAreaTotalGuarnicoesM2(): BigDecimal {
-        throw NotImplementedError("Metodo não implementado")
-    }
-
-    fun calcularComprimentoGuarnicoesPorEsquadriaM(): BigDecimal {
-        throw NotImplementedError("Metodo não implementado")
-    }
-
-    fun calcularComprimentoTotalGuarnicoesM(): BigDecimal {
         throw NotImplementedError("Metodo não implementado")
     }
 
