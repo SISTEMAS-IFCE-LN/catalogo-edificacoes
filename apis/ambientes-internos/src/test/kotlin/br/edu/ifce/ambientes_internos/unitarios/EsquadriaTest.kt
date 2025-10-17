@@ -11,7 +11,7 @@ import java.math.BigDecimal
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
-class EsquadriasTest {
+class EsquadriaTest {
 
     val geometriaFolha1 = Retangular(BigDecimal("0.8"), BigDecimal("2.1"))
     val geometriaFolha2 = Retangular(BigDecimal("0.3"), BigDecimal("2.1"))
@@ -126,6 +126,18 @@ class EsquadriasTest {
         // Então
         assertEquals(areaEsperadaGuarnicoesPorta1, areaGuarnicoesPorta1)
         assertEquals(areaEsperadaGuarnicoesPorta2, areaGuarnicoesPorta2)
+    }
+
+    @Test
+    fun `Deve calcular o vao util de uma porta`() {
+        // Dados
+        val vaoUtilEsperadoPorta = BigDecimal("1.68")
+
+        // Quando
+        val vaoUtilPorta = porta1.calcularVaoUtil()
+
+        // Então
+        assertEquals(vaoUtilEsperadoPorta, vaoUtilPorta)
     }
 
 }
