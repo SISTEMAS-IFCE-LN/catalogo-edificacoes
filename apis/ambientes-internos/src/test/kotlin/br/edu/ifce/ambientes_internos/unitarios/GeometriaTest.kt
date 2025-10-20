@@ -3,6 +3,7 @@ package br.edu.ifce.ambientes_internos.unitarios
 import br.edu.ifce.ambientes_internos.model.domain.geometrias.Retangular
 import br.edu.ifce.ambientes_internos.model.domain.geometrias.Triangular
 import java.math.BigDecimal
+import java.math.RoundingMode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -20,8 +21,9 @@ class GeometriaTest {
         val retangulo1 = Retangular(base1, altura1)
         val retangulo2 = Retangular(base2, altura2, repeticao)
 
-        val areaEsperada1 = BigDecimal("9.13")
-        val areaEsperada2 = BigDecimal("28.85")
+        val areaEsperada1 = base1.multiply(altura1).setScale(2, RoundingMode.HALF_UP)
+        val areaEsperada2 = base2.multiply(altura2).multiply(BigDecimal(repeticao))
+            .setScale(2, RoundingMode.HALF_UP)
 
         // Quando
         val areaTotal1 = retangulo1.calcularAreaTotalM2()
@@ -38,8 +40,11 @@ class GeometriaTest {
         val triangulo1 = Triangular(base1, altura1)
         val triangulo2 = Triangular(base2, altura2, repeticao)
 
-        val areaEsperada1 = BigDecimal("4.56")
-        val areaEsperada2 = BigDecimal("14.43")
+        val areaEsperada1 = base1.multiply(altura1).divide(BigDecimal.TWO)
+            .setScale(2, RoundingMode.HALF_UP)
+        val areaEsperada2 = base2.multiply(altura2).divide(BigDecimal.TWO)
+            .multiply(BigDecimal(repeticao))
+            .setScale(2, RoundingMode.HALF_UP)
 
         // Quando
         val areaTotal1 = triangulo1.calcularAreaTotalM2()
