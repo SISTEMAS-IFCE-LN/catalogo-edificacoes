@@ -10,7 +10,9 @@ abstract class ElementoConstrutivo(
     var informacaoAdicional: String
 ) {
 
-    fun calcularAreaTotal(): BigDecimal {
+    abstract fun calcularAreaPorTipoRevestimentoM2(): Map<String, BigDecimal>
+
+    fun calcularAreaTotalM2(): BigDecimal {
         throw NotImplementedError("Metodo não implementado")
     }
 
