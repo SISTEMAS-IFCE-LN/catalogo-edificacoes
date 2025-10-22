@@ -8,114 +8,112 @@ import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.Abertura
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.MaterialEsquadria
 import br.edu.ifce.ambientes_internos.model.domain.geometrias.Retangular
 import java.math.BigDecimal
-import java.math.RoundingMode
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class EsquadriaTest {
 
-    val geometriaFolha1 = Retangular(BigDecimal("0.8"), BigDecimal("2.1"))
-    val geometriaFolha2 = Retangular(BigDecimal("0.3"), BigDecimal("2.1"), 2)
-
-    val folha1 = Folha(geometriaFolha1, MaterialEsquadria.MADEIRA_VIDRO, Abertura.ABRIR)
-    val folha2 = Folha(geometriaFolha2, MaterialEsquadria.MADEIRA_MACICA, Abertura.FIXA)
-
-    val geometriaBandeirola = Retangular(BigDecimal("1.4"), BigDecimal("0.3"))
-
-    val bandeirola = Bandeirola(geometriaBandeirola, MaterialEsquadria.MADEIRA_VIDRO, Abertura.FIXA)
-
-    val geometriaGuarnicao1 = Retangular(BigDecimal("0.15"), BigDecimal("2.42"), 2)
-    val geometriaGuarnicao2 = Retangular(BigDecimal("0.15"), BigDecimal("1.44"))
-    val geometriaGuarnicao3 = Retangular(BigDecimal("0.15"), BigDecimal("1.40"))
-
-    val guarnicao1 = Guarnicao(geometriaGuarnicao1, MaterialEsquadria.MADEIRA_MACICA, BigDecimal("0.02"))
-    val guarnicao2 = Guarnicao(geometriaGuarnicao2, MaterialEsquadria.MADEIRA_MACICA, BigDecimal("0.02"))
-    val guarnicao3 = Guarnicao(geometriaGuarnicao3, MaterialEsquadria.MADEIRA_MACICA, BigDecimal("0.02"))
-
-    val geometriaPorta = Retangular(BigDecimal("1.44"), BigDecimal("2.44"))
-
-    val componentes = mutableListOf(folha1, folha2, bandeirola, guarnicao1, guarnicao2, guarnicao3)
-
-    val porta = Porta(geometriaPorta, componentes)
-
-    private fun <T, R> filtrarClasse(classe: Class<T>, lista: MutableList<R>): List<T> {
-        return lista.filter { classe.isInstance(it) }.map { classe.cast(it) }
-    }
-
-    private fun <T, R> aplicarCalculo(
-        classe: Class<T>,
-        lista: MutableList<R>,
-        calcular: (T) -> BigDecimal
-    ): BigDecimal {
-        return filtrarClasse(classe, lista)
-            .fold(BigDecimal.ZERO) { somatoria, item -> somatoria.add(calcular(item)) }
-            .setScale(2, RoundingMode.HALF_UP)
-    }
-
-    private fun calcularAreaRetangular(geometria: Retangular): BigDecimal {
-        return geometria.base.multiply(geometria.altura)
-            .multiply(BigDecimal(geometria.repeticao))
-    }
-
     @Test
     fun `Deve calcular a area das folhas de uma esquadria`() {
         // Dados
-        val areaEsperadaFolhasPorta = aplicarCalculo(
-            Folha::class.java,
-            porta.componentes
-        ) { calcularAreaRetangular(it.geometria as Retangular) }
 
+        // Area: 0.8 * 2.1 = 1.68
+        val geometriaFolha1 = Retangular(BigDecimal("0.8"), BigDecimal("2.1"))
+        val folha1 = Folha(geometriaFolha1, MaterialEsquadria.MADEIRA_VIDRO, Abertura.ABRIR)
+
+        // Area: 0.3 * 2.1 = 0.63 * 2 = 1.26
+        val geometriaFolha2 = Retangular(BigDecimal("0.3"), BigDecimal("2.1"), 2)
+        val folha2 = Folha(geometriaFolha2, MaterialEsquadria.MADEIRA_MACICA, Abertura.FIXA)
+
+        val porta = Porta(
+            geometria = Retangular(BigDecimal.ONE, BigDecimal.ONE),
+            componentes = mutableListOf(folha1, folha2)
+        )
+
+        // Área total esperada: 1.68 + 1.26 = 2.94
+        val areaEsperada = BigDecimal("2.94")
 
         // Quando
-        val areaFolhasPorta = porta.calcularAreaFolhasM2()
+        val areaCalculada = porta.calcularAreaFolhasM2()
 
         // Então
-        assertEquals(areaEsperadaFolhasPorta, areaFolhasPorta)
+        assertEquals(areaEsperada, areaCalculada)
     }
 
     @Test
     fun `Deve calcular a area das bandeirolas de uma esquadria`() {
         // Dados
-        val areaEsperadaBandeirolasPorta = aplicarCalculo(
-            Bandeirola::class.java,
-            porta.componentes
-        ) { calcularAreaRetangular(it.geometria as Retangular) }
+
+        // Área: 1.4 * 0.3 = 0.42
+        val geometriaBandeirola = Retangular(BigDecimal("1.4"), BigDecimal("0.3"))
+        val bandeirola = Bandeirola(geometriaBandeirola, MaterialEsquadria.MADEIRA_VIDRO, Abertura.FIXA)
+
+        val porta = Porta(
+            geometria = Retangular(BigDecimal.ONE, BigDecimal.ONE),
+            componentes = mutableListOf(bandeirola)
+        )
+
+        val areaEsperada = BigDecimal("0.42")
 
         // Quando
-        val areaBandeirolasPorta = porta.calcularAreaBandeirolasM2()
+        val areaCalculada = porta.calcularAreaBandeirolasM2()
 
         // Então
-        assertEquals(areaEsperadaBandeirolasPorta, areaBandeirolasPorta)
+        assertEquals(areaEsperada, areaCalculada)
     }
 
     @Test
     fun `Deve calcular o comprimento das guarnicoes de uma esquadria`() {
         // Dados
-        val comprimentoEsperadoGuarnicoesPorta = aplicarCalculo(
-            Guarnicao::class.java,
-            porta.componentes
-        ) { it.geometria.altura.multiply(BigDecimal(it.geometria.repeticao)) }
+
+        // Comprimento: 2.42 * 2 = 4.84
+        val geometriaGuarnicao1 = Retangular(BigDecimal("0.15"), BigDecimal("2.42"), 2)
+        val guarnicao1 = Guarnicao(geometriaGuarnicao1, MaterialEsquadria.MADEIRA_MACICA, BigDecimal("0.02"))
+
+        // Comprimento: 1.44
+        val geometriaGuarnicao2 = Retangular(BigDecimal("0.15"), BigDecimal("1.44"))
+        val guarnicao2 = Guarnicao(geometriaGuarnicao2, MaterialEsquadria.MADEIRA_MACICA, BigDecimal("0.02"))
+
+        val porta = Porta(
+            geometria = Retangular(BigDecimal.ONE, BigDecimal.ONE),
+            componentes = mutableListOf(guarnicao1, guarnicao2)
+        )
+
+        // Comprimento total esperado: 4.84 + 1.44 = 6.28
+        val comprimentoEsperado = BigDecimal("6.28")
 
         // Quando
-        val comprimentoGuarnicoesPorta = porta.calcularComprimentoGuarnicoesM()
+        val comprimentoCalculado = porta.calcularComprimentoGuarnicoesM()
 
         // Então
-        assertEquals(comprimentoEsperadoGuarnicoesPorta, comprimentoGuarnicoesPorta)
+        assertEquals(comprimentoEsperado, comprimentoCalculado)
     }
 
     @Test
     fun `Deve calcular a area das guarnicoes de uma esquadria`() {
         // Dados
-        val areaEsperadaGuarnicoesPorta = aplicarCalculo(
-            Guarnicao::class.java,
-            porta.componentes
-        ) { calcularAreaRetangular(it.geometria as Retangular) }
+
+        // Área: 0.15 * 2.42 = 0.363 * 2 = 0.726
+        val geometriaGuarnicao1 = Retangular(BigDecimal("0.15"), BigDecimal("2.42"), 2)
+        val guarnicao1 = Guarnicao(geometriaGuarnicao1, MaterialEsquadria.MADEIRA_MACICA, BigDecimal("0.02"))
+
+        // Área: 0.15 * 1.44 = 0.216
+        val geometriaGuarnicao2 = Retangular(BigDecimal("0.15"), BigDecimal("1.44"))
+        val guarnicao2 = Guarnicao(geometriaGuarnicao2, MaterialEsquadria.MADEIRA_MACICA, BigDecimal("0.02"))
+
+        val porta = Porta(
+            geometria = Retangular(BigDecimal.ONE, BigDecimal.ONE),
+            componentes = mutableListOf(guarnicao1, guarnicao2)
+        )
+
+        // Área total esperada: 0.726 + 0.216 = 0.942 arredondado para 0.95
+        val areaEsperada = BigDecimal("0.95")
 
         // Quando
-        val areaGuarnicoesPorta = porta.calcularAreaGuarnicoesM2()
+        val areaCalculada = porta.calcularAreaGuarnicoesM2()
 
         // Então
-        assertEquals(areaEsperadaGuarnicoesPorta, areaGuarnicoesPorta)
+        assertEquals(areaEsperada, areaCalculada)
     }
 
 }
