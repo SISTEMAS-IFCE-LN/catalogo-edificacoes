@@ -1,6 +1,7 @@
 package br.edu.ifce.ambientes_internos.model.domain.geometrias
 
 import java.math.BigDecimal
+import java.math.RoundingMode
 
 abstract class Geometria(
     var id: Long?,
@@ -12,7 +13,9 @@ abstract class Geometria(
     abstract fun calcularAreaM2(): BigDecimal
 
     fun calcularAreaTotalM2(): BigDecimal {
-        throw NotImplementedError("Metodo não implementado")
+        return calcularAreaM2()
+            .multiply(BigDecimal(repeticao))
+            .setScale(2, RoundingMode.HALF_UP)
     }
 
 }

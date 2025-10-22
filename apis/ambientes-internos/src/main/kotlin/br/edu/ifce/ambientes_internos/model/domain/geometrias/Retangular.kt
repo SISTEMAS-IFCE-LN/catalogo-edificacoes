@@ -10,7 +10,7 @@ class Retangular(
 ) : Geometria(id, base, altura, repeticao) {
 
     override fun calcularAreaM2(): BigDecimal {
-        throw NotImplementedError("Metodo não implementado")
+        return base.multiply(altura)
     }
 
 }
