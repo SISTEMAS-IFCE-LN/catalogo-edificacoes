@@ -8,7 +8,7 @@ enum class Abertura(val nome: String) {
     SANFONADA("Sanfonada"),
     MAXIM_AR("Maxim-ar"),
     PIVOTANTE("Pivotante"),
-    GUILHOTINA("Guillhotina"),
+    GUILHOTINA("Guilhotina"),
     VAO_ABERTO("Vão aberto"),
     OUTRA("Outra")
 }

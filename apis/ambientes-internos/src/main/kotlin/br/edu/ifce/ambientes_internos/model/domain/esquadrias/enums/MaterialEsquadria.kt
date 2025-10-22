@@ -13,6 +13,6 @@ enum class MaterialEsquadria(val nome: String) {
     MADEIRA_VENEZIANA("Madeira Tipo Veneziana"),
     MADEIRA_FICHA("Madeira Tipo Ficha"),
     MADEIRA_PARANA("Madeira Tipo Paraná"),
-    COBOGO("Cobogó"),
+    NENHUM("Nenhum"),
     OUTRO("Outro")
 }

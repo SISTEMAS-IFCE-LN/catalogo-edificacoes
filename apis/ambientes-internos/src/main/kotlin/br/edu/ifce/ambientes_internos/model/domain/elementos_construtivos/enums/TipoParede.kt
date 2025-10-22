@@ -12,5 +12,6 @@ enum class TipoParede(val nome: String) {
     DIVISORIA_PVC("Divisória de PVC"),
     CONCRETO_PRE_MOLDADO("Divisória de Concreto Pré-Moldado"),
     STEEL_FRAME("Steel Frame"),
+    COBOGO("Cobogó"),
     OUTRO("Outro")
 }

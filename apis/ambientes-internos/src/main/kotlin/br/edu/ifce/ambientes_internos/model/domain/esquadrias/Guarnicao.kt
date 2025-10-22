@@ -8,8 +8,7 @@ class Guarnicao(
     geometria: Geometria,
     material: MaterialEsquadria,
     var espessura: BigDecimal,
-    quantidade: Int = 1,
     informacaoAdicional: String = "",
     id: Long? = null
-): ComponenteEsquadria(id, geometria, material, quantidade, informacaoAdicional) {
+): ComponenteEsquadria(id, geometria, material, informacaoAdicional) {
 }
