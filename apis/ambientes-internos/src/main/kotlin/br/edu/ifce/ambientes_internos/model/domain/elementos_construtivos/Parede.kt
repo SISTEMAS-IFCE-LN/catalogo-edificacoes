@@ -16,7 +16,7 @@ class Parede(
     id: Long? = null
 ): ElementoConstrutivo(id, geometrias, quantidade, informacaoAdicional) {
 
-    override fun calcularAreaPorTipoRevestimentoM2(): Map<String, BigDecimal> {
+    override fun calcularAreaTotalM2(): BigDecimal {
         throw NotImplementedError("Metodo não implementado")
     }
 

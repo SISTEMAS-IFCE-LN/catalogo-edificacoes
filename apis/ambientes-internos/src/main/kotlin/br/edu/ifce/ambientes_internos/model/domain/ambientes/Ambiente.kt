@@ -34,7 +34,19 @@ abstract class Ambiente(
         throw NotImplementedError("Metodo não implementado")
     }
 
-    fun calcularCargaAmbiente(): BigDecimal {
+    fun calcularCargaAmbienteWatts(): BigDecimal {
+        throw NotImplementedError("Metodo não implementado")
+    }
+
+    fun calcularAreaPisosPorTipoRevestimentoM2(): Map<String, BigDecimal> {
+        throw NotImplementedError("Metodo não implementado")
+    }
+
+    fun calcularAreaTetosPorTipoRevestimentoM2(): Map<String, BigDecimal> {
+        throw NotImplementedError("Metodo não implementado")
+    }
+
+    fun calcularAreaParedesPorTipoRevestimentoM2(): Map<String, BigDecimal> {
         throw NotImplementedError("Metodo não implementado")
     }
 
