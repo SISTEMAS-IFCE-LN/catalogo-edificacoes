@@ -12,4 +12,8 @@ abstract class ElementoConstrutivo(
 
     abstract fun calcularAreaTotalM2(): BigDecimal
 
+    protected fun calcularAreaBrutaGeometriasM2(): BigDecimal {
+        return geometrias.fold(BigDecimal.ZERO) { acc, geometria -> acc.add(geometria.calcularAreaTotalM2()) }
+    }
+
 }

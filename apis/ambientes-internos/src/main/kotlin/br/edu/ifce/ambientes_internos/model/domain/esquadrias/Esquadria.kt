@@ -25,7 +25,12 @@ abstract class Esquadria(
 
     fun calcularComprimentoGuarnicoesM(): BigDecimal {
         return componentes.filterIsInstance<Guarnicao>()
-            .fold(BigDecimal.ZERO) { acc, guarnicao -> acc.add(guarnicao.geometria.altura.multiply(BigDecimal(guarnicao.geometria.repeticao))) }
+            .fold(BigDecimal.ZERO) { acc, guarnicao ->
+                acc.add(
+                    guarnicao.geometria.altura
+                        .multiply(BigDecimal(guarnicao.geometria.repeticao))
+                )
+            }
             .setScale(2, RoundingMode.HALF_UP)
     }
 

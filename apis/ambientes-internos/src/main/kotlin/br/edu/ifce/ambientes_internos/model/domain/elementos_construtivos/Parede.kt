@@ -5,6 +5,7 @@ import br.edu.ifce.ambientes_internos.model.domain.elementos_construtivos.enums.
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.Esquadria
 import br.edu.ifce.ambientes_internos.model.domain.geometrias.Geometria
 import java.math.BigDecimal
+import java.math.RoundingMode
 
 class Parede(
     var tipo: TipoParede,
@@ -14,10 +15,16 @@ class Parede(
     quantidade: Int = 1,
     informacaoAdicional: String = "",
     id: Long? = null
-): ElementoConstrutivo(id, geometrias, quantidade, informacaoAdicional) {
+) : ElementoConstrutivo(id, geometrias, quantidade, informacaoAdicional) {
 
     override fun calcularAreaTotalM2(): BigDecimal {
-        throw NotImplementedError("Metodo não implementado")
+        val areaBruta = calcularAreaBrutaGeometriasM2()
+        val areaEsquadrias = esquadrias.fold(BigDecimal.ZERO) { acc, esquadria ->
+            acc.add(esquadria.geometria.calcularAreaTotalM2())
+        }
+        return areaBruta.subtract(areaEsquadrias)
+            .multiply(BigDecimal(quantidade))
+            .setScale(2, RoundingMode.HALF_UP)
     }
 
 }
