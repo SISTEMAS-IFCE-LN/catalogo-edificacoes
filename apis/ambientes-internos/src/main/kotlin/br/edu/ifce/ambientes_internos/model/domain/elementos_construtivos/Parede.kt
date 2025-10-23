@@ -7,14 +7,14 @@ import br.edu.ifce.ambientes_internos.model.domain.geometrias.Geometria
 import java.math.BigDecimal
 import java.math.RoundingMode
 
-class Parede(
+abstract class Parede(
     var tipo: TipoParede,
     var revestimento: Revestimento,
-    geometrias: MutableList<Geometria> = mutableListOf(),
-    val esquadrias: MutableList<Esquadria> = mutableListOf(),
-    quantidade: Int = 1,
-    informacaoAdicional: String = "",
-    id: Long? = null
+    geometrias: MutableList<Geometria>,
+    val esquadrias: MutableList<Esquadria>,
+    quantidade: Int,
+    informacaoAdicional: String,
+    id: Long?
 ) : ElementoConstrutivo(id, geometrias, quantidade, informacaoAdicional) {
 
     override fun calcularAreaTotalM2(): BigDecimal {

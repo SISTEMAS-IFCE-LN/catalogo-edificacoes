@@ -1,16 +1,14 @@
 package br.edu.ifce.ambientes_internos.unitarios
 
-import br.edu.ifce.ambientes_internos.model.domain.elementos_construtivos.Parede
+import br.edu.ifce.ambientes_internos.model.domain.elementos_construtivos.ParedeExterna
+import br.edu.ifce.ambientes_internos.model.domain.elementos_construtivos.ParedeInterna
 import br.edu.ifce.ambientes_internos.model.domain.elementos_construtivos.Piso
 import br.edu.ifce.ambientes_internos.model.domain.elementos_construtivos.Teto
 import br.edu.ifce.ambientes_internos.model.domain.elementos_construtivos.enums.Revestimento
+import br.edu.ifce.ambientes_internos.model.domain.elementos_construtivos.enums.TipoParede
 import br.edu.ifce.ambientes_internos.model.domain.elementos_construtivos.enums.TipoPiso
 import br.edu.ifce.ambientes_internos.model.domain.elementos_construtivos.enums.TipoTeto
-import br.edu.ifce.ambientes_internos.model.domain.elementos_construtivos.enums.TipoParede
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.Porta
-import br.edu.ifce.ambientes_internos.model.domain.esquadrias.Folha
-import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.Abertura
-import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.MaterialEsquadria
 import br.edu.ifce.ambientes_internos.model.domain.geometrias.Retangular
 import br.edu.ifce.ambientes_internos.model.domain.geometrias.Triangular
 import java.math.BigDecimal
@@ -53,15 +51,14 @@ class ElementoConstrutivoTest {
     }
 
     @Test
-    fun `Parede deve calcular area total descontando esquadrias`() {
+    fun `ParedeExterna deve calcular area total descontando esquadrias`() {
         // Dados
         val geometriaParede = Retangular(BigDecimal("3.00"), BigDecimal("2.80")) // Área parede: 8.40
         val portaGeom = Retangular(BigDecimal("0.90"), BigDecimal("2.10")) // Área porta: 1.89
 
-        val folha = Folha(portaGeom, MaterialEsquadria.MADEIRA_VIDRO, Abertura.ABRIR)
-        val porta = Porta(portaGeom, mutableListOf(folha))
+        val porta = Porta(portaGeom)
 
-        val parede = Parede(
+        val parede = ParedeExterna(
             tipo = TipoParede.ALVENARIA,
             revestimento = Revestimento.REBOCO,
             geometrias = mutableListOf(geometriaParede),
@@ -71,6 +68,31 @@ class ElementoConstrutivoTest {
 
         // Área esperada: 8.40 - 1.89 = 6.51
         val valorEsperado = BigDecimal("6.51")
+
+        // Quando
+        val areaTotal = parede.calcularAreaTotalM2()
+
+        // Então
+        assertEquals(valorEsperado, areaTotal)
+    }
+
+    fun `ParedeInterna deve calcular area total descontando esquadrias`() {
+        // Dados
+        val geometriaParede = Retangular(BigDecimal("2.50"), BigDecimal("2.50")) // Área parede: 6.25
+        val portaGeom = Retangular(BigDecimal("0.60"), BigDecimal("1.80")) // Área porta: 1.08
+
+        val porta = Porta(portaGeom)
+
+        val parede = ParedeInterna(
+            tipo = TipoParede.DRYWALL,
+            revestimento = Revestimento.PINTURA,
+            geometrias = mutableListOf(geometriaParede),
+            esquadrias = mutableListOf(porta),
+            quantidade = 4
+        )
+
+        // Área esperada: (6.25 - 1.08) * 4 = 20.68
+        val valorEsperado = BigDecimal("20.68")
 
         // Quando
         val areaTotal = parede.calcularAreaTotalM2()
