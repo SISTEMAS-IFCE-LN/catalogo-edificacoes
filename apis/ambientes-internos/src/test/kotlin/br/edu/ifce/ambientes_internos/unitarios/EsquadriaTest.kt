@@ -7,10 +7,12 @@ import br.edu.ifce.ambientes_internos.model.domain.esquadrias.Porta
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.Abertura
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.MaterialEsquadria
 import br.edu.ifce.ambientes_internos.model.domain.geometrias.Retangular
+import org.junit.jupiter.api.DisplayName
 import java.math.BigDecimal
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+@DisplayName("Testes para a classe Esquadria e suas filhas")
 class EsquadriaTest {
 
     @Test
@@ -93,11 +95,11 @@ class EsquadriaTest {
     fun `Deve calcular a area das guarnicoes de uma esquadria`() {
         // Dados
 
-        // Área: 0.15 * 2.42 = 0.363 * 2 = 0.726
+        // Área: 0.15 * 2.42 = 0.363 * 2 = 0.726 arredondado para 0.73
         val geometriaGuarnicao1 = Retangular(BigDecimal("0.15"), BigDecimal("2.42"), 2)
         val guarnicao1 = Guarnicao(geometriaGuarnicao1, MaterialEsquadria.MADEIRA_MACICA, BigDecimal("0.02"))
 
-        // Área: 0.15 * 1.44 = 0.216
+        // Área: 0.15 * 1.44 = 0.216 arredondado para 0.22
         val geometriaGuarnicao2 = Retangular(BigDecimal("0.15"), BigDecimal("1.44"))
         val guarnicao2 = Guarnicao(geometriaGuarnicao2, MaterialEsquadria.MADEIRA_MACICA, BigDecimal("0.02"))
 
@@ -106,7 +108,7 @@ class EsquadriaTest {
             componentes = mutableListOf(guarnicao1, guarnicao2)
         )
 
-        // Área total esperada: 0.726 + 0.216 = 0.942 arredondado para 0.95
+        // Área total esperada: 0.73 + 0.22 = 0.95
         val areaEsperada = BigDecimal("0.95")
 
         // Quando

@@ -11,10 +11,12 @@ import br.edu.ifce.ambientes_internos.model.domain.elementos_construtivos.enums.
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.Porta
 import br.edu.ifce.ambientes_internos.model.domain.geometrias.Retangular
 import br.edu.ifce.ambientes_internos.model.domain.geometrias.Triangular
+import org.junit.jupiter.api.DisplayName
 import java.math.BigDecimal
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+@DisplayName("Testes para a classe ElementoConstrutivo e suas filhas")
 class ElementoConstrutivoTest {
 
     @Test
@@ -76,6 +78,7 @@ class ElementoConstrutivoTest {
         assertEquals(valorEsperado, areaTotal)
     }
 
+    @Test
     fun `ParedeInterna deve calcular area total descontando esquadrias`() {
         // Dados
         val geometriaParede = Retangular(BigDecimal("2.50"), BigDecimal("2.50")) // Área parede: 6.25

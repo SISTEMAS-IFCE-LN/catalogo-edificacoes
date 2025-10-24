@@ -2,10 +2,12 @@ package br.edu.ifce.ambientes_internos.unitarios
 
 import br.edu.ifce.ambientes_internos.model.domain.geometrias.Retangular
 import br.edu.ifce.ambientes_internos.model.domain.geometrias.Triangular
+import org.junit.jupiter.api.DisplayName
 import java.math.BigDecimal
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+@DisplayName("Testes para a classe Geometria e suas filhas")
 class GeometriaTest {
 
     @Test
