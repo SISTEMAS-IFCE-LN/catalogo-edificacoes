@@ -21,28 +21,17 @@ enum FixacaoLuminaria
 enum MaterialLuminaria
 enum MaterialPeitoril
 
-' ---------- ENUMS DE EXTINTOR (NOVO) ----------
-enum TipoExtintor {
-    AGUA
-    CO2
-    PO_QUIMICO
-    OUTRO
-}
-enum ClasseIncendio {
-    A
-    B
-    C
-    D
-    K
-}
+' ---------- ENUMS DE EXTINTOR ----------
+enum TipoExtintor
+enum ClasseIncendio
 
 
 ' ---------- GEOMETRIA ----------
 abstract class Geometria {
-  + id: Long?
-  + base: BigDecimal
-  + altura: BigDecimal
-  + repeticao: Int
+  - id: Long?
+  - base: BigDecimal
+  - altura: BigDecimal
+  - repeticao: Int
   --
   + {abstract} calcularAreaM2(): BigDecimal
   + calcularAreaTotalM2(): BigDecimal
@@ -53,138 +42,173 @@ class Triangular extends Geometria
 
 ' ---------- CLASSE AMBIENTE ----------
 abstract class Ambiente {
-  + id: Long?
-  + nome: String
-  + localizacao: String
-  + capacidade: Int
-  + informacaoAdicional: String
+  - id: Long?
+  - nome: String
+  - localizacao: String
+  - capacidade: Int
+  - informacaoAdicional: String
+  - publicado: Boolean
   --
-  + calcularAreaParedesM2(): BigDecimal
+  + calcularAreaParedesExternasM2(): BigDecimal
+  + calcularAreaParedesInternasM2(): BigDecimal
   + calcularAreaPisosM2(): BigDecimal
   + calcularAreaPortasM2(): BigDecimal
   + calcularAreaJanelasM2(): BigDecimal
-  + calcularCargaAmbiente(): BigDecimal
+  + calcularCargaAmbienteWatts(): BigDecimal
+  + calcularAreaPisosPorTipoRevestimentoM2(): Map<String, BigDecimal>
+  + calcularAreaTetosPorTipoRevestimentoM2(): Map<String, BigDecimal>
+  + calcularAreaParedesPorTipoRevestimentoM2(): Map<String, BigDecimal>
 }
+class SalaAula extends Ambiente
+class SalaAdm extends Ambiente
+class Auditorio extends Ambiente
 
 
 ' ---------- HIERARQUIA DE ELEMENTOS CONSTRUTIVOS ----------
 abstract class ElementoConstrutivo {
-  + id: Long?
-  + quantidade: Int
-  + informacaoAdicional: String
+  - id: Long?
+  - quantidade: Int
+  - informacaoAdicional: String
   --
-  + calcularAreaTotal(): BigDecimal
+  + {abstract} calcularAreaTotalM2(): BigDecimal
+  # calcularAreaBrutaGeometriasM2(): BigDecimal
 }
-class Parede extends ElementoConstrutivo {
-  + tipo: TipoParede
-  + revestimento: Revestimento
+abstract class Parede extends ElementoConstrutivo {
+  - tipo: TipoParede
+  - revestimento: Revestimento
+  --
+  + calcularAreaTotalM2(): BigDecimal
 }
+class ParedeExterna extends Parede
+class ParedeInterna extends Parede
 class Piso extends ElementoConstrutivo {
-  + tipo: TipoPiso
+  - tipo: TipoPiso
+  --
+  + calcularAreaTotalM2(): BigDecimal
 }
 class Teto extends ElementoConstrutivo {
-  + tipo: TipoTeto
-  + revestimento: Revestimento
+  - tipo: TipoTeto
+  - revestimento: Revestimento
+  --
+  + calcularAreaTotalM2(): BigDecimal
 }
 
 
 ' ---------- HIERARQUIA DE ESQUADRIAS (PADRÃO COMPOSITE) ----------
 abstract class Esquadria {
-  + id: Long?
-  + informacaoAdicional: String
+  - id: Long?
+  - informacaoAdicional: String
   --
-  + obterQuantidadeFolhas(): Int
   + calcularAreaFolhasM2(): BigDecimal
-  ' ... outros métodos ...
+  + calcularAreaBandeirolasM2(): BigDecimal
+  + calcularComprimentoGuarnicoesM(): BigDecimal
+  + calcularAreaGuarnicoesM2(): BigDecimal
 }
-class Porta extends Esquadria {
- + calcularVaoUtil(): BigDecimal
-}
+class Porta extends Esquadria
 class Janela extends Esquadria {
 }
 
 abstract class ComponenteEsquadria {
-  + id: Long?
-  + material: MaterialEsquadria
-  + informacaoAdicional: String
+  - id: Long?
+  - material: MaterialEsquadria
+  - informacaoAdicional: String
 }
 class Folha extends ComponenteEsquadria {
-  + abertura: Abertura
+  - abertura: Abertura
 }
 class Bandeirola extends ComponenteEsquadria {
-  + abertura: Abertura
+  - abertura: Abertura
 }
 class Guarnicao extends ComponenteEsquadria {
-  + espessura: BigDecimal
+  - espessura: BigDecimal
 }
 
 class Peitoril {
-  + id: Long?
-  + altura: BigDecimal
-  + material: MaterialPeitoril
-  + informacaoAdicional: String
+  - id: Long?
+  - altura: BigDecimal
+  - material: MaterialPeitoril
+  - informacaoAdicional: String
 }
 
 
 ' ---------- HIERARQUIA DE COMPONENTES ----------
 abstract class Componente {
-  + id: Long?
-  + quantidade: Int
-  + informacaoAdicional: String
+  - id: Long?
+  - quantidade: Int
+  - informacaoAdicional: String
 }
 abstract class ComponenteEletrico extends Componente {
   + {abstract} calcularPotenciaWatts(): BigDecimal
 }
 class Equipamento extends ComponenteEletrico {
-  + tipo: TipoEquipamento
-  + potenciaWatts: BigDecimal
+  - tipo: TipoEquipamento
+  - potenciaWatts: BigDecimal
+  --
+  + calcularPotenciaWatts(): BigDecimal
 }
 class Luminaria extends ComponenteEletrico {
-  + material: MaterialLuminaria
-  + fixacao: FixacaoLuminaria
-  + quantidadeLampadas: Int
-  + aletada: Boolean
+  - material: MaterialLuminaria
+  - fixacao: FixacaoLuminaria
+  - quantidadeLampadas: Int
+  - aletada: Boolean
   --
   + calcularPotenciaLuminariaWatts(): BigDecimal
+  + calcularPotenciaWatts(): BigDecimal
 }
 class Lampada {
-    + id: Long?
-    + tipo: TipoLampada
-    + formato: FormatoLampada
-    + potenciaWatts: BigDecimal
+    - id: Long?
+    - tipo: TipoLampada
+    - formato: FormatoLampada
+    - potenciaWatts: BigDecimal
 }
 class InstalacaoEletrica extends Componente {
-    + tipo: TipoInstalacaoEletrica
-    + capacidade: BigDecimal
-    + unidadeCapacidade: String
+    - tipo: TipoInstalacaoEletrica
+    - capacidade: BigDecimal
+    - unidadeCapacidade: String
 }
 class InstalacaoLogica extends Componente {
-    + tipo: TipoInstalacaoLogica
+    - tipo: TipoInstalacaoLogica
 }
 class InstalacaoHidrossanitaria extends Componente {
-    + tipo: TipoInstalacaoHidrossanitaria
-    + pontoHidraulico: Int
-    + pontoSanitario: Int
+    - tipo: TipoInstalacaoHidrossanitaria
+    - pontoHidraulico: Int
+    - pontoSanitario: Int
 }
 class Extintor extends Componente {
-    + capacidade: String
-    + unidadeCapacidade: String
-    + tipo: TipoExtintor
+    - capacidade: String
+    - unidadeCapacidade: String
+    - tipo: TipoExtintor
 }
 
 
 ' ---------- RELACIONAMENTOS ----------
 ' Herança
+ElementoConstrutivo <|-- Parede
+Parede <|-- ParedeExterna
+Parede <|-- ParedeInterna
+ElementoConstrutivo <|-- Piso
+ElementoConstrutivo <|-- Teto
+Esquadria <|-- Porta
+Esquadria <|-- Janela
+ComponenteEsquadria <|-- Folha
+ComponenteEsquadria <|-- Bandeirola
+ComponenteEsquadria <|-- Guarnicao
+Componente <|-- ComponenteEletrico
+ComponenteEletrico <|-- Equipamento
+ComponenteEletrico <|-- Luminaria
+Componente <|-- InstalacaoEletrica
+Componente <|-- InstalacaoLogica
+Componente <|-- InstalacaoHidrossanitaria
 Componente <|-- Extintor
+Ambiente <|-- SalaAula
+Ambiente <|-- SalaAdm
+Ambiente <|-- Auditorio
 
-' Ambiente com seus Elementos
-Ambiente "1" *-- "0..*" Piso : - pisos
-Ambiente "1" *-- "0..*" Parede : - paredes
-Ambiente "1" *-- "0..*" Teto : - tetos
-Ambiente "1" *-- "0..*" Porta : - portas
-Ambiente "1" *-- "0..*" Janela : - janelas
-Ambiente "1" *-- "0..*" Componente : - componentes
-Ambiente "1" *-- "0..*" ComponenteEletrico : - componentesEletricos
+' Ambiente com seus Elementos (Composição implícita pelos construtores)
+Ambiente "1" o-- "0..*" Piso : > - pisos
+Ambiente "1" o-- "0..*" Parede : > - paredes
+Ambiente "1" o-- "0..*" Teto : > - tetos
+Ambiente "1" o-- "0..*" Componente : > - componentes
 
 ' Composição com Geometria
 ElementoConstrutivo "1" *-- "1..*" Geometria : - geometrias
@@ -192,9 +216,12 @@ Esquadria "1" *-- "1" Geometria : - geometria
 ComponenteEsquadria "1" *-- "1" Geometria : - geometria
 Peitoril "1" *-- "1" Geometria : - geometria
 
+' Composição de Parede com Esquadrias
+Parede "1" *-- "0..*" Esquadria : - esquadrias
+
 ' Composição de Esquadria
 Esquadria "1" *-- "0..*" ComponenteEsquadria : - componentes
-Janela "1" *-- "1" Peitoril : - peitoril
+Janela "1" *-- "0..1" Peitoril : - peitoril
 
 ' Composição de Luminaria
 Luminaria "1" *-- "1" Lampada : - lampada
