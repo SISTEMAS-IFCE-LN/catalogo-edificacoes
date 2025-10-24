@@ -7,6 +7,5 @@ enum class MaterialPeitoril(val nome: String) {
     CONCRETO_PRE_MOLDADO("Concreto Pré-Moldado"),
     MADEIRA("Madeira"),
     METALICO("Metálico"),
-    NENHUM("Nenhum"),
     OUTRO("Outro")
 }
