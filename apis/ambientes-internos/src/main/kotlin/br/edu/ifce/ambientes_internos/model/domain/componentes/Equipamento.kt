@@ -2,17 +2,19 @@ package br.edu.ifce.ambientes_internos.model.domain.componentes
 
 import br.edu.ifce.ambientes_internos.model.domain.componentes.enums.TipoEquipamento
 import java.math.BigDecimal
+import java.math.RoundingMode
 
 class Equipamento(
-    id: Long? = null,
     quantidade: Int,
     var tipo: TipoEquipamento,
     var potenciaWatts: BigDecimal,
-    informacaoAdicional: String = ""
+    informacaoAdicional: String = "",
+    id: Long? = null
 ): ComponenteEletrico(id, quantidade, informacaoAdicional) {
 
     override fun calcularPotenciaWatts(): BigDecimal {
-        throw NotImplementedError("Metodo não implementado")
+        return potenciaWatts.multiply(BigDecimal(quantidade))
+            .setScale(2, RoundingMode.HALF_UP)
     }
 
 }
