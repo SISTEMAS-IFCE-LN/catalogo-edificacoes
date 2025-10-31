@@ -16,17 +16,19 @@ class AmbienteTest {
 
     private lateinit var ambiente: Ambiente
     private lateinit var porta: Porta
-    private lateinit var janela: Janela
+    private lateinit var janela1: Janela
+    private lateinit var janela2: Janela
 
     @BeforeEach
     fun setUp() {
         // Geometrias usadas no ambiente
-        val pisoGeometria1 = Retangular(base = BigDecimal("5.55"), altura = BigDecimal("4.25")) // 23.59 m2
-        val pisoGeometria2 = Retangular(base = BigDecimal("6.10"), altura = BigDecimal("5.30")) // 32.33 m2
+        val ambienteGeometria1 = Retangular(base = BigDecimal("5.55"), altura = BigDecimal("4.25")) // 23.59 m2
+        val ambienteGeometria2 = Retangular(base = BigDecimal("6.10"), altura = BigDecimal("5.30")) // 32.33 m2
 
         // Geometrias para esquadrias
         val portaGeometria = Retangular(base = BigDecimal("0.85"), altura = BigDecimal("2.10")) // 1.79 m2
-        val janelaGeometria = Retangular(base = BigDecimal("1.50"), altura = BigDecimal("1.10")) // 1.65 m2
+        val janelaGeometria1 = Retangular(base = BigDecimal("1.50"), altura = BigDecimal("1.10")) // 1.65 m2
+        val janelaGeometria2 = Retangular(base = BigDecimal("1.20"), altura = BigDecimal("1.00")) // 1.20 m2
 
         // Esquadrias
         porta = Porta(
@@ -34,10 +36,16 @@ class AmbienteTest {
             materialEsquadria = MaterialEsquadria.VAO_ABERTO
         )
 
-        janela = Janela(
-            geometria = janelaGeometria,
+        janela1 = Janela(
+            geometria = janelaGeometria1,
             materialEsquadria = MaterialEsquadria.ALUMINIO,
             alturaPeitoril = BigDecimal("0.90")
+        )
+
+        janela2 = Janela(
+            geometria = janelaGeometria2,
+            materialEsquadria = MaterialEsquadria.MADEIRA_MACICA,
+            alturaPeitoril = BigDecimal("0.80")
         )
 
         // Ambiente anônimo para teste usando listas mutáveis
@@ -46,11 +54,11 @@ class AmbienteTest {
             nome = "Ambiente de Teste",
             localizacao = "Bloco de Teste",
             capacidade = 50,
-            geometrias = mutableSetOf(pisoGeometria1, pisoGeometria2),
+            geometrias = mutableSetOf(ambienteGeometria1, ambienteGeometria2),
             pesDireitos = mutableSetOf(BigDecimal("3.00")),
-            esquadrias = mutableSetOf(porta, janela),
+            esquadrias = mutableSetOf(porta, janela1, janela2),
             informacaoAdicional = "",
-            publicado = true
+            publicado = false
         ) {}
     }
 
@@ -81,7 +89,7 @@ class AmbienteTest {
     @Test
     fun `Deve calcular a area total das janelas`() {
         // Dados
-        val areaEsperada = BigDecimal("1.65")
+        val areaEsperada = BigDecimal("1.65").add(BigDecimal("1.20")) // 1.65 + 1.20 = 2.85
 
         // Quando
         val areaCalculada = ambiente.calcularAreaEsquadriasM2(Janela::class)
@@ -96,8 +104,8 @@ class AmbienteTest {
         val mapa = ambiente.calcularAreaEsquadriasPorTipoM2(Janela::class)
 
         // Então
-        assertEquals(1, mapa.size)
-        assertEquals(janela, mapa.keys.first())
-        assertEquals(BigDecimal("1.65"), mapa[janela])
+        assertEquals(2, mapa.size)
+        assertEquals(BigDecimal("1.65"), mapa[janela1])
+        assertEquals(BigDecimal("1.20"), mapa[janela2])
     }
 }
