@@ -1,11 +1,12 @@
 package br.edu.ifce.ambientes_internos.model.domain.esquadrias
 
+import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.MaterialEsquadria
 import br.edu.ifce.ambientes_internos.model.domain.geometrias.Geometria
 
 class Porta(
     geometria: Geometria,
-    componentes: MutableList<ComponenteEsquadria> = mutableListOf(),
+    materialEsquadria: MaterialEsquadria,
     informacaoAdicional: String = "",
     id: Long? = null
-): Esquadria(id, geometria, componentes, informacaoAdicional) {
+): Esquadria(id, geometria, materialEsquadria, informacaoAdicional) {
 }
