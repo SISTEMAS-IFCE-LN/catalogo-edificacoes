@@ -6,7 +6,7 @@ import java.math.BigDecimal
 
 class Peitoril(
     var geometria: Geometria,
-    var altura: BigDecimal,
+    var alturaPiso: BigDecimal,
     var material: MaterialPeitoril,
     var informacaoAdicional: String = "",
     var id: Long? = null

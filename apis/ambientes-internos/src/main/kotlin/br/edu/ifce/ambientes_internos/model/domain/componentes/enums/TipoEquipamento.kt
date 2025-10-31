@@ -4,7 +4,7 @@ enum class TipoEquipamento(val nome: String) {
     AR_CONDICIONADO("Ar Condicionado"),
     COMPUTADOR("Computador"),
     IMPRESSORA("Impressora"),
-    PROJETOR("Iluminação"),
+    PROJETOR("Projetor"),
     SWITCH("Switch"),
     SERVIDOR_TI("Servidor de TI"),
     ACCESS_POINT("Access Point"),

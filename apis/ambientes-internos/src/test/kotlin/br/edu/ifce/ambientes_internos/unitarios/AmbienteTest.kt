@@ -11,7 +11,9 @@ import br.edu.ifce.ambientes_internos.model.domain.elementos_construtivos.enums.
 import br.edu.ifce.ambientes_internos.model.domain.elementos_construtivos.enums.TipoPiso
 import br.edu.ifce.ambientes_internos.model.domain.elementos_construtivos.enums.TipoTeto
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.Janela
+import br.edu.ifce.ambientes_internos.model.domain.esquadrias.Peitoril
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.Porta
+import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.MaterialPeitoril
 import br.edu.ifce.ambientes_internos.model.domain.geometrias.Retangular
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -44,9 +46,15 @@ class AmbienteTest {
             Piso(tipo = TipoPiso.PORCELANATO, geometrias = mutableListOf(pisoGeometria2))
         )
 
+        val peitoril = Peitoril(
+            geometria = Retangular(base = BigDecimal("1.20"), altura = BigDecimal("0.20")),
+            alturaPiso = BigDecimal("0.90"),
+            material = MaterialPeitoril.GRANITO
+        )
+
         // Esquadrias
         val porta = Porta(geometria = portaGeometria)
-        val janela = Janela(geometria = janelaGeometria)
+        val janela = Janela(geometria = janelaGeometria, peitoril = peitoril)
 
         // Paredes
         val paredes = mutableListOf(
