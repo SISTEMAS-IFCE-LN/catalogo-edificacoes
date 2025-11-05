@@ -1,14 +1,12 @@
 package br.edu.ifce.ambientes_internos.model.domain.esquadrias
 
-import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.MaterialEsquadria
+import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.TipoEsquadria
 import br.edu.ifce.ambientes_internos.model.domain.geometrias.Geometria
-import java.math.BigDecimal
-import java.math.RoundingMode
 
 abstract class Esquadria(
     var id: Long?,
     var geometria: Geometria,
-    var materialEsquadria: MaterialEsquadria,
+    var tipo: TipoEsquadria,
     var informacaoAdicional: String
 ) {
 
@@ -19,7 +17,7 @@ abstract class Esquadria(
         other as Esquadria
 
         if (geometria != other.geometria) return false
-        if (materialEsquadria != other.materialEsquadria) return false
+        if (tipo != other.tipo) return false
         if (informacaoAdicional != other.informacaoAdicional) return false
 
         return true
@@ -27,7 +25,7 @@ abstract class Esquadria(
 
     override fun hashCode(): Int {
         var result = geometria.hashCode()
-        result = 31 * result + materialEsquadria.hashCode()
+        result = 31 * result + tipo.hashCode()
         result = 31 * result + informacaoAdicional.hashCode()
         return result
     }

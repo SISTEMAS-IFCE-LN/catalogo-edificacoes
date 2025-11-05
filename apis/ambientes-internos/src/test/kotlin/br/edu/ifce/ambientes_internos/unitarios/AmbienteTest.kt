@@ -1,9 +1,10 @@
 package br.edu.ifce.ambientes_internos.unitarios
 
 import br.edu.ifce.ambientes_internos.model.domain.ambientes.Ambiente
+import br.edu.ifce.ambientes_internos.model.domain.ambientes.enums.StatusAmbiente
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.Janela
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.Porta
-import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.MaterialEsquadria
+import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.TipoEsquadria
 import br.edu.ifce.ambientes_internos.model.domain.geometrias.Retangular
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -33,18 +34,18 @@ class AmbienteTest {
         // Esquadrias
         porta = Porta(
             geometria = portaGeometria,
-            materialEsquadria = MaterialEsquadria.VAO_ABERTO
+            tipo = TipoEsquadria.VAO_ABERTO
         )
 
         janela1 = Janela(
             geometria = janelaGeometria1,
-            materialEsquadria = MaterialEsquadria.ALUMINIO,
+            tipo = TipoEsquadria.ALUMINIO,
             alturaPeitoril = BigDecimal("0.90")
         )
 
         janela2 = Janela(
             geometria = janelaGeometria2,
-            materialEsquadria = MaterialEsquadria.MADEIRA_MACICA,
+            tipo = TipoEsquadria.MADEIRA_MACICA,
             alturaPeitoril = BigDecimal("0.80")
         )
 
@@ -58,7 +59,7 @@ class AmbienteTest {
             pesDireitos = mutableSetOf(BigDecimal("3.00")),
             esquadrias = mutableSetOf(porta, janela1, janela2),
             informacaoAdicional = "",
-            publicado = false
+            status = StatusAmbiente.PUBLICADO
         ) {}
     }
 
@@ -108,4 +109,20 @@ class AmbienteTest {
         assertEquals(BigDecimal("1.65"), mapa[janela1])
         assertEquals(BigDecimal("1.20"), mapa[janela2])
     }
+
+    @Test
+    fun `Deve retornar mapa de area por geometria`() {
+        // Dados
+        val geometria1 = Retangular(base = BigDecimal("5.55"), altura = BigDecimal("4.25")) // 23.59 m2
+        val geometria2 = Retangular(base = BigDecimal("6.10"), altura = BigDecimal("5.30")) // 32.33 m2
+
+        // Quando
+        val mapa = ambiente.calcularAreaAmbientePorGeometriaM2()
+
+        // Então
+        assertEquals(2, mapa.size)
+        assertEquals(BigDecimal("23.59"), mapa[geometria1])
+        assertEquals(BigDecimal("32.33"), mapa[geometria2])
+    }
+
 }

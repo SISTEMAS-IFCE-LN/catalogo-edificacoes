@@ -1,5 +1,6 @@
 package br.edu.ifce.ambientes_internos.model.domain.ambientes
 
+import br.edu.ifce.ambientes_internos.model.domain.ambientes.enums.StatusAmbiente
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.Esquadria
 import br.edu.ifce.ambientes_internos.model.domain.geometrias.Geometria
 import java.math.BigDecimal
@@ -14,8 +15,12 @@ abstract class Ambiente(
     val pesDireitos: MutableSet<BigDecimal>,
     val esquadrias: MutableSet<Esquadria>,
     var informacaoAdicional: String,
-    var publicado: Boolean,
+    var status: StatusAmbiente
 ) {
+
+    fun calcularAreaAmbientePorGeometriaM2(): Map<Geometria, BigDecimal> {
+        return geometrias.associateWith { it.calcularAreaTotalM2() }
+    }
 
     fun calcularAreaAmbienteM2(): BigDecimal {
         return geometrias

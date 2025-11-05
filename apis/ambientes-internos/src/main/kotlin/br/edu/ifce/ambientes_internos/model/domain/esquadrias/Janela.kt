@@ -1,16 +1,16 @@
 package br.edu.ifce.ambientes_internos.model.domain.esquadrias
 
-import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.MaterialEsquadria
+import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.TipoEsquadria
 import br.edu.ifce.ambientes_internos.model.domain.geometrias.Geometria
 import java.math.BigDecimal
 
 class Janela(
     geometria: Geometria,
-    materialEsquadria: MaterialEsquadria,
+    tipo: TipoEsquadria,
     var alturaPeitoril: BigDecimal,
     informacaoAdicional: String = "",
     id: Long? = null
-): Esquadria(id, geometria, materialEsquadria, informacaoAdicional) {
+): Esquadria(id, geometria, tipo, informacaoAdicional) {
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
