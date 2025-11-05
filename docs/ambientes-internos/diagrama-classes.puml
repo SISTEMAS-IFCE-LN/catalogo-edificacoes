@@ -20,10 +20,10 @@ enum FormatoLampada
 enum FixacaoLuminaria
 enum MaterialLuminaria
 enum MaterialPeitoril
-
-' ---------- ENUMS DE EXTINTOR ----------
 enum TipoExtintor
 enum ClasseIncendio
+enum StatusAmbiente
+enum TipoAmbiente
 
 
 ' ---------- GEOMETRIA ----------
@@ -45,9 +45,11 @@ abstract class Ambiente {
   - id: Long?
   - nome: String
   - localizacao: String
+  - tipo: TipoAmbiente
   - capacidade: Int
   - informacaoAdicional: String
-  - publicado: Boolean
+  - pesDireitos: MutableSet<BigDecimal>
+  - status: StatusAmbiente
   --
   + calcularAreaParedesExternasM2(): BigDecimal
   + calcularAreaParedesInternasM2(): BigDecimal
@@ -58,10 +60,9 @@ abstract class Ambiente {
   + calcularAreaPisosPorTipoRevestimentoM2(): Map<String, BigDecimal>
   + calcularAreaTetosPorTipoRevestimentoM2(): Map<String, BigDecimal>
   + calcularAreaParedesPorTipoRevestimentoM2(): Map<String, BigDecimal>
+  + calcularAreaAmbientePorGeometriaM2(): Map<Geometria, BigDecimal>
+  + calcularAreaAmbienteM2(): BigDecimal
 }
-class SalaAula extends Ambiente
-class SalaAdm extends Ambiente
-class Auditorio extends Ambiente
 
 
 ' ---------- HIERARQUIA DE ELEMENTOS CONSTRUTIVOS ----------
@@ -200,11 +201,8 @@ Componente <|-- InstalacaoEletrica
 Componente <|-- InstalacaoLogica
 Componente <|-- InstalacaoHidrossanitaria
 Componente <|-- Extintor
-Ambiente <|-- SalaAula
-Ambiente <|-- SalaAdm
-Ambiente <|-- Auditorio
 
-' Ambiente com seus Elementos (Composição implícita pelos construtores)
+' Ambiente com seus Elementos Construtivos e Componentes
 Ambiente "1" o-- "0..*" Piso : > - pisos
 Ambiente "1" o-- "0..*" Parede : > - paredes
 Ambiente "1" o-- "0..*" Teto : > - tetos
@@ -215,6 +213,7 @@ ElementoConstrutivo "1" *-- "1..*" Geometria : - geometrias
 Esquadria "1" *-- "1" Geometria : - geometria
 ComponenteEsquadria "1" *-- "1" Geometria : - geometria
 Peitoril "1" *-- "1" Geometria : - geometria
+Ambiente "1" *-- "1..*" Geometria : - geometrias
 
 ' Composição de Parede com Esquadrias
 Parede "1" *-- "0..*" Esquadria : - esquadrias
@@ -246,4 +245,6 @@ InstalacaoLogica -- TipoInstalacaoLogica
 InstalacaoHidrossanitaria -- TipoInstalacaoHidrossanitaria
 Extintor -- TipoExtintor
 Extintor "1" *-- "1..*" ClasseIncendio : - classesIncendio
+Ambiente -- StatusAmbiente
+Ambiente -- TipoAmbiente
 @enduml
