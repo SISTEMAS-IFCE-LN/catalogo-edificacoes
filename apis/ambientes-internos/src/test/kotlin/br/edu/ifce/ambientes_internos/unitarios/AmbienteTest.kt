@@ -2,6 +2,7 @@ package br.edu.ifce.ambientes_internos.unitarios
 
 import br.edu.ifce.ambientes_internos.model.domain.ambientes.Ambiente
 import br.edu.ifce.ambientes_internos.model.domain.ambientes.enums.StatusAmbiente
+import br.edu.ifce.ambientes_internos.model.domain.ambientes.enums.TipoAmbiente
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.Janela
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.Porta
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.TipoEsquadria
@@ -54,6 +55,7 @@ class AmbienteTest {
             id = null,
             nome = "Ambiente de Teste",
             localizacao = "Bloco de Teste",
+            tipo = TipoAmbiente.SALA_AULA,
             capacidade = 50,
             geometrias = mutableSetOf(ambienteGeometria1, ambienteGeometria2),
             pesDireitos = mutableSetOf(BigDecimal("3.00")),
