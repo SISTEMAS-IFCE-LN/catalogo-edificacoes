@@ -5,7 +5,7 @@ import br.edu.ifce.ambientes_internos.model.domain.ambientes.enums.StatusAmbient
 import br.edu.ifce.ambientes_internos.model.domain.ambientes.enums.TipoAmbiente
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.Janela
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.Porta
-import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.TipoEsquadria
+import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.MaterialEsquadria
 import br.edu.ifce.ambientes_internos.model.domain.geometrias.Retangular
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -35,18 +35,18 @@ class AmbienteTest {
         // Esquadrias
         porta = Porta(
             geometria = portaGeometria,
-            tipo = TipoEsquadria.VAO_ABERTO
+            material = MaterialEsquadria.NAO_SE_APLICA
         )
 
         janela1 = Janela(
             geometria = janelaGeometria1,
-            tipo = TipoEsquadria.ALUMINIO,
+            material = MaterialEsquadria.ALUMINIO,
             alturaPeitoril = BigDecimal("0.90")
         )
 
         janela2 = Janela(
             geometria = janelaGeometria2,
-            tipo = TipoEsquadria.MADEIRA_MACICA,
+            material = MaterialEsquadria.MADEIRA_MACICA,
             alturaPeitoril = BigDecimal("0.80")
         )
 
