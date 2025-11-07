@@ -4,14 +4,13 @@ import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.MaterialEsqu
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.TipoEsquadria
 import br.edu.ifce.ambientes_internos.model.domain.geometrias.Geometria
 
-class Porta(
+class Cobogo(
     geometria: Geometria,
-    material: MaterialEsquadria,
     informacaoAdicional: String = ""
 ): Esquadria(
     id = null,
-    TipoEsquadria.PORTA,
+    TipoEsquadria.COBOGO,
     geometria,
-    material,
+    MaterialEsquadria.PRE_MOLDADO,
     informacaoAdicional) {
 }
