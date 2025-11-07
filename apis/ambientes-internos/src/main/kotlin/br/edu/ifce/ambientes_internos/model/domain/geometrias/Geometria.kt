@@ -1,10 +1,12 @@
 package br.edu.ifce.ambientes_internos.model.domain.geometrias
 
+import br.edu.ifce.ambientes_internos.model.domain.geometrias.enums.TipoGeometria
 import java.math.BigDecimal
 import java.math.RoundingMode
 
 abstract class Geometria(
     var id: Long?,
+    var tipo: TipoGeometria,
     var base: BigDecimal,
     var altura: BigDecimal,
     var repeticao: Int
