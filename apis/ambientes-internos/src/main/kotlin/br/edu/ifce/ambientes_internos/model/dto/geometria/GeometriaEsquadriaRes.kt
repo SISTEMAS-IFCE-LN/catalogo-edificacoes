@@ -3,9 +3,9 @@ package br.edu.ifce.ambientes_internos.model.dto.geometria
 import br.edu.ifce.ambientes_internos.model.domain.geometrias.enums.TipoGeometria
 import java.math.BigDecimal
 
-data class GeometriaReq(
-    val tipo: TipoGeometria,
+data class GeometriaEsquadriaRes(
     val base: BigDecimal,
     val altura: BigDecimal,
-    val repeticao: Int = 1
+    val repeticao: Int,
+    val area: BigDecimal
 )

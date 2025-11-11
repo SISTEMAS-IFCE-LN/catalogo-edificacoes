@@ -3,7 +3,7 @@ package br.edu.ifce.ambientes_internos.model.dto.geometria
 import br.edu.ifce.ambientes_internos.model.domain.geometrias.enums.TipoGeometria
 import java.math.BigDecimal
 
-data class GeometriaRes(
+data class GeometriaAmbienteRes(
     val id: Long,
     val tipo: TipoGeometria,
     val base: BigDecimal,

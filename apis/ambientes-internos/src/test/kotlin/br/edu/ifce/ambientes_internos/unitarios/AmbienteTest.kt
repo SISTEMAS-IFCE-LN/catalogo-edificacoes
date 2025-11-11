@@ -6,49 +6,24 @@ import br.edu.ifce.ambientes_internos.model.domain.ambientes.enums.TipoAmbiente
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.Janela
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.Porta
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.MaterialEsquadria
+import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.TipoEsquadria
 import br.edu.ifce.ambientes_internos.model.domain.geometrias.Retangular
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
+import java.math.BigDecimal
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import java.math.BigDecimal
 
 @DisplayName("Testes para a classe Ambiente")
 class AmbienteTest {
 
     private lateinit var ambiente: Ambiente
-    private lateinit var porta: Porta
-    private lateinit var janela1: Janela
-    private lateinit var janela2: Janela
 
     @BeforeEach
     fun setUp() {
         // Geometrias usadas no ambiente
         val ambienteGeometria1 = Retangular(base = BigDecimal("5.55"), altura = BigDecimal("4.25")) // 23.59 m2
         val ambienteGeometria2 = Retangular(base = BigDecimal("6.10"), altura = BigDecimal("5.30")) // 32.33 m2
-
-        // Geometrias para esquadrias
-        val portaGeometria = Retangular(base = BigDecimal("0.85"), altura = BigDecimal("2.10")) // 1.79 m2
-        val janelaGeometria1 = Retangular(base = BigDecimal("1.50"), altura = BigDecimal("1.10")) // 1.65 m2
-        val janelaGeometria2 = Retangular(base = BigDecimal("1.20"), altura = BigDecimal("1.00")) // 1.20 m2
-
-        // Esquadrias
-        porta = Porta(
-            geometria = portaGeometria,
-            material = MaterialEsquadria.NAO_SE_APLICA
-        )
-
-        janela1 = Janela(
-            geometria = janelaGeometria1,
-            material = MaterialEsquadria.ALUMINIO,
-            alturaPeitoril = BigDecimal("0.90")
-        )
-
-        janela2 = Janela(
-            geometria = janelaGeometria2,
-            material = MaterialEsquadria.MADEIRA_MACICA,
-            alturaPeitoril = BigDecimal("0.80")
-        )
 
         // Ambiente anônimo para teste usando listas mutáveis
         ambiente = object : Ambiente(
@@ -58,8 +33,8 @@ class AmbienteTest {
             tipo = TipoAmbiente.SALA_AULA,
             capacidade = 50,
             geometrias = mutableSetOf(ambienteGeometria1, ambienteGeometria2),
-            pesDireitos = mutableSetOf(BigDecimal("3.00")),
-            esquadrias = mutableSetOf(porta, janela1, janela2),
+            pesDireitos = mutableSetOf(),
+            esquadrias = mutableSetOf(),
             informacaoAdicional = "",
             status = StatusAmbiente.PUBLICADO
         ) {}
@@ -78,53 +53,39 @@ class AmbienteTest {
     }
 
     @Test
-    fun `Deve calcular a area total das portas`() {
+    fun `Deve calcular area das esquadrias agrupadas por tipo e material`() {
         // Dados
-        val areaEsperada = BigDecimal("1.79")
+        val janela1 = Janela(
+            geometria = Retangular(base = BigDecimal("1.00"), altura = BigDecimal("1.50")), // 1.50
+            material = MaterialEsquadria.ALUMINIO,
+            alturaPeitoril = BigDecimal("0.90")
+        )
+
+        val janela2 = Janela(
+            geometria = Retangular(base = BigDecimal("0.80"), altura = BigDecimal("1.40")), // 1.12
+            material = MaterialEsquadria.ALUMINIO,
+            alturaPeitoril = BigDecimal("0.90")
+        )
+
+        val porta1 = Porta(
+            geometria = Retangular(base = BigDecimal("0.90"), altura = BigDecimal("2.00")), // 1.80
+            material = MaterialEsquadria.MADEIRA_MACICA
+        )
+
+        ambiente.esquadrias.add(janela1)
+        ambiente.esquadrias.add(janela2)
+        ambiente.esquadrias.add(porta1)
+
+        val esperado = mapOf(
+            Pair(TipoEsquadria.JANELA, MaterialEsquadria.ALUMINIO) to BigDecimal("2.62"), // 1.50 + 1.12
+            Pair(TipoEsquadria.PORTA, MaterialEsquadria.MADEIRA_MACICA) to BigDecimal("1.80")
+        )
 
         // Quando
-        val areaCalculada = ambiente.calcularAreaEsquadriasM2(Porta::class)
+        val resultado = ambiente.calcularAreaEsquadriasPorTipoMaterial()
 
-        // Então
-        assertEquals(areaEsperada, areaCalculada)
-    }
-
-    @Test
-    fun `Deve calcular a area total das janelas`() {
-        // Dados
-        val areaEsperada = BigDecimal("1.65").add(BigDecimal("1.20")) // 1.65 + 1.20 = 2.85
-
-        // Quando
-        val areaCalculada = ambiente.calcularAreaEsquadriasM2(Janela::class)
-
-        // Então
-        assertEquals(areaEsperada, areaCalculada)
-    }
-
-    @Test
-    fun `Deve retornar mapa de area por esquadria para um tipo`() {
-        // Quando
-        val mapa = ambiente.calcularAreaEsquadriasPorTipoM2(Janela::class)
-
-        // Então
-        assertEquals(2, mapa.size)
-        assertEquals(BigDecimal("1.65"), mapa[janela1])
-        assertEquals(BigDecimal("1.20"), mapa[janela2])
-    }
-
-    @Test
-    fun `Deve retornar mapa de area por geometria`() {
-        // Dados
-        val geometria1 = Retangular(base = BigDecimal("5.55"), altura = BigDecimal("4.25")) // 23.59 m2
-        val geometria2 = Retangular(base = BigDecimal("6.10"), altura = BigDecimal("5.30")) // 32.33 m2
-
-        // Quando
-        val mapa = ambiente.calcularAreaAmbientePorGeometriaM2()
-
-        // Então
-        assertEquals(2, mapa.size)
-        assertEquals(BigDecimal("23.59"), mapa[geometria1])
-        assertEquals(BigDecimal("32.33"), mapa[geometria2])
+        // Entao
+        assertEquals(esperado, resultado)
     }
 
 }
