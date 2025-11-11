@@ -275,7 +275,7 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
 * **Pré-condições:** O Gestor está autenticado e possui permissão para atualizar ambientes não publicados. O ambiente a ser atualizado existe e tem `status = NAO_PUBLICADO`.
 * **Fluxo Principal:**
     1.  O Gestor obtém o ID do ambiente (UC05 ou UC06).
-    2.  O Gestor preenche o corpo da requisição com o ID do ambiente e uma lista contendo os dados de cada esquadria: se é porta ou janela, a largura (base), a altura, o tipo, se for janela informar a altura do peitoril e alguma informação adicional, se houver. A requisição deve ter pelo menos uma esquadria.
+    2.  O Gestor preenche o corpo da requisição com o ID do ambiente e uma lista contendo os dados de cada esquadria: o tipo da esquadria (porta, janela, etc.), a largura (base), a altura, o material, a altura do peitoril, se houver, e alguma informação adicional, se houver. A requisição deve ter pelo menos uma esquadria.
     3.  O Gestor realiza uma requisição `PATCH` ao endpoint `/api/ambientes/nao-publicados/{id}/esquadrias/incluir`.
     4.  O Sistema valida os dados da requisição conforme as regras de negócio (RN-1.6).
     5.  Se a validação for bem-sucedida, o Sistema insere as novas esquadrias no ambiente, atualiza-o no banco de dados e retorna os dados atualizados.
@@ -293,7 +293,7 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
 * **Pré-condições:** O Gestor está autenticado e possui permissão para atualizar ambientes não publicados. O ambiente a ser atualizado existe e tem `status = NAO_PUBLICADO`.
 * **Fluxo Principal:**
     1.  O Gestor obtém os dados atuais do ambiente (UC06).
-    2.  O Gestor preenche o corpo da requisição com o ID do ambiente e altera a lista de esquadrias obtidas modificando quaisquer um dos seguintes atributos: a largura (base), a altura, o tipo, a altura do peitoril, se houver, e informação adicional, se houver, ou remove esquadrias da lista. A requisição deve ter pelo menos uma esquadria.
+    2.  O Gestor preenche o corpo da requisição com o ID do ambiente e altera a lista de esquadrias obtidas modificando quaisquer um dos seguintes atributos: o tipo da esquadria (porta, janela, etc.), a largura (base), a altura, o material, a altura do peitoril, se houver, e alguma informação adicional, se houver, ou remove esquadrias da lista. A requisição deve ter pelo menos uma esquadria.
     3.  O Gestor realiza uma requisição `PATCH` ao endpoint `/api/ambientes/nao-publicados/{id}/esquadrias/atualizar`.
     4.  O Sistema valida os dados da requisição conforme as regras de negócio (RN-1.6).
     5.  Se a validação for bem-sucedida, o Sistema atualiza as esquadrias do ambiente no banco de dados e retorna os dados atualizados.
@@ -419,14 +419,41 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
             * Lista de Janelas por tipo e suas áreas;
             * Área total das Janelas.
 * **Fluxos Alternativos:**
-    * **FA01 - Ambiente não encontrado:** Se o ID não corresponder a nenhum ambiente aguardando validação, o Sistema exibe uma mensagem de erro.
+    * **FA01 - Ambiente não encontrado:** Se o ID não corresponder a nenhum ambiente publicado, o Sistema exibe uma mensagem de erro.
+    * **FA02 - Erro ao obter detalhes:** Se ocorrer um erro ao buscar os detalhes do ambiente, o Sistema informa o Servidor sobre a falha.
+* **Pós-condições:** Nenhuma alteração no estado do sistema.
+
+#### **UC21: Obter Detalhes de Esquadrias de uma lista de Ambientes Publicados**
+
+* **Descrição:** Permite ao Servidor visualizar todas as informações detalhadas de esquadrias de um conjunto de ambientes publicados.
+* **Ator Primário:** Servidor.
+* **Pré-condições:** O Servidor está autenticado e possui permissão para visualizar ambientes publicados. Os ambientes a serem consultados existem e têm atributo `status = PUBLICADO`.
+* **Fluxo Principal:**
+    * **FP1 - Por ID:**
+        1. O servidor preenche o corpo da requisição com a lista de IDs dos ambientes publicados a serem consultados.
+        2. O Servidor realiza uma requisição `POST` ao endpoint `/api/ambientes/publicados/esquadrias`.
+        3. O Sistema recupera e exibe os detalhes das esquadrias dos ambientes solicitados.
+        4. Os detalhes incluem as seguintes informações das esquadrias de cada ambiente:
+            * Nomes e Localizações dos ambientes consultados;
+            * Lista de Esquadrias com os seguintes dados:
+                * Tipo (Porta, Janela, etc.);
+                * Largura (base);
+                * Altura;
+                * Material da esquadria;
+                * Altura do peitoril (se houver);
+                * Informação adicional (se houver);
+                * Área da esquadria;
+                * Área total por tipo e material.
+* **Fluxos Alternativos:**
+    * **FA01 - Ambiente não encontrado:** Se algum dos IDs não corresponderem a um ambiente publicado, o Sistema exibe uma mensagem de erro.
+    * **FA02 - Erro ao obter detalhes:** Se ocorrer um erro ao buscar os detalhes das esquadrias, o Sistema informa o Servidor sobre a falha.
 * **Pós-condições:** Nenhuma alteração no estado do sistema.
 
 ---
 
 ### Ator: Público Externo
 
-#### **UC21: Listar Ambientes Publicados**
+#### **UC22: Listar Ambientes Publicados**
 
 * **Descrição:** Permite ao Público Externo visualizar a lista de todos os ambientes publicados, filtrando por Nome ou Localização.
 * **Ator Primário:** Público Externo.
