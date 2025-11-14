@@ -444,9 +444,15 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
                 * Informação adicional (se houver);
                 * Área da esquadria;
                 * Área total por tipo e material.
+    * **FP2 - Por ID, Tipo e Material:**
+        1. O servidor preenche o corpo da requisição com a lista de IDs dos ambientes publicados a serem consultados, os parametros da requisição para tipo e o material das esquadrias a serem filtradas.
+        2. O Servidor realiza uma requisição `POST` ao endpoint `/api/ambientes/publicados/esquadrias?tipo={tipo}&material={material}`.
+        3. O Sistema recupera e exibe os detalhes das esquadrias dos ambientes solicitados, filtrando pelo tipo e material especificados.
+        4. Repete os passos 4 do FP1.
 * **Fluxos Alternativos:**
     * **FA01 - Ambiente não encontrado:** Se algum dos IDs não corresponderem a um ambiente publicado, o Sistema exibe uma mensagem de erro.
     * **FA02 - Erro ao obter detalhes:** Se ocorrer um erro ao buscar os detalhes das esquadrias, o Sistema informa o Servidor sobre a falha.
+    * **FA03 - Nenhuma esquadria encontrada:** Se não houver esquadrias que correspondam aos filtros aplicados, o Sistema exibe uma mensagem indicando que a lista está vazia.
 * **Pós-condições:** Nenhuma alteração no estado do sistema.
 
 ---
