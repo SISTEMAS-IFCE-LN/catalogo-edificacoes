@@ -88,4 +88,35 @@ class AmbienteTest {
         assertEquals(esperado, resultado)
     }
 
+    @Test
+    fun `Deve calcular area das esquadrias para tipo e material especificados`() {
+        // Dados
+        val janela1 = Janela(
+            geometria = Retangular(base = BigDecimal("1.00"), altura = BigDecimal("1.50")), // 1.50
+            material = MaterialEsquadria.ALUMINIO,
+            alturaPeitoril = BigDecimal("0.90")
+        )
+
+        val janela2 = Janela(
+            geometria = Retangular(base = BigDecimal("0.80"), altura = BigDecimal("1.40")), // 1.12
+            material = MaterialEsquadria.ALUMINIO,
+            alturaPeitoril = BigDecimal("0.90")
+        )
+
+        val porta1 = Porta(
+            geometria = Retangular(base = BigDecimal("0.90"), altura = BigDecimal("2.00")), // 1.80
+            material = MaterialEsquadria.MADEIRA_MACICA
+        )
+
+        ambiente.esquadrias.add(janela1)
+        ambiente.esquadrias.add(janela2)
+        ambiente.esquadrias.add(porta1)
+
+        // Quando
+        val resultado = ambiente.calcularAreaEsquadriasPorTipoMaterial(TipoEsquadria.JANELA, MaterialEsquadria.ALUMINIO)
+
+        // Então
+        assertEquals(BigDecimal("2.62"), resultado) // 1.50 + 1.12
+    }
+
 }

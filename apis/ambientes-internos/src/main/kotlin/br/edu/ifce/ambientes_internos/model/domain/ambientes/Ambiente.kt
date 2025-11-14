@@ -38,4 +38,11 @@ abstract class Ambiente(
             }
     }
 
+    fun calcularAreaEsquadriasPorTipoMaterial(tipo: TipoEsquadria, material: MaterialEsquadria): BigDecimal {
+        return esquadrias
+            .filter { it.tipo == tipo && it.material == material }
+            .map { it.geometria.calcularAreaTotalM2() }
+            .fold(BigDecimal.ZERO) { acc, area -> acc + area }
+    }
+
 }
