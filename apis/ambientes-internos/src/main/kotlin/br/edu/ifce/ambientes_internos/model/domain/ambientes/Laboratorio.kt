@@ -5,7 +5,11 @@ import br.edu.ifce.ambientes_internos.model.domain.ambientes.enums.TipoAmbiente
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.Esquadria
 import br.edu.ifce.ambientes_internos.model.domain.geometrias.Geometria
 import java.math.BigDecimal
+import jakarta.persistence.Entity
+import jakarta.persistence.DiscriminatorValue
 
+@Entity
+@DiscriminatorValue("LABORATORIO")
 class Laboratorio(
     nome: String,
     localizacao: String,
@@ -26,4 +30,3 @@ class Laboratorio(
     informacaoAdicional,
     StatusAmbiente.NAO_PUBLICADO
 ) {}
-

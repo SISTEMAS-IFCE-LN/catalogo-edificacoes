@@ -4,8 +4,12 @@ import br.edu.ifce.ambientes_internos.model.domain.ambientes.enums.StatusAmbient
 import br.edu.ifce.ambientes_internos.model.domain.ambientes.enums.TipoAmbiente
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.Esquadria
 import br.edu.ifce.ambientes_internos.model.domain.geometrias.Geometria
+import jakarta.persistence.DiscriminatorValue
+import jakarta.persistence.Entity
 import java.math.BigDecimal
 
+@Entity
+@DiscriminatorValue("ACADEMIA")
 class Academia(
     nome: String,
     localizacao: String,
