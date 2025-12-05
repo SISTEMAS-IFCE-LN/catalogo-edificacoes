@@ -34,10 +34,6 @@ abstract class Ambiente(
     @Column(nullable = false, length = 100)
     var localizacao: String,
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, insertable = false, updatable = false)
-    var tipo: TipoAmbiente,
-
     @Column(nullable = false)
     var capacidade: Int,
 
@@ -57,6 +53,10 @@ abstract class Ambiente(
     @Column(nullable = false)
     var status: StatusAmbiente
 ) {
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, insertable = false, updatable = false)
+    var tipo: TipoAmbiente? = null
 
     fun calcularAreaAmbienteM2(): BigDecimal {
         return geometrias

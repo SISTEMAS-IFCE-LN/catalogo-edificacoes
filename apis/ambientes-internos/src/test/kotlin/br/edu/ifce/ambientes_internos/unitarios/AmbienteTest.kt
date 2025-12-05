@@ -30,7 +30,6 @@ class AmbienteTest {
             id = null,
             nome = "Ambiente de Teste",
             localizacao = "Bloco de Teste",
-            tipo = TipoAmbiente.SALA_AULA,
             capacidade = 50,
             geometrias = mutableSetOf(ambienteGeometria1, ambienteGeometria2),
             pesDireitos = mutableSetOf(),

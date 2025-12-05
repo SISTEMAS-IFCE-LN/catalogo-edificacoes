@@ -1,7 +1,6 @@
 package br.edu.ifce.ambientes_internos.model.domain.ambientes
 
 import br.edu.ifce.ambientes_internos.model.domain.ambientes.enums.StatusAmbiente
-import br.edu.ifce.ambientes_internos.model.domain.ambientes.enums.TipoAmbiente
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.Esquadria
 import br.edu.ifce.ambientes_internos.model.domain.geometrias.Geometria
 import java.math.BigDecimal
@@ -22,7 +21,6 @@ class SalaAula(
     id = null,
     nome,
     localizacao,
-    TipoAmbiente.SALA_AULA,
     capacidade,
     geometrias,
     pesDireitos,
