@@ -1,8 +1,10 @@
 package br.edu.ifce.ambientes_internos.unitarios
 
 import br.edu.ifce.ambientes_internos.model.domain.ambientes.Ambiente
+import br.edu.ifce.ambientes_internos.model.domain.ambientes.Localizacao
+import br.edu.ifce.ambientes_internos.model.domain.ambientes.enums.Bloco
 import br.edu.ifce.ambientes_internos.model.domain.ambientes.enums.StatusAmbiente
-import br.edu.ifce.ambientes_internos.model.domain.ambientes.enums.TipoAmbiente
+import br.edu.ifce.ambientes_internos.model.domain.ambientes.enums.Unidade
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.Janela
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.Porta
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.MaterialEsquadria
@@ -29,7 +31,7 @@ class AmbienteTest {
         ambiente = object : Ambiente(
             id = null,
             nome = "Ambiente de Teste",
-            localizacao = "Bloco de Teste",
+            localizacao = Localizacao(Bloco.BLOCO_PRINCIPAL, Unidade.CIDADE_ALTA),
             capacidade = 50,
             geometrias = mutableSetOf(ambienteGeometria1, ambienteGeometria2),
             pesDireitos = mutableSetOf(),

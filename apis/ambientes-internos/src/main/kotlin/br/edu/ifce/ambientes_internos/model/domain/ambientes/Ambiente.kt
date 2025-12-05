@@ -6,6 +6,7 @@ import br.edu.ifce.ambientes_internos.model.domain.esquadrias.Esquadria
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.MaterialEsquadria
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.TipoEsquadria
 import br.edu.ifce.ambientes_internos.model.domain.geometrias.Geometria
+import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
@@ -18,6 +19,10 @@ import jakarta.persistence.DiscriminatorType
 import jakarta.persistence.ElementCollection
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
+import jakarta.persistence.FetchType
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
+import jakarta.persistence.OneToMany
 import java.math.BigDecimal
 
 @Entity
@@ -31,8 +36,9 @@ abstract class Ambiente(
     @Column(nullable = false, length = 50)
     var nome: String,
 
-    @Column(nullable = false, length = 100)
-    var localizacao: String,
+    @ManyToOne(cascade = [CascadeType.ALL])
+    @JoinColumn(name = "localizacao_id", nullable = false)
+    var localizacao: Localizacao,
 
     @Column(nullable = false)
     var capacidade: Int,
@@ -40,7 +46,7 @@ abstract class Ambiente(
     @Transient
     val geometrias: MutableSet<Geometria>,
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     val pesDireitos: MutableSet<BigDecimal>,
 
     @Transient
@@ -79,6 +85,10 @@ abstract class Ambiente(
             .filter { it.tipo == tipo && it.material == material }
             .map { it.geometria.calcularAreaTotalM2() }
             .fold(BigDecimal.ZERO) { acc, area -> acc + area }
+    }
+
+    override fun toString(): String {
+        return "Ambiente(id=$id, nome='$nome', localizacao=$localizacao, capacidade=$capacidade, pesDireitos=$pesDireitos informacaoAdicional='$informacaoAdicional', status=$status, tipo=$tipo)"
     }
 
 }
