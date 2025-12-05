@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: ambientes-internos
+  profiles:
+    active:
+      - ${PROFILE_ACTIVE:dev}
+  jpa:
+    open-in-view: false
