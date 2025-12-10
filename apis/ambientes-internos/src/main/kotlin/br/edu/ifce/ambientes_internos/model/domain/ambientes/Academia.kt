@@ -1,6 +1,7 @@
 package br.edu.ifce.ambientes_internos.model.domain.ambientes
 
 import br.edu.ifce.ambientes_internos.model.domain.ambientes.enums.StatusAmbiente
+import br.edu.ifce.ambientes_internos.model.domain.ambientes.enums.TipoAmbiente
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.Esquadria
 import br.edu.ifce.ambientes_internos.model.domain.geometrias.Geometria
 import jakarta.persistence.DiscriminatorValue
@@ -22,6 +23,7 @@ class Academia(
     nome,
     localizacao,
     capacidade,
+    TipoAmbiente.ACADEMIA,
     geometrias,
     pesDireitos,
     esquadrias,

@@ -41,6 +41,8 @@ class Runner(val ambienteRepository: AmbienteRepository) : ApplicationRunner {
         val auditorioSalvo = ambienteRepository.save(auditorio)
 
         println(listOf(salaAulaSalva, salaAdmSalva, auditorioSalvo))
+
+        println(ambienteRepository.findAll())
     }
 
 }

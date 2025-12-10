@@ -22,7 +22,6 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
-import jakarta.persistence.OneToMany
 import java.math.BigDecimal
 
 @Entity
@@ -43,6 +42,10 @@ abstract class Ambiente(
     @Column(nullable = false)
     var capacidade: Int,
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo", nullable = false, insertable = false, updatable = false)
+    var tipo: TipoAmbiente?,
+
     @Transient
     val geometrias: MutableSet<Geometria>,
 
@@ -57,12 +60,8 @@ abstract class Ambiente(
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    var status: StatusAmbiente
+    var status: StatusAmbiente,
 ) {
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, insertable = false, updatable = false)
-    var tipo: TipoAmbiente? = null
 
     fun calcularAreaAmbienteM2(): BigDecimal {
         return geometrias

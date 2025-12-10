@@ -1,6 +1,7 @@
 package br.edu.ifce.ambientes_internos.model.domain.ambientes
 
 import br.edu.ifce.ambientes_internos.model.domain.ambientes.enums.StatusAmbiente
+import br.edu.ifce.ambientes_internos.model.domain.ambientes.enums.TipoAmbiente
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.Esquadria
 import br.edu.ifce.ambientes_internos.model.domain.geometrias.Geometria
 import java.math.BigDecimal
@@ -22,9 +23,11 @@ class SalaAdministrativa(
     nome,
     localizacao,
     capacidade,
+    TipoAmbiente.SALA_ADMINISTRATIVA,
     geometrias,
     pesDireitos,
     esquadrias,
     informacaoAdicional,
     StatusAmbiente.NAO_PUBLICADO
 ) {}
+
