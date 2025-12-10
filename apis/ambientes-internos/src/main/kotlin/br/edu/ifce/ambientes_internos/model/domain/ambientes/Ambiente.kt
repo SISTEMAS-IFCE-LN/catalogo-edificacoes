@@ -22,6 +22,7 @@ import jakarta.persistence.Enumerated
 import jakarta.persistence.FetchType
 import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
+import jakarta.persistence.OneToMany
 import java.math.BigDecimal
 
 @Entity
@@ -52,7 +53,8 @@ abstract class Ambiente(
     @ElementCollection(fetch = FetchType.EAGER)
     val pesDireitos: MutableSet<BigDecimal>,
 
-    @Transient
+    @OneToMany(cascade = [CascadeType.ALL], fetch = FetchType.EAGER, orphanRemoval = true)
+    @JoinColumn(name = "ambiente_id")
     val esquadrias: MutableSet<Esquadria>,
 
     @Column(length = 255)
@@ -87,7 +89,7 @@ abstract class Ambiente(
     }
 
     override fun toString(): String {
-        return "Ambiente(id=$id, nome='$nome', localizacao=$localizacao, capacidade=$capacidade, pesDireitos=$pesDireitos informacaoAdicional='$informacaoAdicional', status=$status, tipo=$tipo)"
+        return "Ambiente(id=$id, nome='$nome', localizacao=$localizacao, capacidade=$capacidade, pesDireitos=$pesDireitos, esquadrias=$esquadrias, informacaoAdicional='$informacaoAdicional', status=$status, tipo=$tipo)"
     }
 
 }

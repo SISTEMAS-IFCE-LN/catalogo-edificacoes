@@ -3,12 +3,20 @@ package br.edu.ifce.ambientes_internos.model.domain.esquadrias
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.MaterialEsquadria
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.TipoEsquadria
 import br.edu.ifce.ambientes_internos.model.domain.geometrias.Geometria
+import jakarta.persistence.Column
+import jakarta.persistence.DiscriminatorValue
+import jakarta.persistence.Entity
 import java.math.BigDecimal
 
+@Entity
+@DiscriminatorValue("JANELA")
 class Janela(
     geometria: Geometria,
     material: MaterialEsquadria,
+
+    @Column(nullable = false, columnDefinition = "DECIMAL(9,2) DEFAULT 0.00")
     var alturaPeitoril: BigDecimal,
+
     informacaoAdicional: String = ""
 ): Esquadria(
     id = null,
