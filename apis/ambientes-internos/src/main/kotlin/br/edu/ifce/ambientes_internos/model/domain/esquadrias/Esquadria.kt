@@ -18,7 +18,8 @@ abstract class Esquadria(
     @Column(name = "tipo", nullable = false, insertable = false, updatable = false)
     var tipo: TipoEsquadria,
 
-    @Transient
+    @ManyToOne(cascade = [CascadeType.ALL])
+    @JoinColumn(name = "geometria_id", nullable = false)
     var geometria: Geometria,
 
     @Enumerated(EnumType.STRING)
@@ -45,14 +46,14 @@ abstract class Esquadria(
 
     override fun hashCode(): Int {
         var result = tipo.hashCode()
-//        result = 31 * result + geometria.hashCode()
+        result = 31 * result + geometria.hashCode()
         result = 31 * result + material.hashCode()
         result = 31 * result + informacaoAdicional.hashCode()
         return result
     }
 
     override fun toString(): String {
-        return "Esquadria(id=$id, tipo=$tipo, material=$material, informacaoAdicional='$informacaoAdicional')"
+        return "Esquadria(id=$id, tipo=$tipo, geometria=$geometria, material=$material, informacaoAdicional='$informacaoAdicional')"
     }
 
 }

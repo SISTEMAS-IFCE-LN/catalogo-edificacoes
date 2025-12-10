@@ -47,7 +47,8 @@ abstract class Ambiente(
     @Column(name = "tipo", nullable = false, insertable = false, updatable = false)
     var tipo: TipoAmbiente?,
 
-    @Transient
+    @OneToMany(cascade = [CascadeType.ALL], fetch = FetchType.EAGER, orphanRemoval = true)
+    @JoinColumn(name = "ambiente_id")
     val geometrias: MutableSet<Geometria>,
 
     @ElementCollection(fetch = FetchType.EAGER)
@@ -89,7 +90,7 @@ abstract class Ambiente(
     }
 
     override fun toString(): String {
-        return "Ambiente(id=$id, nome='$nome', localizacao=$localizacao, capacidade=$capacidade, pesDireitos=$pesDireitos, esquadrias=$esquadrias, informacaoAdicional='$informacaoAdicional', status=$status, tipo=$tipo)"
+        return "Ambiente(id=$id, nome='$nome', localizacao=$localizacao, capacidade=$capacidade, geometrias=$geometrias, pesDireitos=$pesDireitos, esquadrias=$esquadrias, informacaoAdicional='$informacaoAdicional', status=$status, tipo=$tipo)"
     }
 
 }

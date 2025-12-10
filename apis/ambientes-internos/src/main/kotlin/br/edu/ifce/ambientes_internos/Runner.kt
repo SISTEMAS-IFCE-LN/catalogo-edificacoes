@@ -1,9 +1,9 @@
 package br.edu.ifce.ambientes_internos
 
 import br.edu.ifce.ambientes_internos.model.domain.ambientes.Auditorio
+import br.edu.ifce.ambientes_internos.model.domain.ambientes.Localizacao
 import br.edu.ifce.ambientes_internos.model.domain.ambientes.SalaAdministrativa
 import br.edu.ifce.ambientes_internos.model.domain.ambientes.SalaAula
-import br.edu.ifce.ambientes_internos.model.domain.ambientes.Localizacao
 import br.edu.ifce.ambientes_internos.model.domain.ambientes.enums.Bloco
 import br.edu.ifce.ambientes_internos.model.domain.ambientes.enums.Unidade
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.Janela
@@ -42,30 +42,34 @@ class Runner(val ambienteRepository: AmbienteRepository) : ApplicationRunner {
             localizacao = Localizacao(Bloco.BLOCO_11, Unidade.SEDE, 2),
             capacidade = 50,
             pesDireitos = mutableSetOf(2.5.toBigDecimal(), 3.0.toBigDecimal()),
-            esquadrias = mutableSetOf(janela1, janela2, porta1)
+            esquadrias = mutableSetOf(janela1, janela2, porta1),
+            geometrias = mutableSetOf(
+                Retangular(base = BigDecimal("7.00"), altura = BigDecimal("6.00")),
+                Retangular(base = BigDecimal("2.00"), altura = BigDecimal("3.00"))
+            )
         )
 
-        val salaAdministrativa = SalaAdministrativa(
-            nome = "Sala Administrativa",
-            localizacao = Localizacao(Bloco.BLOCO_4, Unidade.SEDE),
-            capacidade = 5
-        )
+    val salaAdministrativa = SalaAdministrativa(
+        nome = "Sala Administrativa",
+        localizacao = Localizacao(Bloco.BLOCO_4, Unidade.SEDE),
+        capacidade = 5
+    )
 
-        val auditorio = Auditorio(
-            nome = "Auditório Principal",
-            localizacao = Localizacao(Bloco.BLOCO_5, Unidade.SEDE),
-            capacidade = 200,
-            pesDireitos = mutableSetOf(3.5.toBigDecimal()),
-            informacaoAdicional = "Auditório para grandes eventos e palestras."
-        )
+    val auditorio = Auditorio(
+        nome = "Auditório Principal",
+        localizacao = Localizacao(Bloco.BLOCO_5, Unidade.SEDE),
+        capacidade = 200,
+        pesDireitos = mutableSetOf(3.5.toBigDecimal()),
+        informacaoAdicional = "Auditório para grandes eventos e palestras."
+    )
 
-        val salaAulaSalva = ambienteRepository.save(salaAula)
-        val salaAdmSalva = ambienteRepository.save(salaAdministrativa)
-        val auditorioSalvo = ambienteRepository.save(auditorio)
+    val salaAulaSalva = ambienteRepository.save(salaAula)
+    val salaAdmSalva = ambienteRepository.save(salaAdministrativa)
+    val auditorioSalvo = ambienteRepository.save(auditorio)
 
-        println(listOf(salaAulaSalva, salaAdmSalva, auditorioSalvo))
+    println(listOf(salaAulaSalva, salaAdmSalva, auditorioSalvo))
 
-        println(ambienteRepository.findById(1L).get())
-    }
+    println(ambienteRepository.findById(1L).get())
+}
 
 }

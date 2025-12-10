@@ -14,7 +14,7 @@ class Janela(
     geometria: Geometria,
     material: MaterialEsquadria,
 
-    @Column(nullable = false, columnDefinition = "DECIMAL(9,2) DEFAULT 0.00")
+    @Column(nullable = false, columnDefinition = "DECIMAL(9, 2) DEFAULT 0.00")
     var alturaPeitoril: BigDecimal,
 
     informacaoAdicional: String = ""
