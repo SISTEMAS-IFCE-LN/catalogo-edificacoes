@@ -1,0 +1,36 @@
+package br.edu.ifce.ambientes_internos.model.domain.esquadrias
+
+import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.MaterialEsquadria
+import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.TipoEsquadria
+import br.edu.ifce.ambientes_internos.model.domain.geometrias.Geometria
+import java.math.BigDecimal
+
+class Janela(
+    geometria: Geometria,
+    material: MaterialEsquadria,
+    var alturaPeitoril: BigDecimal,
+    informacaoAdicional: String = ""
+): Esquadria(
+    id = null,
+    TipoEsquadria.JANELA,
+    geometria,
+    material,
+    informacaoAdicional) {
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        if (!super.equals(other)) return false
+
+        other as Janela
+
+        return alturaPeitoril == other.alturaPeitoril
+    }
+
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = 31 * result + alturaPeitoril.hashCode()
+        return result
+    }
+
+}
