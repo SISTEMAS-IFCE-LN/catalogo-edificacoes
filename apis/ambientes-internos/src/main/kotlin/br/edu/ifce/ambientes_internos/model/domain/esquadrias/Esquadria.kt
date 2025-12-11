@@ -52,8 +52,4 @@ abstract class Esquadria(
         return result
     }
 
-    override fun toString(): String {
-        return "Esquadria(id=$id, tipo=$tipo, geometria=$geometria, material=$material, informacaoAdicional='$informacaoAdicional')"
-    }
-
 }

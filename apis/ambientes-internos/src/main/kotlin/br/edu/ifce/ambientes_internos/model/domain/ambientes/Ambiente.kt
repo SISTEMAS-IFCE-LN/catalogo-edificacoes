@@ -89,8 +89,40 @@ abstract class Ambiente(
             .fold(BigDecimal.ZERO) { acc, area -> acc + area }
     }
 
-    override fun toString(): String {
-        return "Ambiente(id=$id, nome='$nome', localizacao=$localizacao, capacidade=$capacidade, geometrias=$geometrias, pesDireitos=$pesDireitos, esquadrias=$esquadrias, informacaoAdicional='$informacaoAdicional', status=$status, tipo=$tipo)"
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null) return false
+        if (this::class != other::class) return false
+
+        other as Ambiente
+
+        if (nome != other.nome) return false
+        if (localizacao != other.localizacao) return false
+        if (capacidade != other.capacidade) return false
+        if (tipo != other.tipo) return false
+        if (geometrias.size != other.geometrias.size) return false
+        if (!geometrias.containsAll(other.geometrias)) return false
+        if (pesDireitos.size != other.pesDireitos.size) return false
+        if (!pesDireitos.containsAll(other.pesDireitos)) return false
+        if (esquadrias.size != other.esquadrias.size) return false
+        if (!esquadrias.containsAll(other.esquadrias)) return false
+        if (informacaoAdicional != other.informacaoAdicional) return false
+        if (status != other.status) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = nome.hashCode()
+        result = 31 * result + localizacao.hashCode()
+        result = 31 * result + capacidade
+        result = 31 * result + (tipo?.hashCode() ?: 0)
+        result = 31 * result + geometrias.hashCode()
+        result = 31 * result + pesDireitos.hashCode()
+        result = 31 * result + esquadrias.hashCode()
+        result = 31 * result + informacaoAdicional.hashCode()
+        result = 31 * result + status.hashCode()
+        return result
     }
 
 }

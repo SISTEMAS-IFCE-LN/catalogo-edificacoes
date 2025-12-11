@@ -65,8 +65,4 @@ abstract class Geometria(
         return result
     }
 
-    override fun toString(): String {
-        return "Geometria(id=$id, tipo=$tipo, base=$base, altura=$altura, repeticao=$repeticao)"
-    }
-
 }
