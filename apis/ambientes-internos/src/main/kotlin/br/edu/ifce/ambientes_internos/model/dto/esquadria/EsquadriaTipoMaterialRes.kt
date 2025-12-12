@@ -8,4 +8,14 @@ data class EsquadriaTipoMaterialRes(
     val tipo: TipoEsquadria,
     val material: MaterialEsquadria,
     val area: BigDecimal
-)
+) {
+    companion object {
+        fun from(mapaTipoMaterial: Map.Entry<Pair<TipoEsquadria, MaterialEsquadria>, BigDecimal>): EsquadriaTipoMaterialRes {
+            return EsquadriaTipoMaterialRes(
+                tipo = mapaTipoMaterial.key.first,
+                material = mapaTipoMaterial.key.second,
+                area = mapaTipoMaterial.value
+            )
+        }
+    }
+}

@@ -6,9 +6,9 @@ import br.edu.ifce.ambientes_internos.model.dto.geometria.GeometriaAmbienteReq
 import java.math.BigDecimal
 
 data class AmbienteReq(
-    val nome: String,
-    val localizacao: String,
     val tipo: TipoAmbiente,
+    val nome: String,
+    val localizacao: LocalizacaoReq,
     val capacidade: Int,
     val geometrias: Set<GeometriaAmbienteReq>,
     val pesDireitos: Set<BigDecimal>,
