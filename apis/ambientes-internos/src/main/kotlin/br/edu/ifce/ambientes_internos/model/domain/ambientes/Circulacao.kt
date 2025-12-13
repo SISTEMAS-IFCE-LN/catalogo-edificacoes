@@ -12,7 +12,7 @@ import jakarta.persistence.DiscriminatorValue
 @DiscriminatorValue("CIRCULACAO")
 class Circulacao(
     nome: String,
-    localizacao: String,
+    localizacao: Localizacao,
     capacidade: Int,
     geometrias: MutableSet<Geometria> = mutableSetOf(),
     pesDireitos: MutableSet<BigDecimal> = mutableSetOf(),
@@ -22,8 +22,8 @@ class Circulacao(
     id = null,
     nome,
     localizacao,
-    TipoAmbiente.CIRCULACAO,
     capacidade,
+    TipoAmbiente.CIRCULACAO,
     geometrias,
     pesDireitos,
     esquadrias,

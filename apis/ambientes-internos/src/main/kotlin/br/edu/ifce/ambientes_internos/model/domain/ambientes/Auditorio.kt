@@ -12,7 +12,7 @@ import jakarta.persistence.DiscriminatorValue
 @DiscriminatorValue("AUDITORIO")
 class Auditorio(
     nome: String,
-    localizacao: String,
+    localizacao: Localizacao,
     capacidade: Int,
     geometrias: MutableSet<Geometria> = mutableSetOf(),
     pesDireitos: MutableSet<BigDecimal> = mutableSetOf(),
@@ -22,11 +22,12 @@ class Auditorio(
     id = null,
     nome,
     localizacao,
-    TipoAmbiente.AUDITORIO,
     capacidade,
+    TipoAmbiente.AUDITORIO,
     geometrias,
     pesDireitos,
     esquadrias,
     informacaoAdicional,
     StatusAmbiente.NAO_PUBLICADO
 ) {}
+

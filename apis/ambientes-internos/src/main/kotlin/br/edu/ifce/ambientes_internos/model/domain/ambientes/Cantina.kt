@@ -12,7 +12,7 @@ import jakarta.persistence.DiscriminatorValue
 @DiscriminatorValue("CANTINA")
 class Cantina(
     nome: String,
-    localizacao: String,
+    localizacao: Localizacao,
     capacidade: Int,
     geometrias: MutableSet<Geometria> = mutableSetOf(),
     pesDireitos: MutableSet<BigDecimal> = mutableSetOf(),
@@ -22,8 +22,8 @@ class Cantina(
     id = null,
     nome,
     localizacao,
-    TipoAmbiente.CANTINA,
     capacidade,
+    TipoAmbiente.CANTINA,
     geometrias,
     pesDireitos,
     esquadrias,

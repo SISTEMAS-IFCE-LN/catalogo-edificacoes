@@ -12,7 +12,7 @@ import java.math.BigDecimal
 @DiscriminatorValue("ACADEMIA")
 class Academia(
     nome: String,
-    localizacao: String,
+    localizacao: Localizacao,
     capacidade: Int,
     geometrias: MutableSet<Geometria> = mutableSetOf(),
     pesDireitos: MutableSet<BigDecimal> = mutableSetOf(),
@@ -22,12 +22,11 @@ class Academia(
     id = null,
     nome,
     localizacao,
-    TipoAmbiente.ACADEMIA,
     capacidade,
+    TipoAmbiente.ACADEMIA,
     geometrias,
     pesDireitos,
     esquadrias,
     informacaoAdicional,
     StatusAmbiente.NAO_PUBLICADO
 ) {}
-

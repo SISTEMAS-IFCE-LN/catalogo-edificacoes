@@ -12,7 +12,7 @@ import jakarta.persistence.DiscriminatorValue
 @DiscriminatorValue("BIBLIOTECA")
 class Biblioteca(
     nome: String,
-    localizacao: String,
+    localizacao: Localizacao,
     capacidade: Int,
     geometrias: MutableSet<Geometria> = mutableSetOf(),
     pesDireitos: MutableSet<BigDecimal> = mutableSetOf(),
@@ -22,8 +22,8 @@ class Biblioteca(
     id = null,
     nome,
     localizacao,
-    TipoAmbiente.BIBLIOTECA,
     capacidade,
+    TipoAmbiente.BIBLIOTECA,
     geometrias,
     pesDireitos,
     esquadrias,

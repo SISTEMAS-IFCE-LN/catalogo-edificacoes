@@ -12,7 +12,7 @@ import jakarta.persistence.DiscriminatorValue
 @DiscriminatorValue("GINASIO")
 class Ginasio(
     nome: String,
-    localizacao: String,
+    localizacao: Localizacao,
     capacidade: Int,
     geometrias: MutableSet<Geometria> = mutableSetOf(),
     pesDireitos: MutableSet<BigDecimal> = mutableSetOf(),
@@ -22,8 +22,8 @@ class Ginasio(
     id = null,
     nome,
     localizacao,
-    TipoAmbiente.GINASIO,
     capacidade,
+    TipoAmbiente.GINASIO,
     geometrias,
     pesDireitos,
     esquadrias,

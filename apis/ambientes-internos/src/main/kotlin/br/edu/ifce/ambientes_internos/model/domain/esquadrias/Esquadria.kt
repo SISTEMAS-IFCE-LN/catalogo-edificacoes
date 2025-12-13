@@ -1,14 +1,32 @@
 package br.edu.ifce.ambientes_internos.model.domain.esquadrias
 
+import br.edu.ifce.ambientes_internos.model.domain.ambientes.Ambiente
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.MaterialEsquadria
 import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.TipoEsquadria
 import br.edu.ifce.ambientes_internos.model.domain.geometrias.Geometria
+import jakarta.persistence.*
 
+@Entity
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+@DiscriminatorColumn(name = "tipo", discriminatorType = DiscriminatorType.STRING)
 abstract class Esquadria(
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     var id: Long?,
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo", nullable = false, insertable = false, updatable = false)
     var tipo: TipoEsquadria,
+
+    @ManyToOne(cascade = [CascadeType.ALL])
+    @JoinColumn(name = "geometria_id", nullable = false)
     var geometria: Geometria,
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     var material: MaterialEsquadria,
+
+    @Column(length = 255)
     var informacaoAdicional: String
 ) {
 
