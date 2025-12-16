@@ -33,7 +33,7 @@ class AmbienteRepositoryIntegrationTest {
 
     @Test
     fun `Deve salvar tres ambientes distintos e retornar id e tipo corretos`() {
-        // Arrange
+        // Dados
         val salaAula = SalaAula(
             nome = "Sala A 101",
             localizacao = Localizacao(Bloco.BLOCO_PRINCIPAL, Unidade.CIDADE_ALTA),
@@ -65,12 +65,12 @@ class AmbienteRepositoryIntegrationTest {
             capacidade = 200
         )
 
-        // Act
+        // Quando
         val savedSalaAula = repository.save(salaAula)
         val savedSalaAdm = repository.save(salaAdm)
         val savedAuditorio = repository.save(auditorio)
 
-        // Assert - ids gerados
+        // Então - ids gerados
         assertNotNull(savedSalaAula.id)
         assertTrue(savedSalaAula.id!! > 0)
         assertNotNull(savedSalaAdm.id)
@@ -78,7 +78,7 @@ class AmbienteRepositoryIntegrationTest {
         assertNotNull(savedAuditorio.id)
         assertTrue(savedAuditorio.id!! > 0)
 
-        // Assert - igualdade de negócio (equals/hashCode) entre o objeto original e o salvo
+        // Então - igualdade entre entidade salva e o objeto original
         assertEquals(salaAula, savedSalaAula)
         assertEquals(salaAdm, savedSalaAdm)
         assertEquals(auditorio, savedAuditorio)
@@ -86,7 +86,7 @@ class AmbienteRepositoryIntegrationTest {
 
     @Test
     fun `Deve recuperar itens do banco de dados com id, tipo e relacionamentos corretos`() {
-        // Arrange - criar e salvar
+        // Dados
         val salaAula = SalaAula(
             nome = "Sala A 102",
             localizacao = Localizacao(Bloco.BLOCO_PRINCIPAL, Unidade.CIDADE_ALTA),
@@ -111,16 +111,17 @@ class AmbienteRepositoryIntegrationTest {
             capacidade = 120
         )
 
+        // Quando - salvar no banco
         val saved1 = repository.save(salaAula)
         val saved2 = repository.save(salaAdm)
         val saved3 = repository.save(auditorio)
 
-        // Act - recuperar por id
+        // Quando - recuperar por id
         val found1 = repository.findById(saved1.id!!).get()
         val found2 = repository.findById(saved2.id!!).get()
         val found3 = repository.findById(saved3.id!!).get()
 
-        // Assert - igualdade de negócio
+        // Então - igualdade entre entidade recuperada e o objeto original
         assertEquals(salaAula, found1)
         assertEquals(salaAdm, found2)
         assertEquals(auditorio, found3)
