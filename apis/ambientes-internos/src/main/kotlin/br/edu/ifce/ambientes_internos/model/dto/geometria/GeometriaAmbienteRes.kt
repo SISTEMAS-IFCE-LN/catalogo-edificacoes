@@ -24,4 +24,26 @@ data class GeometriaAmbienteRes(
             )
         }
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is GeometriaAmbienteRes) return false
+
+        if (tipo != other.tipo) return false
+        if (base != other.base) return false
+        if (altura != other.altura) return false
+        if (repeticao != other.repeticao) return false
+        if (area != other.area) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = tipo.hashCode()
+        result = 31 * result + base.hashCode()
+        result = 31 * result + altura.hashCode()
+        result = 31 * result + repeticao
+        result = 31 * result + area.hashCode()
+        return result
+    }
 }

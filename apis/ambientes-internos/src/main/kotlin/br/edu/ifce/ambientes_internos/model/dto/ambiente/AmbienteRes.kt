@@ -37,4 +37,39 @@ data class AmbienteRes(
             )
         }
     }
+
+    // Igualdade por valores de negócio (ignora id)
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is AmbienteRes) return false
+
+        if (nome != other.nome) return false
+        if (localizacao != other.localizacao) return false
+        if (tipo != other.tipo) return false
+        if (capacidade != other.capacidade) return false
+        if (geometrias.size != other.geometrias.size) return false
+        if (!geometrias.containsAll(other.geometrias)) return false
+        if (pesDireitos.size != other.pesDireitos.size) return false
+        if (!pesDireitos.containsAll(other.pesDireitos)) return false
+        if (esquadriasDetalhes != other.esquadriasDetalhes) return false
+        if (informacaoAdicional != other.informacaoAdicional) return false
+        if (areaAmbiente != other.areaAmbiente) return false
+        if (status != other.status) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = nome.hashCode()
+        result = 31 * result + localizacao.hashCode()
+        result = 31 * result + tipo.hashCode()
+        result = 31 * result + capacidade
+        result = 31 * result + geometrias.hashCode()
+        result = 31 * result + pesDireitos.hashCode()
+        result = 31 * result + esquadriasDetalhes.hashCode()
+        result = 31 * result + informacaoAdicional.hashCode()
+        result = 31 * result + areaAmbiente.hashCode()
+        result = 31 * result + status.hashCode()
+        return result
+    }
 }

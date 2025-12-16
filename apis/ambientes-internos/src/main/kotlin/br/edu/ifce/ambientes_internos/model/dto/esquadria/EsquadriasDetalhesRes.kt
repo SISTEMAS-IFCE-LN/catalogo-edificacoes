@@ -15,4 +15,23 @@ data class EsquadriasDetalhesRes(
             )
         }
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is EsquadriasDetalhesRes) return false
+
+        if (esquadrias.size != other.esquadrias.size) return false
+        if (!esquadrias.containsAll(other.esquadrias)) return false
+
+        if (esquadriasTipoMaterial.size != other.esquadriasTipoMaterial.size) return false
+        if (!esquadriasTipoMaterial.containsAll(other.esquadriasTipoMaterial)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = esquadrias.hashCode()
+        result = 31 * result + esquadriasTipoMaterial.hashCode()
+        return result
+    }
 }

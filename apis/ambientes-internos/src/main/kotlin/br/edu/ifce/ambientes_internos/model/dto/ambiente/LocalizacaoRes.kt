@@ -20,4 +20,22 @@ data class LocalizacaoRes(
             )
         }
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is LocalizacaoRes) return false
+
+        if (bloco != other.bloco) return false
+        if (unidade != other.unidade) return false
+        if (andar != other.andar) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = bloco.hashCode()
+        result = 31 * result + unidade.hashCode()
+        result = 31 * result + andar
+        return result
+    }
 }
