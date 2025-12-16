@@ -7,12 +7,12 @@ import br.edu.ifce.ambientes_internos.model.dto.esquadria.EsquadriasDetalhesRes
 import br.edu.ifce.ambientes_internos.model.dto.geometria.GeometriaAmbienteReq
 import br.edu.ifce.ambientes_internos.model.dto.geometria.ListaGeometriasAmbienteRes
 import br.edu.ifce.ambientes_internos.model.repository.AmbienteRepository
-import br.edu.ifce.ambientes_internos.model.use_cases.AmbienteNaoPublicadoUseCase
+import br.edu.ifce.ambientes_internos.model.use_cases.AmbienteNaoPublicadoUseCases
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 
 @Service
-class AmbienteNaoPublicadoService(val repository: AmbienteRepository) : AmbienteNaoPublicadoUseCase {
+class AmbienteNaoPublicadoService(val repository: AmbienteRepository) : AmbienteNaoPublicadoUseCases {
 
     override fun cadastrarAmbiente(ambienteReq: AmbienteReq): AmbienteRes {
         val ambiente = repository.save(AmbienteFactory.criar(ambienteReq))
@@ -21,9 +21,16 @@ class AmbienteNaoPublicadoService(val repository: AmbienteRepository) : Ambiente
 
     override fun atualizarDadosBasicosAmbiente(
         id: Long,
-        ambiente: AmbienteBasicoReq
+        ambienteAtualizado: AmbienteBasicoReq
     ): AmbienteBasicoRes {
-        TODO("Not yet implemented")
+        val ambienteExistente =
+            repository.findById(id).orElseThrow { NoSuchElementException("Ambiente não encontrado") }
+        ambienteExistente.nome = ambienteAtualizado.nome
+        ambienteExistente.capacidade = ambienteAtualizado.capacidade
+        ambienteExistente.localizacao.bloco = ambienteAtualizado.localizacao.bloco
+        ambienteExistente.localizacao.unidade = ambienteAtualizado.localizacao.unidade
+        ambienteExistente.localizacao.andar = ambienteAtualizado.localizacao.andar
+        return AmbienteBasicoRes.from(repository.save(ambienteExistente))
     }
 
     override fun incluirGeometriasAmbiente(
