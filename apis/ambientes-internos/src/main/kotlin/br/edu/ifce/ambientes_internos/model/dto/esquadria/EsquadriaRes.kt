@@ -1,9 +1,9 @@
 package br.edu.ifce.ambientes_internos.model.dto.esquadria
 
-import br.edu.ifce.ambientes_internos.model.domain.esquadrias.Esquadria
-import br.edu.ifce.ambientes_internos.model.domain.esquadrias.Janela
-import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.MaterialEsquadria
-import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.TipoEsquadria
+import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.Esquadria
+import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.Janela
+import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.enums.MaterialEsquadria
+import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.enums.TipoEsquadria
 import br.edu.ifce.ambientes_internos.model.dto.geometria.GeometriaEsquadriaRes
 import java.math.BigDecimal
 

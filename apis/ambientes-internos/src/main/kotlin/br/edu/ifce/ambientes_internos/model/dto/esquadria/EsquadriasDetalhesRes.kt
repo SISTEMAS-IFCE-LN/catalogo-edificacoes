@@ -1,6 +1,6 @@
 package br.edu.ifce.ambientes_internos.model.dto.esquadria
 
-import br.edu.ifce.ambientes_internos.model.domain.ambientes.Ambiente
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Ambiente
 
 data class EsquadriasDetalhesRes(
     val esquadrias: List<EsquadriaRes>,

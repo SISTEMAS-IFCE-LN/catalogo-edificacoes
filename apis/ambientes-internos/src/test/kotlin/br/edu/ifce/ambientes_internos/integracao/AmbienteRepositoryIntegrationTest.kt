@@ -1,15 +1,15 @@
 package br.edu.ifce.ambientes_internos.integracao
 
-import br.edu.ifce.ambientes_internos.model.domain.ambientes.Auditorio
-import br.edu.ifce.ambientes_internos.model.domain.ambientes.Localizacao
-import br.edu.ifce.ambientes_internos.model.domain.ambientes.SalaAdministrativa
-import br.edu.ifce.ambientes_internos.model.domain.ambientes.SalaAula
-import br.edu.ifce.ambientes_internos.model.domain.ambientes.enums.Bloco
-import br.edu.ifce.ambientes_internos.model.domain.ambientes.enums.Unidade
-import br.edu.ifce.ambientes_internos.model.domain.esquadrias.Janela
-import br.edu.ifce.ambientes_internos.model.domain.esquadrias.Porta
-import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.MaterialEsquadria
-import br.edu.ifce.ambientes_internos.model.domain.geometrias.Retangular
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Auditorio
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Localizacao
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.SalaAdministrativa
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.SalaAula
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Bloco
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Unidade
+import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.Janela
+import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.Porta
+import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.enums.MaterialEsquadria
+import br.edu.ifce.ambientes_internos.model.domain.entity.geometrias.Retangular
 import br.edu.ifce.ambientes_internos.model.repository.AmbienteRepository
 import org.junit.jupiter.api.DisplayName
 import org.springframework.beans.factory.annotation.Autowired

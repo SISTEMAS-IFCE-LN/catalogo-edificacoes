@@ -1,6 +1,6 @@
 package br.edu.ifce.ambientes_internos.model.dto.geometria
 
-import br.edu.ifce.ambientes_internos.model.domain.geometrias.Geometria
+import br.edu.ifce.ambientes_internos.model.domain.entity.geometrias.Geometria
 import java.math.BigDecimal
 
 data class GeometriaEsquadriaRes(

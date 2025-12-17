@@ -1,6 +1,6 @@
 package br.edu.ifce.ambientes_internos.model.dto.ambiente
 
-import br.edu.ifce.ambientes_internos.model.domain.ambientes.enums.TipoAmbiente
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.TipoAmbiente
 import br.edu.ifce.ambientes_internos.model.dto.esquadria.EsquadriaReq
 import br.edu.ifce.ambientes_internos.model.dto.geometria.GeometriaAmbienteReq
 import java.math.BigDecimal
