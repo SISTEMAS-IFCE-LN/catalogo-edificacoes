@@ -29,6 +29,7 @@ import br.edu.ifce.ambientes_internos.model.application.usecases.AmbienteNaoPubl
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbienteBasicoReq
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbienteBasicoRes
 import br.edu.ifce.ambientes_internos.model.dto.geometria.ListaGeometriasAmbienteRes
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
@@ -50,10 +51,19 @@ class AmbienteUseCasesIntegrationTest {
     @Autowired
     lateinit var ambientesNPUseCases: IAmbienteNaoPublicadoUseCases
 
-    @Test
-    fun `Deve validar casos de uso dos ambientes nao publicados`() {
-        // Dados - Modelo de requisição
-        val ambienteReq = AmbienteReq(
+    // Dados - Modelo de requisição e resposta
+    lateinit var ambienteReq: AmbienteReq
+    lateinit var salaAula: SalaAula
+    lateinit var ambienteRes: AmbienteRes
+    lateinit var ambienteBasicoReq: AmbienteBasicoReq
+    lateinit var ambienteBasicoRes: AmbienteBasicoRes
+    lateinit var geometriasParaIncluir: Set<GeometriaAmbienteReq>
+    lateinit var listaGeometriasEsperadas: ListaGeometriasAmbienteRes
+
+    @BeforeEach
+    fun setup() {
+        // Dados - Modelo de requisição de cadastro de ambiente
+        ambienteReq = AmbienteReq(
             tipo = TipoAmbiente.SALA_AULA,
             nome = "Sala de Aula Exemplo",
             localizacao = LocalizacaoReq(
@@ -79,8 +89,8 @@ class AmbienteUseCasesIntegrationTest {
                 )
             ), informacaoAdicional = "Sala equipada com projetor e quadro branco."
         )
-        // Dados - Modelo de entidade salva do banco
-        val salaAula = SalaAula(
+        // Dados - Modelo do ambiente salvo do banco
+        salaAula = SalaAula(
             nome = ambienteReq.nome,
             localizacao = Localizacao(
                 bloco = ambienteReq.localizacao.bloco,
@@ -117,8 +127,8 @@ class AmbienteUseCasesIntegrationTest {
             informacaoAdicional = ambienteReq.informacaoAdicional
         )
 
-        // Dados - Modelo da resposta que deve ser retornada para o usuário.
-        val ambienteRes = AmbienteRes(
+        // Dados - Modelo do ambiente que deve ser retornado para o usuário.
+        ambienteRes = AmbienteRes(
             id = 0L,
             tipo = salaAula.tipo!!,
             nome = salaAula.nome,
@@ -166,27 +176,15 @@ class AmbienteUseCasesIntegrationTest {
             status = salaAula.status
         )
 
-        // Quando um ambiente for cadastrado
-        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(ambienteReq)
-
-        // Então o ambiente deve ser persistido e retornado ao usuário
-        assertEquals(ambienteRes, ambienteSalvo)
-
-        // Quando o ambiente cadastrado for recuperado pelo seu ID
-        val ambienteRecuperadoPorId = ambientesNPUseCases.obterAmbientePorId(ambienteSalvo.id)
-
-        // Então o ambiente recuperado deve ser igual ao ambiente salvo anteriormente
-        assertEquals(ambienteRes, ambienteRecuperadoPorId)
-
         //Dados - Modelo de requisição para atualização de dados básicos do ambiente
-        val ambienteBasicoReq = AmbienteBasicoReq(
+        ambienteBasicoReq = AmbienteBasicoReq(
             nome = "Sala de Aula Atualizada",
             localizacao = LocalizacaoReq(unidade = Unidade.CIDADE_ALTA, bloco = Bloco.BLOCO_10, andar = 2),
             capacidade = 35
         )
 
         // Dados - Modelo de resposta esperado após a atualização
-        val ambienteBasicoRes = AmbienteBasicoRes(
+        ambienteBasicoRes = AmbienteBasicoRes(
             id = ambienteRes.id,
             nome = ambienteBasicoReq.nome,
             localizacao = LocalizacaoRes(
@@ -199,14 +197,8 @@ class AmbienteUseCasesIntegrationTest {
             area = ambienteRes.areaAmbiente
         )
 
-        // Quando o ambiente salvo for atualizado
-        val ambienteBasicoAtualizado = ambientesNPUseCases.atualizarDadosBasicosAmbiente(ambienteSalvo.id, ambienteBasicoReq)
-
-        // Então os dados atualizados devem ser retornados ao usuário
-        assertEquals(ambienteBasicoRes, ambienteBasicoAtualizado)
-
         // Dados - Geometria a serem incluídas no ambiente
-        val geometriasParaIncluir = setOf(
+        geometriasParaIncluir = setOf(
             GeometriaAmbienteReq(
                 tipo = TipoGeometria.RETANGULAR, base = BigDecimal("4.0"), altura = BigDecimal("3.0"),
                 repeticao = 2
@@ -219,7 +211,16 @@ class AmbienteUseCasesIntegrationTest {
         // Dados - Criação da lista de geometrias atualizadas do ambiente
         val geometriasAtualizadas = mutableSetOf<GeometriaAmbienteRes>()
 
-        geometriasAtualizadas.addAll(ambienteSalvo.geometrias)
+        geometriasAtualizadas.addAll(salaAula.geometrias.map {
+            GeometriaAmbienteRes(
+                id = 0L,
+                tipo = it.tipo,
+                base = it.base,
+                altura = it.altura,
+                repeticao = it.repeticao,
+                area = it.calcularAreaTotalM2()
+            )
+        })
 
         geometriasAtualizadas.addAll(
             geometriasParaIncluir.map {
@@ -245,12 +246,48 @@ class AmbienteUseCasesIntegrationTest {
         )
 
         // Dados - Modelo de resposta esperado após a inclusão das geometrias
-        val listaGeometriasEsperadas = ListaGeometriasAmbienteRes(
+        listaGeometriasEsperadas = ListaGeometriasAmbienteRes(
             geometrias = geometriasAtualizadas.toList(),
             areaTotal = geometriasAtualizadas.fold(BigDecimal.ZERO) { acc, geometria ->
                 acc + geometria.area
             }
         )
+    }
+
+    @Test
+    fun `Deve cadastrar e recuperar ambiente por id`() {
+        // Quando um ambiente for cadastrado
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(ambienteReq)
+
+        // Então o ambiente deve ser persistido e retornado ao usuário
+        assertEquals(ambienteRes, ambienteSalvo)
+
+        // Quando o ambiente cadastrado for recuperado pelo seu ID
+        val ambienteRecuperadoPorId = ambientesNPUseCases.obterAmbientePorId(ambienteSalvo.id)
+
+        // Então o ambiente recuperado deve ser igual ao ambiente salvo anteriormente
+        assertEquals(ambienteRes, ambienteRecuperadoPorId)
+    }
+
+    @Test
+    fun `Deve atualizar dados basicos do ambiente`() {
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(ambienteReq)
+
+        // Quando o ambiente salvo for atualizado
+        val ambienteBasicoAtualizado =
+            ambientesNPUseCases.atualizarDadosBasicosAmbiente(ambienteSalvo.id, ambienteBasicoReq)
+
+        // Então os dados atualizados devem ser retornados ao usuário
+        assertEquals(ambienteBasicoRes, ambienteBasicoAtualizado)
+    }
+
+    @Test
+    fun `Deve incluir geometrias no ambiente`() {
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(ambienteReq)
+
+        // Primeiro atualiza dados basicos como no fluxo original
+        val ambienteBasicoAtualizado =
+            ambientesNPUseCases.atualizarDadosBasicosAmbiente(ambienteSalvo.id, ambienteBasicoReq)
 
         // Quando novas geometrias forem adicionadas ao ambiente
         val listaGeometriasAtualizadas =
