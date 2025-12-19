@@ -89,14 +89,25 @@ class AmbienteNaoPublicadoUseCases(val repository: AmbienteRepository) : IAmbien
         id: Long,
         pesDireitos: Set<BigDecimal>
     ): Set<BigDecimal> {
-        TODO("Not yet implemented")
+        val ambienteExistente =
+            repository.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
+                .orElseThrow { NoSuchElementException("Ambiente não encontrado") }
+        ambienteExistente.pesDireitos.addAll(pesDireitos)
+        val ambienteAtualizado = repository.save(ambienteExistente)
+        return ambienteAtualizado.pesDireitos
     }
 
     override fun atualizarPesDireitosAmbiente(
         id: Long,
         pesDireitos: Set<BigDecimal>
     ): Set<BigDecimal> {
-        TODO("Not yet implemented")
+        val ambienteExistente =
+            repository.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
+                .orElseThrow { NoSuchElementException("Ambiente não encontrado") }
+        ambienteExistente.pesDireitos.clear()
+        ambienteExistente.pesDireitos.addAll(pesDireitos)
+        val ambienteAtualizado = repository.save(ambienteExistente)
+        return ambienteAtualizado.pesDireitos
     }
 
     override fun incluirEsquadriasAmbiente(
