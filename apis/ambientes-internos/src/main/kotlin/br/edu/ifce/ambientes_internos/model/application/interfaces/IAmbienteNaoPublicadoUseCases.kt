@@ -15,7 +15,7 @@ interface IAmbienteNaoPublicadoUseCases : IAmbienteUseCases<AmbientesBasicosRes,
 
     fun incluirGeometriasAmbiente(id: Long, geometriasAdd: Set<GeometriaAmbienteReq>): ListaGeometriasAmbienteRes
 
-    fun atualizarGeometriasAmbiente(id: Long, geometrias: Set<GeometriaAmbienteReq>): ListaGeometriasAmbienteRes
+    fun atualizarGeometriasAmbiente(id: Long, geometriasAtualizadas: Set<GeometriaAmbienteReq>): ListaGeometriasAmbienteRes
 
     fun incluirPesDireitosAmbiente(id: Long, pesDireitos: Set<BigDecimal>): Set<BigDecimal>
 

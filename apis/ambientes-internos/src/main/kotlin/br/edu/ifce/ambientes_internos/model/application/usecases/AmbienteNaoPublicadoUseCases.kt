@@ -52,9 +52,12 @@ class AmbienteNaoPublicadoUseCases(val repository: AmbienteRepository) : IAmbien
             repository.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
                 .orElseThrow { NoSuchElementException("Ambiente não encontrado") }
         val geometrias = geometriasAdd.map { GeometriaFactory.criar(it) }.toMutableSet()
+
         ambienteExistente.geometrias.addAll(geometrias)
+
         val ambienteAtualizado = repository.save(ambienteExistente)
         val geometriasRes = ambienteAtualizado.geometrias.map { GeometriaAmbienteRes.from(it) }
+
         return ListaGeometriasAmbienteRes(
             geometrias = geometriasRes,
             areaTotal = ambienteAtualizado.calcularAreaAmbienteM2()
@@ -63,9 +66,23 @@ class AmbienteNaoPublicadoUseCases(val repository: AmbienteRepository) : IAmbien
 
     override fun atualizarGeometriasAmbiente(
         id: Long,
-        geometrias: Set<GeometriaAmbienteReq>
+        geometriasAtualizadas: Set<GeometriaAmbienteReq>
     ): ListaGeometriasAmbienteRes {
-        TODO("Not yet implemented")
+        val ambienteExistente =
+            repository.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
+                .orElseThrow { NoSuchElementException("Ambiente não encontrado") }
+        val geometrias = geometriasAtualizadas.map { GeometriaFactory.criar(it) }.toMutableSet()
+
+        ambienteExistente.geometrias.clear()
+        ambienteExistente.geometrias.addAll(geometrias)
+
+        val ambienteAtualizado = repository.save(ambienteExistente)
+        val geometriasRes = ambienteAtualizado.geometrias.map { GeometriaAmbienteRes.from(it) }
+
+        return ListaGeometriasAmbienteRes(
+            geometrias = geometriasRes,
+            areaTotal = ambienteAtualizado.calcularAreaAmbienteM2()
+        )
     }
 
     override fun incluirPesDireitosAmbiente(
