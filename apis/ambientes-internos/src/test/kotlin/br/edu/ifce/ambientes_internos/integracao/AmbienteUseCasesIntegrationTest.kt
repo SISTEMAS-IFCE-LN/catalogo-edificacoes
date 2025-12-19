@@ -51,7 +51,7 @@ class AmbienteUseCasesIntegrationTest {
     @Autowired
     lateinit var ambientesNPUseCases: IAmbienteNaoPublicadoUseCases
 
-    // Dados - Modelo de requisição e resposta
+    // Dados - Modelo de requisição
     lateinit var ambienteReq: AmbienteReq
     lateinit var salaAula: SalaAula
     lateinit var ambienteRes: AmbienteRes
@@ -62,7 +62,7 @@ class AmbienteUseCasesIntegrationTest {
 
     @BeforeEach
     fun setup() {
-        // Dados - Modelo de requisição de cadastro de ambiente
+        // Dados - Modelo de requisição
         ambienteReq = AmbienteReq(
             tipo = TipoAmbiente.SALA_AULA,
             nome = "Sala de Aula Exemplo",
@@ -89,7 +89,7 @@ class AmbienteUseCasesIntegrationTest {
                 )
             ), informacaoAdicional = "Sala equipada com projetor e quadro branco."
         )
-        // Dados - Modelo do ambiente salvo do banco
+        // Dados - Modelo de entidade salva do banco
         salaAula = SalaAula(
             nome = ambienteReq.nome,
             localizacao = Localizacao(
@@ -127,7 +127,7 @@ class AmbienteUseCasesIntegrationTest {
             informacaoAdicional = ambienteReq.informacaoAdicional
         )
 
-        // Dados - Modelo do ambiente que deve ser retornado para o usuário.
+        // Dados - Modelo da resposta que deve ser retornada para o usuário.
         ambienteRes = AmbienteRes(
             id = 0L,
             tipo = salaAula.tipo!!,
@@ -285,17 +285,52 @@ class AmbienteUseCasesIntegrationTest {
     fun `Deve incluir geometrias no ambiente`() {
         val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(ambienteReq)
 
-        // Primeiro atualiza dados basicos como no fluxo original
-        val ambienteBasicoAtualizado =
-            ambientesNPUseCases.atualizarDadosBasicosAmbiente(ambienteSalvo.id, ambienteBasicoReq)
-
         // Quando novas geometrias forem adicionadas ao ambiente
         val listaGeometriasAtualizadas =
-            ambientesNPUseCases.incluirGeometriasAmbiente(ambienteBasicoAtualizado.id, geometriasParaIncluir)
+            ambientesNPUseCases.incluirGeometriasAmbiente(ambienteSalvo.id, geometriasParaIncluir)
 
         // Então as geometrias atualizadas devem ser retornadas ao usuário
         assertEquals(listaGeometriasEsperadas, listaGeometriasAtualizadas)
+    }
 
+    @Test
+    fun `Deve atualizar geometrias do ambiente`() {
+        // Dado um ambiente cadastrado
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(ambienteReq)
+
+        // Monta a lista de geometrias esperada apenas com as geometrias fornecidas (substituição completa)
+        val geometriasEsperadas = geometriasParaIncluir.map {
+            GeometriaAmbienteRes(
+                id = 0L,
+                tipo = it.tipo,
+                base = it.base,
+                altura = it.altura,
+                repeticao = it.repeticao,
+                area = when (it.tipo) {
+                    TipoGeometria.RETANGULAR ->
+                        it.base.multiply(it.altura)
+                            .multiply(BigDecimal(it.repeticao))
+                            .setScale(2, RoundingMode.HALF_UP)
+
+                    TipoGeometria.TRIANGULAR -> it.base.multiply(it.altura)
+                        .divide(BigDecimal("2"))
+                        .multiply(BigDecimal(it.repeticao))
+                        .setScale(2, RoundingMode.HALF_UP)
+                }
+            )
+        }
+
+        val respostaEsperada = ListaGeometriasAmbienteRes(
+            geometrias = geometriasEsperadas,
+            areaTotal = geometriasEsperadas.fold(BigDecimal.ZERO) { acc, geometria -> acc + geometria.area }
+        )
+
+        // Quando as geometrias do ambiente forem atualizadas
+        val listaGeometriasAtualizadas =
+            ambientesNPUseCases.atualizarGeometriasAmbiente(ambienteSalvo.id, geometriasParaIncluir)
+
+        // Então as geometrias retornadas devem corresponder exatamente às fornecidas
+        assertEquals(respostaEsperada, listaGeometriasAtualizadas)
     }
 
 }
