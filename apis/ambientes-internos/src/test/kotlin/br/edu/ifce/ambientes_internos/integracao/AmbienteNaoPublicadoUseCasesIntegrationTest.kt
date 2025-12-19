@@ -46,7 +46,7 @@ import kotlin.test.assertEquals
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
 @ActiveProfiles("test")
 @DisplayName("Testes de integração para os Casos de Uso dos Ambientes")
-class AmbienteUseCasesIntegrationTest {
+class AmbienteNaoPublicadoUseCasesIntegrationTest {
 
     @Autowired
     lateinit var ambientesNPUseCases: IAmbienteNaoPublicadoUseCases
@@ -328,6 +328,39 @@ class AmbienteUseCasesIntegrationTest {
 
         // Então as geometrias retornadas devem corresponder exatamente às fornecidas
         assertEquals(respostaEsperada, listaGeometriasAtualizadas)
+    }
+
+    @Test
+    fun `Deve incluir pes direitos no ambiente`() {
+        // Dados - pés-direitos a serem incluídos
+        val pesDireitosParaIncluir = setOf(BigDecimal("3.5"), BigDecimal("4.0"))
+
+        // Dados - ambiente cadastrado
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(ambienteReq)
+
+        // Quando novos pés-direitos forem incluídos
+        val pesDireitosRetornados =
+            ambientesNPUseCases.incluirPesDireitosAmbiente(ambienteSalvo.id, pesDireitosParaIncluir)
+
+        // Então o conjunto retornado deve conter os originais e os adicionados
+        val pesDireitosEsperados = salaAula.pesDireitos + pesDireitosParaIncluir
+        assertEquals(pesDireitosEsperados, pesDireitosRetornados)
+    }
+
+    @Test
+    fun `Deve atualizar pes direitos do ambiente`() {
+        // Dados - novos pés-direitos para substituir os existentes
+        val pesDireitosParaAtualizar = setOf(BigDecimal("2.8"), BigDecimal("3.2"))
+
+        // Dados - ambiente cadastrado
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(ambienteReq)
+
+        // Quando os pés-direitos do ambiente forem atualizados
+        val pesDireitosRetornados =
+            ambientesNPUseCases.atualizarPesDireitosAmbiente(ambienteSalvo.id, pesDireitosParaAtualizar)
+
+        // Então o conjunto retornado deve corresponder exatamente ao fornecido
+        assertEquals(pesDireitosParaAtualizar, pesDireitosRetornados)
     }
 
 }
