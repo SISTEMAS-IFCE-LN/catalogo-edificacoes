@@ -1,5 +1,7 @@
 package br.edu.ifce.ambientes_internos.integracao
 
+import br.edu.ifce.ambientes_internos.model.application.interfaces.IAmbienteNaoPublicadoUseCases
+import br.edu.ifce.ambientes_internos.model.application.usecases.AmbienteNaoPublicadoUseCases
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Localizacao
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.SalaAula
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Bloco
@@ -12,23 +14,12 @@ import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.enums.TipoE
 import br.edu.ifce.ambientes_internos.model.domain.entity.geometrias.Geometria
 import br.edu.ifce.ambientes_internos.model.domain.entity.geometrias.Retangular
 import br.edu.ifce.ambientes_internos.model.domain.entity.geometrias.enums.TipoGeometria
-import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbienteReq
-import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbienteRes
-import br.edu.ifce.ambientes_internos.model.dto.ambiente.LocalizacaoReq
-import br.edu.ifce.ambientes_internos.model.dto.ambiente.LocalizacaoRes
+import br.edu.ifce.ambientes_internos.model.dto.ambiente.*
 import br.edu.ifce.ambientes_internos.model.dto.esquadria.EsquadriaReq
 import br.edu.ifce.ambientes_internos.model.dto.esquadria.EsquadriaRes
 import br.edu.ifce.ambientes_internos.model.dto.esquadria.EsquadriaTipoMaterialRes
 import br.edu.ifce.ambientes_internos.model.dto.esquadria.EsquadriasDetalhesRes
-import br.edu.ifce.ambientes_internos.model.dto.geometria.GeometriaAmbienteReq
-import br.edu.ifce.ambientes_internos.model.dto.geometria.GeometriaAmbienteRes
-import br.edu.ifce.ambientes_internos.model.dto.geometria.GeometriaEsquadriaReq
-import br.edu.ifce.ambientes_internos.model.dto.geometria.GeometriaEsquadriaRes
-import br.edu.ifce.ambientes_internos.model.application.interfaces.IAmbienteNaoPublicadoUseCases
-import br.edu.ifce.ambientes_internos.model.application.usecases.AmbienteNaoPublicadoUseCases
-import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbienteBasicoReq
-import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbienteBasicoRes
-import br.edu.ifce.ambientes_internos.model.dto.geometria.ListaGeometriasAmbienteRes
+import br.edu.ifce.ambientes_internos.model.dto.geometria.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.springframework.beans.factory.annotation.Autowired
@@ -361,6 +352,134 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
 
         // Então o conjunto retornado deve corresponder exatamente ao fornecido
         assertEquals(pesDireitosParaAtualizar, pesDireitosRetornados)
+    }
+
+    @Test
+    fun `Deve incluir esquadrias no ambiente`() {
+        // Dados - Esquadrias a serem incluídas no ambiente
+        val esquadriasParaIncluir = setOf(
+            EsquadriaReq(
+                tipo = TipoEsquadria.JANELA,
+                geometria = GeometriaEsquadriaReq(
+                    base = BigDecimal("1.2"), altura = BigDecimal("1.2"), repeticao = 2
+                ),
+                material = MaterialEsquadria.ALUMINIO,
+                alturaPeitoril = BigDecimal("0.80")
+            )
+        )
+
+        // Dados - Criação da lista de esquadrias atualizadas do ambiente
+        salaAula.esquadrias.addAll(esquadriasParaIncluir.map {
+            Janela(
+                geometria = Retangular(
+                    base = it.geometria.base,
+                    altura = it.geometria.altura,
+                    repeticao = it.geometria.repeticao
+                ),
+                material = it.material,
+                alturaPeitoril = it.alturaPeitoril
+            )
+        })
+
+        // Dados - Modelo de resposta esperado após a inclusão das esquadrias
+        val esquadriasDetalhesRes = EsquadriasDetalhesRes(
+            esquadrias = salaAula.esquadrias.map {
+                EsquadriaRes(
+                    id = 0L,
+                    tipo = it.tipo,
+                    geometria = GeometriaEsquadriaRes(
+                        id = 0L,
+                        base = it.geometria.base,
+                        altura = it.geometria.altura,
+                        repeticao = it.geometria.repeticao,
+                        area = it.geometria.calcularAreaTotalM2()
+                    ),
+                    alturaPeitoril = if (it is Janela) it.alturaPeitoril else BigDecimal.ZERO,
+                    area = it.geometria.calcularAreaTotalM2(),
+                    material = it.material,
+                    informacaoAdicional = it.informacaoAdicional
+                )
+            },
+            esquadriasTipoMaterial = salaAula.calcularAreaEsquadriasPorTipoMaterial().map {
+                EsquadriaTipoMaterialRes(tipo = it.key.first, material = it.key.second, area = it.value)
+            }
+        )
+
+        // Dados - ambiente cadastrado
+        val ambienteRes = ambientesNPUseCases.cadastrarAmbiente(ambienteReq)
+
+        // Quando novas esquadrias forem adicionadas ao ambiente
+        val esquadriasDetalhesAtualizados = ambientesNPUseCases.incluirEsquadriasAmbiente(
+            ambienteRes.id,
+            esquadriasParaIncluir
+        )
+
+        // Então as esquadrias atualizadas devem ser retornadas ao usuário
+        assertEquals(esquadriasDetalhesRes, esquadriasDetalhesAtualizados)
+    }
+
+    @Test
+    fun `Deve atualizar as esquadrias no ambiente`() {
+        // Dados - Esquadrias a serem incluídas no ambiente
+        val esquadriasParaAtualizar = setOf(
+            EsquadriaReq(
+                tipo = TipoEsquadria.PORTA,
+                geometria = GeometriaEsquadriaReq(
+                    base = BigDecimal("0.8"), altura = BigDecimal("2.1")
+                ),
+                material = MaterialEsquadria.MADEIRA_FICHA
+            )
+        )
+
+        // Dados - Criação da lista de esquadrias atualizadas do ambiente
+        salaAula.esquadrias.clear()
+        salaAula.esquadrias.addAll(esquadriasParaAtualizar.map {
+            Porta(
+                geometria = Retangular(
+                    base = it.geometria.base,
+                    altura = it.geometria.altura,
+                    repeticao = it.geometria.repeticao
+                ),
+                material = it.material,
+                informacaoAdicional = it.informacaoAdicional
+            )
+        })
+
+        // Dados - Modelo de resposta esperado após a inclusão das esquadrias
+        val esquadriasDetalhesRes = EsquadriasDetalhesRes(
+            esquadrias = salaAula.esquadrias.map {
+                EsquadriaRes(
+                    id = 0L,
+                    tipo = it.tipo,
+                    geometria = GeometriaEsquadriaRes(
+                        id = 0L,
+                        base = it.geometria.base,
+                        altura = it.geometria.altura,
+                        repeticao = it.geometria.repeticao,
+                        area = it.geometria.calcularAreaTotalM2()
+                    ),
+                    alturaPeitoril = BigDecimal.ZERO,
+                    area = it.geometria.calcularAreaTotalM2(),
+                    material = it.material,
+                    informacaoAdicional = it.informacaoAdicional
+                )
+            },
+            esquadriasTipoMaterial = salaAula.calcularAreaEsquadriasPorTipoMaterial().map {
+                EsquadriaTipoMaterialRes(tipo = it.key.first, material = it.key.second, area = it.value)
+            }
+        )
+
+        // Dados - ambiente cadastrado
+        val ambienteRes = ambientesNPUseCases.cadastrarAmbiente(ambienteReq)
+
+        // Quando novas esquadrias forem adicionadas ao ambiente
+        val esquadriasDetalhesAtualizados = ambientesNPUseCases.atualizarEsquadriasAmbiente(
+            ambienteRes.id,
+            esquadriasParaAtualizar
+        )
+
+        // Então as esquadrias atualizadas devem ser retornadas ao usuário
+        assertEquals(esquadriasDetalhesRes, esquadriasDetalhesAtualizados)
     }
 
 }
