@@ -3,6 +3,7 @@ package br.edu.ifce.ambientes_internos.model.application.usecases
 import br.edu.ifce.ambientes_internos.model.application.interfaces.IAmbienteNaoPublicadoUseCases
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.StatusAmbiente
 import br.edu.ifce.ambientes_internos.model.domain.factory.AmbienteFactory
+import br.edu.ifce.ambientes_internos.model.domain.factory.EsquadriaFactory
 import br.edu.ifce.ambientes_internos.model.domain.factory.GeometriaFactory
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.*
 import br.edu.ifce.ambientes_internos.model.dto.esquadria.EsquadriaReq
@@ -114,14 +115,27 @@ class AmbienteNaoPublicadoUseCases(val repository: AmbienteRepository) : IAmbien
         id: Long,
         esquadrias: Set<EsquadriaReq>
     ): EsquadriasDetalhesRes {
-        TODO("Not yet implemented")
+        val ambienteExistente =
+            repository.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
+                .orElseThrow { NoSuchElementException("Ambiente não encontrado") }
+        val esquadriasNovas = esquadrias.map { EsquadriaFactory.criar(it) }
+        ambienteExistente.esquadrias.addAll(esquadriasNovas)
+        val ambienteAtualizado = repository.save(ambienteExistente)
+        return EsquadriasDetalhesRes.from(ambienteAtualizado)
     }
 
     override fun atualizarEsquadriasAmbiente(
         id: Long,
         esquadrias: Set<EsquadriaReq>
     ): EsquadriasDetalhesRes {
-        TODO("Not yet implemented")
+        val ambienteExistente =
+            repository.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
+                .orElseThrow { NoSuchElementException("Ambiente não encontrado") }
+        val esquadriasAtualizadas = esquadrias.map { EsquadriaFactory.criar(it) }
+        ambienteExistente.esquadrias.clear()
+        ambienteExistente.esquadrias.addAll(esquadriasAtualizadas)
+        val ambienteAtualizado = repository.save(ambienteExistente)
+        return EsquadriasDetalhesRes.from(ambienteAtualizado)
     }
 
     override fun atualizarInformacaoAdicionalAmbiente(
