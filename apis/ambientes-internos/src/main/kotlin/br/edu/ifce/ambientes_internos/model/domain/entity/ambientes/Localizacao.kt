@@ -5,6 +5,9 @@ import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Unidad
 import jakarta.persistence.*
 
 @Entity
+@Table(
+    uniqueConstraints = [UniqueConstraint(name = "uk_localizacao_bloco_unidade_andar", columnNames = ["bloco", "unidade", "andar"]) ]
+)
 class Localizacao(
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

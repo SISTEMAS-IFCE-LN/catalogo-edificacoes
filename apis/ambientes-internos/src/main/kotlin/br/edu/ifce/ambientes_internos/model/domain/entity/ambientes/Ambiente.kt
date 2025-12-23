@@ -6,27 +6,13 @@ import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.Esquadria
 import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.enums.MaterialEsquadria
 import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.enums.TipoEsquadria
 import br.edu.ifce.ambientes_internos.model.domain.entity.geometrias.Geometria
-import jakarta.persistence.CascadeType
-import jakarta.persistence.Column
-import jakarta.persistence.Entity
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.GenerationType
-import jakarta.persistence.Id
-import jakarta.persistence.Inheritance
-import jakarta.persistence.InheritanceType
-import jakarta.persistence.DiscriminatorColumn
-import jakarta.persistence.DiscriminatorType
-import jakarta.persistence.ElementCollection
-import jakarta.persistence.EnumType
-import jakarta.persistence.Enumerated
-import jakarta.persistence.FetchType
-import jakarta.persistence.JoinColumn
-import jakarta.persistence.ManyToOne
-import jakarta.persistence.OneToMany
+import jakarta.persistence.*
 import java.math.BigDecimal
-import kotlin.plus
 
 @Entity
+@Table(
+    uniqueConstraints = [UniqueConstraint(name = "uk_ambiente_nome_localizacao", columnNames = ["nome", "localizacao_id"]) ]
+)
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "tipo", discriminatorType = DiscriminatorType.STRING)
 abstract class Ambiente(
