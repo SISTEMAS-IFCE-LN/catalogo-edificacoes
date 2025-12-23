@@ -12,37 +12,57 @@ import br.edu.ifce.ambientes_internos.model.dto.geometria.GeometriaAmbienteReq
 import br.edu.ifce.ambientes_internos.model.dto.geometria.GeometriaAmbienteRes
 import br.edu.ifce.ambientes_internos.model.dto.geometria.ListaGeometriasAmbienteRes
 import br.edu.ifce.ambientes_internos.model.repository.AmbienteRepository
+import br.edu.ifce.ambientes_internos.model.repository.LocalizacaoRepository
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 
 @Service
-class AmbienteNaoPublicadoUseCases(val repository: AmbienteRepository) : IAmbienteNaoPublicadoUseCases {
+class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc: LocalizacaoRepository) :
+    IAmbienteNaoPublicadoUseCases {
 
+    @Transactional
     override fun cadastrarAmbiente(ambienteReq: AmbienteReq): AmbienteRes {
-        val ambiente = repository.save(AmbienteFactory.criar(ambienteReq))
-        return AmbienteRes.from(ambiente)
+        val ambiente = AmbienteFactory.criar(ambienteReq)
+        repoLoc.findByLocalizacao(ambiente.localizacao).ifPresent {
+            ambiente.localizacao = it
+            if (repoAmb.existsByNomeAndLocalizacaoId(ambiente.nome, it.id!!)) {
+                throw IllegalArgumentException("Já existe um ambiente com esse nome nessa localização")
+            }
+        }
+        return AmbienteRes.from(repoAmb.save(ambiente))
     }
 
     override fun obterAmbientePorId(id: Long): AmbienteRes {
         val ambiente =
-            repository.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
+            repoAmb.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
                 .orElseThrow { NoSuchElementException("Ambiente não encontrado") }
         return AmbienteRes.from(ambiente)
     }
 
+    @Transactional
     override fun atualizarDadosBasicosAmbiente(
         id: Long,
         ambienteAtualizado: AmbienteBasicoReq
     ): AmbienteBasicoRes {
         val ambienteExistente =
-            repository.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
+            repoAmb.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
                 .orElseThrow { NoSuchElementException("Ambiente não encontrado") }
         ambienteExistente.nome = ambienteAtualizado.nome
         ambienteExistente.capacidade = ambienteAtualizado.capacidade
         ambienteExistente.localizacao.bloco = ambienteAtualizado.localizacao.bloco
         ambienteExistente.localizacao.unidade = ambienteAtualizado.localizacao.unidade
         ambienteExistente.localizacao.andar = ambienteAtualizado.localizacao.andar
-        return AmbienteBasicoRes.from(repository.save(ambienteExistente))
+        repoLoc.findByLocalizacao(ambienteExistente.localizacao).ifPresent {
+            ambienteExistente.localizacao = it
+            if (repoAmb.existsByNomeAndLocalizacaoIdAndIdNot(
+                    ambienteExistente.nome,
+                    it.id!!,
+                    ambienteExistente.id!!
+                )
+            ) throw IllegalArgumentException("Já existe um ambiente com esse nome nessa localização")
+        }
+        return AmbienteBasicoRes.from(repoAmb.save(ambienteExistente))
     }
 
     override fun incluirGeometriasAmbiente(
@@ -50,13 +70,13 @@ class AmbienteNaoPublicadoUseCases(val repository: AmbienteRepository) : IAmbien
         geometriasAdd: Set<GeometriaAmbienteReq>
     ): ListaGeometriasAmbienteRes {
         val ambienteExistente =
-            repository.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
+            repoAmb.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
                 .orElseThrow { NoSuchElementException("Ambiente não encontrado") }
         val geometrias = geometriasAdd.map { GeometriaFactory.criar(it) }.toMutableSet()
 
         ambienteExistente.geometrias.addAll(geometrias)
 
-        val ambienteAtualizado = repository.save(ambienteExistente)
+        val ambienteAtualizado = repoAmb.save(ambienteExistente)
         val geometriasRes = ambienteAtualizado.geometrias.map { GeometriaAmbienteRes.from(it) }
 
         return ListaGeometriasAmbienteRes(
@@ -70,14 +90,14 @@ class AmbienteNaoPublicadoUseCases(val repository: AmbienteRepository) : IAmbien
         geometriasAtualizadas: Set<GeometriaAmbienteReq>
     ): ListaGeometriasAmbienteRes {
         val ambienteExistente =
-            repository.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
+            repoAmb.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
                 .orElseThrow { NoSuchElementException("Ambiente não encontrado") }
         val geometrias = geometriasAtualizadas.map { GeometriaFactory.criar(it) }.toMutableSet()
 
         ambienteExistente.geometrias.clear()
         ambienteExistente.geometrias.addAll(geometrias)
 
-        val ambienteAtualizado = repository.save(ambienteExistente)
+        val ambienteAtualizado = repoAmb.save(ambienteExistente)
         val geometriasRes = ambienteAtualizado.geometrias.map { GeometriaAmbienteRes.from(it) }
 
         return ListaGeometriasAmbienteRes(
@@ -91,10 +111,10 @@ class AmbienteNaoPublicadoUseCases(val repository: AmbienteRepository) : IAmbien
         pesDireitos: Set<BigDecimal>
     ): Set<BigDecimal> {
         val ambienteExistente =
-            repository.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
+            repoAmb.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
                 .orElseThrow { NoSuchElementException("Ambiente não encontrado") }
         ambienteExistente.pesDireitos.addAll(pesDireitos)
-        val ambienteAtualizado = repository.save(ambienteExistente)
+        val ambienteAtualizado = repoAmb.save(ambienteExistente)
         return ambienteAtualizado.pesDireitos
     }
 
@@ -103,11 +123,11 @@ class AmbienteNaoPublicadoUseCases(val repository: AmbienteRepository) : IAmbien
         pesDireitos: Set<BigDecimal>
     ): Set<BigDecimal> {
         val ambienteExistente =
-            repository.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
+            repoAmb.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
                 .orElseThrow { NoSuchElementException("Ambiente não encontrado") }
         ambienteExistente.pesDireitos.clear()
         ambienteExistente.pesDireitos.addAll(pesDireitos)
-        val ambienteAtualizado = repository.save(ambienteExistente)
+        val ambienteAtualizado = repoAmb.save(ambienteExistente)
         return ambienteAtualizado.pesDireitos
     }
 
@@ -116,11 +136,11 @@ class AmbienteNaoPublicadoUseCases(val repository: AmbienteRepository) : IAmbien
         esquadrias: Set<EsquadriaReq>
     ): EsquadriasDetalhesRes {
         val ambienteExistente =
-            repository.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
+            repoAmb.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
                 .orElseThrow { NoSuchElementException("Ambiente não encontrado") }
         val esquadriasNovas = esquadrias.map { EsquadriaFactory.criar(it) }
         ambienteExistente.esquadrias.addAll(esquadriasNovas)
-        val ambienteAtualizado = repository.save(ambienteExistente)
+        val ambienteAtualizado = repoAmb.save(ambienteExistente)
         return EsquadriasDetalhesRes.from(ambienteAtualizado)
     }
 
@@ -129,12 +149,12 @@ class AmbienteNaoPublicadoUseCases(val repository: AmbienteRepository) : IAmbien
         esquadrias: Set<EsquadriaReq>
     ): EsquadriasDetalhesRes {
         val ambienteExistente =
-            repository.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
+            repoAmb.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
                 .orElseThrow { NoSuchElementException("Ambiente não encontrado") }
         val esquadriasAtualizadas = esquadrias.map { EsquadriaFactory.criar(it) }
         ambienteExistente.esquadrias.clear()
         ambienteExistente.esquadrias.addAll(esquadriasAtualizadas)
-        val ambienteAtualizado = repository.save(ambienteExistente)
+        val ambienteAtualizado = repoAmb.save(ambienteExistente)
         return EsquadriasDetalhesRes.from(ambienteAtualizado)
     }
 
