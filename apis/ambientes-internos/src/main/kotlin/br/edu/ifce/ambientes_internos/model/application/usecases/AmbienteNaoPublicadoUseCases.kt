@@ -1,6 +1,7 @@
 package br.edu.ifce.ambientes_internos.model.application.usecases
 
 import br.edu.ifce.ambientes_internos.model.application.interfaces.IAmbienteNaoPublicadoUseCases
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Localizacao
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.StatusAmbiente
 import br.edu.ifce.ambientes_internos.model.domain.factory.AmbienteFactory
 import br.edu.ifce.ambientes_internos.model.domain.factory.EsquadriaFactory
@@ -162,21 +163,58 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         id: Long,
         informacaoAdicional: String
     ): String {
-        TODO("Not yet implemented")
+        val ambienteExistente =
+            repoAmb.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
+                .orElseThrow { NoSuchElementException("Ambiente não encontrado") }
+        ambienteExistente.informacaoAdicional = informacaoAdicional
+        val ambienteAtualizado = repoAmb.save(ambienteExistente)
+        return ambienteAtualizado.informacaoAdicional
     }
 
     override fun alterarTipoDadosAmbiente(
         id: Long,
         ambiente: AmbienteReq
     ): AmbienteRes {
-        TODO("Not yet implemented")
+        val ambienteExistente =
+            repoAmb.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
+                .orElseThrow { NoSuchElementException("Ambiente não encontrado") }
+        val ambienteAtualizado = AmbienteFactory.criar(ambiente)
+        ambienteAtualizado.localizacao = ambienteExistente.localizacao
+        if (repoAmb.existsByNomeAndLocalizacaoId(
+                ambienteAtualizado.nome,
+                ambienteAtualizado.localizacao.id!!
+            )
+        ) {
+            throw IllegalArgumentException("Já existe um ambiente com esse nome nessa localização")
+        }
+        val ambienteSalvo = repoAmb.save(ambienteAtualizado)
+        repoAmb.delete(ambienteExistente)
+        return AmbienteRes.from(ambienteSalvo)
     }
 
     override fun duplicarAmbiente(
         id: Long,
         dados: AmbienteNomeLocalizacaoReq
     ): AmbienteRes {
-        TODO("Not yet implemented")
+        val ambienteExistente =
+            repoAmb.findById(id)
+                .orElseThrow { NoSuchElementException("Ambiente não encontrado") }
+        val ambienteDuplicado = AmbienteFactory.clonar(ambienteExistente)
+        val novaLocalizacao = Localizacao(
+            bloco = dados.localizacao.bloco,
+            unidade = dados.localizacao.unidade,
+            andar = dados.localizacao.andar
+        )
+        ambienteDuplicado.id = null
+        ambienteDuplicado.nome = dados.nome
+        ambienteDuplicado.localizacao = novaLocalizacao
+        repoLoc.findByLocalizacao(novaLocalizacao).ifPresent {
+            ambienteDuplicado.localizacao = it
+            if (repoAmb.existsByNomeAndLocalizacaoId(ambienteDuplicado.nome, it.id!!)) {
+                throw IllegalArgumentException("Já existe um ambiente com esse nome nessa localização")
+            }
+        }
+        return AmbienteRes.from(repoAmb.save(ambienteDuplicado))
     }
 
     override fun enviarValidacaoAmbientes(ids: Set<Long>) {
