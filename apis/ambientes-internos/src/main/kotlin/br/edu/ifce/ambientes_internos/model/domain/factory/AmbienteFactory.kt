@@ -73,4 +73,22 @@ object AmbienteFactory {
         )
     }
 
+    fun clonar(ambiente: Ambiente): Ambiente {
+        val construtor = AMBIENTES_MAP[ambiente.tipo]
+            ?: throw IllegalArgumentException("O tipo de ambiente é inválido.")
+        return construtor(
+            ambiente.nome,
+            Localizacao(
+                unidade = ambiente.localizacao.unidade,
+                bloco = ambiente.localizacao.bloco,
+                andar = ambiente.localizacao.andar
+            ),
+            ambiente.capacidade,
+            ambiente.geometrias.map { GeometriaFactory.clonar(it) }.toMutableSet(),
+            ambiente.pesDireitos.toMutableSet(),
+            ambiente.esquadrias.map { EsquadriaFactory.clonar(it) }.toMutableSet(),
+            ambiente.informacaoAdicional
+        )
+    }
+
 }

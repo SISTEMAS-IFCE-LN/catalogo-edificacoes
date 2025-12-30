@@ -27,4 +27,10 @@ object GeometriaFactory {
         return construtor(geometriaEsquadriaReq.base, geometriaEsquadriaReq.altura, geometriaEsquadriaReq.repeticao)
     }
 
+    fun clonar(geometria: Geometria): Geometria {
+        val construtor = GEOMETRIAS_MAP[geometria.tipo]
+            ?: throw IllegalArgumentException("O tipo de geometria é inválido.")
+        return construtor(geometria.base, geometria.altura, geometria.repeticao)
+    }
+
 }

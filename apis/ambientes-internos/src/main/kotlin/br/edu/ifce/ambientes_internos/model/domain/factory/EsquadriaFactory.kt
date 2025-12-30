@@ -58,4 +58,18 @@ object EsquadriaFactory {
         )
     }
 
+    fun clonar(esquadria: Esquadria): Esquadria {
+        val construtor = ESQUADRIAS_MAP[esquadria.tipo]
+            ?: throw IllegalArgumentException("O tipo de esquadria é inválido.")
+
+        val geometria = GeometriaFactory.clonar(esquadria.geometria) as Retangular
+
+        return construtor(
+            geometria,
+            esquadria.material,
+            if (esquadria is Janela) esquadria.alturaPeitoril else BigDecimal.ZERO,
+            esquadria.informacaoAdicional
+        )
+    }
+
 }
