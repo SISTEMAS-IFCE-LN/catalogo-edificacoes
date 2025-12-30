@@ -2,9 +2,11 @@ package br.edu.ifce.ambientes_internos.integracao
 
 import br.edu.ifce.ambientes_internos.model.application.interfaces.IAmbienteNaoPublicadoUseCases
 import br.edu.ifce.ambientes_internos.model.application.usecases.AmbienteNaoPublicadoUseCases
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.LaboratorioInformatica
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Localizacao
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.SalaAula
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Bloco
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.StatusAmbiente
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.TipoAmbiente
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Unidade
 import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.Janela
@@ -14,6 +16,7 @@ import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.enums.TipoE
 import br.edu.ifce.ambientes_internos.model.domain.entity.geometrias.Geometria
 import br.edu.ifce.ambientes_internos.model.domain.entity.geometrias.Retangular
 import br.edu.ifce.ambientes_internos.model.domain.entity.geometrias.enums.TipoGeometria
+import br.edu.ifce.ambientes_internos.model.domain.factory.AmbienteFactory
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.*
 import br.edu.ifce.ambientes_internos.model.dto.esquadria.EsquadriaReq
 import br.edu.ifce.ambientes_internos.model.dto.esquadria.EsquadriaRes
@@ -22,6 +25,7 @@ import br.edu.ifce.ambientes_internos.model.dto.esquadria.EsquadriasDetalhesRes
 import br.edu.ifce.ambientes_internos.model.dto.geometria.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
@@ -480,6 +484,256 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
 
         // Então as esquadrias atualizadas devem ser retornadas ao usuário
         assertEquals(esquadriasDetalhesRes, esquadriasDetalhesAtualizados)
+    }
+
+    @Test
+    fun `Deve atualizar informacao adicional do ambiente`() {
+        // Dados - nova informação adicional para o ambiente
+        val informacaoAdicionalAtualizada = "Sala equipada com ar-condicionado e projetor."
+
+        // Dados - ambiente cadastrado
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(ambienteReq)
+
+        // Quando a informação adicional do ambiente for atualizada
+        val informacaoAdicionalRetornada =
+            ambientesNPUseCases.atualizarInformacaoAdicionalAmbiente(ambienteSalvo.id, informacaoAdicionalAtualizada)
+
+        // Então a informação adicional retornada deve corresponder à fornecida
+        assertEquals(informacaoAdicionalAtualizada, informacaoAdicionalRetornada)
+    }
+
+    @Test
+    fun `Deve alterar tipo e dados do ambiente`() {
+        // Dados - Modelo de requisição para alteração do tipo e dados do ambiente
+        val ambienteAlteracaoReq = AmbienteReq(
+            tipo = TipoAmbiente.LABORATORIO_INFORMATICA,
+            nome = "Laboratório de Informática Exemplo",
+            localizacao = LocalizacaoReq(
+                unidade = Unidade.CIDADE_ALTA, bloco = Bloco.BLOCO_10, andar = 1
+            ), capacidade = 25, geometrias = setOf(
+                GeometriaAmbienteReq(
+                    tipo = TipoGeometria.RETANGULAR, base = BigDecimal("8.0"), altura = BigDecimal("4.0")
+                )
+            ), pesDireitos = setOf(BigDecimal("3.5")), esquadrias = setOf(
+                EsquadriaReq(
+                    tipo = TipoEsquadria.PORTA,
+                    geometria = GeometriaEsquadriaReq(
+                        base = BigDecimal("0.8"), altura = BigDecimal("2.10")
+                    ),
+                    material = MaterialEsquadria.ALUMINIO
+                ),
+                EsquadriaReq(
+                    tipo = TipoEsquadria.JANELA, geometria = GeometriaEsquadriaReq(
+                        base = BigDecimal("1.2"), altura = BigDecimal("1.0")
+                    ),
+                    material = MaterialEsquadria.ALUMINIO, alturaPeitoril = BigDecimal("1.0")
+                )
+            ), informacaoAdicional = "Laboratório equipado com computadores e projetor."
+        )
+
+        // Dados - ambiente para salvar a partir da requisição de alteração
+        val laboratorioInformatica = LaboratorioInformatica(
+            nome = ambienteAlteracaoReq.nome,
+            localizacao = Localizacao(
+                bloco = ambienteAlteracaoReq.localizacao.bloco,
+                unidade = ambienteAlteracaoReq.localizacao.unidade,
+                andar = ambienteAlteracaoReq.localizacao.andar
+            ),
+            capacidade = ambienteAlteracaoReq.capacidade,
+            geometrias = ambienteAlteracaoReq.geometrias.map {
+                Retangular(
+                    base = it.base, altura = it.altura
+                ) as Geometria
+            }.toMutableSet(),
+            esquadrias = ambienteAlteracaoReq.esquadrias.map {
+                when (it.tipo) {
+                    TipoEsquadria.JANELA -> Janela(
+                        geometria = Retangular(
+                            base = it.geometria.base, altura = it.geometria.altura
+                        ),
+                        material = it.material,
+                        alturaPeitoril = it.alturaPeitoril,
+                        informacaoAdicional = it.informacaoAdicional
+                    )
+
+                    TipoEsquadria.PORTA -> Porta(
+                        geometria = Retangular(
+                            base = it.geometria.base, altura = it.geometria.altura
+                        ), material = it.material, informacaoAdicional = it.informacaoAdicional
+                    )
+
+                    else -> throw IllegalArgumentException("Tipo de esquadria desconhecido: ${it.tipo}")
+                }
+            }.toMutableSet(),
+            pesDireitos = ambienteAlteracaoReq.pesDireitos.toMutableSet(),
+            informacaoAdicional = ambienteAlteracaoReq.informacaoAdicional
+        )
+
+        // Dados - ambiente alterado esperado
+        val ambienteEsperado = AmbienteRes(
+            id = 0L,
+            tipo = laboratorioInformatica.tipo!!,
+            nome = laboratorioInformatica.nome,
+            localizacao = LocalizacaoRes(
+                id = 0L,
+                bloco = laboratorioInformatica.localizacao.bloco,
+                unidade = laboratorioInformatica.localizacao.unidade,
+                andar = laboratorioInformatica.localizacao.andar
+            ),
+            capacidade = laboratorioInformatica.capacidade,
+            geometrias = laboratorioInformatica.geometrias.map {
+                GeometriaAmbienteRes(
+                    id = 0L,
+                    tipo = it.tipo,
+                    base = it.base,
+                    altura = it.altura,
+                    repeticao = it.repeticao,
+                    area = it.calcularAreaTotalM2()
+                )
+            },
+            areaAmbiente = laboratorioInformatica.calcularAreaAmbienteM2(),
+            pesDireitos = laboratorioInformatica.pesDireitos.toList(),
+            esquadriasDetalhes = EsquadriasDetalhesRes(esquadrias = laboratorioInformatica.esquadrias.map {
+                EsquadriaRes(
+                    id = 0L,
+                    tipo = it.tipo,
+                    geometria = GeometriaEsquadriaRes(
+                        id = 0L,
+                        base = it.geometria.base,
+                        altura = it.geometria.altura,
+                        repeticao = it.geometria.repeticao,
+                        area = it.geometria.calcularAreaTotalM2()
+                    ),
+                    alturaPeitoril = if (it is Janela) it.alturaPeitoril else BigDecimal.ZERO,
+                    area = it.geometria.calcularAreaTotalM2(),
+                    material = it.material,
+                    informacaoAdicional = it.informacaoAdicional
+                )
+            }, esquadriasTipoMaterial = laboratorioInformatica.calcularAreaEsquadriasPorTipoMaterial().map {
+                EsquadriaTipoMaterialRes(
+                    tipo = it.key.first, material = it.key.second, area = it.value
+                )
+            }),
+            informacaoAdicional = laboratorioInformatica.informacaoAdicional,
+            status = laboratorioInformatica.status
+        )
+
+        // Dados - ambiente cadastrado
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(ambienteReq)
+
+        // Quando o tipo e dados do ambiente forem alterados
+        val ambienteAlterado = ambientesNPUseCases.alterarTipoDadosAmbiente(ambienteSalvo.id, ambienteAlteracaoReq)
+
+        // Então não deve ocorrer nenhuma exceção durante o processo
+        assertEquals(ambienteEsperado, ambienteAlterado)
+        assertEquals(ambienteSalvo.localizacao, ambienteAlterado.localizacao)
+        assertThrows <NoSuchElementException> { ambientesNPUseCases.obterAmbientePorId(ambienteSalvo.id) }
+    }
+
+    @Test
+    fun `Deve duplicar um ambiente cadastrado`() {
+        // Dados - Modelo requisição para duplicação do ambiente
+        val ambienteNomeLocalizacaoReq = AmbienteNomeLocalizacaoReq(
+            nome = "Sala de Aula Duplicada",
+            localizacao = LocalizacaoReq(
+                unidade = Unidade.CIDADE_ALTA, bloco = Bloco.BLOCO_10, andar = 1
+            )
+        )
+
+        // Dados - Modelo de resposta esperado após a duplicação do ambiente
+        val salaAulaDuplicada = SalaAula(
+            nome = ambienteNomeLocalizacaoReq.nome,
+            localizacao = Localizacao(
+                bloco = ambienteNomeLocalizacaoReq.localizacao.bloco,
+                unidade = ambienteNomeLocalizacaoReq.localizacao.unidade,
+                andar = ambienteNomeLocalizacaoReq.localizacao.andar
+            ),
+            capacidade = salaAula.capacidade,
+            geometrias = salaAula.geometrias.map {
+                Retangular(
+                    base = it.base, altura = it.altura
+                ) as Geometria
+            }.toMutableSet(),
+            esquadrias = salaAula.esquadrias.map {
+                when (it.tipo) {
+                    TipoEsquadria.JANELA -> Janela(
+                        geometria = Retangular(
+                            base = it.geometria.base, altura = it.geometria.altura
+                        ),
+                        material = it.material,
+                        alturaPeitoril = if (it is Janela) it.alturaPeitoril else BigDecimal.ZERO,
+                        informacaoAdicional = it.informacaoAdicional
+                    )
+
+                    TipoEsquadria.PORTA -> Porta(
+                        geometria = Retangular(
+                            base = it.geometria.base, altura = it.geometria.altura
+                        ), material = it.material, informacaoAdicional = it.informacaoAdicional
+                    )
+
+                    else -> throw IllegalArgumentException("Tipo de esquadria desconhecido: ${it.tipo}")
+                }
+            }.toMutableSet(),
+            pesDireitos = salaAula.pesDireitos.toMutableSet(),
+            informacaoAdicional = salaAula.informacaoAdicional
+        )
+
+        val ambienteDuplicadoEsperado = AmbienteRes(
+            id = 0L,
+            tipo = salaAulaDuplicada.tipo!!,
+            nome = salaAulaDuplicada.nome,
+            localizacao = LocalizacaoRes(
+                id = 0L,
+                bloco = salaAulaDuplicada.localizacao.bloco,
+                unidade = salaAulaDuplicada.localizacao.unidade,
+                andar = salaAulaDuplicada.localizacao.andar
+            ),
+            capacidade = salaAulaDuplicada.capacidade,
+            geometrias = salaAulaDuplicada.geometrias.map {
+                GeometriaAmbienteRes(
+                    id = 0L,
+                    tipo = it.tipo,
+                    base = it.base,
+                    altura = it.altura,
+                    repeticao = it.repeticao,
+                    area = it.calcularAreaTotalM2()
+                )
+            },
+            areaAmbiente = salaAulaDuplicada.calcularAreaAmbienteM2(),
+            pesDireitos = salaAulaDuplicada.pesDireitos.toList(),
+            esquadriasDetalhes = EsquadriasDetalhesRes(esquadrias = salaAulaDuplicada.esquadrias.map {
+                EsquadriaRes(
+                    id = 0L,
+                    tipo = it.tipo,
+                    geometria = GeometriaEsquadriaRes(
+                        id = 0L,
+                        base = it.geometria.base,
+                        altura = it.geometria.altura,
+                        repeticao = it.geometria.repeticao,
+                        area = it.geometria.calcularAreaTotalM2()
+                    ),
+                    alturaPeitoril = if (it is Janela) it.alturaPeitoril else BigDecimal.ZERO,
+                    area = it.geometria.calcularAreaTotalM2(),
+                    material = it.material,
+                    informacaoAdicional = it.informacaoAdicional
+                )
+            }, esquadriasTipoMaterial = salaAulaDuplicada.calcularAreaEsquadriasPorTipoMaterial().map {
+                EsquadriaTipoMaterialRes(
+                    tipo = it.key.first, material = it.key.second, area = it.value
+                )
+            }),
+            informacaoAdicional = salaAulaDuplicada.informacaoAdicional,
+            status = salaAulaDuplicada.status
+        )
+
+        // Dados - ambiente cadastrado
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(ambienteReq)
+
+        // Quando o ambiente for duplicado
+        val ambienteDuplicado = ambientesNPUseCases.duplicarAmbiente(ambienteSalvo.id, ambienteNomeLocalizacaoReq)
+
+        // Então o ambiente duplicado deve ser retornado ao usuário
+        assertEquals(ambienteDuplicadoEsperado, ambienteDuplicado)
     }
 
 }
