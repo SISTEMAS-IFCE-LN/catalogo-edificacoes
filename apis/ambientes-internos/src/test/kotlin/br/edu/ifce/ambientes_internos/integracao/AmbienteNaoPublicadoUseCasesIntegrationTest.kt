@@ -736,4 +736,16 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
         assertEquals(ambienteDuplicadoEsperado, ambienteDuplicado)
     }
 
+    @Test
+    fun `Deve alterar o status de um ambiente de NAO_PUBLICADO para AGUARDANDO_VALIDACAO`() {
+        // Dados - ambiente cadastrado
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(ambienteReq)
+
+        // Quando o ambiente for enviado para validação
+        ambientesNPUseCases.enviarValidacaoAmbientes(setOf(ambienteSalvo.id))
+
+        // Então seu status deve ser alterado para AGUARDANDO_VALIDACAO
+        assertThrows <NoSuchElementException> { ambientesNPUseCases.obterAmbientePorId(ambienteSalvo.id) }
+    }
+
 }

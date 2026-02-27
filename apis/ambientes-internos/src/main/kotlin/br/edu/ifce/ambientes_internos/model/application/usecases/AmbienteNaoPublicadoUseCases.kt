@@ -217,8 +217,14 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         return AmbienteRes.from(repoAmb.save(ambienteDuplicado))
     }
 
+    @Transactional
     override fun enviarValidacaoAmbientes(ids: Set<Long>) {
-        TODO("Not yet implemented")
+        val ambientes = repoAmb.findAllByIdInAndStatus(ids, StatusAmbiente.NAO_PUBLICADO)
+        if (ambientes.size != ids.size) {
+            throw NoSuchElementException("Um ou mais ambientes foram não encontrados")
+        }
+        ambientes.forEach { ambiente -> ambiente.status = StatusAmbiente.AGUARDANDO_VALIDACAO }
+        repoAmb.saveAll(ambientes)
     }
 
     override fun listarAmbientes(): AmbientesBasicosRes {
