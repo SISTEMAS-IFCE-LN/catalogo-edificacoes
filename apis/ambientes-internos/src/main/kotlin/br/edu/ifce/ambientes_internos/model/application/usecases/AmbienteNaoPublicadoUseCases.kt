@@ -14,6 +14,7 @@ import br.edu.ifce.ambientes_internos.model.dto.geometria.GeometriaAmbienteRes
 import br.edu.ifce.ambientes_internos.model.dto.geometria.ListaGeometriasAmbienteRes
 import br.edu.ifce.ambientes_internos.model.repository.AmbienteRepository
 import br.edu.ifce.ambientes_internos.model.repository.LocalizacaoRepository
+import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
@@ -34,6 +35,7 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         return AmbienteRes.from(repoAmb.save(ambiente))
     }
 
+    @Transactional(readOnly = true)
     override fun obterAmbientePorId(id: Long): AmbienteRes {
         val ambiente =
             repoAmb.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
@@ -66,6 +68,7 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         return AmbienteBasicoRes.from(repoAmb.save(ambienteExistente))
     }
 
+    @Transactional
     override fun incluirGeometriasAmbiente(
         id: Long,
         geometriasAdd: Set<GeometriaAmbienteReq>
@@ -86,6 +89,7 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         )
     }
 
+    @Transactional
     override fun atualizarGeometriasAmbiente(
         id: Long,
         geometriasAtualizadas: Set<GeometriaAmbienteReq>
@@ -107,6 +111,7 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         )
     }
 
+    @Transactional
     override fun incluirPesDireitosAmbiente(
         id: Long,
         pesDireitos: Set<BigDecimal>
@@ -119,6 +124,7 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         return ambienteAtualizado.pesDireitos
     }
 
+    @Transactional
     override fun atualizarPesDireitosAmbiente(
         id: Long,
         pesDireitos: Set<BigDecimal>
@@ -132,6 +138,7 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         return ambienteAtualizado.pesDireitos
     }
 
+    @Transactional
     override fun incluirEsquadriasAmbiente(
         id: Long,
         esquadrias: Set<EsquadriaReq>
@@ -145,6 +152,7 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         return EsquadriasDetalhesRes.from(ambienteAtualizado)
     }
 
+    @Transactional
     override fun atualizarEsquadriasAmbiente(
         id: Long,
         esquadrias: Set<EsquadriaReq>
@@ -159,6 +167,7 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         return EsquadriasDetalhesRes.from(ambienteAtualizado)
     }
 
+    @Transactional
     override fun atualizarInformacaoAdicionalAmbiente(
         id: Long,
         informacaoAdicional: String
@@ -171,6 +180,7 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         return ambienteAtualizado.informacaoAdicional
     }
 
+    @Transactional
     override fun alterarTipoDadosAmbiente(
         id: Long,
         ambiente: AmbienteReq
@@ -192,6 +202,7 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         return AmbienteRes.from(ambienteSalvo)
     }
 
+    @Transactional
     override fun duplicarAmbiente(
         id: Long,
         dados: AmbienteNomeLocalizacaoReq
@@ -227,24 +238,89 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         repoAmb.saveAll(ambientes)
     }
 
-    override fun listarAmbientes(): AmbientesBasicosRes {
-        TODO("Not yet implemented")
+    @Transactional(readOnly = true)
+    override fun listarAmbientes(pageable: Pageable): PaginatedAmbientesBasicosRes {
+        val page = repoAmb.findAllByStatus(StatusAmbiente.NAO_PUBLICADO, pageable)
+        val ambientesBasicos = page.content.map { AmbienteBasicoRes.from(it) }
+        val areaTotal = page.content.fold(BigDecimal.ZERO) { acc, ambiente ->
+            acc.add(ambiente.calcularAreaAmbienteM2())
+        }
+        return PaginatedAmbientesBasicosRes(
+            ambientes = ambientesBasicos,
+            areaTotal = areaTotal,
+            totalElements = page.totalElements,
+            totalPages = page.totalPages,
+            currentPage = page.number,
+            pageSize = page.size,
+            hasNext = page.hasNext(),
+            hasPrevious = page.hasPrevious()
+        )
     }
 
-    override fun listarAmbientesPorTipo(tipo: String): AmbientesBasicosRes {
-        TODO("Not yet implemented")
+    @Transactional(readOnly = true)
+    override fun listarAmbientesPorTipo(tipo: String, pageable: Pageable): PaginatedAmbientesBasicosRes {
+        val page = repoAmb.findByTipoAndStatus(tipo, StatusAmbiente.NAO_PUBLICADO, pageable)
+        val ambientesBasicos = page.content.map { AmbienteBasicoRes.from(it) }
+        val areaTotal = page.content.fold(BigDecimal.ZERO) { acc, ambiente ->
+            acc.add(ambiente.calcularAreaAmbienteM2())
+        }
+        return PaginatedAmbientesBasicosRes(
+            ambientes = ambientesBasicos,
+            areaTotal = areaTotal,
+            totalElements = page.totalElements,
+            totalPages = page.totalPages,
+            currentPage = page.number,
+            pageSize = page.size,
+            hasNext = page.hasNext(),
+            hasPrevious = page.hasPrevious()
+        )
     }
 
-    override fun listarAmbientesPorNome(nome: String): AmbientesBasicosRes {
-        TODO("Not yet implemented")
+    @Transactional(readOnly = true)
+    override fun listarAmbientesPorNome(nome: String, pageable: Pageable): PaginatedAmbientesBasicosRes {
+        val page = repoAmb.findByNomeContainingIgnoreCaseAndStatus(nome, StatusAmbiente.NAO_PUBLICADO, pageable)
+        val ambientesBasicos = page.content.map { AmbienteBasicoRes.from(it) }
+        val areaTotal = page.content.fold(BigDecimal.ZERO) { acc, ambiente ->
+            acc.add(ambiente.calcularAreaAmbienteM2())
+        }
+        return PaginatedAmbientesBasicosRes(
+            ambientes = ambientesBasicos,
+            areaTotal = areaTotal,
+            totalElements = page.totalElements,
+            totalPages = page.totalPages,
+            currentPage = page.number,
+            pageSize = page.size,
+            hasNext = page.hasNext(),
+            hasPrevious = page.hasPrevious()
+        )
     }
 
-    override fun listarAmbientesPorLocalizacao(localizacao: String): AmbientesBasicosRes {
-        TODO("Not yet implemented")
+    @Transactional(readOnly = true)
+    override fun listarAmbientesPorLocalizacao(localizacao: String, pageable: Pageable): PaginatedAmbientesBasicosRes {
+        val page = repoAmb.findByLocalizacaoContainingIgnoreCaseAndStatus(localizacao, StatusAmbiente.NAO_PUBLICADO, pageable)
+        val ambientesBasicos = page.content.map { AmbienteBasicoRes.from(it) }
+        val areaTotal = page.content.fold(BigDecimal.ZERO) { acc, ambiente ->
+            acc.add(ambiente.calcularAreaAmbienteM2())
+        }
+        return PaginatedAmbientesBasicosRes(
+            ambientes = ambientesBasicos,
+            areaTotal = areaTotal,
+            totalElements = page.totalElements,
+            totalPages = page.totalPages,
+            currentPage = page.number,
+            pageSize = page.size,
+            hasNext = page.hasNext(),
+            hasPrevious = page.hasPrevious()
+        )
     }
 
+    @Transactional
     override fun deletarAmbientes(ids: Set<Long>) {
-        TODO("Not yet implemented")
+        val ambientes = repoAmb.findAllByIdInAndStatus(ids, StatusAmbiente.NAO_PUBLICADO)
+        if (ambientes.size != ids.size) {
+            throw NoSuchElementException("Um ou mais ambientes foram não encontrados")
+        }
+        repoAmb.deleteAll(ambientes)
     }
 
 }
