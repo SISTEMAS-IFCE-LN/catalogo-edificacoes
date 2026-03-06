@@ -7,7 +7,7 @@ import br.edu.ifce.ambientes_internos.model.dto.geometria.GeometriaAmbienteReq
 import br.edu.ifce.ambientes_internos.model.dto.geometria.ListaGeometriasAmbienteRes
 import java.math.BigDecimal
 
-interface IAmbienteNaoPublicadoUseCases : IAmbienteUseCases<AmbientesBasicosRes, AmbienteRes> {
+interface IAmbienteNaoPublicadoUseCases : IAmbienteUseCases<AmbienteRes> {
 
     fun cadastrarAmbiente(ambienteReq: AmbienteReq): AmbienteRes
 
