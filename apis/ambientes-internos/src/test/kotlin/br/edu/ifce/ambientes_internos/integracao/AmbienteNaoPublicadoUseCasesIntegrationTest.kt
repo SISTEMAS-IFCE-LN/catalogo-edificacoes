@@ -30,11 +30,15 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.context.annotation.Import
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.test.context.ActiveProfiles
 import java.math.BigDecimal
 import java.math.RoundingMode
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+
 
 @DataJpaTest
 @Import(AmbienteNaoPublicadoUseCases::class)
@@ -746,6 +750,202 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
 
         // Então seu status deve ser alterado para AGUARDANDO_VALIDACAO
         assertThrows <NoSuchElementException> { ambientesNPUseCases.obterAmbientePorId(ambienteSalvo.id) }
+    }
+
+    @Test
+    fun `Deve listar os ambientes com status NAO_PUBLICADO`() {
+        // Dados - ambiente cadastrado
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(ambienteReq)
+
+        // Quando os ambientes com status NAO_PUBLICADO forem listados com paginação
+        val pageable = PageRequest.of(0, 10)
+        val ambientesNaoPublicados = ambientesNPUseCases.listarAmbientes(pageable)
+
+        // Então a lista deve conter o ambiente cadastrado
+        assertTrue(ambientesNaoPublicados.ambientes.any { it.id == ambienteSalvo.id })
+
+        // E as informações de paginação devem estar presentes
+        assertEquals(1, ambientesNaoPublicados.totalElements)
+        assertEquals(1, ambientesNaoPublicados.totalPages)
+        assertEquals(0, ambientesNaoPublicados.currentPage)
+        assertEquals(10, ambientesNaoPublicados.pageSize)
+        assertEquals(false, ambientesNaoPublicados.hasNext)
+        assertEquals(false, ambientesNaoPublicados.hasPrevious)
+    }
+
+    @Test
+    fun `Deve listar ambientes por nome com paginação`() {
+        // Dados - ambiente cadastrado
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(ambienteReq)
+
+        // Quando os ambientes forem filtrados por nome com paginação
+        val pageable = PageRequest.of(0, 10)
+        val ambientesPorNome = ambientesNPUseCases.listarAmbientesPorNome("Sala de Aula", pageable)
+
+        // Então a lista deve conter o ambiente cadastrado
+        assertTrue(ambientesPorNome.ambientes.any { it.id == ambienteSalvo.id })
+        assertEquals(1, ambientesPorNome.totalElements)
+
+        // E as informações de paginação devem estar presentes
+        assertEquals(1, ambientesPorNome.totalElements)
+        assertEquals(1, ambientesPorNome.totalPages)
+        assertEquals(0, ambientesPorNome.currentPage)
+        assertEquals(10, ambientesPorNome.pageSize)
+        assertEquals(false, ambientesPorNome.hasNext)
+        assertEquals(false, ambientesPorNome.hasPrevious)
+    }
+
+    @Test
+    fun `Deve listar ambientes por localização com paginação`() {
+        // Dados - ambiente cadastrado
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(ambienteReq)
+
+        // Quando os ambientes forem filtrados por localização com paginação
+        val pageable = PageRequest.of(0, 10)
+        val localizacaoFiltro = "CIDADE_ALTA"
+        val ambientesPorLocalizacao = ambientesNPUseCases.listarAmbientesPorLocalizacao(localizacaoFiltro, pageable)
+
+        // Então a lista deve conter o ambiente cadastrado
+        assertTrue(ambientesPorLocalizacao.ambientes.any { it.id == ambienteSalvo.id })
+        assertEquals(1, ambientesPorLocalizacao.totalElements)
+
+        // E as informações de paginação devem estar presentes
+        assertEquals(1, ambientesPorLocalizacao.totalElements)
+        assertEquals(1, ambientesPorLocalizacao.totalPages)
+        assertEquals(0, ambientesPorLocalizacao.currentPage)
+        assertEquals(10, ambientesPorLocalizacao.pageSize)
+        assertEquals(false, ambientesPorLocalizacao.hasNext)
+        assertEquals(false, ambientesPorLocalizacao.hasPrevious)
+    }
+
+    @Test
+    fun `Deve retornar lista vazia ao filtrar por localização inexistente com paginação`() {
+        // Dados - ambiente cadastrado
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(ambienteReq)
+
+        // Quando os ambientes forem filtrados por uma localização que não existe
+        val pageable = PageRequest.of(0, 10)
+        val localizacaoInexistente = "LOCALIZACAO_INEXISTENTE"
+        val ambientesPorLocalizacao = ambientesNPUseCases.listarAmbientesPorLocalizacao(localizacaoInexistente, pageable)
+
+        // Então a lista deve estar vazia
+        assertTrue(ambientesPorLocalizacao.ambientes.isEmpty())
+        assertEquals(0, ambientesPorLocalizacao.totalElements)
+
+        // E as informações de paginação devem refletir a lista vazia
+        assertEquals(0, ambientesPorLocalizacao.totalElements)
+        assertEquals(0, ambientesPorLocalizacao.totalPages)
+        assertEquals(0, ambientesPorLocalizacao.currentPage)
+        assertEquals(10, ambientesPorLocalizacao.pageSize)
+        assertEquals(false, ambientesPorLocalizacao.hasNext)
+        assertEquals(false, ambientesPorLocalizacao.hasPrevious)
+    }
+
+    @Test
+    fun `Deve deletar um ambiente existente com sucesso`() {
+        // Dados - ambiente cadastrado
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(ambienteReq)
+
+        // Quando o ambiente for deletado
+        ambientesNPUseCases.deletarAmbientes(setOf(ambienteSalvo.id))
+
+        // Então o ambiente não deve mais existir
+        assertThrows<NoSuchElementException> { ambientesNPUseCases.obterAmbientePorId(ambienteSalvo.id) }
+    }
+
+    @Test
+    fun `Deve deletar múltiplos ambientes com sucesso`() {
+        // Dados - criar 3 ambientes
+        val ambiente1 = ambientesNPUseCases.cadastrarAmbiente(ambienteReq)
+
+        val ambienteReq2 = AmbienteReq(
+            tipo = TipoAmbiente.SALA_AULA,
+            nome = "Sala de Aula 2",
+            localizacao = LocalizacaoReq(
+                unidade = Unidade.CIDADE_ALTA, bloco = Bloco.BLOCO_11, andar = 1
+            ),
+            capacidade = 25,
+            geometrias = setOf(
+                GeometriaAmbienteReq(
+                    tipo = TipoGeometria.RETANGULAR, base = BigDecimal("5.0"), altura = BigDecimal("3.0")
+                )
+            ),
+            pesDireitos = setOf(BigDecimal("3.0")),
+            esquadrias = setOf(
+                EsquadriaReq(
+                    tipo = TipoEsquadria.JANELA,
+                    geometria = GeometriaEsquadriaReq(
+                        base = BigDecimal("1.5"), altura = BigDecimal("1.2")
+                    ),
+                    material = MaterialEsquadria.ALUMINIO,
+                    alturaPeitoril = BigDecimal("0.90"),
+                    informacaoAdicional = "Janela de correr"
+                )
+            ),
+            informacaoAdicional = "Segunda sala de aula."
+        )
+        val ambiente2 = ambientesNPUseCases.cadastrarAmbiente(ambienteReq2)
+
+        val ambienteReq3 = AmbienteReq(
+            tipo = TipoAmbiente.LABORATORIO_INFORMATICA,
+            nome = "Laboratório de Informática",
+            localizacao = LocalizacaoReq(
+                unidade = Unidade.CIDADE_ALTA, bloco = Bloco.BLOCO_12, andar = 2
+            ),
+            capacidade = 40,
+            geometrias = setOf(
+                GeometriaAmbienteReq(
+                    tipo = TipoGeometria.RETANGULAR, base = BigDecimal("8.0"), altura = BigDecimal("6.0")
+                )
+            ),
+            pesDireitos = setOf(BigDecimal("3.0")),
+            esquadrias = setOf(),
+            informacaoAdicional = "Laboratório com computadores."
+        )
+        val ambiente3 = ambientesNPUseCases.cadastrarAmbiente(ambienteReq3)
+
+        // Quando todos os ambientes forem deletados
+        ambientesNPUseCases.deletarAmbientes(setOf(ambiente1.id, ambiente2.id, ambiente3.id))
+
+        // Então nenhum dos ambientes deve mais existir
+        assertThrows<NoSuchElementException> { ambientesNPUseCases.obterAmbientePorId(ambiente1.id) }
+        assertThrows<NoSuchElementException> { ambientesNPUseCases.obterAmbientePorId(ambiente2.id) }
+        assertThrows<NoSuchElementException> { ambientesNPUseCases.obterAmbientePorId(ambiente3.id) }
+
+        // E a lista de ambientes deve estar vazia
+        val pageable = PageRequest.of(0, 10)
+        val ambientesRestantes = ambientesNPUseCases.listarAmbientes(pageable)
+        assertEquals(0, ambientesRestantes.totalElements)
+    }
+
+    @Test
+    fun `Deve lançar exceção ao tentar deletar ambiente inexistente`() {
+        // Dados - ambiente cadastrado
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(ambienteReq)
+
+        // Quando tentar deletar um ID que não existe
+        val idInexistente = ambienteSalvo.id + 999L
+
+        // Então deve lançar NoSuchElementException
+        assertThrows<NoSuchElementException> {
+            ambientesNPUseCases.deletarAmbientes(setOf(idInexistente))
+        }
+    }
+
+    @Test
+    fun `Deve lançar exceção ao tentar deletar conjunto com ambiente existente e inexistente`() {
+        // Dados - dois ambientes, um existente e um ID fictício
+        val ambiente1 = ambientesNPUseCases.cadastrarAmbiente(ambienteReq)
+        val idInexistente = ambiente1.id + 999L
+
+        // Quando tentar deletar um conjunto onde um existe e outro não
+        assertThrows<NoSuchElementException> {
+            ambientesNPUseCases.deletarAmbientes(setOf(ambiente1.id, idInexistente))
+        }
+
+        // Então o ambiente existente deve continuar no banco (transação foi revertida)
+        val ambienteRecuperado = ambientesNPUseCases.obterAmbientePorId(ambiente1.id)
+        assertEquals(ambiente1.id, ambienteRecuperado.id)
     }
 
 }
