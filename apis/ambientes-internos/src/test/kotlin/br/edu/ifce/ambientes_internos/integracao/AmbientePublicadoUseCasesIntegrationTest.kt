@@ -630,40 +630,52 @@ class AmbientePublicadoUseCasesIntegrationTest {
         assertEquals(1, ambientesPUseCases.listarAmbientesPorNome("Sala", pageable).totalElements)
         assertEquals(1, ambientesPUseCases.listarAmbientesPorLocalizacao("BLOCO_10", pageable).totalElements)
     }
+
+    @Test
+    fun `Deve listar esquadrias dos ambientes publicados com paginacao`() {
+        val ambiente1 = criarAmbientePublicado(
+            nome = "Ambiente Publicado 1",
+            localizacao = Localizacao(Bloco.BLOCO_1, Unidade.CIDADE_ALTA, 1),
+            capacidade = 20,
+            geometrias = mutableSetOf(Retangular(base = BigDecimal("4.0"), altura = BigDecimal("3.0"))),
+            pesDireitos = mutableSetOf(BigDecimal("3.0")),
+            esquadrias = mutableSetOf(
+                Janela(
+                    geometria = Retangular(base = BigDecimal("1.0"), altura = BigDecimal("1.0")),
+                    material = MaterialEsquadria.ALUMINIO,
+                    alturaPeitoril = BigDecimal("0.90")
+                )
+            )
+        )
+
+        val ambiente2 = criarAmbientePublicado(
+            nome = "Ambiente Publicado 2",
+            localizacao = Localizacao(Bloco.BLOCO_2, Unidade.CIDADE_ALTA, 1),
+            capacidade = 25,
+            geometrias = mutableSetOf(Retangular(base = BigDecimal("5.0"), altura = BigDecimal("3.0"))),
+            pesDireitos = mutableSetOf(BigDecimal("3.0"))
+        )
+
+        val ambiente3 = criarAmbientePublicado(
+            nome = "Ambiente Publicado 3",
+            localizacao = Localizacao(Bloco.BLOCO_3, Unidade.CIDADE_ALTA, 1),
+            capacidade = 30,
+            geometrias = mutableSetOf(Retangular(base = BigDecimal("6.0"), altura = BigDecimal("3.0"))),
+            pesDireitos = mutableSetOf(BigDecimal("3.0"))
+        )
+
+        val resultado = ambientesPUseCases.listarEsquadriasAmbientes(
+            ids = setOf(ambiente1.id!!, ambiente2.id!!, ambiente3.id!!),
+            pageable = PageRequest.of(0, 2)
+        )
+
+        assertEquals(3, resultado.totalElements)
+        assertEquals(2, resultado.totalPages)
+        assertEquals(0, resultado.currentPage)
+        assertEquals(2, resultado.pageSize)
+        assertEquals(true, resultado.hasNext)
+        assertEquals(false, resultado.hasPrevious)
+        assertEquals(2, resultado.ambientes.size)
+    }
+
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
