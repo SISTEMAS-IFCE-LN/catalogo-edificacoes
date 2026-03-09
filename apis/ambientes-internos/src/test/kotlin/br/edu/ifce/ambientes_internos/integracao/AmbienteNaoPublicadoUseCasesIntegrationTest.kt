@@ -44,7 +44,7 @@ import kotlin.test.assertTrue
 @Import(AmbienteNaoPublicadoUseCases::class)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
 @ActiveProfiles("test")
-@DisplayName("Testes de integração para os Casos de Uso dos Ambientes")
+@DisplayName("Testes de integração para os Casos de Uso dos Ambientes Não Publicados")
 class AmbienteNaoPublicadoUseCasesIntegrationTest {
 
     @Autowired
