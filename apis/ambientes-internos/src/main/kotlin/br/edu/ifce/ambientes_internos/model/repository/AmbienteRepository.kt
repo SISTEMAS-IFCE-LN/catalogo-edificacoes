@@ -15,6 +15,8 @@ interface AmbienteRepository : JpaRepository<Ambiente, Long> {
 
     fun findAllByIdInAndStatus(ids: Set<Long>, status: StatusAmbiente): List<Ambiente>
 
+    fun findAllByIdInAndStatus(ids: Set<Long>, status: StatusAmbiente, pageable: Pageable): Page<Ambiente>
+
     fun existsByNomeAndLocalizacaoId(nome: String, localizacaoId: Long): Boolean
 
     @Query(

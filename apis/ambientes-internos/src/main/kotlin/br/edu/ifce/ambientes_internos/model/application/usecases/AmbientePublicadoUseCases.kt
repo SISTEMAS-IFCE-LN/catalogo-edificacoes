@@ -6,6 +6,8 @@ import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbienteBasicoRes
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbienteNomeLocalizacaoRes
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbienteRes
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbientesBasicosPaginadosRes
+import br.edu.ifce.ambientes_internos.model.dto.ambiente.LocalizacaoRes
+import br.edu.ifce.ambientes_internos.model.dto.esquadria.EsquadriasAmbientesPaginadosRes
 import br.edu.ifce.ambientes_internos.model.dto.esquadria.EsquadriasDetalhesRes
 import br.edu.ifce.ambientes_internos.model.repository.AmbienteRepository
 import org.springframework.data.domain.Pageable
@@ -109,8 +111,28 @@ class AmbientePublicadoUseCases(val repoAmb: AmbienteRepository) : IAmbientePubl
         )
     }
 
-    override fun listarEsquadriasAmbientes(ids: Set<Long>): Pair<Set<AmbienteNomeLocalizacaoRes>, Set<EsquadriasDetalhesRes>> {
-        TODO("Not yet implemented")
+    @Transactional(readOnly = true)
+    override fun listarEsquadriasAmbientes(
+        ids: Set<Long>,
+        pageable: Pageable
+    ): EsquadriasAmbientesPaginadosRes {
+        val page = repoAmb.findAllByIdInAndStatus(ids, StatusAmbiente.PUBLICADO, pageable)
+        val ambientes = page.content.associate { ambiente ->
+            AmbienteNomeLocalizacaoRes(
+                id = ambiente.id!!,
+                nome = ambiente.nome,
+                localizacao = LocalizacaoRes.from(ambiente.localizacao)
+            ) to EsquadriasDetalhesRes.from(ambiente)
+        }
+        return EsquadriasAmbientesPaginadosRes(
+            ambientes = ambientes,
+            totalElements = page.totalElements,
+            totalPages = page.totalPages,
+            currentPage = page.number,
+            pageSize = page.size,
+            hasNext = page.hasNext(),
+            hasPrevious = page.hasPrevious()
+        )
     }
 
 }
