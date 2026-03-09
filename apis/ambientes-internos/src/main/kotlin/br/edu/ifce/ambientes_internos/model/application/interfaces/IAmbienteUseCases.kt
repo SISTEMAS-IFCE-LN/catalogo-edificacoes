@@ -1,18 +1,18 @@
 package br.edu.ifce.ambientes_internos.model.application.interfaces
 
-import br.edu.ifce.ambientes_internos.model.dto.ambiente.PaginatedAmbientesBasicosRes
+import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbientesBasicosPaginadosRes
 import org.springframework.data.domain.Pageable
 
-interface IAmbienteUseCases<RES2> {
+interface IAmbienteUseCases<RES> {
 
-    fun listarAmbientes(pageable: Pageable): PaginatedAmbientesBasicosRes
+    fun listarAmbientes(pageable: Pageable): AmbientesBasicosPaginadosRes
 
-    fun listarAmbientesPorTipo(tipo: String, pageable: Pageable): PaginatedAmbientesBasicosRes
+    fun listarAmbientesPorTipo(tipo: String, pageable: Pageable): AmbientesBasicosPaginadosRes
 
-    fun listarAmbientesPorNome(nome: String, pageable: Pageable): PaginatedAmbientesBasicosRes
+    fun listarAmbientesPorNome(nome: String, pageable: Pageable): AmbientesBasicosPaginadosRes
 
-    fun listarAmbientesPorLocalizacao(localizacao: String, pageable: Pageable): PaginatedAmbientesBasicosRes
+    fun listarAmbientesPorLocalizacao(localizacao: String, pageable: Pageable): AmbientesBasicosPaginadosRes
 
-    fun obterAmbientePorId(id: Long): RES2
+    fun obterAmbientePorId(id: Long): RES
 
 }

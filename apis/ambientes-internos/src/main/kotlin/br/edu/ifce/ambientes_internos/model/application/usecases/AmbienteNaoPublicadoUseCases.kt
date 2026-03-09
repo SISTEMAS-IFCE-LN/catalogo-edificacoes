@@ -239,13 +239,13 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
     }
 
     @Transactional(readOnly = true)
-    override fun listarAmbientes(pageable: Pageable): PaginatedAmbientesBasicosRes {
+    override fun listarAmbientes(pageable: Pageable): AmbientesBasicosPaginadosRes {
         val page = repoAmb.findAllByStatus(StatusAmbiente.NAO_PUBLICADO, pageable)
         val ambientesBasicos = page.content.map { AmbienteBasicoRes.from(it) }
         val areaTotal = page.content.fold(BigDecimal.ZERO) { acc, ambiente ->
             acc.add(ambiente.calcularAreaAmbienteM2())
         }
-        return PaginatedAmbientesBasicosRes(
+        return AmbientesBasicosPaginadosRes(
             ambientes = ambientesBasicos,
             areaTotal = areaTotal,
             totalElements = page.totalElements,
@@ -258,13 +258,13 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
     }
 
     @Transactional(readOnly = true)
-    override fun listarAmbientesPorTipo(tipo: String, pageable: Pageable): PaginatedAmbientesBasicosRes {
+    override fun listarAmbientesPorTipo(tipo: String, pageable: Pageable): AmbientesBasicosPaginadosRes {
         val page = repoAmb.findByTipoAndStatus(tipo, StatusAmbiente.NAO_PUBLICADO, pageable)
         val ambientesBasicos = page.content.map { AmbienteBasicoRes.from(it) }
         val areaTotal = page.content.fold(BigDecimal.ZERO) { acc, ambiente ->
             acc.add(ambiente.calcularAreaAmbienteM2())
         }
-        return PaginatedAmbientesBasicosRes(
+        return AmbientesBasicosPaginadosRes(
             ambientes = ambientesBasicos,
             areaTotal = areaTotal,
             totalElements = page.totalElements,
@@ -277,13 +277,13 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
     }
 
     @Transactional(readOnly = true)
-    override fun listarAmbientesPorNome(nome: String, pageable: Pageable): PaginatedAmbientesBasicosRes {
+    override fun listarAmbientesPorNome(nome: String, pageable: Pageable): AmbientesBasicosPaginadosRes {
         val page = repoAmb.findByNomeContainingIgnoreCaseAndStatus(nome, StatusAmbiente.NAO_PUBLICADO, pageable)
         val ambientesBasicos = page.content.map { AmbienteBasicoRes.from(it) }
         val areaTotal = page.content.fold(BigDecimal.ZERO) { acc, ambiente ->
             acc.add(ambiente.calcularAreaAmbienteM2())
         }
-        return PaginatedAmbientesBasicosRes(
+        return AmbientesBasicosPaginadosRes(
             ambientes = ambientesBasicos,
             areaTotal = areaTotal,
             totalElements = page.totalElements,
@@ -296,13 +296,13 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
     }
 
     @Transactional(readOnly = true)
-    override fun listarAmbientesPorLocalizacao(localizacao: String, pageable: Pageable): PaginatedAmbientesBasicosRes {
+    override fun listarAmbientesPorLocalizacao(localizacao: String, pageable: Pageable): AmbientesBasicosPaginadosRes {
         val page = repoAmb.findByLocalizacaoContainingIgnoreCaseAndStatus(localizacao, StatusAmbiente.NAO_PUBLICADO, pageable)
         val ambientesBasicos = page.content.map { AmbienteBasicoRes.from(it) }
         val areaTotal = page.content.fold(BigDecimal.ZERO) { acc, ambiente ->
             acc.add(ambiente.calcularAreaAmbienteM2())
         }
-        return PaginatedAmbientesBasicosRes(
+        return AmbientesBasicosPaginadosRes(
             ambientes = ambientesBasicos,
             areaTotal = areaTotal,
             totalElements = page.totalElements,
