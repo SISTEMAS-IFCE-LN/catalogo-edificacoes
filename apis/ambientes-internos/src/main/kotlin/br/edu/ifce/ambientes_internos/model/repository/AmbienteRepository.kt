@@ -45,6 +45,13 @@ interface AmbienteRepository : JpaRepository<Ambiente, Long> {
         pageable: Pageable
     ): Page<Ambiente>
 
-    fun findByTipoAndStatus(tipo: String, status: StatusAmbiente, pageable: Pageable): Page<Ambiente>
+    @Query(
+        "select a from Ambiente a where a.status = :status and upper(cast(a.tipo as string)) = upper(:tipo)"
+    )
+    fun findByTipoAndStatus(
+        @Param("tipo") tipo: String,
+        @Param("status") status: StatusAmbiente,
+        pageable: Pageable
+    ): Page<Ambiente>
 
 }
