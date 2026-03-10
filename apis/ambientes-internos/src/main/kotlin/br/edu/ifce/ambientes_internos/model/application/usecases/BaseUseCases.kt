@@ -1,5 +1,6 @@
 package br.edu.ifce.ambientes_internos.model.application.usecases
 
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Ambiente
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.StatusAmbiente
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbienteRes
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbientesBasicosPaginadosRes
@@ -8,9 +9,11 @@ import org.springframework.data.domain.Pageable
 
 open class BaseUseCases(val status: StatusAmbiente) {
 
+    fun obterAmbienteMetodos(id: Long, repoAmb: AmbienteRepository): Ambiente = repoAmb.findByIdAndStatus(id, status)
+        .orElseThrow { NoSuchElementException("Ambiente não encontrado") }
+
     fun obterAmbientePorId(id: Long, repoAmb: AmbienteRepository): AmbienteRes {
-        val ambiente = repoAmb.findByIdAndStatus(id, status)
-            .orElseThrow { NoSuchElementException("Ambiente não encontrado") }
+        val ambiente = obterAmbienteMetodos(id, repoAmb)
         return AmbienteRes.from(ambiente)
     }
 
