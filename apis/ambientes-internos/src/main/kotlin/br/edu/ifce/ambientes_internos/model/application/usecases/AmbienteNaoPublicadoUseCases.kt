@@ -1,6 +1,7 @@
 package br.edu.ifce.ambientes_internos.model.application.usecases
 
 import br.edu.ifce.ambientes_internos.model.application.interfaces.IAmbienteNaoPublicadoUseCases
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Ambiente
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Localizacao
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.StatusAmbiente
 import br.edu.ifce.ambientes_internos.model.domain.factory.AmbienteFactory
@@ -23,24 +24,42 @@ import java.math.BigDecimal
 class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc: LocalizacaoRepository) :
     IAmbienteNaoPublicadoUseCases, BaseUseCases(StatusAmbiente.NAO_PUBLICADO) {
 
-    @Transactional
-    override fun cadastrarAmbiente(ambienteReq: AmbienteReq): AmbienteRes {
-        val ambiente = AmbienteFactory.criar(ambienteReq)
+    private fun verificarNomeLocalizacaoCadastro(ambiente: Ambiente) {
         repoLoc.findByLocalizacao(ambiente.localizacao).ifPresent {
             ambiente.localizacao = it
             if (repoAmb.existsByNomeAndLocalizacaoId(ambiente.nome, it.id!!)) {
                 throw IllegalArgumentException("Já existe um ambiente com esse nome nessa localização")
             }
         }
+    }
+
+    private fun verificarNomeLocalizacaoAlteracao(ambiente: Ambiente) {
+        repoLoc.findByLocalizacao(ambiente.localizacao).ifPresent {
+            ambiente.localizacao = it
+            if (repoAmb.existsByNomeAndLocalizacaoIdAndIdNot(ambiente.nome, it.id!!, ambiente.id!!)) {
+                throw IllegalArgumentException("Já existe um ambiente com esse nome nessa localização")
+            }
+        }
+    }
+
+    private fun obterAmbientesPorIds(ids: Set<Long>): List<Ambiente> {
+        val ambientes = repoAmb.findAllByIdInAndStatus(ids, StatusAmbiente.NAO_PUBLICADO)
+        if (ambientes.isEmpty()) {
+            throw NoSuchElementException("Nenhum ambiente encontrado para os IDs fornecidos")
+        }
+        return ambientes
+    }
+
+    @Transactional
+    override fun cadastrarAmbiente(ambienteReq: AmbienteReq): AmbienteRes {
+        val ambiente = AmbienteFactory.criar(ambienteReq)
+        verificarNomeLocalizacaoCadastro(ambiente)
         return AmbienteRes.from(repoAmb.save(ambiente))
     }
 
     @Transactional(readOnly = true)
     override fun obterAmbientePorId(id: Long): AmbienteRes {
-        val ambiente =
-            repoAmb.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
-                .orElseThrow { NoSuchElementException("Ambiente não encontrado") }
-        return AmbienteRes.from(ambiente)
+        return obterAmbientePorId(id, repoAmb)
     }
 
     @Transactional
@@ -48,23 +67,13 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         id: Long,
         ambienteAtualizado: AmbienteBasicoReq
     ): AmbienteBasicoRes {
-        val ambienteExistente =
-            repoAmb.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
-                .orElseThrow { NoSuchElementException("Ambiente não encontrado") }
+        val ambienteExistente = obterAmbienteMetodos(id, repoAmb)
         ambienteExistente.nome = ambienteAtualizado.nome
         ambienteExistente.capacidade = ambienteAtualizado.capacidade
         ambienteExistente.localizacao.bloco = ambienteAtualizado.localizacao.bloco
         ambienteExistente.localizacao.unidade = ambienteAtualizado.localizacao.unidade
         ambienteExistente.localizacao.andar = ambienteAtualizado.localizacao.andar
-        repoLoc.findByLocalizacao(ambienteExistente.localizacao).ifPresent {
-            ambienteExistente.localizacao = it
-            if (repoAmb.existsByNomeAndLocalizacaoIdAndIdNot(
-                    ambienteExistente.nome,
-                    it.id!!,
-                    ambienteExistente.id!!
-                )
-            ) throw IllegalArgumentException("Já existe um ambiente com esse nome nessa localização")
-        }
+        verificarNomeLocalizacaoAlteracao(ambienteExistente)
         return AmbienteBasicoRes.from(repoAmb.save(ambienteExistente))
     }
 
@@ -73,9 +82,7 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         id: Long,
         geometriasAdd: Set<GeometriaAmbienteReq>
     ): ListaGeometriasAmbienteRes {
-        val ambienteExistente =
-            repoAmb.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
-                .orElseThrow { NoSuchElementException("Ambiente não encontrado") }
+        val ambienteExistente = obterAmbienteMetodos(id, repoAmb)
         val geometrias = geometriasAdd.map { GeometriaFactory.criar(it) }.toMutableSet()
 
         ambienteExistente.geometrias.addAll(geometrias)
@@ -94,9 +101,7 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         id: Long,
         geometriasAtualizadas: Set<GeometriaAmbienteReq>
     ): ListaGeometriasAmbienteRes {
-        val ambienteExistente =
-            repoAmb.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
-                .orElseThrow { NoSuchElementException("Ambiente não encontrado") }
+        val ambienteExistente = obterAmbienteMetodos(id, repoAmb)
         val geometrias = geometriasAtualizadas.map { GeometriaFactory.criar(it) }.toMutableSet()
 
         ambienteExistente.geometrias.clear()
@@ -116,9 +121,7 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         id: Long,
         pesDireitos: Set<BigDecimal>
     ): Set<BigDecimal> {
-        val ambienteExistente =
-            repoAmb.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
-                .orElseThrow { NoSuchElementException("Ambiente não encontrado") }
+        val ambienteExistente = obterAmbienteMetodos(id, repoAmb)
         ambienteExistente.pesDireitos.addAll(pesDireitos)
         val ambienteAtualizado = repoAmb.save(ambienteExistente)
         return ambienteAtualizado.pesDireitos
@@ -129,9 +132,7 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         id: Long,
         pesDireitos: Set<BigDecimal>
     ): Set<BigDecimal> {
-        val ambienteExistente =
-            repoAmb.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
-                .orElseThrow { NoSuchElementException("Ambiente não encontrado") }
+        val ambienteExistente = obterAmbienteMetodos(id, repoAmb)
         ambienteExistente.pesDireitos.clear()
         ambienteExistente.pesDireitos.addAll(pesDireitos)
         val ambienteAtualizado = repoAmb.save(ambienteExistente)
@@ -143,9 +144,7 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         id: Long,
         esquadrias: Set<EsquadriaReq>
     ): EsquadriasDetalhesRes {
-        val ambienteExistente =
-            repoAmb.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
-                .orElseThrow { NoSuchElementException("Ambiente não encontrado") }
+        val ambienteExistente = obterAmbienteMetodos(id, repoAmb)
         val esquadriasNovas = esquadrias.map { EsquadriaFactory.criar(it) }
         ambienteExistente.esquadrias.addAll(esquadriasNovas)
         val ambienteAtualizado = repoAmb.save(ambienteExistente)
@@ -157,9 +156,7 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         id: Long,
         esquadrias: Set<EsquadriaReq>
     ): EsquadriasDetalhesRes {
-        val ambienteExistente =
-            repoAmb.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
-                .orElseThrow { NoSuchElementException("Ambiente não encontrado") }
+        val ambienteExistente = obterAmbienteMetodos(id, repoAmb)
         val esquadriasAtualizadas = esquadrias.map { EsquadriaFactory.criar(it) }
         ambienteExistente.esquadrias.clear()
         ambienteExistente.esquadrias.addAll(esquadriasAtualizadas)
@@ -172,9 +169,7 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         id: Long,
         informacaoAdicional: String
     ): String {
-        val ambienteExistente =
-            repoAmb.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
-                .orElseThrow { NoSuchElementException("Ambiente não encontrado") }
+        val ambienteExistente = obterAmbienteMetodos(id, repoAmb)
         ambienteExistente.informacaoAdicional = informacaoAdicional
         val ambienteAtualizado = repoAmb.save(ambienteExistente)
         return ambienteAtualizado.informacaoAdicional
@@ -185,18 +180,10 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         id: Long,
         ambiente: AmbienteReq
     ): AmbienteRes {
-        val ambienteExistente =
-            repoAmb.findByIdAndStatus(id, StatusAmbiente.NAO_PUBLICADO)
-                .orElseThrow { NoSuchElementException("Ambiente não encontrado") }
+        val ambienteExistente = obterAmbienteMetodos(id, repoAmb)
         val ambienteAtualizado = AmbienteFactory.criar(ambiente)
         ambienteAtualizado.localizacao = ambienteExistente.localizacao
-        if (repoAmb.existsByNomeAndLocalizacaoId(
-                ambienteAtualizado.nome,
-                ambienteAtualizado.localizacao.id!!
-            )
-        ) {
-            throw IllegalArgumentException("Já existe um ambiente com esse nome nessa localização")
-        }
+        verificarNomeLocalizacaoCadastro(ambienteAtualizado)
         val ambienteSalvo = repoAmb.save(ambienteAtualizado)
         repoAmb.delete(ambienteExistente)
         return AmbienteRes.from(ambienteSalvo)
@@ -207,9 +194,7 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         id: Long,
         dados: AmbienteNomeLocalizacaoReq
     ): AmbienteRes {
-        val ambienteExistente =
-            repoAmb.findById(id)
-                .orElseThrow { NoSuchElementException("Ambiente não encontrado") }
+        val ambienteExistente = obterAmbienteMetodos(id, repoAmb)
         val ambienteDuplicado = AmbienteFactory.clonar(ambienteExistente)
         val novaLocalizacao = Localizacao(
             bloco = dados.localizacao.bloco,
@@ -219,21 +204,13 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         ambienteDuplicado.id = null
         ambienteDuplicado.nome = dados.nome
         ambienteDuplicado.localizacao = novaLocalizacao
-        repoLoc.findByLocalizacao(novaLocalizacao).ifPresent {
-            ambienteDuplicado.localizacao = it
-            if (repoAmb.existsByNomeAndLocalizacaoId(ambienteDuplicado.nome, it.id!!)) {
-                throw IllegalArgumentException("Já existe um ambiente com esse nome nessa localização")
-            }
-        }
+        verificarNomeLocalizacaoCadastro(ambienteDuplicado)
         return AmbienteRes.from(repoAmb.save(ambienteDuplicado))
     }
 
     @Transactional
     override fun enviarValidacaoAmbientes(ids: Set<Long>) {
-        val ambientes = repoAmb.findAllByIdInAndStatus(ids, StatusAmbiente.NAO_PUBLICADO)
-        if (ambientes.size != ids.size) {
-            throw NoSuchElementException("Um ou mais ambientes foram não encontrados")
-        }
+        val ambientes = obterAmbientesPorIds(ids)
         ambientes.forEach { ambiente -> ambiente.status = StatusAmbiente.AGUARDANDO_VALIDACAO }
         repoAmb.saveAll(ambientes)
     }
@@ -260,10 +237,7 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
 
     @Transactional
     override fun deletarAmbientes(ids: Set<Long>) {
-        val ambientes = repoAmb.findAllByIdInAndStatus(ids, StatusAmbiente.NAO_PUBLICADO)
-        if (ambientes.size != ids.size) {
-            throw NoSuchElementException("Um ou mais ambientes foram não encontrados")
-        }
+        val ambientes = obterAmbientesPorIds(ids)
         repoAmb.deleteAll(ambientes)
     }
 

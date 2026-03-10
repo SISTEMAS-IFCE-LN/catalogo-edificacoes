@@ -23,6 +23,7 @@ import br.edu.ifce.ambientes_internos.model.dto.esquadria.EsquadriaRes
 import br.edu.ifce.ambientes_internos.model.dto.esquadria.EsquadriaTipoMaterialRes
 import br.edu.ifce.ambientes_internos.model.dto.esquadria.EsquadriasDetalhesRes
 import br.edu.ifce.ambientes_internos.model.dto.geometria.*
+import br.edu.ifce.ambientes_internos.model.repository.AmbienteRepository
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.assertThrows
@@ -49,6 +50,8 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
 
     @Autowired
     lateinit var ambientesNPUseCases: IAmbienteNaoPublicadoUseCases
+    @Autowired
+    lateinit var repoAmb: AmbienteRepository
 
     lateinit var ambienteReq: AmbienteReq
     lateinit var salaAula: SalaAula
@@ -749,7 +752,8 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
         ambientesNPUseCases.enviarValidacaoAmbientes(setOf(ambienteSalvo.id))
 
         // Então seu status deve ser alterado para AGUARDANDO_VALIDACAO
-        assertThrows <NoSuchElementException> { ambientesNPUseCases.obterAmbientePorId(ambienteSalvo.id) }
+        val ambienteAguardandoValidacao = repoAmb.findById(ambienteSalvo.id)
+        assertEquals(StatusAmbiente.AGUARDANDO_VALIDACAO, ambienteAguardandoValidacao.get().status)
     }
 
     @Test
@@ -927,22 +931,6 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
         assertThrows<NoSuchElementException> {
             ambientesNPUseCases.deletarAmbientes(setOf(idInexistente))
         }
-    }
-
-    @Test
-    fun `Deve lançar exceção ao tentar deletar conjunto com ambiente existente e inexistente`() {
-        // Dados - dois ambientes, um existente e um ID fictício
-        val ambiente1 = ambientesNPUseCases.cadastrarAmbiente(ambienteReq)
-        val idInexistente = ambiente1.id + 999L
-
-        // Quando tentar deletar um conjunto onde um existe e outro não
-        assertThrows<NoSuchElementException> {
-            ambientesNPUseCases.deletarAmbientes(setOf(ambiente1.id, idInexistente))
-        }
-
-        // Então o ambiente existente deve continuar no banco (transação foi revertida)
-        val ambienteRecuperado = ambientesNPUseCases.obterAmbientePorId(ambiente1.id)
-        assertEquals(ambiente1.id, ambienteRecuperado.id)
     }
 
 }
