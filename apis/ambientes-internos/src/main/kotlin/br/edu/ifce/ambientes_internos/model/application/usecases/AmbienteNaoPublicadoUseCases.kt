@@ -21,7 +21,7 @@ import java.math.BigDecimal
 
 @Service
 class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc: LocalizacaoRepository) :
-    IAmbienteNaoPublicadoUseCases {
+    IAmbienteNaoPublicadoUseCases, BaseUseCases(StatusAmbiente.NAO_PUBLICADO) {
 
     @Transactional
     override fun cadastrarAmbiente(ambienteReq: AmbienteReq): AmbienteRes {
@@ -240,78 +240,22 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
 
     @Transactional(readOnly = true)
     override fun listarAmbientes(pageable: Pageable): AmbientesBasicosPaginadosRes {
-        val page = repoAmb.findAllByStatus(StatusAmbiente.NAO_PUBLICADO, pageable)
-        val ambientesBasicos = page.content.map { AmbienteBasicoRes.from(it) }
-        val areaTotal = page.content.fold(BigDecimal.ZERO) { acc, ambiente ->
-            acc.add(ambiente.calcularAreaAmbienteM2())
-        }
-        return AmbientesBasicosPaginadosRes(
-            ambientes = ambientesBasicos,
-            areaTotal = areaTotal,
-            totalElements = page.totalElements,
-            totalPages = page.totalPages,
-            currentPage = page.number,
-            pageSize = page.size,
-            hasNext = page.hasNext(),
-            hasPrevious = page.hasPrevious()
-        )
+        return listarAmbientes(pageable, repoAmb)
     }
 
     @Transactional(readOnly = true)
     override fun listarAmbientesPorTipo(tipo: String, pageable: Pageable): AmbientesBasicosPaginadosRes {
-        val page = repoAmb.findByTipoAndStatus(tipo, StatusAmbiente.NAO_PUBLICADO, pageable)
-        val ambientesBasicos = page.content.map { AmbienteBasicoRes.from(it) }
-        val areaTotal = page.content.fold(BigDecimal.ZERO) { acc, ambiente ->
-            acc.add(ambiente.calcularAreaAmbienteM2())
-        }
-        return AmbientesBasicosPaginadosRes(
-            ambientes = ambientesBasicos,
-            areaTotal = areaTotal,
-            totalElements = page.totalElements,
-            totalPages = page.totalPages,
-            currentPage = page.number,
-            pageSize = page.size,
-            hasNext = page.hasNext(),
-            hasPrevious = page.hasPrevious()
-        )
+        return listarAmbientesPorTipo(tipo, pageable, repoAmb)
     }
 
     @Transactional(readOnly = true)
     override fun listarAmbientesPorNome(nome: String, pageable: Pageable): AmbientesBasicosPaginadosRes {
-        val page = repoAmb.findByNomeContainingIgnoreCaseAndStatus(nome, StatusAmbiente.NAO_PUBLICADO, pageable)
-        val ambientesBasicos = page.content.map { AmbienteBasicoRes.from(it) }
-        val areaTotal = page.content.fold(BigDecimal.ZERO) { acc, ambiente ->
-            acc.add(ambiente.calcularAreaAmbienteM2())
-        }
-        return AmbientesBasicosPaginadosRes(
-            ambientes = ambientesBasicos,
-            areaTotal = areaTotal,
-            totalElements = page.totalElements,
-            totalPages = page.totalPages,
-            currentPage = page.number,
-            pageSize = page.size,
-            hasNext = page.hasNext(),
-            hasPrevious = page.hasPrevious()
-        )
+        return listarAmbientesPorNome(nome, pageable, repoAmb)
     }
 
     @Transactional(readOnly = true)
     override fun listarAmbientesPorLocalizacao(localizacao: String, pageable: Pageable): AmbientesBasicosPaginadosRes {
-        val page = repoAmb.findByLocalizacaoContainingIgnoreCaseAndStatus(localizacao, StatusAmbiente.NAO_PUBLICADO, pageable)
-        val ambientesBasicos = page.content.map { AmbienteBasicoRes.from(it) }
-        val areaTotal = page.content.fold(BigDecimal.ZERO) { acc, ambiente ->
-            acc.add(ambiente.calcularAreaAmbienteM2())
-        }
-        return AmbientesBasicosPaginadosRes(
-            ambientes = ambientesBasicos,
-            areaTotal = areaTotal,
-            totalElements = page.totalElements,
-            totalPages = page.totalPages,
-            currentPage = page.number,
-            pageSize = page.size,
-            hasNext = page.hasNext(),
-            hasPrevious = page.hasPrevious()
-        )
+        return listarAmbientesPorLocalizacao(localizacao, pageable, repoAmb)
     }
 
     @Transactional
