@@ -765,12 +765,12 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
         assertTrue(ambientesNaoPublicados.ambientes.any { it.id == ambienteSalvo.id })
 
         // E as informações de paginação devem estar presentes
-        assertEquals(1, ambientesNaoPublicados.totalElements)
-        assertEquals(1, ambientesNaoPublicados.totalPages)
-        assertEquals(0, ambientesNaoPublicados.currentPage)
-        assertEquals(10, ambientesNaoPublicados.pageSize)
-        assertEquals(false, ambientesNaoPublicados.hasNext)
-        assertEquals(false, ambientesNaoPublicados.hasPrevious)
+        assertEquals(1, ambientesNaoPublicados.dadosPaginacao.totalElements)
+        assertEquals(1, ambientesNaoPublicados.dadosPaginacao.totalPages)
+        assertEquals(0, ambientesNaoPublicados.dadosPaginacao.currentPage)
+        assertEquals(10, ambientesNaoPublicados.dadosPaginacao.pageSize)
+        assertEquals(false, ambientesNaoPublicados.dadosPaginacao.hasNext)
+        assertEquals(false, ambientesNaoPublicados.dadosPaginacao.hasPrevious)
     }
 
     @Test
@@ -784,15 +784,14 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
 
         // Então a lista deve conter o ambiente cadastrado
         assertTrue(ambientesPorNome.ambientes.any { it.id == ambienteSalvo.id })
-        assertEquals(1, ambientesPorNome.totalElements)
 
         // E as informações de paginação devem estar presentes
-        assertEquals(1, ambientesPorNome.totalElements)
-        assertEquals(1, ambientesPorNome.totalPages)
-        assertEquals(0, ambientesPorNome.currentPage)
-        assertEquals(10, ambientesPorNome.pageSize)
-        assertEquals(false, ambientesPorNome.hasNext)
-        assertEquals(false, ambientesPorNome.hasPrevious)
+        assertEquals(1, ambientesPorNome.dadosPaginacao.totalElements)
+        assertEquals(1, ambientesPorNome.dadosPaginacao.totalPages)
+        assertEquals(0, ambientesPorNome.dadosPaginacao.currentPage)
+        assertEquals(10, ambientesPorNome.dadosPaginacao.pageSize)
+        assertEquals(false, ambientesPorNome.dadosPaginacao.hasNext)
+        assertEquals(false, ambientesPorNome.dadosPaginacao.hasPrevious)
     }
 
     @Test
@@ -807,15 +806,14 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
 
         // Então a lista deve conter o ambiente cadastrado
         assertTrue(ambientesPorLocalizacao.ambientes.any { it.id == ambienteSalvo.id })
-        assertEquals(1, ambientesPorLocalizacao.totalElements)
 
         // E as informações de paginação devem estar presentes
-        assertEquals(1, ambientesPorLocalizacao.totalElements)
-        assertEquals(1, ambientesPorLocalizacao.totalPages)
-        assertEquals(0, ambientesPorLocalizacao.currentPage)
-        assertEquals(10, ambientesPorLocalizacao.pageSize)
-        assertEquals(false, ambientesPorLocalizacao.hasNext)
-        assertEquals(false, ambientesPorLocalizacao.hasPrevious)
+        assertEquals(1, ambientesPorLocalizacao.dadosPaginacao.totalElements)
+        assertEquals(1, ambientesPorLocalizacao.dadosPaginacao.totalPages)
+        assertEquals(0, ambientesPorLocalizacao.dadosPaginacao.currentPage)
+        assertEquals(10, ambientesPorLocalizacao.dadosPaginacao.pageSize)
+        assertEquals(false, ambientesPorLocalizacao.dadosPaginacao.hasNext)
+        assertEquals(false, ambientesPorLocalizacao.dadosPaginacao.hasPrevious)
     }
 
     @Test
@@ -830,15 +828,14 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
 
         // Então a lista deve estar vazia
         assertTrue(ambientesPorLocalizacao.ambientes.isEmpty())
-        assertEquals(0, ambientesPorLocalizacao.totalElements)
 
         // E as informações de paginação devem refletir a lista vazia
-        assertEquals(0, ambientesPorLocalizacao.totalElements)
-        assertEquals(0, ambientesPorLocalizacao.totalPages)
-        assertEquals(0, ambientesPorLocalizacao.currentPage)
-        assertEquals(10, ambientesPorLocalizacao.pageSize)
-        assertEquals(false, ambientesPorLocalizacao.hasNext)
-        assertEquals(false, ambientesPorLocalizacao.hasPrevious)
+        assertEquals(0, ambientesPorLocalizacao.dadosPaginacao.totalElements)
+        assertEquals(0, ambientesPorLocalizacao.dadosPaginacao.totalPages)
+        assertEquals(0, ambientesPorLocalizacao.dadosPaginacao.currentPage)
+        assertEquals(10, ambientesPorLocalizacao.dadosPaginacao.pageSize)
+        assertEquals(false, ambientesPorLocalizacao.dadosPaginacao.hasNext)
+        assertEquals(false, ambientesPorLocalizacao.dadosPaginacao.hasPrevious)
     }
 
     @Test
@@ -915,7 +912,7 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
         // E a lista de ambientes deve estar vazia
         val pageable = PageRequest.of(0, 10)
         val ambientesRestantes = ambientesNPUseCases.listarAmbientes(pageable)
-        assertEquals(0, ambientesRestantes.totalElements)
+        assertEquals(0, ambientesRestantes.dadosPaginacao.totalElements)
     }
 
     @Test

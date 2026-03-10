@@ -57,22 +57,7 @@ class AmbientePublicadoUseCases(val repoAmb: AmbienteRepository) : IAmbientePubl
         pageable: Pageable
     ): EsquadriasAmbientesPaginadosRes {
         val page = repoAmb.findAllByIdInAndStatus(ids, StatusAmbiente.PUBLICADO, pageable)
-        val ambientes = page.content.associate { ambiente ->
-            AmbienteNomeLocalizacaoRes(
-                id = ambiente.id!!,
-                nome = ambiente.nome,
-                localizacao = LocalizacaoRes.from(ambiente.localizacao)
-            ) to EsquadriasDetalhesRes.from(ambiente)
-        }
-        return EsquadriasAmbientesPaginadosRes(
-            ambientes = ambientes,
-            totalElements = page.totalElements,
-            totalPages = page.totalPages,
-            currentPage = page.number,
-            pageSize = page.size,
-            hasNext = page.hasNext(),
-            hasPrevious = page.hasPrevious()
-        )
+        return EsquadriasAmbientesPaginadosRes.from(page)
     }
 
 }

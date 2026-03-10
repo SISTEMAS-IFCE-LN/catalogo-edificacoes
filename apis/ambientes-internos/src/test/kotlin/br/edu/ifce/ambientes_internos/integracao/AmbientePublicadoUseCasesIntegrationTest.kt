@@ -288,11 +288,11 @@ class AmbientePublicadoUseCasesIntegrationTest {
 
         // Então a lista deve conter todos os ambientes publicados
         assertTrue(ambientesPublicados.ambientes.isNotEmpty())
-        assertEquals(2, ambientesPublicados.totalElements)
-        assertEquals(1, ambientesPublicados.totalPages)
-        assertEquals(0, ambientesPublicados.currentPage)
-        assertEquals(false, ambientesPublicados.hasNext)
-        assertEquals(false, ambientesPublicados.hasPrevious)
+        assertEquals(2, ambientesPublicados.dadosPaginacao.totalElements)
+        assertEquals(1, ambientesPublicados.dadosPaginacao.totalPages)
+        assertEquals(0, ambientesPublicados.dadosPaginacao.currentPage)
+        assertEquals(false, ambientesPublicados.dadosPaginacao.hasNext)
+        assertEquals(false, ambientesPublicados.dadosPaginacao.hasPrevious)
     }
 
     @Test
@@ -303,8 +303,8 @@ class AmbientePublicadoUseCasesIntegrationTest {
 
         // Então a lista deve estar vazia
         assertTrue(ambientesPublicados.ambientes.isEmpty())
-        assertEquals(0, ambientesPublicados.totalElements)
-        assertEquals(0, ambientesPublicados.totalPages)
+        assertEquals(0, ambientesPublicados.dadosPaginacao.totalElements)
+        assertEquals(0, ambientesPublicados.dadosPaginacao.totalPages)
     }
 
     @Test
@@ -343,7 +343,7 @@ class AmbientePublicadoUseCasesIntegrationTest {
         val todosAmbientes = ambientesPUseCases.listarAmbientes(pageable)
 
         // Então devem estar os dois ambientes
-        assertEquals(2, todosAmbientes.totalElements)
+        assertEquals(2, todosAmbientes.dadosPaginacao.totalElements)
     }
 
     @Test
@@ -388,7 +388,7 @@ class AmbientePublicadoUseCasesIntegrationTest {
         val ambientesPublicadosPorNome = ambientesPUseCases.listarAmbientesPorNome("Sala de Aula", pageable)
 
         // Então a lista deve conter apenas os ambientes que correspondem ao filtro
-        assertEquals(1, ambientesPublicadosPorNome.totalElements)
+        assertEquals(1, ambientesPublicadosPorNome.dadosPaginacao.totalElements)
         assertEquals("Sala de Aula Publicada", ambientesPublicadosPorNome.ambientes.first().nome)
     }
 
@@ -408,7 +408,7 @@ class AmbientePublicadoUseCasesIntegrationTest {
         val ambientesPublicadosPorNome = ambientesPUseCases.listarAmbientesPorNome("sala de aula", pageable)
 
         // Então a lista deve conter os ambientes (case insensitive)
-        assertEquals(1, ambientesPublicadosPorNome.totalElements)
+        assertEquals(1, ambientesPublicadosPorNome.dadosPaginacao.totalElements)
         assertEquals("Sala de Aula Publicada", ambientesPublicadosPorNome.ambientes.first().nome)
     }
 
@@ -429,7 +429,7 @@ class AmbientePublicadoUseCasesIntegrationTest {
 
         // Então a lista deve estar vazia
         assertTrue(ambientesPublicadosPorNome.ambientes.isEmpty())
-        assertEquals(0, ambientesPublicadosPorNome.totalElements)
+        assertEquals(0, ambientesPublicadosPorNome.dadosPaginacao.totalElements)
     }
 
     @Test
@@ -457,7 +457,7 @@ class AmbientePublicadoUseCasesIntegrationTest {
         val ambientesPublicadosPorLocalizacao = ambientesPUseCases.listarAmbientesPorLocalizacao("BLOCO_10", pageable)
 
         // Então a lista deve conter apenas os ambientes na localização especificada
-        assertEquals(1, ambientesPublicadosPorLocalizacao.totalElements)
+        assertEquals(1, ambientesPublicadosPorLocalizacao.dadosPaginacao.totalElements)
         assertEquals("Sala de Aula Publicada", ambientesPublicadosPorLocalizacao.ambientes.first().nome)
     }
 
@@ -477,7 +477,7 @@ class AmbientePublicadoUseCasesIntegrationTest {
         val ambientesPublicadosPorLocalizacao = ambientesPUseCases.listarAmbientesPorLocalizacao("BLOCO_10", pageable)
 
         // Então a lista deve conter os ambientes
-        assertEquals(1, ambientesPublicadosPorLocalizacao.totalElements)
+        assertEquals(1, ambientesPublicadosPorLocalizacao.dadosPaginacao.totalElements)
     }
 
     @Test
@@ -498,7 +498,7 @@ class AmbientePublicadoUseCasesIntegrationTest {
 
         // Então a lista deve estar vazia
         assertTrue(ambientesPublicadosPorLocalizacao.ambientes.isEmpty())
-        assertEquals(0, ambientesPublicadosPorLocalizacao.totalElements)
+        assertEquals(0, ambientesPublicadosPorLocalizacao.dadosPaginacao.totalElements)
     }
 
     @Test
@@ -578,10 +578,10 @@ class AmbientePublicadoUseCasesIntegrationTest {
 
         // Então deve ter 5 elementos
         assertEquals(5, resultado1.ambientes.size)
-        assertEquals(15, resultado1.totalElements)
-        assertEquals(3, resultado1.totalPages)
-        assertEquals(true, resultado1.hasNext)
-        assertEquals(false, resultado1.hasPrevious)
+        assertEquals(15, resultado1.dadosPaginacao.totalElements)
+        assertEquals(3, resultado1.dadosPaginacao.totalPages)
+        assertEquals(true, resultado1.dadosPaginacao.hasNext)
+        assertEquals(false, resultado1.dadosPaginacao.hasPrevious)
 
         // Quando listar segunda página
         val pageable2 = PageRequest.of(1, 5)
@@ -589,9 +589,9 @@ class AmbientePublicadoUseCasesIntegrationTest {
 
         // Então deve ter 5 elementos e indicar que há próxima página
         assertEquals(5, resultado2.ambientes.size)
-        assertEquals(1, resultado2.currentPage)
-        assertEquals(true, resultado2.hasNext)
-        assertEquals(true, resultado2.hasPrevious)
+        assertEquals(1, resultado2.dadosPaginacao.currentPage)
+        assertEquals(true, resultado2.dadosPaginacao.hasNext)
+        assertEquals(true, resultado2.dadosPaginacao.hasPrevious)
     }
 
     @Test
@@ -626,9 +626,9 @@ class AmbientePublicadoUseCasesIntegrationTest {
         val pageable = PageRequest.of(0, 10)
 
         // Então não deve incluir ambiente não publicado em nenhum filtro
-        assertEquals(1, ambientesPUseCases.listarAmbientes(pageable).totalElements)
-        assertEquals(1, ambientesPUseCases.listarAmbientesPorNome("Sala", pageable).totalElements)
-        assertEquals(1, ambientesPUseCases.listarAmbientesPorLocalizacao("BLOCO_10", pageable).totalElements)
+        assertEquals(1, ambientesPUseCases.listarAmbientes(pageable).dadosPaginacao.totalElements)
+        assertEquals(1, ambientesPUseCases.listarAmbientesPorNome("Sala", pageable).dadosPaginacao.totalElements)
+        assertEquals(1, ambientesPUseCases.listarAmbientesPorLocalizacao("BLOCO_10", pageable).dadosPaginacao.totalElements)
     }
 
     @Test
@@ -669,12 +669,12 @@ class AmbientePublicadoUseCasesIntegrationTest {
             pageable = PageRequest.of(0, 2)
         )
 
-        assertEquals(3, resultado.totalElements)
-        assertEquals(2, resultado.totalPages)
-        assertEquals(0, resultado.currentPage)
-        assertEquals(2, resultado.pageSize)
-        assertEquals(true, resultado.hasNext)
-        assertEquals(false, resultado.hasPrevious)
+        assertEquals(3, resultado.dadosPaginacao.totalElements)
+        assertEquals(2, resultado.dadosPaginacao.totalPages)
+        assertEquals(0, resultado.dadosPaginacao.currentPage)
+        assertEquals(2, resultado.dadosPaginacao.pageSize)
+        assertEquals(true, resultado.dadosPaginacao.hasNext)
+        assertEquals(false, resultado.dadosPaginacao.hasPrevious)
         assertEquals(2, resultado.ambientes.size)
     }
 
