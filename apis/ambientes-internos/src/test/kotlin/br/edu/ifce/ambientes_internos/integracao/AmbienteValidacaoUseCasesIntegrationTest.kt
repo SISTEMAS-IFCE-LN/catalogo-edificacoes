@@ -333,4 +333,18 @@ class AmbienteValidacaoUseCasesIntegrationTest {
             ambientesVUseCases.obterAmbientePorId(ambienteSalvo.id!!)
         }
     }
+
+    @Test
+    fun `Deve lancar excecao ao publicar ambiente inexistente`() {
+        assertThrows<NoSuchElementException> {
+            ambientesVUseCases.publicarAmbiente(Long.MAX_VALUE)
+        }
+    }
+
+    @Test
+    fun `Deve lancar excecao ao privar ambiente inexistente`() {
+        assertThrows<NoSuchElementException> {
+            ambientesVUseCases.privarAmbiente(Long.MAX_VALUE)
+        }
+    }
 }

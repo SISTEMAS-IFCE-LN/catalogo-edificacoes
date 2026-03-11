@@ -338,17 +338,18 @@ class AmbientePublicadoUseCasesIntegrationTest {
         lab.status = StatusAmbiente.PUBLICADO
         repoAmb.save(lab)
 
-        // Quando os ambientes forem listados
+        // Quando listar por tipo
         val pageable = PageRequest.of(0, 10)
-        val todosAmbientes = ambientesPUseCases.listarAmbientes(pageable)
+        val ambientesPorTipo = ambientesPUseCases.listarAmbientesPorTipo(TipoAmbiente.SALA_AULA.name, pageable)
 
-        // Então devem estar os dois ambientes
-        assertEquals(2, todosAmbientes.dadosPaginacao.totalElements)
+        // Então devem estar apenas ambientes do tipo solicitado
+        assertEquals(1, ambientesPorTipo.dadosPaginacao.totalElements)
+        assertEquals("Sala de Aula 1", ambientesPorTipo.ambientes.first().nome)
     }
 
     @Test
-    fun `Deve retornar lista vazia ao filtrar por tipo inexistente`() {
-        // Dado - ambiente publicado salvo
+    fun `Deve retornar lista vazia ao listar ambientes publicados por tipo sem correspondencia`() {
+        // Dado - apenas salas de aula publicadas
         criarAmbientePublicado(
             nome = "Sala de Aula Publicada",
             localizacao = Localizacao(Bloco.BLOCO_12, Unidade.CIDADE_ALTA, 1),
@@ -357,10 +358,61 @@ class AmbientePublicadoUseCasesIntegrationTest {
             pesDireitos = mutableSetOf(BigDecimal("3.0"))
         )
 
-        // Dado que o repositório filtra apenas por tipos válidos, este teste não será implementado
-        // pois o método listarAmbientesPorTipo espera um enum TipoAmbiente válido
-        // Para testar tipos inexistentes, seria necessário uma abordagem diferente
-        assertTrue(true)
+        // Quando filtrar por um tipo sem correspondência
+        val resultado = ambientesPUseCases.listarAmbientesPorTipo(
+            TipoAmbiente.LABORATORIO_INFORMATICA.name,
+            PageRequest.of(0, 10)
+        )
+
+        // Então a lista deve estar vazia e sem área acumulada
+        assertTrue(resultado.ambientes.isEmpty())
+        assertEquals(0, resultado.dadosPaginacao.totalElements)
+        assertEquals(0, resultado.areaTotal.compareTo(BigDecimal.ZERO))
+    }
+
+    @Test
+    fun `Deve calcular area total ao filtrar ambientes publicados por tipo`() {
+        // Dado - ambientes publicados de tipos diferentes
+        criarAmbientePublicado(
+            nome = "Sala de Aula 1",
+            localizacao = Localizacao(Bloco.BLOCO_10, Unidade.CIDADE_ALTA, 1),
+            capacidade = 30,
+            geometrias = mutableSetOf(Retangular(base = BigDecimal("5.0"), altura = BigDecimal("4.0"))),
+            pesDireitos = mutableSetOf(BigDecimal("3.0")),
+            informacaoAdicional = "Sala 1"
+        )
+
+        criarAmbientePublicado(
+            nome = "Sala de Aula 2",
+            localizacao = Localizacao(Bloco.BLOCO_11, Unidade.CIDADE_ALTA, 2),
+            capacidade = 35,
+            geometrias = mutableSetOf(Retangular(base = BigDecimal("3.0"), altura = BigDecimal("3.0"))),
+            pesDireitos = mutableSetOf(BigDecimal("3.0")),
+            informacaoAdicional = "Sala 2"
+        )
+
+        val laboratorioInformatica = LaboratorioInformatica(
+            nome = "Laboratório Publicado",
+            localizacao = Localizacao(Bloco.BLOCO_3, Unidade.CIDADE_ALTA, 1),
+            capacidade = 20,
+            geometrias = mutableSetOf(Retangular(base = BigDecimal("10.0"), altura = BigDecimal("2.0"))),
+            esquadrias = mutableSetOf(),
+            pesDireitos = mutableSetOf(BigDecimal("3.0")),
+            informacaoAdicional = "Laboratório"
+        )
+        val lab = repoAmb.save(laboratorioInformatica)
+        lab.status = StatusAmbiente.PUBLICADO
+        repoAmb.save(lab)
+
+        // Quando listar apenas salas de aula
+        val resultado = ambientesPUseCases.listarAmbientesPorTipo(
+            TipoAmbiente.SALA_AULA.name,
+            PageRequest.of(0, 10)
+        )
+
+        // Então a área total considera somente o tipo filtrado (5*4 + 3*3 = 29)
+        assertEquals(BigDecimal("29.00"), resultado.areaTotal)
+        assertEquals(2, resultado.dadosPaginacao.totalElements)
     }
 
     @Test
@@ -531,7 +583,7 @@ class AmbientePublicadoUseCasesIntegrationTest {
 
     @Test
     fun `Deve incluir area total em filtro por tipo`() {
-        // Dado - ambientes publicados
+        // Dado - ambientes publicados de tipos diferentes
         criarAmbientePublicado(
             nome = "Sala de Aula 1",
             localizacao = Localizacao(Bloco.BLOCO_10, Unidade.CIDADE_ALTA, 1),
@@ -541,21 +593,28 @@ class AmbientePublicadoUseCasesIntegrationTest {
             informacaoAdicional = "Sala 1"
         )
 
-        criarAmbientePublicado(
-            nome = "Sala de Aula 2",
+        val laboratorioInformatica = LaboratorioInformatica(
+            nome = "Laboratório Publicado 2",
             localizacao = Localizacao(Bloco.BLOCO_11, Unidade.CIDADE_ALTA, 2),
             capacidade = 35,
             geometrias = mutableSetOf(Retangular(base = BigDecimal("3.0"), altura = BigDecimal("3.0"))),
+            esquadrias = mutableSetOf(),
             pesDireitos = mutableSetOf(BigDecimal("3.0")),
-            informacaoAdicional = "Sala 2"
+            informacaoAdicional = "Lab"
+        )
+        val lab = repoAmb.save(laboratorioInformatica)
+        lab.status = StatusAmbiente.PUBLICADO
+        repoAmb.save(lab)
+
+        // Quando listar apenas laboratórios
+        val resultado = ambientesPUseCases.listarAmbientesPorTipo(
+            TipoAmbiente.LABORATORIO_INFORMATICA.name,
+            PageRequest.of(0, 10)
         )
 
-        // Quando listar todos os ambientes
-        val pageable = PageRequest.of(0, 10)
-        val resultado = ambientesPUseCases.listarAmbientes(pageable)
-
-        // Então a área total deve ser calculada (5*4 + 3*3 = 20 + 9 = 29)
-        assertEquals(BigDecimal("29.00"), resultado.areaTotal)
+        // Então a área total deve refletir apenas o tipo filtrado (3*3 = 9)
+        assertEquals(BigDecimal("9.00"), resultado.areaTotal)
+        assertEquals(1, resultado.dadosPaginacao.totalElements)
     }
 
     @Test

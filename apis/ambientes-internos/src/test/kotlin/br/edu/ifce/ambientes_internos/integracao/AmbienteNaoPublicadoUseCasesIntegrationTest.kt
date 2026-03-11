@@ -16,7 +16,6 @@ import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.enums.TipoE
 import br.edu.ifce.ambientes_internos.model.domain.entity.geometrias.Geometria
 import br.edu.ifce.ambientes_internos.model.domain.entity.geometrias.Retangular
 import br.edu.ifce.ambientes_internos.model.domain.entity.geometrias.enums.TipoGeometria
-import br.edu.ifce.ambientes_internos.model.domain.factory.AmbienteFactory
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.*
 import br.edu.ifce.ambientes_internos.model.dto.esquadria.EsquadriaReq
 import br.edu.ifce.ambientes_internos.model.dto.esquadria.EsquadriaRes
@@ -31,8 +30,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.context.annotation.Import
+import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Sort
 import org.springframework.test.context.ActiveProfiles
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -50,6 +49,7 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
 
     @Autowired
     lateinit var ambientesNPUseCases: IAmbienteNaoPublicadoUseCases
+
     @Autowired
     lateinit var repoAmb: AmbienteRepository
 
@@ -634,7 +634,7 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
         // Então não deve ocorrer nenhuma exceção durante o processo
         assertEquals(ambienteEsperado, ambienteAlterado)
         assertEquals(ambienteSalvo.localizacao, ambienteAlterado.localizacao)
-        assertThrows <NoSuchElementException> { ambientesNPUseCases.obterAmbientePorId(ambienteSalvo.id) }
+        assertThrows<NoSuchElementException> { ambientesNPUseCases.obterAmbientePorId(ambienteSalvo.id) }
     }
 
     @Test
@@ -823,12 +823,13 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
     @Test
     fun `Deve retornar lista vazia ao filtrar por localização inexistente com paginação`() {
         // Dados - ambiente cadastrado
-        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(ambienteReq)
+        ambientesNPUseCases.cadastrarAmbiente(ambienteReq)
 
         // Quando os ambientes forem filtrados por uma localização que não existe
         val pageable = PageRequest.of(0, 10)
         val localizacaoInexistente = "LOCALIZACAO_INEXISTENTE"
-        val ambientesPorLocalizacao = ambientesNPUseCases.listarAmbientesPorLocalizacao(localizacaoInexistente, pageable)
+        val ambientesPorLocalizacao =
+            ambientesNPUseCases.listarAmbientesPorLocalizacao(localizacaoInexistente, pageable)
 
         // Então a lista deve estar vazia
         assertTrue(ambientesPorLocalizacao.ambientes.isEmpty())
@@ -930,6 +931,84 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
         // Então deve lançar NoSuchElementException
         assertThrows<NoSuchElementException> {
             ambientesNPUseCases.deletarAmbientes(setOf(idInexistente))
+        }
+    }
+
+    @Test
+    fun `Deve lancar excecao ao cadastrar ambiente com nome e localizacao ja existentes`() {
+        // Dado - ambiente inicial já cadastrado
+        ambientesNPUseCases.cadastrarAmbiente(ambienteReq)
+
+        // Quando cadastrar outro ambiente com o mesmo nome e mesma localização
+        // Então deve lançar exceção de unicidade
+        assertThrows<IllegalArgumentException> {
+            ambientesNPUseCases.cadastrarAmbiente(ambienteReq)
+        }
+    }
+
+    @Test
+    fun `Deve lancar excecao ao atualizar dados basicos para nome e localizacao ja existentes`() {
+        // Dado - dois ambientes não publicados distintos
+        val ambiente1 = ambientesNPUseCases.cadastrarAmbiente(ambienteReq)
+
+        val ambienteReq2 = AmbienteReq(
+            tipo = TipoAmbiente.SALA_AULA,
+            nome = "Sala Distinta",
+            localizacao = LocalizacaoReq(
+                unidade = Unidade.CIDADE_ALTA,
+                bloco = Bloco.BLOCO_11,
+                andar = 2
+            ),
+            capacidade = 20,
+            geometrias = setOf(
+                GeometriaAmbienteReq(
+                    tipo = TipoGeometria.RETANGULAR,
+                    base = BigDecimal("5.0"),
+                    altura = BigDecimal("3.0")
+                )
+            ),
+            pesDireitos = setOf(BigDecimal("3.0")),
+            esquadrias = setOf(),
+            informacaoAdicional = "Outro ambiente"
+        )
+        val ambiente2 = ambientesNPUseCases.cadastrarAmbiente(ambienteReq2)
+
+        // Quando tentar atualizar o segundo para nome/localização do primeiro
+        val atualizacaoConflitante = AmbienteBasicoReq(
+            nome = ambiente1.nome,
+            localizacao = LocalizacaoReq(
+                unidade = ambiente1.localizacao.unidade,
+                bloco = ambiente1.localizacao.bloco,
+                andar = ambiente1.localizacao.andar
+            ),
+            capacidade = ambiente2.capacidade
+        )
+
+        // Então deve falhar por violação de unicidade
+        val erro = assertThrows<Exception> {
+            ambientesNPUseCases.atualizarDadosBasicosAmbiente(ambiente2.id, atualizacaoConflitante)
+        }
+        assertTrue(erro is IllegalArgumentException || erro is DataIntegrityViolationException)
+    }
+
+    @Test
+    fun `Deve lancar excecao ao enviar validacao com ids inexistentes`() {
+        // Dado - ambiente cadastrado
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(ambienteReq)
+
+        // Quando enviar para validação um conjunto sem IDs válidos
+        // Então deve lançar NoSuchElementException
+        assertThrows<NoSuchElementException> {
+            ambientesNPUseCases.enviarValidacaoAmbientes(setOf(ambienteSalvo.id + 999L))
+        }
+    }
+
+    @Test
+    fun `Deve lancar excecao ao enviar validacao com conjunto vazio`() {
+        // Quando enviar para validação sem IDs
+        // Então deve lançar NoSuchElementException
+        assertThrows<NoSuchElementException> {
+            ambientesNPUseCases.enviarValidacaoAmbientes(emptySet())
         }
     }
 
