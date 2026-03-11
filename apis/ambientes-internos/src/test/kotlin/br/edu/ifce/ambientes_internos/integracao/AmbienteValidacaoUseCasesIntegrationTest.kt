@@ -11,6 +11,7 @@ import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.TipoAm
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Unidade
 import br.edu.ifce.ambientes_internos.model.domain.entity.geometrias.Geometria
 import br.edu.ifce.ambientes_internos.model.domain.entity.geometrias.Retangular
+import br.edu.ifce.ambientes_internos.model.dto.ambiente.LocalizacaoPesquisaReq
 import br.edu.ifce.ambientes_internos.model.repository.AmbienteRepository
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.assertThrows
@@ -36,6 +37,10 @@ class AmbienteValidacaoUseCasesIntegrationTest {
 
     @Autowired
     lateinit var repoAmb: AmbienteRepository
+
+    // -------------------------------------------------------------------------
+    // Helpers de criação de entidades
+    // -------------------------------------------------------------------------
 
     private fun criarSalaAula(
         nome: String,
@@ -94,6 +99,10 @@ class AmbienteValidacaoUseCasesIntegrationTest {
         ambiente.status = status
         return repoAmb.save(ambiente)
     }
+
+    // -------------------------------------------------------------------------
+    // Testes
+    // -------------------------------------------------------------------------
 
     @Test
     fun `Deve obter ambiente em validacao por id`() {
@@ -281,7 +290,7 @@ class AmbienteValidacaoUseCasesIntegrationTest {
         )
 
         val resultado = ambientesVUseCases.listarAmbientesPorLocalizacao(
-            "BLOCO_10",
+            LocalizacaoPesquisaReq(bloco = "BLOCO_10", unidade = null, andar = null),
             PageRequest.of(0, 10)
         )
 
