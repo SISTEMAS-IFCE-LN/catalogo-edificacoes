@@ -231,7 +231,10 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
     }
 
     @Transactional(readOnly = true)
-    override fun listarAmbientesPorLocalizacao(localizacao: String, pageable: Pageable): AmbientesBasicosPaginadosRes {
+    override fun listarAmbientesPorLocalizacao(
+        localizacao: LocalizacaoPesquisaReq,
+        pageable: Pageable
+    ): AmbientesBasicosPaginadosRes {
         return listarAmbientesPorLocalizacao(localizacao, pageable, repoAmb)
     }
 

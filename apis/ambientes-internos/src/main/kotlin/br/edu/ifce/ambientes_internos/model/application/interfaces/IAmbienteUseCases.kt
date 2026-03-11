@@ -1,6 +1,7 @@
 package br.edu.ifce.ambientes_internos.model.application.interfaces
 
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbientesBasicosPaginadosRes
+import br.edu.ifce.ambientes_internos.model.dto.ambiente.LocalizacaoPesquisaReq
 import org.springframework.data.domain.Pageable
 
 interface IAmbienteUseCases<RES> {
@@ -11,7 +12,7 @@ interface IAmbienteUseCases<RES> {
 
     fun listarAmbientesPorNome(nome: String, pageable: Pageable): AmbientesBasicosPaginadosRes
 
-    fun listarAmbientesPorLocalizacao(localizacao: String, pageable: Pageable): AmbientesBasicosPaginadosRes
+    fun listarAmbientesPorLocalizacao(localizacao: LocalizacaoPesquisaReq, pageable: Pageable): AmbientesBasicosPaginadosRes
 
     fun obterAmbientePorId(id: Long): RES
 

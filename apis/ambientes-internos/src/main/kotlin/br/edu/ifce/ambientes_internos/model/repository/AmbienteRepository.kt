@@ -35,12 +35,16 @@ interface AmbienteRepository : JpaRepository<Ambiente, Long> {
     fun findByNomeContainingIgnoreCaseAndStatus(nome: String, status: StatusAmbiente, pageable: Pageable): Page<Ambiente>
 
     @Query(
-        "select a from Ambiente a where a.status = :status and " +
-                "(cast(a.localizacao.bloco as string) like concat('%', :localizacao, '%') or " +
-                "cast(a.localizacao.unidade as string) like concat('%', :localizacao, '%'))"
+        "select a from Ambiente a " +
+                "where a.status = :status " +
+                "and (:bloco is null or upper(cast(a.localizacao.bloco as string)) like concat('%', upper(:bloco), '%')) " +
+                "and (:unidade is null or upper(cast(a.localizacao.unidade as string)) like concat('%', upper(:unidade), '%')) " +
+                "and (:andar is null or cast(a.localizacao.andar as string) like concat('%', :andar, '%'))"
     )
     fun findByLocalizacaoContainingIgnoreCaseAndStatus(
-        @Param("localizacao") localizacao: String,
+        @Param("bloco") bloco: String?,
+        @Param("unidade") unidade: String?,
+        @Param("andar") andar: String?,
         @Param("status") status: StatusAmbiente,
         pageable: Pageable
     ): Page<Ambiente>

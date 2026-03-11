@@ -4,6 +4,7 @@ import br.edu.ifce.ambientes_internos.model.application.interfaces.IAmbienteVali
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.StatusAmbiente
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbienteRes
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbientesBasicosPaginadosRes
+import br.edu.ifce.ambientes_internos.model.dto.ambiente.LocalizacaoPesquisaReq
 import br.edu.ifce.ambientes_internos.model.repository.AmbienteRepository
 import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
@@ -41,7 +42,7 @@ class AmbienteValidacaoUseCases(val repoAmb: AmbienteRepository) : IAmbienteVali
 
     @Transactional(readOnly = true)
     override fun listarAmbientesPorLocalizacao(
-        localizacao: String,
+        localizacao: LocalizacaoPesquisaReq,
         pageable: Pageable
     ): AmbientesBasicosPaginadosRes {
         return listarAmbientesPorLocalizacao(localizacao, pageable, repoAmb)

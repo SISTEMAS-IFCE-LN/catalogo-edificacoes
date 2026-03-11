@@ -4,6 +4,7 @@ import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Ambiente
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.StatusAmbiente
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbienteRes
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbientesBasicosPaginadosRes
+import br.edu.ifce.ambientes_internos.model.dto.ambiente.LocalizacaoPesquisaReq
 import br.edu.ifce.ambientes_internos.model.repository.AmbienteRepository
 import org.springframework.data.domain.Pageable
 
@@ -41,12 +42,28 @@ open class BaseUseCases(val status: StatusAmbiente) {
     }
 
     fun listarAmbientesPorLocalizacao(
-        localizacao: String,
+        localizacao: LocalizacaoPesquisaReq,
         pageable: Pageable,
         repoAmb: AmbienteRepository
     ): AmbientesBasicosPaginadosRes {
-        val page =
-            repoAmb.findByLocalizacaoContainingIgnoreCaseAndStatus(localizacao, status, pageable)
+        if (localizacao.bloco.isNullOrBlank()
+            && localizacao.unidade.isNullOrBlank()
+            && localizacao.andar == null
+        ) {
+            throw IllegalArgumentException("Pelo menos um campo de localização deve ser preenchido")
+        }
+
+        val bloco = localizacao.bloco?.trim()?.ifBlank { null }?.replace(" ", "_")
+        val unidade = localizacao.unidade?.trim()?.ifBlank { null }?.replace(" ", "_")
+        val andar = localizacao.andar?.toString()
+
+        val page = repoAmb.findByLocalizacaoContainingIgnoreCaseAndStatus(
+            bloco = bloco,
+            unidade = unidade,
+            andar = andar,
+            status = status,
+            pageable = pageable
+        )
         return AmbientesBasicosPaginadosRes.from(page)
     }
 

@@ -5,6 +5,7 @@ import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Status
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbienteNomeLocalizacaoRes
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbienteRes
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbientesBasicosPaginadosRes
+import br.edu.ifce.ambientes_internos.model.dto.ambiente.LocalizacaoPesquisaReq
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.LocalizacaoRes
 import br.edu.ifce.ambientes_internos.model.dto.esquadria.EsquadriasAmbientesPaginadosRes
 import br.edu.ifce.ambientes_internos.model.dto.esquadria.EsquadriasDetalhesRes
@@ -45,7 +46,7 @@ class AmbientePublicadoUseCases(val repoAmb: AmbienteRepository) : IAmbientePubl
 
     @Transactional(readOnly = true)
     override fun listarAmbientesPorLocalizacao(
-        localizacao: String,
+        localizacao: LocalizacaoPesquisaReq,
         pageable: Pageable
     ): AmbientesBasicosPaginadosRes {
         return listarAmbientesPorLocalizacao(localizacao, pageable, repoAmb)
