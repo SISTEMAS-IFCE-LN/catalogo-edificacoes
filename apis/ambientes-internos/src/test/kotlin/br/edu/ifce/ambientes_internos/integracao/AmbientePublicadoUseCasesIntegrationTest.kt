@@ -628,7 +628,10 @@ class AmbientePublicadoUseCasesIntegrationTest {
         // Então não deve incluir ambiente não publicado em nenhum filtro
         assertEquals(1, ambientesPUseCases.listarAmbientes(pageable).dadosPaginacao.totalElements)
         assertEquals(1, ambientesPUseCases.listarAmbientesPorNome("Sala", pageable).dadosPaginacao.totalElements)
-        assertEquals(1, ambientesPUseCases.listarAmbientesPorLocalizacao("BLOCO_10", pageable).dadosPaginacao.totalElements)
+        assertEquals(
+            1,
+            ambientesPUseCases.listarAmbientesPorLocalizacao("BLOCO_10", pageable).dadosPaginacao.totalElements
+        )
     }
 
     @Test
@@ -640,6 +643,10 @@ class AmbientePublicadoUseCasesIntegrationTest {
             geometrias = mutableSetOf(Retangular(base = BigDecimal("4.0"), altura = BigDecimal("3.0"))),
             pesDireitos = mutableSetOf(BigDecimal("3.0")),
             esquadrias = mutableSetOf(
+                Porta(
+                    geometria = Retangular(base = BigDecimal("0.9"), altura = BigDecimal("2.1")),
+                    material = MaterialEsquadria.MADEIRA_FICHA
+                ),
                 Janela(
                     geometria = Retangular(base = BigDecimal("1.0"), altura = BigDecimal("1.0")),
                     material = MaterialEsquadria.ALUMINIO,
@@ -653,15 +660,36 @@ class AmbientePublicadoUseCasesIntegrationTest {
             localizacao = Localizacao(Bloco.BLOCO_2, Unidade.CIDADE_ALTA, 1),
             capacidade = 25,
             geometrias = mutableSetOf(Retangular(base = BigDecimal("5.0"), altura = BigDecimal("3.0"))),
-            pesDireitos = mutableSetOf(BigDecimal("3.0"))
+            pesDireitos = mutableSetOf(BigDecimal("3.0")),
+            esquadrias = mutableSetOf(
+                Porta(
+                    geometria = Retangular(base = BigDecimal("0.9"), altura = BigDecimal("2.1")),
+                    material = MaterialEsquadria.MADEIRA_FICHA
+                ),
+                Janela(
+                    geometria = Retangular(base = BigDecimal("1.5"), altura = BigDecimal("1.2")),
+                    material = MaterialEsquadria.ALUMINIO,
+                    alturaPeitoril = BigDecimal("0.90")
+                )
+            )
         )
-
         val ambiente3 = criarAmbientePublicado(
             nome = "Ambiente Publicado 3",
             localizacao = Localizacao(Bloco.BLOCO_3, Unidade.CIDADE_ALTA, 1),
             capacidade = 30,
             geometrias = mutableSetOf(Retangular(base = BigDecimal("6.0"), altura = BigDecimal("3.0"))),
-            pesDireitos = mutableSetOf(BigDecimal("3.0"))
+            pesDireitos = mutableSetOf(BigDecimal("3.0")),
+            esquadrias = mutableSetOf(
+                Porta(
+                    geometria = Retangular(base = BigDecimal("0.9"), altura = BigDecimal("2.1")),
+                    material = MaterialEsquadria.MADEIRA_FICHA
+                ),
+                Janela(
+                    geometria = Retangular(base = BigDecimal("2.0"), altura = BigDecimal("1.5")),
+                    material = MaterialEsquadria.ALUMINIO,
+                    alturaPeitoril = BigDecimal("0.90")
+                )
+            )
         )
 
         val resultado = ambientesPUseCases.listarEsquadriasAmbientes(
@@ -669,13 +697,39 @@ class AmbientePublicadoUseCasesIntegrationTest {
             pageable = PageRequest.of(0, 2)
         )
 
+        // Validar paginação
         assertEquals(3, resultado.dadosPaginacao.totalElements)
         assertEquals(2, resultado.dadosPaginacao.totalPages)
         assertEquals(0, resultado.dadosPaginacao.currentPage)
         assertEquals(2, resultado.dadosPaginacao.pageSize)
         assertEquals(true, resultado.dadosPaginacao.hasNext)
         assertEquals(false, resultado.dadosPaginacao.hasPrevious)
+
+        // Validar conteúdo retornado (2 ambientes na primeira página)
         assertEquals(2, resultado.ambientes.size)
+
+        // Validar que os ambientes retornados têm as esquadrias corretas
+        val ambientesRetornados = resultado.ambientes.keys.toList()
+        assertTrue(ambientesRetornados.any { it.nome == "Ambiente Publicado 1" })
+        assertTrue(ambientesRetornados.any { it.nome == "Ambiente Publicado 2" })
+
+        // Validar que o consolidado de tipos e materiais foi calculado
+        assertTrue(resultado.totalTipoMaterial.isNotEmpty())
+
+        // Deve conter a porta tipo ficha de madeira nos resultados
+        assertTrue(resultado.totalTipoMaterial.any { it.tipo == TipoEsquadria.PORTA && it.material == MaterialEsquadria.MADEIRA_FICHA })
+
+        // Validar que a área total das janelas de alumínio foi calculada corretamente (apenas dos 2 primeiros ambientes na paginação)
+        val areaJanelasAluminio =
+            resultado.totalTipoMaterial.find { it.tipo == TipoEsquadria.JANELA && it.material == MaterialEsquadria.ALUMINIO }?.area
+        // A área total das janelas de alumínio deve ser a soma das áreas das janelas dos ambientes 1 e 2 (primeira página)
+        // Ambiente 1: 1.0 * 1.0 = 1.0 m²
+        // Ambiente 2: 1.5 * 1.2 = 1.8 m²
+        // Total: 2.8 m²
+        val areaEsperada =
+            BigDecimal("1.0").multiply(BigDecimal("1.0"))
+                .add(BigDecimal("1.5").multiply(BigDecimal("1.2")))
+        assertEquals(areaEsperada.setScale(2), areaJanelasAluminio?.setScale(2))
     }
 
 }
