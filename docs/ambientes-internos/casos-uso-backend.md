@@ -147,7 +147,7 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
     2.  O Gestor realiza uma requisição `POST` ao endpoint `/api/ambientes/nao-publicados`.
     3.  O Sistema valida os dados da requisição conforme as regras de negócio (RN-1.6 e RN-1.7).
     4.  Se a validação for bem-sucedida, o Sistema persiste o novo ambiente com o atributo `status = NAO_PUBLICADO`, gera um ID e retorna os dados do ambiente criado.
-    5.  O Sistema exibe uma mensagem de sucesso e os detalhes do ambiente recém-criado.
+    5.  O Sistema exibe um status de sucesso e os detalhes do ambiente recém-criado.
 * **Fluxos Alternativos:**
     * **FA01 - Erro de Validação:** Se os dados fornecidos pelo Gestor não passarem na validação, o Sistema exibe mensagens de erro indicando os problemas e não prossegue com o cadastro.
     * **FA02 - Erro de Persistência:** Se ocorrer um erro ao salvar o ambiente no banco de dados, o Sistema informa o Gestor sobre a falha.
@@ -164,7 +164,7 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
     3.  O Gestor realiza uma requisição `PATCH` ao endpoint `/api/ambientes/nao-publicados/{id}/dados-basicos`.
     4.  O Sistema valida os dados da requisição conforme as regras de negócio (RN-1.6 e RN-1.7).
     5.  Se a validação for bem-sucedida, o Sistema atualiza os dados do ambiente no banco de dados e retorna os dados atualizados.
-    6.  O Sistema exibe uma mensagem de sucesso e os detalhes atualizados do ambiente.
+    6.  O Sistema exibe um status de sucesso e os detalhes atualizados do ambiente.
 * **Fluxos Alternativos:**
     * **FA01 - Erro de Validação:** Se os dados modificados não passarem na validação, o Sistema exibe mensagens de erro e não salva as alterações.
     * **FA02 - Ambiente Não Encontrado:** Se o ID fornecido não corresponder a um ambiente não publicado, o Sistema exibe uma mensagem de erro.
@@ -182,7 +182,7 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
     3.  O Gestor realiza uma requisição `PATCH` ao endpoint `/api/ambientes/nao-publicados/{id}/geometrias/incluir`.
     4.  O Sistema valida os dados da requisição conforme as regras de negócio (RN-1.6).
     5.  Se a validação for bem-sucedida, o Sistema insere as novas geometrias no ambiente, atualiza-o no banco de dados e retorna os dados atualizados.
-    6.  O Sistema exibe uma mensagem de sucesso e os detalhes atualizados do ambiente.
+    6.  O Sistema exibe um status de sucesso e os detalhes atualizados do ambiente.
 * **Fluxos Alternativos:**
     * **FA01 - Erro de Validação:** Se os dados inseridos não passarem na validação, o Sistema exibe mensagens de erro e não salva as alterações.
     * **FA02 - Ambiente Não Encontrado:** Se o ID fornecido não corresponder a um ambiente não publicado, o Sistema exibe uma mensagem de erro.
@@ -200,7 +200,7 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
     3.  O Gestor realiza uma requisição `PATCH` ao endpoint `/api/ambientes/nao-publicados/{id}/geometrias/atualizar`.
     4.  O Sistema valida os dados da requisição conforme as regras de negócio (RN-1.6).
     5.  Se a validação for bem-sucedida, o Sistema atualiza as geometrias do ambiente no banco de dados e retorna os dados atualizados.
-    6.  O Sistema exibe uma mensagem de sucesso e os detalhes atualizados do ambiente.
+    6.  O Sistema exibe um status de sucesso e os detalhes atualizados do ambiente.
 * **Fluxos Alternativos:**
     * **FA01 - Erro de Validação:** Se os dados modificados não passarem na validação, o Sistema exibe mensagens de erro e não salva as alterações.
     * **FA02 - Ambiente Não Encontrado:** Se o ID fornecido não corresponder a um ambiente não publicado, o Sistema exibe uma mensagem de erro.
@@ -218,7 +218,7 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
     3.  O Gestor realiza uma requisição `PATCH` ao endpoint `/api/ambientes/nao-publicados/{id}/pes-direitos/incluir`.
     4.  O Sistema valida os dados da requisição conforme as regras de negócio (RN-1.6).
     5.  Se a validação for bem-sucedida, o Sistema insere os novos pés-direitos no ambiente, atualiza-o no banco de dados e retorna os dados atualizados.
-    6.  O Sistema exibe uma mensagem de sucesso e os detalhes atualizados do ambiente.
+    6.  O Sistema exibe um status de sucesso e os detalhes atualizados do ambiente.
 * **Fluxos Alternativos:**
     * **FA01 - Erro de Validação:** Se os dados inseridos não passarem na validação, o Sistema exibe mensagens de erro e não salva as alterações.
     * **FA02 - Ambiente Não Encontrado:** Se o ID fornecido não corresponder a um ambiente não publicado, o Sistema exibe uma mensagem de erro.
@@ -236,7 +236,7 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
     3.  O Gestor realiza uma requisição `PATCH` ao endpoint `/api/ambientes/nao-publicados/{id}/pes-direitos/atualizar`.
     4.  O Sistema valida os dados da requisição conforme as regras de negócio (RN-1.6).
     5.  Se a validação for bem-sucedida, o Sistema atualiza os pés-direitos do ambiente no banco de dados e retorna os dados atualizados.
-    6.  O Sistema exibe uma mensagem de sucesso e os detalhes atualizados do ambiente.
+    6.  O Sistema exibe um status de sucesso e os detalhes atualizados do ambiente.
 * **Fluxos Alternativos:**
     * **FA01 - Erro de Validação:** Se os dados modificados não passarem na validação, o Sistema exibe mensagens de erro e não salva as alterações.
     * **FA02 - Ambiente Não Encontrado:** Se o ID fornecido não corresponder a um ambiente não publicado, o Sistema exibe uma mensagem de erro.
@@ -254,7 +254,7 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
     3.  O Gestor realiza uma requisição `PATCH` ao endpoint `/api/ambientes/nao-publicados/{id}/esquadrias/incluir`.
     4.  O Sistema valida os dados da requisição conforme as regras de negócio (RN-1.6).
     5.  Se a validação for bem-sucedida, o Sistema insere as novas esquadrias no ambiente, atualiza-o no banco de dados e retorna os dados atualizados.
-    6.  O Sistema exibe uma mensagem de sucesso e os detalhes atualizados do ambiente.
+    6.  O Sistema exibe um status de sucesso e os detalhes atualizados do ambiente.
 * **Fluxos Alternativos:**
     * **FA01 - Erro de Validação:** Se os dados inseridos não passarem na validação, o Sistema exibe mensagens de erro e não salva as alterações.
     * **FA02 - Ambiente Não Encontrado:** Se o ID fornecido não corresponder a um ambiente não publicado, o Sistema exibe uma mensagem de erro.
@@ -272,7 +272,7 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
     3.  O Gestor realiza uma requisição `PATCH` ao endpoint `/api/ambientes/nao-publicados/{id}/esquadrias/atualizar`.
     4.  O Sistema valida os dados da requisição conforme as regras de negócio (RN-1.6).
     5.  Se a validação for bem-sucedida, o Sistema atualiza as esquadrias do ambiente no banco de dados e retorna os dados atualizados.
-    6.  O Sistema exibe uma mensagem de sucesso e os detalhes atualizados do ambiente.
+    6.  O Sistema exibe um status de sucesso e os detalhes atualizados do ambiente.
 * **Fluxos Alternativos:**
     * **FA01 - Erro de Validação:** Se os dados modificados não passarem na validação, o Sistema exibe mensagens de erro e não salva as alterações.
     * **FA02 - Ambiente Não Encontrado:** Se o ID fornecido não corresponder a um ambiente não publicado, o Sistema exibe uma mensagem de erro.
@@ -290,7 +290,7 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
     3.  O Gestor realiza uma requisição `PATCH` ao endpoint `/api/ambientes/nao-publicados/{id}/informacao-adicional`.
     4.  O Sistema valida os dados da requisição conforme as regras de negócio (RN-1.6).
     5.  Se a validação for bem-sucedida, o Sistema atualiza a informação adicional do ambiente no banco de dados e retorna os dados atualizados.
-    6.  O Sistema exibe uma mensagem de sucesso e os detalhes atualizados do ambiente.
+    6.  O Sistema exibe um status de sucesso e os detalhes atualizados do ambiente.
 * **Fluxos Alternativos:**
     * **FA01 - Erro de Validação:** Se os dados modificados não passarem na validação, o Sistema exibe mensagens de erro e não salva as alterações.
     * **FA02 - Ambiente Não Encontrado:** Se o ID fornecido não corresponder a um ambiente não publicado, o Sistema exibe uma mensagem de erro.
@@ -325,7 +325,7 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
     3.  O Gestor realiza uma requisição `POST` ao endpoint `/api/ambientes/nao-publicados/{id}`.
     4.  O Sistema verifica se cada ambiente existe e está com `status = NAO_PUBLICADO` e se os novos dados estiverem de acordo com as regras de negócio (RN-1.6).
     5.  Se as verificações forem bem-sucedidas, o Sistema cria um novo ambiente do tipo especificado no banco de dados, remove o ambiente antigo e retorna os dados do novo ambiente.
-    6.  O Sistema exibe uma mensagem de sucesso e os dados do novo ambiente.
+    6.  O Sistema exibe um status de sucesso e os dados do novo ambiente.
 * **Fluxos Alternativos:**
     * **FA01 - Erro de Validação:** Se os dados modificados não passarem na validação, o Sistema exibe mensagens de erro e não salva as alterações.
     * **FA02 - Ambiente Não Encontrado:** Se o ID fornecido não corresponder a um ambiente não publicado, o Sistema exibe uma mensagem de erro.
@@ -343,7 +343,7 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
     3.  O Gestor realiza uma requisição `POST` ao endpoint `/api/ambientes/nao-publicados/{id}/duplicar`.
     4.  O Sistema verifica se o ambiente existe e está com `status = NAO_PUBLICADO` e está de acordo com as regras de negócio (RN-1.6 e RN-1.7).
     5.  Se as verificações forem bem-sucedidas, o Sistema cria um novo ambiente no banco de dados com base nos dados do ambiente especificado.
-    6.  O Sistema exibe uma mensagem de sucesso e os dados do novo ambiente.
+    6.  O Sistema exibe um status de sucesso e os dados do novo ambiente.
 * **Fluxos Alternativos:**
     * **FA01 - Erro de Validação:** Se os dados modificados não passarem na validação, o Sistema exibe uma mensagem de erro e não salva as alterações.
     * **FA02 - Ambiente Não Encontrado:** Se o ID fornecido não corresponder a um ambiente não publicado, o Sistema exibe uma mensagem de erro.
@@ -399,13 +399,13 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
 
 #### **UC20: Obter Detalhes de Esquadrias de uma lista de Ambientes Publicados**
 
-* **Descrição:** Permite ao Servidor visualizar todas as informações detalhadas de esquadrias de um conjunto de ambientes publicados.
+* **Descrição:** Permite ao Servidor visualizar todas as informações detalhadas de esquadrias de um conjunto de ambientes publicados de forma paginada.
 * **Ator Primário:** Servidor.
 * **Pré-condições:** O Servidor está autenticado e possui permissão para visualizar ambientes publicados. Os ambientes a serem consultados existem e têm atributo `status = PUBLICADO`.
 * **Fluxo Principal:**
         1. O servidor preenche os parâmetros de consulta com a lista de IDs dos ambientes publicados a serem consultados.
         2. O Servidor realiza uma requisição `GET` ao endpoint `/api/ambientes/publicados/esquadrias?ids=1,2,3`.
-        3. O Sistema recupera e exibe os detalhes das esquadrias dos ambientes solicitados.
+        3. O Sistema recupera e exibe, de forma paginada e limitada a 100 registros por página, os detalhes das esquadrias dos ambientes solicitados.
         4. Os detalhes incluem as seguintes informações das esquadrias de cada ambiente:
             * Nomes e Localizações dos ambientes consultados;
             * Lista de Esquadrias com os seguintes dados:
