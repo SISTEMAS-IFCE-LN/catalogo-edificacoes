@@ -18,15 +18,15 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
         3. O Sistema retorna a lista ao Validador de forma paginada, limitada a 100 registros por página.
         4. A lista retornada conterá os seguintes dados: ID, Nome, Localização, Tipo, Capacidade e Área.
     * **FP2 - Filtrar por Nome:**
-        1. O Validador realiza uma requisição `GET` ao endpoint `/api/ambientes/validacao?nome={nome}`.
+        1. O Validador realiza uma requisição `GET` ao endpoint `/api/ambientes/validacao/nome?nome={nome}`.
         2. O Sistema recupera a lista de ambientes que correspondem ao nome fornecido.
         3. Repete os passos 3 e 4 do FP1.
     * **FP3 - Filtrar por Localização:**
-        1. O Validador realiza uma requisição `GET` ao endpoint `/api/ambientes/validacao?localizacao={localizacao}`.
-        2. O Sistema recupera a lista de ambientes que correspondem à localização fornecida.
+        1. O Validador realiza uma requisição `GET` ao endpoint `/api/ambientes/validacao/localizacao?bloco={bloco}&unidade={unidade}&andar={andar}`.
+        2. O Sistema recupera a lista de ambientes que correspondem aos parâmetros de localização fornecidos.
         3. Repete os passos 3 e 4 do FP1.
     * **FP4 - Filtrar por Tipo:**
-        1. O Validador realiza uma requisição `GET` ao endpoint `/api/ambientes/validacao?tipo={tipo}`.
+        1. O Validador realiza uma requisição `GET` ao endpoint `/api/ambientes/validacao/tipo?tipo={tipo}`.
         2. O Sistema recupera a lista de ambientes que correspondem ao tipo fornecido.
         3. Repete os passos 3 e 4 do FP1.
 * **Fluxos Alternativos:**
@@ -66,15 +66,15 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
 * **Pré-condições:** O Validador está autenticado e possui as permissões necessárias.
 * **Fluxo Principal:**
     * **FP1 - Publicar:**
-        1.  Obtém o ambiente não publicado (UC05) ou aguardando validação (UC02) que deseja tornar público.
+        1.  Obtém o ambiente aguardando validação (UC02) que deseja tornar público.
         2.  O Validador realiza uma requisição `PATCH` ao endpoint `/api/ambientes/validacao/{id}/publicar`.
         3.  O Sistema atualiza o status do ambiente selecionado para `status = PUBLICADO`.
-        4.  O Sistema exibe uma mensagem de sucesso e os detalhes do ambiente publicado.
+        4.  O Sistema retorna `204 No Content`.
     * **FP2 - Privar:**
         1.  Obtém o ambiente publicado (UC19) ou aguardando validação (UC02) que deseja privar.
         2.  O Validador realiza uma requisição `PATCH` ao endpoint `/api/ambientes/validacao/{id}/privar`.
         3.  O Sistema atualiza o status do ambiente selecionado para `status = NAO_PUBLICADO`.
-        4.  O Sistema exibe uma mensagem de sucesso e os detalhes do ambiente não publicado.
+        4.  O Sistema retorna `204 No Content`.
 * **Fluxos Alternativos:**
     * **FA01 - Ambiente não encontrado ou status incorreto:** Se o ambiente não existir ou não estiver no estado esperado (ex: tentar publicar um ambiente já publicado), o Sistema exibe erro.
     * **FA02 - Erro ao publicar ambiente:** Se ocorrer um erro durante o processo de publicação, o Sistema exibe uma mensagem de erro.
@@ -96,15 +96,15 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
         3. O Sistema retorna a lista ao Gestor de forma paginada, limitada a 100 registros por página.
         4. A lista retornada conterá os seguintes dados: ID, Nome, Localização, Tipo, Capacidade e Área.
     * **FP2 - Filtrar por Nome:**
-        1. O Gestor realiza uma requisição `GET` ao endpoint `/api/ambientes/nao-publicados?nome={nome}`.
+        1. O Gestor realiza uma requisição `GET` ao endpoint `/api/ambientes/nao-publicados/nome?nome={nome}`.
         2. O Sistema recupera a lista de ambientes que correspondem ao nome fornecido.
         3. Repete os passos 3 e 4 do FP1.
     * **FP3 - Filtrar por Localização:**
-        1. O Gestor realiza uma requisição `GET` ao endpoint `/api/ambientes/nao-publicados?localizacao={localizacao}`.
-        2. O Sistema recupera a lista de ambientes que correspondem à localização fornecida.
+        1. O Gestor realiza uma requisição `GET` ao endpoint `/api/ambientes/nao-publicados/localizacao?bloco={bloco}&unidade={unidade}&andar={andar}`.
+        2. O Sistema recupera a lista de ambientes que correspondem aos parâmetros de localização fornecidos.
         3. Repete os passos 3 e 4 do FP1.
     * **FP4 - Filtrar por Tipo:**
-        1. O Gestor realiza uma requisição `GET` ao endpoint `/api/ambientes/nao-publicados?tipo={tipo}`.
+        1. O Gestor realiza uma requisição `GET` ao endpoint `/api/ambientes/nao-publicados/tipo?tipo={tipo}`.
         2. O Sistema recupera a lista de ambientes que correspondem ao tipo fornecido.
         3. Repete os passos 3 e 4 do FP1.
 * **Fluxos Alternativos:**
@@ -308,7 +308,7 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
     3.  O Gestor realiza uma requisição `DELETE` ao endpoint `/api/ambientes/nao-publicados`.
     4.  O Sistema verifica se cada ambiente existe e está com `status = NAO_PUBLICADO`.
     5.  Se todos os ambientes forem encontrados e não estiverem publicados, o Sistema os remove do banco de dados.
-    6.  O Sistema exibe uma mensagem de sucesso.
+    6.  O Sistema retorna `204 No Content`.
 * **Fluxos Alternativos:**
     * **FA01 - Ambiente Não Encontrado:** Se o ID fornecido não corresponder a um ambiente não publicado, o Sistema exibe uma mensagem de erro.
     * **FA02 - Erro de Exclusão:** Se ocorrer um erro ao remover o ambiente do banco de dados, o Sistema informa o Gestor sobre a falha.
@@ -361,7 +361,7 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
     3.  O Gestor realiza uma requisição `PATCH` ao endpoint `/api/ambientes/nao-publicados/validar`.
     4.  O Sistema verifica se cada ambiente existe e está com `status = NAO_PUBLICADO`.
     5.  Se todos os ambientes forem válidos, o Sistema atualiza o status dos ambientes selecionados para `status = AGUARDANDO_VALIDACAO`.
-    6.  O Sistema exibe uma mensagem de sucesso.
+    6.  O Sistema retorna `204 No Content`.
 * **Fluxos Alternativos:**
     * **FA01 - Ambiente Não Encontrado:** Se os IDs fornecidos não corresponderem a ambientes não publicados, o Sistema exibe uma mensagem de erro.
     * **FA02 - Erro no Envio:** Se ocorrer um erro ao atualizar o status dos ambientes, o Sistema informa o Gestor sobre a falha.
@@ -439,15 +439,15 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
         3. O Sistema retorna a lista ao Público Externo de forma paginada, limitada a 100 registros por página.
         4. A lista retornada conterá os seguintes dados: ID, Nome, Localização, Tipo, Capacidade e Área.
     * **FP2 - Filtrar por Nome:**
-        1. O Público Externo realiza uma requisição `GET` ao endpoint `/api/ambientes/publicados?nome={nome}`.
+        1. O Público Externo realiza uma requisição `GET` ao endpoint `/api/ambientes/publicados/nome?nome={nome}`.
         2. O Sistema recupera a lista de ambientes que correspondem ao nome fornecido.
         3. Repete os passos 3 e 4 do FP1.
     * **FP3 - Filtrar por Localização:**
-        1. O Público Externo realiza uma requisição `GET` ao endpoint `/api/ambientes/publicados?localizacao={localizacao}`.
-        2. O Sistema recupera a lista de ambientes que correspondem à localização fornecida.
+        1. O Público Externo realiza uma requisição `GET` ao endpoint `/api/ambientes/publicados/localizacao?bloco={bloco}&unidade={unidade}&andar={andar}`.
+        2. O Sistema recupera a lista de ambientes que correspondem aos parâmetros de localização fornecidos.
         3. Repete os passos 3 e 4 do FP1.
     * **FP4 - Filtrar por Tipo:**
-        1. O Público Externo realiza uma requisição `GET` ao endpoint `/api/ambientes/publicados?tipo={tipo}`.
+        1. O Público Externo realiza uma requisição `GET` ao endpoint `/api/ambientes/publicados/tipo?tipo={tipo}`.
         2. O Sistema recupera a lista de ambientes que correspondem ao tipo fornecido.
         3. Repete os passos 3 e 4 do FP1.
 * **Fluxos Alternativos:**
