@@ -525,6 +525,29 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
     }
 
     @Test
+    fun `Deve lancar excecao ao cadastrar ambiente sem porta`() {
+        val reqSemPorta = criarSalaAula(
+            nome = "Sala sem porta"
+        ).copy(
+            esquadrias = setOf(
+                EsquadriaReq(
+                    tipo = TipoEsquadria.JANELA,
+                    geometria = GeometriaEsquadriaReq(base = BigDecimal("1.5"), altura = BigDecimal("1.2")),
+                    material = MaterialEsquadria.ALUMINIO,
+                    alturaPeitoril = BigDecimal("0.90"),
+                    informacaoAdicional = "Janela de correr"
+                )
+            )
+        )
+
+        val erro = assertThrows<IllegalArgumentException> {
+            ambientesNPUseCases.cadastrarAmbiente(reqSemPorta)
+        }
+
+        assertEquals("O ambiente deve possuir pelo menos uma porta", erro.message)
+    }
+
+    @Test
     fun `Deve lancar excecao ao atualizar dados basicos para nome e localizacao ja existentes`() {
         val ambiente1 = ambientesNPUseCases.cadastrarAmbiente(criarSalaAula())
         val ambiente2 = ambientesNPUseCases.cadastrarAmbiente(
