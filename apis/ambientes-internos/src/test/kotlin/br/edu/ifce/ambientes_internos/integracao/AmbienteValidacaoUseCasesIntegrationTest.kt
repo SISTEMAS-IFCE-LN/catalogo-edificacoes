@@ -300,6 +300,27 @@ class AmbienteValidacaoUseCasesIntegrationTest {
     }
 
     @Test
+    fun `Deve limitar pagina para no maximo 100 ambientes em validacao`() {
+        (1..120).forEach { indice ->
+            criarSalaAula(
+                nome = "Sala validacao $indice",
+                bloco = Bloco.BLOCO_10,
+                unidade = Unidade.CIDADE_ALTA,
+                andar = indice,
+                capacidade = 30,
+                base = "6.0",
+                altura = "3.0"
+            )
+        }
+
+        val resultado = ambientesVUseCases.listarAmbientes(PageRequest.of(0, 1000))
+
+        assertEquals(120, resultado.dadosPaginacao.totalElements)
+        assertEquals(100, resultado.dadosPaginacao.pageSize)
+        assertEquals(100, resultado.ambientes.size)
+    }
+
+    @Test
     fun `Deve publicar ambiente em validacao`() {
         val ambienteSalvo = criarSalaAula(
             nome = "Sala pronta para publicação",

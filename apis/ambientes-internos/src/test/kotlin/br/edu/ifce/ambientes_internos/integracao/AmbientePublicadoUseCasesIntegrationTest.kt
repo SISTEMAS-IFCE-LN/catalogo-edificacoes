@@ -498,4 +498,53 @@ class AmbientePublicadoUseCasesIntegrationTest {
             .add(BigDecimal("1.5").multiply(BigDecimal("1.2")))
         assertEquals(areaEsperada.setScale(2), areaJanelasAluminio?.setScale(2))
     }
+
+    @Test
+    fun `Deve limitar pagina para no maximo 100 ambientes publicados`() {
+        (1..120).forEach { indice ->
+            criarSalaAula(
+                nome = "Sala Publicada $indice",
+                bloco = Bloco.BLOCO_10,
+                unidade = Unidade.CIDADE_ALTA,
+                andar = indice,
+                capacidade = 30,
+                base = "6.0",
+                altura = "3.0"
+            )
+        }
+
+        val resultado = ambientesPUseCases.listarAmbientes(PageRequest.of(0, 1000))
+
+        assertEquals(120, resultado.dadosPaginacao.totalElements)
+        assertEquals(100, resultado.dadosPaginacao.pageSize)
+        assertEquals(100, resultado.ambientes.size)
+    }
+
+    @Test
+    fun `Deve limitar pagina para no maximo 100 ambientes ao listar esquadrias`() {
+        val ids = (1..120).map { indice ->
+            criarSalaAula(
+                nome = "Sala com esquadria $indice",
+                bloco = Bloco.BLOCO_11,
+                unidade = Unidade.CIDADE_ALTA,
+                andar = indice,
+                capacidade = 30,
+                base = "6.0",
+                altura = "3.0",
+                esquadrias = mutableSetOf(
+                    Porta(
+                        geometria = Retangular(base = BigDecimal("0.9"), altura = BigDecimal("2.1")),
+                        material = MaterialEsquadria.MADEIRA_FICHA,
+                        informacaoAdicional = "Porta padrão"
+                    )
+                )
+            ).id!!
+        }.toSet()
+
+        val resultado = ambientesPUseCases.listarEsquadriasAmbientes(ids, PageRequest.of(0, 1000))
+
+        assertEquals(120, resultado.dadosPaginacao.totalElements)
+        assertEquals(100, resultado.dadosPaginacao.pageSize)
+        assertEquals(100, resultado.ambientes.size)
+    }
 }

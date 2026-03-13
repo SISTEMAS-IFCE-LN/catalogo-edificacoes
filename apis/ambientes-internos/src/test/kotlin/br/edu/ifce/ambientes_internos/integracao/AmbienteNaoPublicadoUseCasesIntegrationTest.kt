@@ -391,6 +391,27 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
         assertEquals(false, ambientesNaoPublicados.dadosPaginacao.hasPrevious)
     }
 
+    @Test
+    fun `Deve limitar pagina para no maximo 100 ambientes nao publicados`() {
+        (1..120).forEach { indice ->
+            ambientesNPUseCases.cadastrarAmbiente(
+                criarSalaAula(
+                    nome = "Sala NP $indice",
+                    bloco = Bloco.BLOCO_10,
+                    unidade = Unidade.CIDADE_ALTA,
+                    andar = indice,
+                    capacidade = 30
+                )
+            )
+        }
+
+        val resultado = ambientesNPUseCases.listarAmbientes(PageRequest.of(0, 1000))
+
+        assertEquals(120, resultado.dadosPaginacao.totalElements)
+        assertEquals(100, resultado.dadosPaginacao.pageSize)
+        assertEquals(100, resultado.ambientes.size)
+    }
+
     @ParameterizedTest(name = "Filtro por nome ''{0}'' deve retornar {1} item(ns)")
     @MethodSource("filtrosNomeNaoPublicados")
     fun `Deve filtrar ambientes nao publicados por nome em cenarios relevantes`(
