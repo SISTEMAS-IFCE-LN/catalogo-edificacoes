@@ -18,7 +18,8 @@ class AmbientePublicadoUseCases(
         ids: Set<Long>,
         pageable: Pageable
     ): EsquadriasAmbientesPaginadosRes {
-        val page = repoAmb.findAllByIdInAndStatus(ids, status, pageable)
+        val pageableLimitado = limitarPageable(pageable)
+        val page = repoAmb.findAllByIdInAndStatus(ids, status, pageableLimitado)
         return EsquadriasAmbientesPaginadosRes.from(page)
     }
 

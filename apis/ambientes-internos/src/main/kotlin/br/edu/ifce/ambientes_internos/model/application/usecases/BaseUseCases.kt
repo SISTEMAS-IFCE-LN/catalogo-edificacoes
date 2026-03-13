@@ -7,13 +7,26 @@ import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbienteRes
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbientesBasicosPaginadosRes
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.LocalizacaoPesquisaReq
 import br.edu.ifce.ambientes_internos.model.repository.AmbienteRepository
+import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.transaction.annotation.Transactional
+import kotlin.math.min
 
 abstract class BaseUseCases(
     protected val status: StatusAmbiente,
     protected val repoAmb: AmbienteRepository
 ) : IAmbienteUseCases<AmbienteRes> {
+
+    companion object {
+        protected const val PAGE_SIZE_MAX = 100
+    }
+
+    protected fun limitarPageable(pageable: Pageable): Pageable {
+        if (pageable.isUnpaged) {
+            return PageRequest.of(0, PAGE_SIZE_MAX)
+        }
+        return PageRequest.of(pageable.pageNumber, min(pageable.pageSize, PAGE_SIZE_MAX), pageable.sort)
+    }
 
     protected fun obterAmbiente(id: Long): Ambiente = repoAmb.findByIdAndStatus(id, status)
         .orElseThrow { NoSuchElementException("Ambiente não encontrado") }
@@ -25,7 +38,8 @@ abstract class BaseUseCases(
 
     @Transactional(readOnly = true)
     override fun listarAmbientes(pageable: Pageable): AmbientesBasicosPaginadosRes {
-        val page = repoAmb.findAllByStatus(status, pageable)
+        val pageableLimitado = limitarPageable(pageable)
+        val page = repoAmb.findAllByStatus(status, pageableLimitado)
         return AmbientesBasicosPaginadosRes.from(page)
     }
 
@@ -34,7 +48,8 @@ abstract class BaseUseCases(
         tipo: String,
         pageable: Pageable
     ): AmbientesBasicosPaginadosRes {
-        val page = repoAmb.findByTipoAndStatus(tipo, status, pageable)
+        val pageableLimitado = limitarPageable(pageable)
+        val page = repoAmb.findByTipoAndStatus(tipo, status, pageableLimitado)
         return AmbientesBasicosPaginadosRes.from(page)
     }
 
@@ -43,7 +58,8 @@ abstract class BaseUseCases(
         nome: String,
         pageable: Pageable
     ): AmbientesBasicosPaginadosRes {
-        val page = repoAmb.findByNomeContainingIgnoreCaseAndStatus(nome, status, pageable)
+        val pageableLimitado = limitarPageable(pageable)
+        val page = repoAmb.findByNomeContainingIgnoreCaseAndStatus(nome, status, pageableLimitado)
         return AmbientesBasicosPaginadosRes.from(page)
     }
 
@@ -59,13 +75,14 @@ abstract class BaseUseCases(
         val bloco = localizacao.bloco?.trim()?.ifBlank { null }?.replace(" ", "_")
         val unidade = localizacao.unidade?.trim()?.ifBlank { null }?.replace(" ", "_")
         val andar = localizacao.andar?.toString()
+        val pageableLimitado = limitarPageable(pageable)
 
         val page = repoAmb.findByLocalizacaoContainingIgnoreCaseAndStatus(
             bloco = bloco,
             unidade = unidade,
             andar = andar,
             status = status,
-            pageable = pageable
+            pageable = pageableLimitado
         )
         return AmbientesBasicosPaginadosRes.from(page)
     }
