@@ -15,14 +15,15 @@ import br.edu.ifce.ambientes_internos.model.dto.geometria.GeometriaAmbienteRes
 import br.edu.ifce.ambientes_internos.model.dto.geometria.ListaGeometriasAmbienteRes
 import br.edu.ifce.ambientes_internos.model.repository.AmbienteRepository
 import br.edu.ifce.ambientes_internos.model.repository.LocalizacaoRepository
-import org.springframework.data.domain.Pageable
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 
 @Service
-class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc: LocalizacaoRepository) :
-    IAmbienteNaoPublicadoUseCases, BaseUseCases(StatusAmbiente.NAO_PUBLICADO) {
+class AmbienteNaoPublicadoUseCases(
+    repoAmb: AmbienteRepository,
+    private val repoLoc: LocalizacaoRepository
+) : IAmbienteNaoPublicadoUseCases, BaseUseCases(StatusAmbiente.NAO_PUBLICADO, repoAmb) {
 
     private fun verificarNomeLocalizacaoCadastro(ambiente: Ambiente) {
         repoLoc.findByLocalizacao(ambiente.localizacao).ifPresent {
@@ -43,7 +44,7 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
     }
 
     private fun obterAmbientesPorIds(ids: Set<Long>): List<Ambiente> {
-        val ambientes = repoAmb.findAllByIdInAndStatus(ids, StatusAmbiente.NAO_PUBLICADO)
+        val ambientes = repoAmb.findAllByIdInAndStatus(ids, status)
         if (ambientes.isEmpty()) {
             throw NoSuchElementException("Nenhum ambiente encontrado para os IDs fornecidos")
         }
@@ -57,17 +58,12 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         return AmbienteRes.from(repoAmb.save(ambiente))
     }
 
-    @Transactional(readOnly = true)
-    override fun obterAmbientePorId(id: Long): AmbienteRes {
-        return obterAmbientePorId(id, repoAmb)
-    }
-
     @Transactional
     override fun atualizarDadosBasicosAmbiente(
         id: Long,
         ambienteAtualizado: AmbienteBasicoReq
     ): AmbienteBasicoRes {
-        val ambienteExistente = obterAmbienteMetodos(id, repoAmb)
+        val ambienteExistente = obterAmbiente(id)
         ambienteExistente.nome = ambienteAtualizado.nome
         ambienteExistente.capacidade = ambienteAtualizado.capacidade
         ambienteExistente.localizacao.bloco = ambienteAtualizado.localizacao.bloco
@@ -82,7 +78,7 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         id: Long,
         geometriasAdd: Set<GeometriaAmbienteReq>
     ): ListaGeometriasAmbienteRes {
-        val ambienteExistente = obterAmbienteMetodos(id, repoAmb)
+        val ambienteExistente = obterAmbiente(id)
         val geometrias = geometriasAdd.map { GeometriaFactory.criar(it) }.toMutableSet()
 
         ambienteExistente.geometrias.addAll(geometrias)
@@ -101,7 +97,7 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         id: Long,
         geometriasAtualizadas: Set<GeometriaAmbienteReq>
     ): ListaGeometriasAmbienteRes {
-        val ambienteExistente = obterAmbienteMetodos(id, repoAmb)
+        val ambienteExistente = obterAmbiente(id)
         val geometrias = geometriasAtualizadas.map { GeometriaFactory.criar(it) }.toMutableSet()
 
         ambienteExistente.geometrias.clear()
@@ -121,7 +117,7 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         id: Long,
         pesDireitos: Set<BigDecimal>
     ): Set<BigDecimal> {
-        val ambienteExistente = obterAmbienteMetodos(id, repoAmb)
+        val ambienteExistente = obterAmbiente(id)
         ambienteExistente.pesDireitos.addAll(pesDireitos)
         val ambienteAtualizado = repoAmb.save(ambienteExistente)
         return ambienteAtualizado.pesDireitos
@@ -132,7 +128,7 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         id: Long,
         pesDireitos: Set<BigDecimal>
     ): Set<BigDecimal> {
-        val ambienteExistente = obterAmbienteMetodos(id, repoAmb)
+        val ambienteExistente = obterAmbiente(id)
         ambienteExistente.pesDireitos.clear()
         ambienteExistente.pesDireitos.addAll(pesDireitos)
         val ambienteAtualizado = repoAmb.save(ambienteExistente)
@@ -144,7 +140,7 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         id: Long,
         esquadrias: Set<EsquadriaReq>
     ): EsquadriasDetalhesRes {
-        val ambienteExistente = obterAmbienteMetodos(id, repoAmb)
+        val ambienteExistente = obterAmbiente(id)
         val esquadriasNovas = esquadrias.map { EsquadriaFactory.criar(it) }
         ambienteExistente.esquadrias.addAll(esquadriasNovas)
         val ambienteAtualizado = repoAmb.save(ambienteExistente)
@@ -156,7 +152,7 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         id: Long,
         esquadrias: Set<EsquadriaReq>
     ): EsquadriasDetalhesRes {
-        val ambienteExistente = obterAmbienteMetodos(id, repoAmb)
+        val ambienteExistente = obterAmbiente(id)
         val esquadriasAtualizadas = esquadrias.map { EsquadriaFactory.criar(it) }
         ambienteExistente.esquadrias.clear()
         ambienteExistente.esquadrias.addAll(esquadriasAtualizadas)
@@ -169,7 +165,7 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         id: Long,
         informacaoAdicional: String
     ): String {
-        val ambienteExistente = obterAmbienteMetodos(id, repoAmb)
+        val ambienteExistente = obterAmbiente(id)
         ambienteExistente.informacaoAdicional = informacaoAdicional
         val ambienteAtualizado = repoAmb.save(ambienteExistente)
         return ambienteAtualizado.informacaoAdicional
@@ -180,7 +176,7 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         id: Long,
         ambiente: AmbienteReq
     ): AmbienteRes {
-        val ambienteExistente = obterAmbienteMetodos(id, repoAmb)
+        val ambienteExistente = obterAmbiente(id)
         val ambienteAtualizado = AmbienteFactory.criar(ambiente)
         ambienteAtualizado.localizacao = ambienteExistente.localizacao
         verificarNomeLocalizacaoCadastro(ambienteAtualizado)
@@ -194,7 +190,7 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         id: Long,
         dados: AmbienteNomeLocalizacaoReq
     ): AmbienteRes {
-        val ambienteExistente = obterAmbienteMetodos(id, repoAmb)
+        val ambienteExistente = obterAmbiente(id)
         val ambienteDuplicado = AmbienteFactory.clonar(ambienteExistente)
         val novaLocalizacao = Localizacao(
             bloco = dados.localizacao.bloco,
@@ -213,29 +209,6 @@ class AmbienteNaoPublicadoUseCases(val repoAmb: AmbienteRepository, val repoLoc:
         val ambientes = obterAmbientesPorIds(ids)
         ambientes.forEach { ambiente -> ambiente.status = StatusAmbiente.AGUARDANDO_VALIDACAO }
         repoAmb.saveAll(ambientes)
-    }
-
-    @Transactional(readOnly = true)
-    override fun listarAmbientes(pageable: Pageable): AmbientesBasicosPaginadosRes {
-        return listarAmbientes(pageable, repoAmb)
-    }
-
-    @Transactional(readOnly = true)
-    override fun listarAmbientesPorTipo(tipo: String, pageable: Pageable): AmbientesBasicosPaginadosRes {
-        return listarAmbientesPorTipo(tipo, pageable, repoAmb)
-    }
-
-    @Transactional(readOnly = true)
-    override fun listarAmbientesPorNome(nome: String, pageable: Pageable): AmbientesBasicosPaginadosRes {
-        return listarAmbientesPorNome(nome, pageable, repoAmb)
-    }
-
-    @Transactional(readOnly = true)
-    override fun listarAmbientesPorLocalizacao(
-        localizacao: LocalizacaoPesquisaReq,
-        pageable: Pageable
-    ): AmbientesBasicosPaginadosRes {
-        return listarAmbientesPorLocalizacao(localizacao, pageable, repoAmb)
     }
 
     @Transactional
