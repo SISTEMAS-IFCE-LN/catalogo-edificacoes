@@ -4,6 +4,7 @@ import br.edu.ifce.ambientes_internos.model.application.interfaces.IAmbienteNaoP
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Ambiente
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Localizacao
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.StatusAmbiente
+import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.enums.TipoEsquadria
 import br.edu.ifce.ambientes_internos.model.domain.factory.AmbienteFactory
 import br.edu.ifce.ambientes_internos.model.domain.factory.EsquadriaFactory
 import br.edu.ifce.ambientes_internos.model.domain.factory.GeometriaFactory
@@ -54,6 +55,9 @@ class AmbienteNaoPublicadoUseCases(
     @Transactional
     override fun cadastrarAmbiente(ambienteReq: AmbienteReq): AmbienteRes {
         val ambiente = AmbienteFactory.criar(ambienteReq)
+        if (ambiente.esquadrias.none { it.tipo == TipoEsquadria.PORTA }) {
+            throw IllegalArgumentException("O ambiente deve possuir pelo menos uma porta")
+        }
         verificarNomeLocalizacaoCadastro(ambiente)
         return AmbienteRes.from(repoAmb.save(ambiente))
     }
