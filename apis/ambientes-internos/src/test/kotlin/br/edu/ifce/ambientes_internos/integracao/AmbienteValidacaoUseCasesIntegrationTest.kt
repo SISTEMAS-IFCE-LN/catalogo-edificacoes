@@ -311,10 +311,9 @@ class AmbienteValidacaoUseCasesIntegrationTest {
             altura = "3.0"
         )
 
-        val statusRetornado = ambientesVUseCases.publicarAmbiente(ambienteSalvo.id!!)
+        ambientesVUseCases.publicarAmbiente(ambienteSalvo.id!!)
         val ambienteAtualizado = repoAmb.findById(ambienteSalvo.id!!).orElseThrow()
 
-        assertEquals(StatusAmbiente.PUBLICADO, statusRetornado)
         assertEquals(StatusAmbiente.PUBLICADO, ambienteAtualizado.status)
         assertThrows<NoSuchElementException> {
             ambientesVUseCases.obterAmbientePorId(ambienteSalvo.id!!)
@@ -333,14 +332,32 @@ class AmbienteValidacaoUseCasesIntegrationTest {
             altura = "3.0"
         )
 
-        val statusRetornado = ambientesVUseCases.privarAmbiente(ambienteSalvo.id!!)
+        ambientesVUseCases.privarAmbiente(ambienteSalvo.id!!)
         val ambienteAtualizado = repoAmb.findById(ambienteSalvo.id!!).orElseThrow()
 
-        assertEquals(StatusAmbiente.NAO_PUBLICADO, statusRetornado)
         assertEquals(StatusAmbiente.NAO_PUBLICADO, ambienteAtualizado.status)
         assertThrows<NoSuchElementException> {
             ambientesVUseCases.obterAmbientePorId(ambienteSalvo.id!!)
         }
+    }
+
+    @Test
+    fun `Deve privar ambiente publicado`() {
+        val ambienteSalvo = criarSalaAula(
+            nome = "Sala publicada para privar",
+            bloco = Bloco.BLOCO_10,
+            unidade = Unidade.CIDADE_ALTA,
+            andar = 1,
+            capacidade = 30,
+            base = "6.0",
+            altura = "3.0",
+            status = StatusAmbiente.PUBLICADO
+        )
+
+        ambientesVUseCases.privarAmbiente(ambienteSalvo.id!!)
+        val ambienteAtualizado = repoAmb.findById(ambienteSalvo.id!!).orElseThrow()
+
+        assertEquals(StatusAmbiente.NAO_PUBLICADO, ambienteAtualizado.status)
     }
 
     @Test
