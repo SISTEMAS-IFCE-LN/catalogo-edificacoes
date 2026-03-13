@@ -1,7 +1,6 @@
 package br.edu.ifce.ambientes_internos.controller
 
 import br.edu.ifce.ambientes_internos.model.application.interfaces.IAmbienteValidacaoUseCases
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.StatusAmbiente
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbienteRes
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PatchMapping
@@ -18,13 +17,15 @@ class AmbienteValidacaoController(
 ) : BaseController<AmbienteRes>(useCasesValidacao) {
 
     @PatchMapping("/{id}/publicar")
-    fun publicarAmbiente(@PathVariable id: Long): ResponseEntity<StatusAmbiente> {
-        return ResponseEntity.ok(useCasesValidacao.publicarAmbiente(id))
+    fun publicarAmbiente(@PathVariable id: Long): ResponseEntity<Void> {
+        useCasesValidacao.publicarAmbiente(id)
+        return ResponseEntity.noContent().build()
     }
 
     @PatchMapping("/{id}/privar")
-    fun privarAmbiente(@PathVariable id: Long): ResponseEntity<StatusAmbiente> {
-        return ResponseEntity.ok(useCasesValidacao.privarAmbiente(id))
+    fun privarAmbiente(@PathVariable id: Long): ResponseEntity<Void> {
+        useCasesValidacao.privarAmbiente(id)
+        return ResponseEntity.noContent().build()
     }
 
 }

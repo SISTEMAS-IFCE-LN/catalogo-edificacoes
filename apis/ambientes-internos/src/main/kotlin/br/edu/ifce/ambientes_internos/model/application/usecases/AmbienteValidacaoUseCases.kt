@@ -12,17 +12,21 @@ class AmbienteValidacaoUseCases(
 ) : IAmbienteValidacaoUseCases, BaseUseCases(StatusAmbiente.AGUARDANDO_VALIDACAO, repoAmb) {
 
     @Transactional
-    override fun publicarAmbiente(id: Long): StatusAmbiente {
+    override fun publicarAmbiente(id: Long) {
         val ambiente = obterAmbiente(id)
         ambiente.status = StatusAmbiente.PUBLICADO
-        return repoAmb.save(ambiente).status
+        repoAmb.save(ambiente)
     }
 
     @Transactional
-    override fun privarAmbiente(id: Long): StatusAmbiente {
-        val ambiente = obterAmbiente(id)
+    override fun privarAmbiente(id: Long) {
+        val ambiente = repoAmb.findByIdAndStatus(id, StatusAmbiente.AGUARDANDO_VALIDACAO)
+            .orElseGet {
+                repoAmb.findByIdAndStatus(id, StatusAmbiente.PUBLICADO)
+                    .orElseThrow { NoSuchElementException("Ambiente não encontrado") }
+            }
         ambiente.status = StatusAmbiente.NAO_PUBLICADO
-        return repoAmb.save(ambiente).status
+        repoAmb.save(ambiente)
     }
 
 }
