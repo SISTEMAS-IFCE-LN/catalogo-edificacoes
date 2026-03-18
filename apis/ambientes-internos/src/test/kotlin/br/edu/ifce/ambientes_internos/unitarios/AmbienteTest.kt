@@ -1,16 +1,16 @@
 package br.edu.ifce.ambientes_internos.unitarios
 
-import br.edu.ifce.ambientes_internos.model.domain.ambientes.Ambiente
-import br.edu.ifce.ambientes_internos.model.domain.ambientes.Localizacao
-import br.edu.ifce.ambientes_internos.model.domain.ambientes.enums.Bloco
-import br.edu.ifce.ambientes_internos.model.domain.ambientes.enums.StatusAmbiente
-import br.edu.ifce.ambientes_internos.model.domain.ambientes.enums.TipoAmbiente
-import br.edu.ifce.ambientes_internos.model.domain.ambientes.enums.Unidade
-import br.edu.ifce.ambientes_internos.model.domain.esquadrias.Janela
-import br.edu.ifce.ambientes_internos.model.domain.esquadrias.Porta
-import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.MaterialEsquadria
-import br.edu.ifce.ambientes_internos.model.domain.esquadrias.enums.TipoEsquadria
-import br.edu.ifce.ambientes_internos.model.domain.geometrias.Retangular
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Ambiente
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Localizacao
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Bloco
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.StatusAmbiente
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.TipoAmbiente
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Unidade
+import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.Janela
+import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.Porta
+import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.enums.MaterialEsquadria
+import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.enums.TipoEsquadria
+import br.edu.ifce.ambientes_internos.model.domain.entity.geometrias.Retangular
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import java.math.BigDecimal

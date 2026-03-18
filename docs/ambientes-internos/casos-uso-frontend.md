@@ -33,11 +33,11 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 
 - `/ambientes/validacao` — lista de ambientes aguardando validação (UC01-FE).
 - `/ambientes/validacao/{id}` — detalhes de um ambiente aguardando validação (UC02-FE).
-- `/ambientes/nao-publicados` — lista de ambientes não publicados (UC05-FE).
-- `/ambientes/nao-publicados/novo` — criação de novo ambiente não publicado (UC07-FE).
-- `/ambientes/nao-publicados/{id}` — detalhes de um ambiente não publicado (UC06-FE).
-- `/ambientes/publicados` — lista de ambientes publicados (UC22-FE).
-- `/ambientes/publicados/{id}` — detalhes de um ambiente publicado (UC20-FE).
+- `/ambientes/nao-publicados` — lista de ambientes não publicados (UC04-FE).
+- `/ambientes/nao-publicados/novo` — criação de novo ambiente não publicado (UC06-FE).
+- `/ambientes/nao-publicados/{id}` — detalhes de um ambiente não publicado (UC05-FE).
+- `/ambientes/publicados` — lista de ambientes publicados (UC21-FE).
+- `/ambientes/publicados/{id}` — detalhes de um ambiente publicado (UC19-FE).
 
 ---
 
@@ -90,24 +90,11 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
   - Botões desabilitados se o ambiente não estiver no status esperado.
   - Lista atualizada corretamente após a ação.
 
-### UC04-FE: Deletar Ambientes Aguardando Validação ou Publicados
-
-- Tela/Componente: Ação `Deletar` disponível em `DetalheAmbiente` e em `AcoesLote` na tela correspondente (`AguardandoValidação` ou `Publicados`).
-- Pré-condições: Usuário logado com role `validador` e ambiente(s) selecionado(s) com status adequado (`AGUARDANDO_VALIDACAO` ou `PUBLICADO`).
-- Fluxo principal (UI):
-  1. Ambiente único: Na página de detalhes do ambiente o usuário aciona o botão `Deletar`, um `ModalConfirmacao` é aberto para confirmação, em seguida, é realizada uma requisição DELETE para `/api/ambientes/validacao` ou `/api/ambientes/publicados`, conforme o status do ambiente, e um toast é exibido com a mensagem de sucesso ou erro.
-  2. Ações em lote: O usuário seleciona múltiplos ambientes na lista e aciona o botão `Deletar` em `AcoesLote`, um `ModalConfirmacao` é aberto para confirmação, em seguida, é realizada uma requisição DELETE para `/api/ambientes/validacao` ou `/api/ambientes/publicados`, conforme o status dos ambientes selecionados, e um toast é exibido com a mensagem de sucesso ou erro. 
-- Estados e erros:
-  - Ao deletar com sucesso, remover itens da lista e exibir toast.
-  - Se algum ID não puder ser deletado (status incorreto), mostrar erro indicando quais IDs falharam.
-- Critérios de aceitação:
-  - Lista atualizada corretamente após deleção.
-
 ---
 
 ## Ator: Gestor do Sistema (UI)
 
-### UC05-FE: Listar Ambientes Não Publicados
+### UC04-FE: Listar Ambientes Não Publicados
 
 - Tela: `Ambientes > NãoPublicados` (rota `/ambientes/nao-publicados`) (semelhante ao UC01-FE). Filtragem, paginação e seleção múltipla.
 - Pré-condições: Usuário logado com role `gestor`.
@@ -115,7 +102,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - Estados e erros: Os mesmos do UC01-FE.
 - Critérios de aceitação: Os mesmos do UC01-FE, mas para `status = NAO_PUBLICADO`.
 
-### UC06-FE: Detalhes de um Ambiente Não Publicado
+### UC05-FE: Detalhes de um Ambiente Não Publicado
 
 - Tela: `DetalheAmbiente` (rota `/ambientes/nao-publicados/{id}`).
 - Pré-condições: Selecionar um ambiente da lista e estar logado com a role `gestor`.
@@ -123,7 +110,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - Estados e erros: Os mesmos do UC02-FE.
 - Critérios de aceitação: Os mesmos do UC02-FE.
 
-### UC07-FE: Cadastrar um Novo Ambiente Não Publicado
+### UC06-FE: Cadastrar um Novo Ambiente Não Publicado
 
 - Tela: `FormAmbiente` acionado pelo botão `Criar Novo` em `Ambientes > NãoPublicados` (rota `/ambientes/nao-publicados/novo`).
 - Pré-condições: Usuário logado com role `gestor`.
@@ -146,7 +133,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - Critérios de aceitação:
   - Novo ambiente criado com `status = NAO_PUBLICADO` e redireciona para `DetalheAmbiente` do novo registro.
 
-### UC08-FE: Atualizar dados básicos de um Ambiente Não Publicado
+### UC07-FE: Atualizar dados básicos de um Ambiente Não Publicado
 
 - Modal: Modal acionado pelo botão `Editar Dados Básicos` em `DetalheAmbiente` (rota `/ambientes/nao-publicados/{id}`).
 - Pré-condições: Usuário logado com role `gestor` e ambiente com `status = NAO_PUBLICADO`.
@@ -162,7 +149,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
   - Em sucesso, atualizar dados na tela e mostrar toast de sucesso.
 - Critério de aceitação: dados atualizados corretamente no backend e refletidos na UI.
 
-### UC09-FE: Incluir Geometrias
+### UC08-FE: Incluir Geometrias
 
 - Modal: Modal acionado por meio de um botão com ícone referente a inclusão de Geometrias em `DetalheAmbiente` (rota `/ambientes/nao-publicados/{id}`).
 - Pré-condições: Usuário logado com role `gestor` e ambiente com `status = NAO_PUBLICADO`.
@@ -180,7 +167,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
   - Após inclusão bem-sucedida, a UI mostra a geometria na lista e atualiza a área total do ambiente.
   - Pelo menos uma geometria deve estar presente antes de permitir submissão (cliente valida).
 
-### UC10-FE: Atualizar / Remover Geometrias
+### UC09-FE: Atualizar / Remover Geometrias
 
 - Modal: Modal acionado por meio de um botão com ícone referente a edição de Geometrias em `DetalheAmbiente` (rota `/ambientes/nao-publicados/{id}`).
 - Pré-condições: Usuário logado com role `gestor` e ambiente com `status = NAO_PUBLICADO`.
@@ -198,7 +185,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
   - Atualizações e remoções persistem no backend e são refletidas imediatamente na UI com recalculo das áreas.
   - Não é possível remover todas as geometrias, mantendo pelo menos uma.
 
-### UC11-FE: Incluir Pés-direitos
+### UC10-FE: Incluir Pés-direitos
 
 - Modal: Modal acionado por meio de um botão com ícone referente a inclusão de Pés-direitos em `DetalheAmbiente` (rota `/ambientes/nao-publicados/{id}`).
 - Pré-condições: Usuário logado com role `gestor` e ambiente com `status = NAO_PUBLICADO`.
@@ -215,7 +202,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
   - Após inclusão bem-sucedida, a UI mostra os novos pés-direitos na lista.
   - Pelo menos um pé-direito deve estar presente antes de permitir submissão (cliente valida).
 
-### UC12-FE: Atualizar / Remover Pés-direitos
+### UC11-FE: Atualizar / Remover Pés-direitos
 
 - Modal: Modal acionado por meio de um botão com ícone referente a edição de Pés-direitos em `DetalheAmbiente` (rota `/ambientes/nao-publicados/{id}`).
 - Pré-condições: Usuário logado com role `gestor` e ambiente com `status = NAO_PUBLICADO`.
@@ -233,7 +220,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
   - Alterações e remoções persistem no backend e são refletidas na UI.
   - Não é possível remover todos os pés-direitos, mantendo pelo menos um.
 
-### UC13-FE: Incluir Esquadrias
+### UC12-FE: Incluir Esquadrias
 
 - Modal: Modal acionado por meio de um botão com ícone referente a inclusão de Esquadrias em `DetalheAmbiente` (rota `/ambientes/nao-publicados/{id}`).
 - Pré-condições: Usuário logado com role `gestor` e ambiente com `status = NAO_PUBLICADO`.
@@ -251,7 +238,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
   - Após inclusão bem-sucedida, a UI mostra as esquadrias na lista e atualiza suas áreas.
   - Pelo menos uma esquadria deve estar presente antes de permitir submissão (cliente valida).
 
-### UC14-FE: Atualizar / Remover Esquadrias
+### UC13-FE: Atualizar / Remover Esquadrias
 
 - Modal: Modal acionado por meio de um botão com ícone referente a edição de Esquadrias em `DetalheAmbiente` (rota `/ambientes/nao-publicados/{id}`).
 - Pré-condições: Usuário logado com role `gestor` e ambiente com `status = NAO_PUBLICADO`.
@@ -269,7 +256,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
   - Atualizações e remoções persistem no backend e são refletidas imediatamente na UI com recalculo das áreas.
   - Não é possível remover todas as esquadrias, mantendo pelo menos uma.
 
-### UC15-FE: Atualizar Informação Adicional
+### UC14-FE: Atualizar Informação Adicional
 
 - Componente: Input acionado por meio de um botão com ícone referente a edição de Informação Adicional em `DetalheAmbiente` (rota `/ambientes/nao-publicados/{id}`).
 - Pré-condições: Usuário logado com role `gestor` e ambiente com `status = NAO_PUBLICADO`.
@@ -283,7 +270,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - Critérios de aceitação:
   - Informação adicional atualizada no backend e visível na UI após persistência.
 
-### UC16-FE: Deletar Ambientes Não Publicados
+### UC15-FE: Deletar Ambientes Não Publicados
 
 - Componente: Ação acionada por botão `Deletar` disponível em `DetalheAmbiente` e em `AcoesLote` na tela `NaoPublicados`.
 - Pré-condições: Usuário logado com role `gestor` e ambiente(s) selecionado(s) com `status = NAO_PUBLICADO`.
@@ -297,7 +284,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - Critérios de aceitação:
   - Ambientes removidos do backend e atualizados na UI; mensagens claras em falhas parciais.
 
-### UC17-FE: Alterar Tipo e Dados de Ambientes Não Publicados
+### UC16-FE: Alterar Tipo e Dados de Ambientes Não Publicados
 
 - Modal: Ação acionada por botão `Alterar tipo` em `DetalheAmbiente` (rota `/ambientes/nao-publicados/{id}`).
 - Pré-condições: Usuário logado com role `gestor` e ambiente com `status = NAO_PUBLICADO`.
@@ -311,7 +298,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - Critérios de aceitação:
   - Novo ambiente criado com os dados esperados; ambiente antigo removido conforme contrato do backend.
 
-### UC18-FE: Duplicar Ambiente Não Publicados
+### UC17-FE: Duplicar Ambiente Não Publicados
 
 - Modal: Ação acionada por botão `Duplicar` em `DetalheAmbiente` (rota `/ambientes/nao-publicados/{id}`) que abre modal para `nome` e `localizacao` do novo ambiente.
 - Pré-condições: Usuário logado com role `gestor` e ambiente com `status = NAO_PUBLICADO`.
@@ -326,7 +313,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
   - Novo registro criado e exibido; dados copiados conforme esperado do original.
   - Não permitir duplicação se o nome ou localização estiverem vazios (cliente valida) ou se um deles já existe (backend valida).
 
-### UC19-FE: Enviar Ambientes para Publicação
+### UC18-FE: Enviar Ambientes para Publicação
 
 - Componente: Ação acionada por botão `Enviar para publicação` em `DetalheAmbiente` e na tela `NãoPublicados` por meio de `AcoesLote`.
 - Pré-condições: Usuário logado com role `gestor` e itens selecionados com `status = NAO_PUBLICADO`.
@@ -344,7 +331,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 
 ## Ator: Servidor (UI)
 
-### UC20-FE: Detalhes de um Ambiente Publicado
+### UC19-FE: Detalhes de um Ambiente Publicado
 
 - Tela: `DetalheAmbiente` (rota `/ambientes/publicados/{id}`).
 - Pré-condições: selecionou um ambiente da lista e está logado com role `servidor`.
@@ -352,23 +339,17 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - Estados e erros: Os mesmos do UC02-FE.
 - Critérios de aceitação: Os mesmos do UC02-FE.
 
-### UC21-FE: Obter Detalhes de Esquadrias de uma lista de Ambientes Publicados
+### UC20-FE: Obter Detalhes de Esquadrias de uma lista de Ambientes Publicados
 
 - Tela: Tela `Publicados` por meio de `AcoesLote`, ação `Detalhes Esquadrias`.
 - Pré-condições: Usuário logado com role `servidor` e ambientes com `status = PUBLICADO` selecionados.
 - Fluxo principal (UI):
-  FP1 - Por IDs:
   1. O usuário seleciona um ou mais ambientes na lista e seleciona `Detalhes Esquadrias`.
-  2. O frontend envia `POST /api/ambientes/publicados/esquadrias` com o corpo contendo a lista de IDs.
+  2. O frontend envia `GET /api/ambientes/publicados/esquadrias` passando a lista de ids por parâmetro.
   3. O backend retorna os detalhes das esquadrias por ambiente; o frontend exibe:
      - Nome e Localização de cada ambiente consultado;
      - Lista de esquadrias de cada ambiente com: tipo, largura, altura, material, peitoril (se houver), info adicional (se houver), área da esquadria;
      - Totais consolidados por tipo e por material.
-
-  FP2 - Por IDs + filtros (tipo/material):
-  1. O usuário, além de informar os IDs, pode aplicar filtros `tipo` e/ou `material` na UI.
-  2. O frontend envia `POST /api/ambientes/publicados/esquadrias?tipo={tipo}&material={material}` com lista de IDs no corpo.
-  3. O backend retorna os dados filtrados e o frontend atualiza a tabela com os resultados filtrados e totais correspondentes.
 
 - Estados e erros:
   - Se algum ID não corresponder a um ambiente publicado, exibir aviso listando os IDs inválidos e permitir excluir/re-tentar apenas os válidos.
@@ -383,7 +364,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 
 ## Ator: Público Externo (UI)
 
-### UC22-FE: Listar Ambientes Publicados
+### UC21-FE: Listar Ambientes Publicados
 
 - Tela: `Ambientes > Não Publicados` (semelhante ao UC01-FE). Filtragem, paginação e seleção múltipla.
 - Pré-condições: Acesso público (não autenticado).
