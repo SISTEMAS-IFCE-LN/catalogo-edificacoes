@@ -4,8 +4,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
 @SpringBootApplication
-class AmbientesInternosApplication
+class AmbientesInternosApp
 
 fun main(args: Array<String>) {
-	runApplication<AmbientesInternosApplication>(*args)
+	runApplication<AmbientesInternosApp>(*args)
 }
