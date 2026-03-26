@@ -47,6 +47,14 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
     @Autowired
     lateinit var repoAmb: AmbienteRepository
 
+    private fun blocoPorNome(nome: String): Bloco =
+        Bloco.entries.firstOrNull { it.nome == nome }
+            ?: throw IllegalArgumentException("Bloco inválido para teste: $nome")
+
+    private fun unidadePorNome(nome: String): Unidade =
+        Unidade.entries.firstOrNull { it.nome == nome }
+            ?: throw IllegalArgumentException("Unidade inválida para teste: $nome")
+
     // -------------------------------------------------------------------------
     // Helpers de criação de entidades
     // -------------------------------------------------------------------------
@@ -331,7 +339,7 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
         val ambienteAlterado = ambientesNPUseCases.alterarTipoDadosAmbiente(ambienteSalvo.id, reqAlteracao)
 
         // Então o tipo deve ter mudado e a localização permanecer a mesma
-        assertEquals(TipoAmbiente.LABORATORIO_INFORMATICA, ambienteAlterado.tipo)
+        assertEquals(TipoAmbiente.LABORATORIO_INFORMATICA.nome, ambienteAlterado.tipo)
         assertEquals(ambienteSalvo.localizacao, ambienteAlterado.localizacao)
 
         // E o ID original não deve mais existir
@@ -353,7 +361,7 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
 
         // Então os dados copiados devem corresponder ao original, exceto nome e localização
         assertEquals(ambienteNomeLocalizacaoReq.nome, ambienteDuplicado.nome)
-        assertEquals(ambienteNomeLocalizacaoReq.localizacao.bloco, ambienteDuplicado.localizacao.bloco)
+        assertEquals(ambienteNomeLocalizacaoReq.localizacao.bloco.nome, ambienteDuplicado.localizacao.bloco)
         assertEquals(ambienteSalvo.capacidade, ambienteDuplicado.capacidade)
         assertEquals(ambienteSalvo.tipo, ambienteDuplicado.tipo)
         assertEquals(StatusAmbiente.NAO_PUBLICADO, ambienteDuplicado.status)
@@ -579,8 +587,8 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
         val atualizacaoConflitante = AmbienteBasicoReq(
             nome = ambiente1.nome,
             localizacao = LocalizacaoReq(
-                unidade = ambiente1.localizacao.unidade,
-                bloco = ambiente1.localizacao.bloco,
+                unidade = unidadePorNome(ambiente1.localizacao.unidade),
+                bloco = blocoPorNome(ambiente1.localizacao.bloco),
                 andar = ambiente1.localizacao.andar
             ),
             capacidade = ambiente2.capacidade

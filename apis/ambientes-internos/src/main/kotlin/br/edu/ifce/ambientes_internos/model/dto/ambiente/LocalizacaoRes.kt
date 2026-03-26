@@ -6,16 +6,16 @@ import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Unidad
 
 data class LocalizacaoRes(
     val id: Long,
-    val bloco: Bloco,
-    val unidade: Unidade,
+    val bloco: String,
+    val unidade: String,
     val andar: Int
 ) {
     companion object {
         fun from(localizacao: Localizacao): LocalizacaoRes {
             return LocalizacaoRes(
                 id = localizacao.id!!,
-                bloco = localizacao.bloco,
-                unidade = localizacao.unidade,
+                bloco = localizacao.bloco.nome,
+                unidade = localizacao.unidade.nome,
                 andar = localizacao.andar
             )
         }
