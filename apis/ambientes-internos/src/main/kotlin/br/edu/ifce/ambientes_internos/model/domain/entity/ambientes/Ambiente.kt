@@ -7,11 +7,15 @@ import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.enums.Mater
 import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.enums.TipoEsquadria
 import br.edu.ifce.ambientes_internos.model.domain.entity.geometrias.Geometria
 import jakarta.persistence.*
+import org.hibernate.annotations.BatchSize
 import java.math.BigDecimal
 
 @Entity
 @Table(
-    uniqueConstraints = [UniqueConstraint(name = "uk_ambiente_nome_localizacao", columnNames = ["nome", "localizacao_id"]) ]
+    uniqueConstraints = [UniqueConstraint(
+        name = "uk_ambiente_nome_localizacao",
+        columnNames = ["nome", "localizacao_id"]
+    )]
 )
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "tipo", discriminatorType = DiscriminatorType.STRING)
@@ -34,15 +38,18 @@ abstract class Ambiente(
     @Column(name = "tipo", nullable = false, insertable = false, updatable = false)
     var tipo: TipoAmbiente?,
 
-    @OneToMany(cascade = [CascadeType.ALL], fetch = FetchType.EAGER, orphanRemoval = true)
+    @OneToMany(cascade = [CascadeType.ALL], orphanRemoval = true)
     @JoinColumn(name = "ambiente_id")
+    @BatchSize(size = 20)
     val geometrias: MutableSet<Geometria>,
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection
+    @BatchSize(size = 10)
     val pesDireitos: MutableSet<BigDecimal>,
 
-    @OneToMany(cascade = [CascadeType.ALL], fetch = FetchType.EAGER, orphanRemoval = true)
+    @OneToMany(cascade = [CascadeType.ALL], orphanRemoval = true)
     @JoinColumn(name = "ambiente_id")
+    @BatchSize(size = 50)
     val esquadrias: MutableSet<Esquadria>,
 
     @Column(length = 255)

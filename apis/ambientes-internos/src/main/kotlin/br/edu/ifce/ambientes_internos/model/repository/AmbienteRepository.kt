@@ -4,6 +4,7 @@ import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Ambiente
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.StatusAmbiente
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
+import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
@@ -20,9 +21,8 @@ interface AmbienteRepository : JpaRepository<Ambiente, Long> {
     fun existsByNomeAndLocalizacaoId(nome: String, localizacaoId: Long): Boolean
 
     @Query(
-        "select case when (count(a) > 0) then true else false end " +
-                "from Ambiente a " +
-                "where a.nome = :nome and a.localizacao.id = :localizacaoId and a.id <> :id"
+        """select case when (count(a) > 0) then true else false end from Ambiente a
+                where a.nome = :nome and a.localizacao.id = :localizacaoId and a.id <> :id"""
     )
     fun existsByNomeAndLocalizacaoIdAndIdNot(
         @Param("nome") nome: String,
@@ -30,16 +30,33 @@ interface AmbienteRepository : JpaRepository<Ambiente, Long> {
         @Param("id") id: Long
     ): Boolean
 
-    fun findAllByStatus(status: StatusAmbiente, pageable: Pageable): Page<Ambiente>
+    @EntityGraph(attributePaths = ["localizacao"])
+    fun findByStatus(
+        @Param("status") status: StatusAmbiente,
+        pageable: Pageable
+    ): Page<Ambiente>
 
-    fun findByNomeContainingIgnoreCaseAndStatus(nome: String, status: StatusAmbiente, pageable: Pageable): Page<Ambiente>
-
+    @EntityGraph(attributePaths = ["localizacao"])
     @Query(
-        "select a from Ambiente a " +
-                "where a.status = :status " +
-                "and (:bloco is null or upper(cast(a.localizacao.bloco as string)) like concat('%', upper(:bloco), '%')) " +
-                "and (:unidade is null or upper(cast(a.localizacao.unidade as string)) like concat('%', upper(:unidade), '%')) " +
-                "and (:andar is null or cast(a.localizacao.andar as string) like concat('%', :andar, '%'))"
+        """
+            select a from Ambiente a
+            where a.status = :status
+            and upper(a.nome) like concat('%', upper(:nome), '%')
+        """
+    )
+    fun findByNomeContainingIgnoreCaseAndStatus(
+        nome: String,
+        status: StatusAmbiente,
+        pageable: Pageable
+    ): Page<Ambiente>
+
+    @EntityGraph(attributePaths = ["localizacao"])
+    @Query(
+        """select a from Ambiente a
+                where a.status = :status
+                and (:bloco is null or upper(cast(a.localizacao.bloco as string)) like concat('%', upper(:bloco), '%'))
+                and (:unidade is null or upper(cast(a.localizacao.unidade as string)) like concat('%', upper(:unidade), '%'))
+                and (:andar is null or cast(a.localizacao.andar as string) like :andar)"""
     )
     fun findByLocalizacaoContainingIgnoreCaseAndStatus(
         @Param("bloco") bloco: String?,
@@ -49,8 +66,14 @@ interface AmbienteRepository : JpaRepository<Ambiente, Long> {
         pageable: Pageable
     ): Page<Ambiente>
 
+    @EntityGraph(attributePaths = ["localizacao"])
     @Query(
-        "select a from Ambiente a where a.status = :status and upper(cast(a.tipo as string)) = upper(:tipo)"
+        """
+            select a from Ambiente a
+            where a.status = :status
+            and upper(cast(a.tipo as string))
+            like concat('%', upper(:tipo), '%')
+        """
     )
     fun findByTipoAndStatus(
         @Param("tipo") tipo: String,

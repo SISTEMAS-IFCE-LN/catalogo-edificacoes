@@ -39,7 +39,7 @@ abstract class BaseUseCases(
     @Transactional(readOnly = true)
     override fun listarAmbientes(pageable: Pageable): AmbientesBasicosPaginadosRes {
         val pageableLimitado = limitarPageable(pageable)
-        val page = repoAmb.findAllByStatus(status, pageableLimitado)
+        val page = repoAmb.findByStatus(status, pageableLimitado)
         return AmbientesBasicosPaginadosRes.from(page)
     }
 
