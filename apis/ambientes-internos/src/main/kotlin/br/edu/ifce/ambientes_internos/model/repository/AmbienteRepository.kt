@@ -12,6 +12,16 @@ import java.util.*
 
 interface AmbienteRepository : JpaRepository<Ambiente, Long> {
 
+    @Query(
+        """
+            select a from Ambiente a
+            left join fetch a.localizacao
+            left join fetch a.geometrias
+            left join fetch a.pesDireitos
+            left join fetch a.esquadrias
+            where a.id = :id and a.status = :status
+        """
+    )
     fun findByIdAndStatus(id: Long, status: StatusAmbiente): Optional<Ambiente>
 
     fun findAllByIdInAndStatus(ids: Set<Long>, status: StatusAmbiente): List<Ambiente>
@@ -21,8 +31,10 @@ interface AmbienteRepository : JpaRepository<Ambiente, Long> {
     fun existsByNomeAndLocalizacaoId(nome: String, localizacaoId: Long): Boolean
 
     @Query(
-        """select case when (count(a) > 0) then true else false end from Ambiente a
-                where a.nome = :nome and a.localizacao.id = :localizacaoId and a.id <> :id"""
+        """
+            select case when (count(a) > 0) then true else false end from Ambiente a
+            where a.nome = :nome and a.localizacao.id = :localizacaoId and a.id <> :id
+        """
     )
     fun existsByNomeAndLocalizacaoIdAndIdNot(
         @Param("nome") nome: String,
@@ -52,11 +64,13 @@ interface AmbienteRepository : JpaRepository<Ambiente, Long> {
 
     @EntityGraph(attributePaths = ["localizacao"])
     @Query(
-        """select a from Ambiente a
-                where a.status = :status
-                and (:bloco is null or upper(cast(a.localizacao.bloco as string)) like concat('%', upper(:bloco), '%'))
-                and (:unidade is null or upper(cast(a.localizacao.unidade as string)) like concat('%', upper(:unidade), '%'))
-                and (:andar is null or cast(a.localizacao.andar as string) like :andar)"""
+        """
+            select a from Ambiente a
+            where a.status = :status
+            and (:bloco is null or upper(cast(a.localizacao.bloco as string)) like concat('%', upper(:bloco), '%'))
+            and (:unidade is null or upper(cast(a.localizacao.unidade as string)) like concat('%', upper(:unidade), '%'))
+            and (:andar is null or cast(a.localizacao.andar as string) like :andar)
+        """
     )
     fun findByLocalizacaoContainingIgnoreCaseAndStatus(
         @Param("bloco") bloco: String?,
