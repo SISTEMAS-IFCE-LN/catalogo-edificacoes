@@ -27,7 +27,7 @@ abstract class Ambiente(
     @Column(nullable = false, length = 50)
     var nome: String,
 
-    @ManyToOne(cascade = [CascadeType.ALL])
+    @ManyToOne(cascade = [CascadeType.PERSIST, CascadeType.MERGE])
     @JoinColumn(name = "localizacao_id", nullable = false)
     var localizacao: Localizacao,
 

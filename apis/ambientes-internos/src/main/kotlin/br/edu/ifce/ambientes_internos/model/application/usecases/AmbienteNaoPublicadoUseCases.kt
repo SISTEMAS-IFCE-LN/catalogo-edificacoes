@@ -52,12 +52,31 @@ class AmbienteNaoPublicadoUseCases(
         return ambientes
     }
 
+    private fun resolverLocalizacao(
+        localizacaoCandidata: Localizacao,
+        localizacaoExistente: Localizacao? = null
+    ): Localizacao {
+        return if (localizacaoCandidata == localizacaoExistente) {
+            localizacaoExistente
+        } else {
+            repoLoc.findByLocalizacao(localizacaoCandidata).orElse(localizacaoCandidata)
+        }
+    }
+
+    private fun deletarLocalizacaoOrfao(localizacaoExistenteId: Long?, localizacaoAtualizadaId: Long? = null) {
+        if (localizacaoExistenteId != localizacaoAtualizadaId) {
+            repoLoc.deleteIfOrphan(localizacaoExistenteId ?: return)
+        }
+    }
+
     @Transactional
     override fun cadastrarAmbiente(ambienteReq: AmbienteReq): AmbienteRes {
         val ambiente = AmbienteFactory.criar(ambienteReq)
         if (ambiente.esquadrias.none { it.tipo == TipoEsquadria.PORTA }) {
             throw IllegalArgumentException("O ambiente deve possuir pelo menos uma porta")
         }
+        val localizacao = resolverLocalizacao(ambiente.localizacao)
+        ambiente.localizacao = localizacao
         verificarNomeLocalizacaoCadastro(ambiente)
         return AmbienteRes.from(repoAmb.save(ambiente))
     }
@@ -65,16 +84,24 @@ class AmbienteNaoPublicadoUseCases(
     @Transactional
     override fun atualizarDadosBasicosAmbiente(
         id: Long,
-        ambienteAtualizado: AmbienteBasicoReq
+        ambienteBasicoReq: AmbienteBasicoReq
     ): AmbienteBasicoRes {
         val ambienteExistente = obterAmbiente(id)
-        ambienteExistente.nome = ambienteAtualizado.nome
-        ambienteExistente.capacidade = ambienteAtualizado.capacidade
-        ambienteExistente.localizacao.bloco = ambienteAtualizado.localizacao.bloco
-        ambienteExistente.localizacao.unidade = ambienteAtualizado.localizacao.unidade
-        ambienteExistente.localizacao.andar = ambienteAtualizado.localizacao.andar
+        val localizacaoExistenteId = ambienteExistente.localizacao.id
+        val localizacaoCandidata = Localizacao(
+            bloco = ambienteBasicoReq.localizacao.bloco,
+            unidade = ambienteBasicoReq.localizacao.unidade,
+            andar = ambienteBasicoReq.localizacao.andar
+        )
+        val localizacaoResolvida = resolverLocalizacao(localizacaoCandidata, ambienteExistente.localizacao)
+        ambienteExistente.nome = ambienteBasicoReq.nome
+        ambienteExistente.capacidade = ambienteBasicoReq.capacidade
+        ambienteExistente.localizacao = localizacaoResolvida
         verificarNomeLocalizacaoAlteracao(ambienteExistente)
-        return AmbienteBasicoRes.from(repoAmb.save(ambienteExistente))
+        val ambienteAtualizado = repoAmb.save(ambienteExistente)
+        repoAmb.flush()
+        deletarLocalizacaoOrfao(localizacaoExistenteId, ambienteAtualizado.localizacao.id)
+        return AmbienteBasicoRes.from(ambienteAtualizado)
     }
 
     @Transactional
@@ -218,7 +245,12 @@ class AmbienteNaoPublicadoUseCases(
     @Transactional
     override fun deletarAmbientes(ids: Set<Long>) {
         val ambientes = obterAmbientesPorIds(ids)
+        val localizacoesIds = ambientes.mapNotNull { it.localizacao.id }.toSet()
+
         repoAmb.deleteAll(ambientes)
+        repoAmb.flush()
+
+        localizacoesIds.forEach { repoLoc.deleteIfOrphan(it) }
     }
 
 }

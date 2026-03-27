@@ -11,7 +11,7 @@ interface IAmbienteNaoPublicadoUseCases : IAmbienteUseCases<AmbienteRes> {
 
     fun cadastrarAmbiente(ambienteReq: AmbienteReq): AmbienteRes
 
-    fun atualizarDadosBasicosAmbiente(id: Long, ambienteAtualizado: AmbienteBasicoReq): AmbienteBasicoRes
+    fun atualizarDadosBasicosAmbiente(id: Long, ambienteBasicoReq: AmbienteBasicoReq): AmbienteBasicoRes
 
     fun incluirGeometriasAmbiente(id: Long, geometriasAdd: Set<GeometriaAmbienteReq>): ListaGeometriasAmbienteRes
 
