@@ -27,20 +27,22 @@ class AmbienteNaoPublicadoUseCases(
 ) : IAmbienteNaoPublicadoUseCases, BaseUseCases(StatusAmbiente.NAO_PUBLICADO, repoAmb) {
 
     private fun verificarNomeLocalizacaoCadastro(ambiente: Ambiente) {
-        repoLoc.findByLocalizacao(ambiente.localizacao).ifPresent {
-            ambiente.localizacao = it
-            if (repoAmb.existsByNomeAndLocalizacaoId(ambiente.nome, it.id!!)) {
+        repoLoc.findByLocalizacao(ambiente.localizacao).ifPresent { localizacao ->
+            if (repoAmb.existsByNomeAndLocalizacaoId(ambiente.nome, localizacao.id!!)) {
                 throw IllegalArgumentException("Já existe um ambiente com esse nome nessa localização")
             }
+            ambiente.localizacao = localizacao
         }
     }
 
-    private fun verificarNomeLocalizacaoAlteracao(ambiente: Ambiente) {
-        repoLoc.findByLocalizacao(ambiente.localizacao).ifPresent {
-            ambiente.localizacao = it
-            if (repoAmb.existsByNomeAndLocalizacaoIdAndIdNot(ambiente.nome, it.id!!, ambiente.id!!)) {
+    private fun verificarNomeLocalizacaoAlteracao(ambiente: Ambiente, localizacaoCandidata: Localizacao) {
+        if (localizacaoCandidata == ambiente.localizacao) return
+
+        repoLoc.findByLocalizacao(localizacaoCandidata).ifPresent { localizacao ->
+            if (repoAmb.existsByNomeAndLocalizacaoIdAndIdNot(ambiente.nome, localizacao.id!!, ambiente.id!!)) {
                 throw IllegalArgumentException("Já existe um ambiente com esse nome nessa localização")
             }
+            ambiente.localizacao = localizacao
         }
     }
 
@@ -50,17 +52,6 @@ class AmbienteNaoPublicadoUseCases(
             throw NoSuchElementException("Nenhum ambiente encontrado para os IDs fornecidos")
         }
         return ambientes
-    }
-
-    private fun resolverLocalizacao(
-        localizacaoCandidata: Localizacao,
-        localizacaoExistente: Localizacao? = null
-    ): Localizacao {
-        return if (localizacaoCandidata == localizacaoExistente) {
-            localizacaoExistente
-        } else {
-            repoLoc.findByLocalizacao(localizacaoCandidata).orElse(localizacaoCandidata)
-        }
     }
 
     private fun deletarLocalizacaoOrfao(localizacaoExistenteId: Long?, localizacaoAtualizadaId: Long? = null) {
@@ -75,8 +66,6 @@ class AmbienteNaoPublicadoUseCases(
         if (ambiente.esquadrias.none { it.tipo == TipoEsquadria.PORTA }) {
             throw IllegalArgumentException("O ambiente deve possuir pelo menos uma porta")
         }
-        val localizacao = resolverLocalizacao(ambiente.localizacao)
-        ambiente.localizacao = localizacao
         verificarNomeLocalizacaoCadastro(ambiente)
         return AmbienteRes.from(repoAmb.save(ambiente))
     }
@@ -93,11 +82,9 @@ class AmbienteNaoPublicadoUseCases(
             unidade = ambienteBasicoReq.localizacao.unidade,
             andar = ambienteBasicoReq.localizacao.andar
         )
-        val localizacaoResolvida = resolverLocalizacao(localizacaoCandidata, ambienteExistente.localizacao)
         ambienteExistente.nome = ambienteBasicoReq.nome
         ambienteExistente.capacidade = ambienteBasicoReq.capacidade
-        ambienteExistente.localizacao = localizacaoResolvida
-        verificarNomeLocalizacaoAlteracao(ambienteExistente)
+        verificarNomeLocalizacaoAlteracao(ambienteExistente, localizacaoCandidata)
         val ambienteAtualizado = repoAmb.save(ambienteExistente)
         repoAmb.flush()
         deletarLocalizacaoOrfao(localizacaoExistenteId, ambienteAtualizado.localizacao.id)
