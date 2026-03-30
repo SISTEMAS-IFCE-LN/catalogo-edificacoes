@@ -38,12 +38,17 @@ class AmbienteNaoPublicadoUseCases(
     private fun verificarNomeLocalizacaoAlteracao(ambiente: Ambiente, localizacaoCandidata: Localizacao) {
         if (localizacaoCandidata == ambiente.localizacao) return
 
-        repoLoc.findByLocalizacao(localizacaoCandidata).ifPresent { localizacao ->
-            if (repoAmb.existsByNomeAndLocalizacaoIdAndIdNot(ambiente.nome, localizacao.id!!, ambiente.id!!)) {
-                throw IllegalArgumentException("Já existe um ambiente com esse nome nessa localização")
+        repoLoc.findByLocalizacao(localizacaoCandidata).ifPresentOrElse(
+            { localizacao ->
+                if (repoAmb.existsByNomeAndLocalizacaoIdAndIdNot(ambiente.nome, localizacao.id!!, ambiente.id!!)) {
+                    throw IllegalArgumentException("Já existe um ambiente com esse nome nessa localização")
+                }
+                ambiente.localizacao = localizacao
+            },
+            {
+                ambiente.localizacao = localizacaoCandidata
             }
-            ambiente.localizacao = localizacao
-        }
+        )
     }
 
     private fun obterAmbientesPorIds(ids: Set<Long>): List<Ambiente> {
