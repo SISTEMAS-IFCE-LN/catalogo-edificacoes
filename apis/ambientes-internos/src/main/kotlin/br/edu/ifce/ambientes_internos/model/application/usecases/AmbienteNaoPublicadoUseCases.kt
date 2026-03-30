@@ -102,9 +102,9 @@ class AmbienteNaoPublicadoUseCases(
         geometriasAdd: Set<GeometriaAmbienteReq>
     ): ListaGeometriasAmbienteRes {
         val ambienteExistente = obterAmbiente(id)
-        val geometrias = geometriasAdd.map { GeometriaFactory.criar(it) }.toMutableSet()
+        val geometrias = geometriasAdd.map { GeometriaFactory.criar(it) }.toSet()
 
-        ambienteExistente.geometrias.addAll(geometrias)
+        ambienteExistente.adicionarGeometrias(geometrias)
 
         val ambienteAtualizado = repoAmb.save(ambienteExistente)
         val geometriasRes = ambienteAtualizado.geometrias.map { GeometriaAmbienteRes.from(it) }
@@ -121,10 +121,9 @@ class AmbienteNaoPublicadoUseCases(
         geometriasAtualizadas: Set<GeometriaAmbienteReq>
     ): ListaGeometriasAmbienteRes {
         val ambienteExistente = obterAmbiente(id)
-        val geometrias = geometriasAtualizadas.map { GeometriaFactory.criar(it) }.toMutableSet()
+        val geometrias = geometriasAtualizadas.map { GeometriaFactory.criar(it) }.toSet()
 
-        ambienteExistente.geometrias.clear()
-        ambienteExistente.geometrias.addAll(geometrias)
+        ambienteExistente.substituirGeometrias(geometrias)
 
         val ambienteAtualizado = repoAmb.save(ambienteExistente)
         val geometriasRes = ambienteAtualizado.geometrias.map { GeometriaAmbienteRes.from(it) }
@@ -164,8 +163,8 @@ class AmbienteNaoPublicadoUseCases(
         esquadrias: Set<EsquadriaReq>
     ): EsquadriasDetalhesRes {
         val ambienteExistente = obterAmbiente(id)
-        val esquadriasNovas = esquadrias.map { EsquadriaFactory.criar(it) }
-        ambienteExistente.esquadrias.addAll(esquadriasNovas)
+        val esquadriasNovas = esquadrias.map { EsquadriaFactory.criar(it) }.toSet()
+        ambienteExistente.adicionarEsquadrias(esquadriasNovas)
         val ambienteAtualizado = repoAmb.save(ambienteExistente)
         return EsquadriasDetalhesRes.from(ambienteAtualizado)
     }
@@ -176,9 +175,8 @@ class AmbienteNaoPublicadoUseCases(
         esquadrias: Set<EsquadriaReq>
     ): EsquadriasDetalhesRes {
         val ambienteExistente = obterAmbiente(id)
-        val esquadriasAtualizadas = esquadrias.map { EsquadriaFactory.criar(it) }
-        ambienteExistente.esquadrias.clear()
-        ambienteExistente.esquadrias.addAll(esquadriasAtualizadas)
+        val esquadriasAtualizadas = esquadrias.map { EsquadriaFactory.criar(it) }.toSet()
+        ambienteExistente.substituirEsquadrias(esquadriasAtualizadas)
         val ambienteAtualizado = repoAmb.save(ambienteExistente)
         return EsquadriasDetalhesRes.from(ambienteAtualizado)
     }

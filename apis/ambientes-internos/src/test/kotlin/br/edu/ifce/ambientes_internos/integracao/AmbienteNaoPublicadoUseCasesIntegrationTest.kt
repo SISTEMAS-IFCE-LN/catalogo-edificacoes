@@ -14,6 +14,7 @@ import br.edu.ifce.ambientes_internos.model.dto.esquadria.EsquadriaReq
 import br.edu.ifce.ambientes_internos.model.dto.geometria.GeometriaAmbienteReq
 import br.edu.ifce.ambientes_internos.model.dto.geometria.GeometriaEsquadriaReq
 import br.edu.ifce.ambientes_internos.model.repository.AmbienteRepository
+import br.edu.ifce.ambientes_internos.model.repository.LocalizacaoRepository
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
@@ -25,6 +26,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest
 import org.springframework.context.annotation.Import
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.domain.PageRequest
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.context.ActiveProfiles
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -46,6 +48,12 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
 
     @Autowired
     lateinit var repoAmb: AmbienteRepository
+
+    @Autowired
+    lateinit var repoLoc: LocalizacaoRepository
+
+    @Autowired
+    lateinit var jdbcTemplate: JdbcTemplate
 
     private fun blocoPorNome(nome: String): Bloco =
         Bloco.entries.firstOrNull { it.nome == nome }
@@ -617,6 +625,108 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
         assertThrows<NoSuchElementException> {
             ambientesNPUseCases.enviarValidacaoAmbientes(emptySet())
         }
+    }
+
+    private fun contarPorId(tabela: String, id: Long): Int {
+        return jdbcTemplate.queryForObject(
+            "select count(1) from $tabela where id = ?",
+            Int::class.java,
+            id
+        ) ?: 0
+    }
+
+    @Test
+    fun `Deve manter vinculo reverso ao incluir e atualizar geometrias`() {
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(criarSalaAula())
+
+        ambientesNPUseCases.incluirGeometriasAmbiente(
+            ambienteSalvo.id,
+            setOf(GeometriaAmbienteReq(tipo = TipoGeometria.TRIANGULAR, base = BigDecimal("2.0"), altura = BigDecimal("1.5")))
+        )
+
+        ambientesNPUseCases.atualizarGeometriasAmbiente(
+            ambienteSalvo.id,
+            setOf(GeometriaAmbienteReq(tipo = TipoGeometria.RETANGULAR, base = BigDecimal("4.0"), altura = BigDecimal("2.0")))
+        )
+
+        val ambientePersistido = repoAmb.findById(ambienteSalvo.id).get()
+        assertEquals(true, ambientePersistido.geometrias.all { it.ambiente.id == ambientePersistido.id })
+    }
+
+    @Test
+    fun `Deve manter vinculo reverso ao incluir e atualizar esquadrias`() {
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(criarSalaAula())
+
+        ambientesNPUseCases.incluirEsquadriasAmbiente(
+            ambienteSalvo.id,
+            setOf(
+                EsquadriaReq(
+                    tipo = TipoEsquadria.JANELA,
+                    geometria = GeometriaEsquadriaReq(base = BigDecimal("1.1"), altura = BigDecimal("1.0")),
+                    material = MaterialEsquadria.ALUMINIO,
+                    alturaPeitoril = BigDecimal("0.8")
+                )
+            )
+        )
+
+        ambientesNPUseCases.atualizarEsquadriasAmbiente(
+            ambienteSalvo.id,
+            setOf(
+                EsquadriaReq(
+                    tipo = TipoEsquadria.PORTA,
+                    geometria = GeometriaEsquadriaReq(base = BigDecimal("0.9"), altura = BigDecimal("2.1")),
+                    material = MaterialEsquadria.MADEIRA_FICHA
+                )
+            )
+        )
+
+        val ambientePersistido = repoAmb.findById(ambienteSalvo.id).get()
+        assertEquals(true, ambientePersistido.esquadrias.all { it.ambiente.id == ambientePersistido.id })
+    }
+
+    @Test
+    fun `Deve remover filhos antigos ao substituir colecoes`() {
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(criarSalaAula())
+        val antes = repoAmb.findById(ambienteSalvo.id).get()
+        val idsGeometriasAntigas = antes.geometrias.mapNotNull { it.id }
+        val idsEsquadriasAntigas = antes.esquadrias.mapNotNull { it.id }
+
+        ambientesNPUseCases.atualizarGeometriasAmbiente(
+            ambienteSalvo.id,
+            setOf(GeometriaAmbienteReq(tipo = TipoGeometria.RETANGULAR, base = BigDecimal("7.0"), altura = BigDecimal("2.0")))
+        )
+        ambientesNPUseCases.atualizarEsquadriasAmbiente(
+            ambienteSalvo.id,
+            setOf(
+                EsquadriaReq(
+                    tipo = TipoEsquadria.PORTA,
+                    geometria = GeometriaEsquadriaReq(base = BigDecimal("1.0"), altura = BigDecimal("2.2")),
+                    material = MaterialEsquadria.ALUMINIO
+                )
+            )
+        )
+
+        repoAmb.flush()
+        idsGeometriasAntigas.forEach { assertEquals(0, contarPorId("geometria", it)) }
+        idsEsquadriasAntigas.forEach { assertEquals(0, contarPorId("esquadria", it)) }
+    }
+
+    @Test
+    fun `Deve deletar ambiente removendo filhos e localizacao orfa`() {
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(
+            criarSalaAula(nome = "Sala Excluir", bloco = Bloco.BLOCO_12, unidade = Unidade.SEDE, andar = 8)
+        )
+        val antes = repoAmb.findById(ambienteSalvo.id).get()
+        val localizacaoId = antes.localizacao.id!!
+        val idsGeometrias = antes.geometrias.mapNotNull { it.id }
+        val idsEsquadrias = antes.esquadrias.mapNotNull { it.id }
+
+        ambientesNPUseCases.deletarAmbientes(setOf(ambienteSalvo.id))
+
+        repoAmb.flush()
+        idsGeometrias.forEach { assertEquals(0, contarPorId("geometria", it)) }
+        idsEsquadrias.forEach { assertEquals(0, contarPorId("esquadria", it)) }
+        assertEquals(0, contarPorId("localizacao", localizacaoId))
     }
 
 }

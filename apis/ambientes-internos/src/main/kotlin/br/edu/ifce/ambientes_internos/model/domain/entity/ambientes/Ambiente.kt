@@ -38,8 +38,7 @@ abstract class Ambiente(
     @Column(name = "tipo", nullable = false, insertable = false, updatable = false)
     var tipo: TipoAmbiente?,
 
-    @OneToMany(cascade = [CascadeType.ALL], orphanRemoval = true)
-    @JoinColumn(name = "ambiente_id")
+    @OneToMany(mappedBy = "ambiente", cascade = [CascadeType.ALL], orphanRemoval = true)
     @BatchSize(size = 20)
     val geometrias: MutableSet<Geometria>,
 
@@ -47,8 +46,7 @@ abstract class Ambiente(
     @BatchSize(size = 10)
     val pesDireitos: MutableSet<BigDecimal>,
 
-    @OneToMany(cascade = [CascadeType.ALL], orphanRemoval = true)
-    @JoinColumn(name = "ambiente_id")
+    @OneToMany(mappedBy = "ambiente", cascade = [CascadeType.ALL], orphanRemoval = true)
     @BatchSize(size = 50)
     val esquadrias: MutableSet<Esquadria>,
 
@@ -59,6 +57,11 @@ abstract class Ambiente(
     @Column(nullable = false)
     var status: StatusAmbiente,
 ) {
+
+    init {
+        geometrias.toList().forEach { adicionarGeometria(it) }
+        esquadrias.toList().forEach { adicionarEsquadria(it) }
+    }
 
     fun calcularAreaAmbienteM2(): BigDecimal {
         return geometrias
@@ -81,6 +84,34 @@ abstract class Ambiente(
             .filter { it.tipo == tipo && it.material == material }
             .map { it.geometria.calcularAreaTotalM2() }
             .fold(BigDecimal.ZERO) { acc, area -> acc + area }
+    }
+
+    fun adicionarGeometria(geometria: Geometria) {
+        geometrias.add(geometria)
+        geometria.ambiente = this
+    }
+
+    fun adicionarGeometrias(geometrias: Set<Geometria>) {
+        geometrias.forEach { adicionarGeometria(it) }
+    }
+
+    fun substituirGeometrias(novasGeometrias: Set<Geometria>) {
+        geometrias.clear()
+        adicionarGeometrias(novasGeometrias)
+    }
+
+    fun adicionarEsquadria(esquadria: Esquadria) {
+        esquadrias.add(esquadria)
+        esquadria.ambiente = this
+    }
+
+    fun adicionarEsquadrias(esquadrias: Set<Esquadria>) {
+        esquadrias.forEach { adicionarEsquadria(it) }
+    }
+
+    fun substituirEsquadrias(novasEsquadrias: Set<Esquadria>) {
+        esquadrias.clear()
+        adicionarEsquadrias(novasEsquadrias)
     }
 
     override fun equals(other: Any?): Boolean {

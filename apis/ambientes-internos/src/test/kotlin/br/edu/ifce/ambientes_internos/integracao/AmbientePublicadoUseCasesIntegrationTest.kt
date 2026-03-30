@@ -548,3 +548,4 @@ class AmbientePublicadoUseCasesIntegrationTest {
         assertEquals(100, resultado.ambientes.size)
     }
 }
+

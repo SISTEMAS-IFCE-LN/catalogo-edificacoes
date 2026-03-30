@@ -1,5 +1,6 @@
 package br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias
 
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Ambiente
 import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.enums.MaterialEsquadria
 import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.enums.TipoEsquadria
 import br.edu.ifce.ambientes_internos.model.domain.entity.geometrias.Geometria
@@ -28,6 +29,10 @@ abstract class Esquadria(
     @Column(length = 255)
     var informacaoAdicional: String
 ) {
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ambiente_id", nullable = false)
+    lateinit var ambiente: Ambiente
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true

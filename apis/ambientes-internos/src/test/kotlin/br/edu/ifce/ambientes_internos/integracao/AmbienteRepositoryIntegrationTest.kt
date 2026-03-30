@@ -48,9 +48,9 @@ class AmbienteRepositoryIntegrationTest {
             material = MaterialEsquadria.MADEIRA_MACICA
         )
 
-        salaAula.geometrias.add(geom1)
-        salaAula.esquadrias.add(jan)
-        salaAula.esquadrias.add(porta)
+        salaAula.adicionarGeometria(geom1)
+        salaAula.adicionarEsquadria(jan)
+        salaAula.adicionarEsquadria(porta)
         salaAula.pesDireitos.add(BigDecimal("3.00"))
 
         val salaAdm = SalaAdministrativa(
@@ -82,6 +82,10 @@ class AmbienteRepositoryIntegrationTest {
         assertEquals(salaAula, savedSalaAula)
         assertEquals(salaAdm, savedSalaAdm)
         assertEquals(auditorio, savedAuditorio)
+
+        // Então - relacionamento bidirecional deve estar consistente
+        assertEquals(savedSalaAula.id, savedSalaAula.geometrias.first().ambiente.id)
+        assertEquals(true, savedSalaAula.esquadrias.all { it.ambiente.id == savedSalaAula.id })
     }
 
     @Test
@@ -95,8 +99,8 @@ class AmbienteRepositoryIntegrationTest {
 
         val geom = Retangular(base = BigDecimal("6.10"), altura = BigDecimal("5.30"), repeticao = 1)
         val jan = Janela(geometria = geom, material = MaterialEsquadria.ALUMINIO, alturaPeitoril = BigDecimal("0.90"))
-        salaAula.geometrias.add(geom)
-        salaAula.esquadrias.add(jan)
+        salaAula.adicionarGeometria(geom)
+        salaAula.adicionarEsquadria(jan)
         salaAula.pesDireitos.add(BigDecimal("3.50"))
 
         val salaAdm = SalaAdministrativa(
@@ -120,6 +124,10 @@ class AmbienteRepositoryIntegrationTest {
         val found1 = repository.findById(saved1.id!!).get()
         val found2 = repository.findById(saved2.id!!).get()
         val found3 = repository.findById(saved3.id!!).get()
+
+        // Então - relacionamento bidirecional deve estar consistente
+        assertEquals(found1.id, found1.geometrias.first().ambiente.id)
+        assertEquals(true, found1.esquadrias.all { it.ambiente.id == found1.id })
 
         // Então - igualdade entre entidade recuperada e o objeto original
         assertEquals(salaAula, found1)

@@ -75,9 +75,7 @@ class AmbienteTest {
             material = MaterialEsquadria.MADEIRA_MACICA
         )
 
-        ambiente.esquadrias.add(janela1)
-        ambiente.esquadrias.add(janela2)
-        ambiente.esquadrias.add(porta1)
+        ambiente.adicionarEsquadrias(setOf(janela1, janela2, porta1))
 
         val esperado = mapOf(
             Pair(TipoEsquadria.JANELA, MaterialEsquadria.ALUMINIO) to BigDecimal("2.62"), // 1.50 + 1.12
@@ -111,15 +109,51 @@ class AmbienteTest {
             material = MaterialEsquadria.MADEIRA_MACICA
         )
 
-        ambiente.esquadrias.add(janela1)
-        ambiente.esquadrias.add(janela2)
-        ambiente.esquadrias.add(porta1)
+        ambiente.adicionarEsquadrias(setOf(janela1, janela2, porta1))
 
         // Quando
         val resultado = ambiente.calcularAreaEsquadriasPorTipoMaterial(TipoEsquadria.JANELA, MaterialEsquadria.ALUMINIO)
 
         // Então
         assertEquals(BigDecimal("2.62"), resultado) // 1.50 + 1.12
+    }
+
+    @Test
+    fun `Deve sincronizar o lado inverso ao adicionar geometrias e esquadrias`() {
+        val geometria = Retangular(base = BigDecimal("2.00"), altura = BigDecimal("3.00"))
+        val esquadria = Porta(
+            geometria = Retangular(base = BigDecimal("0.90"), altura = BigDecimal("2.10")),
+            material = MaterialEsquadria.MADEIRA_MACICA
+        )
+
+        ambiente.adicionarGeometria(geometria)
+        ambiente.adicionarEsquadria(esquadria)
+
+        assertEquals(ambiente, geometria.ambiente)
+        assertEquals(ambiente, esquadria.ambiente)
+    }
+
+    @Test
+    fun `Deve substituir colecoes mantendo vinculo bidirecional`() {
+        val geometriasNovas = setOf(
+            Retangular(base = BigDecimal("4.00"), altura = BigDecimal("2.00")),
+            Retangular(base = BigDecimal("1.50"), altura = BigDecimal("1.50"))
+        )
+        val esquadriasNovas = setOf(
+            Janela(
+                geometria = Retangular(base = BigDecimal("1.00"), altura = BigDecimal("1.00")),
+                material = MaterialEsquadria.ALUMINIO,
+                alturaPeitoril = BigDecimal("0.90")
+            )
+        )
+
+        ambiente.substituirGeometrias(geometriasNovas)
+        ambiente.substituirEsquadrias(esquadriasNovas)
+
+        assertEquals(2, ambiente.geometrias.size)
+        assertEquals(1, ambiente.esquadrias.size)
+        assertEquals(true, ambiente.geometrias.all { it.ambiente == ambiente })
+        assertEquals(true, ambiente.esquadrias.all { it.ambiente == ambiente })
     }
 
 }
