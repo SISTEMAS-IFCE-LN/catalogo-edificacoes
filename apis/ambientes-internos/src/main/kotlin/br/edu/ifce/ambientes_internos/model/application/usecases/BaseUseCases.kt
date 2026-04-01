@@ -48,8 +48,9 @@ abstract class BaseUseCases(
         tipo: String,
         pageable: Pageable
     ): AmbientesBasicosPaginadosRes {
+        val tipoNormalizado = tipo.trim()
         val pageableLimitado = limitarPageable(pageable)
-        val page = repoAmb.findByTipoAndStatus(tipo, status, pageableLimitado)
+        val page = repoAmb.findByTipoAndStatus(tipoNormalizado, status, pageableLimitado)
         return AmbientesBasicosPaginadosRes.from(page)
     }
 
@@ -58,8 +59,9 @@ abstract class BaseUseCases(
         nome: String,
         pageable: Pageable
     ): AmbientesBasicosPaginadosRes {
+        val nomeNormalizado = nome.trim()
         val pageableLimitado = limitarPageable(pageable)
-        val page = repoAmb.findByNomeContainingIgnoreCaseAndStatus(nome, status, pageableLimitado)
+        val page = repoAmb.findByNomeContainingIgnoreCaseAndStatus(nomeNormalizado, status, pageableLimitado)
         return AmbientesBasicosPaginadosRes.from(page)
     }
 

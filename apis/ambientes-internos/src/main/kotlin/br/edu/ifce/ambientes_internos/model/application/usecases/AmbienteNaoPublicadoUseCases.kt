@@ -186,8 +186,11 @@ class AmbienteNaoPublicadoUseCases(
         id: Long,
         informacaoAdicional: String
     ): String {
+        val novaInformacaoAdicional = informacaoAdicional.trim()
         val ambienteExistente = obterAmbiente(id)
-        ambienteExistente.informacaoAdicional = informacaoAdicional
+        if (novaInformacaoAdicional == ambienteExistente.informacaoAdicional)
+            throw IllegalArgumentException("A nova informação adicional deve ser diferente da atual.")
+        ambienteExistente.informacaoAdicional = novaInformacaoAdicional
         val ambienteAtualizado = repoAmb.save(ambienteExistente)
         return ambienteAtualizado.informacaoAdicional
     }
