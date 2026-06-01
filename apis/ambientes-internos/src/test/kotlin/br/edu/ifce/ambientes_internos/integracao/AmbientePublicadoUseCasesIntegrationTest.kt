@@ -483,9 +483,9 @@ class AmbientePublicadoUseCasesIntegrationTest {
         // Validar conteúdo retornado (2 ambientes na primeira página)
         assertEquals(2, resultado.ambientes.size)
 
-        val ambientesRetornados = resultado.ambientes.keys.toList()
-        assertTrue(ambientesRetornados.any { it.nome == "Ambiente Publicado 1" })
-        assertTrue(ambientesRetornados.any { it.nome == "Ambiente Publicado 2" })
+        val ambientesRetornados = resultado.ambientes.map { it.dadosAmbiente }
+        assertTrue(ambientesRetornados.any { ambiente -> ambiente.nome == "Ambiente Publicado 1" })
+        assertTrue(ambientesRetornados.any { ambiente -> ambiente.nome == "Ambiente Publicado 2" })
 
         assertTrue(resultado.totalTipoMaterial.isNotEmpty())
         assertTrue(resultado.totalTipoMaterial.any { it.tipo == TipoEsquadria.PORTA && it.material == MaterialEsquadria.MADEIRA_FICHA })
