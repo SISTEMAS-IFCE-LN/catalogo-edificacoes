@@ -6,6 +6,7 @@ import java.math.BigDecimal
 data class AmbienteBasicoRes(
     val id: Long,
     val nome: String,
+    val tipo: String,
     val localizacao: LocalizacaoRes,
     val capacidade: Int,
     val area: BigDecimal
@@ -15,6 +16,7 @@ data class AmbienteBasicoRes(
             return AmbienteBasicoRes(
                 id = ambiente.id!!,
                 nome = ambiente.nome,
+                tipo = ambiente.tipo!!.nome,
                 localizacao = LocalizacaoRes.from(ambiente.localizacao),
                 capacidade = ambiente.capacidade,
                 area = ambiente.calcularAreaAmbienteM2()

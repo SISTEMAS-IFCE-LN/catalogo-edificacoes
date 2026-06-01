@@ -27,21 +27,28 @@ class AmbienteNaoPublicadoUseCases(
 ) : IAmbienteNaoPublicadoUseCases, BaseUseCases(StatusAmbiente.NAO_PUBLICADO, repoAmb) {
 
     private fun verificarNomeLocalizacaoCadastro(ambiente: Ambiente) {
-        repoLoc.findByLocalizacao(ambiente.localizacao).ifPresent {
-            ambiente.localizacao = it
-            if (repoAmb.existsByNomeAndLocalizacaoId(ambiente.nome, it.id!!)) {
+        repoLoc.findByLocalizacao(ambiente.localizacao).ifPresent { localizacao ->
+            if (repoAmb.existsByNomeAndLocalizacaoId(ambiente.nome, localizacao.id!!)) {
                 throw IllegalArgumentException("Já existe um ambiente com esse nome nessa localização")
             }
+            ambiente.localizacao = localizacao
         }
     }
 
-    private fun verificarNomeLocalizacaoAlteracao(ambiente: Ambiente) {
-        repoLoc.findByLocalizacao(ambiente.localizacao).ifPresent {
-            ambiente.localizacao = it
-            if (repoAmb.existsByNomeAndLocalizacaoIdAndIdNot(ambiente.nome, it.id!!, ambiente.id!!)) {
-                throw IllegalArgumentException("Já existe um ambiente com esse nome nessa localização")
+    private fun verificarNomeLocalizacaoAlteracao(ambiente: Ambiente, localizacaoCandidata: Localizacao) {
+        if (localizacaoCandidata == ambiente.localizacao) return
+
+        repoLoc.findByLocalizacao(localizacaoCandidata).ifPresentOrElse(
+            { localizacao ->
+                if (repoAmb.existsByNomeAndLocalizacaoIdAndIdNot(ambiente.nome, localizacao.id!!, ambiente.id!!)) {
+                    throw IllegalArgumentException("Já existe um ambiente com esse nome nessa localização")
+                }
+                ambiente.localizacao = localizacao
+            },
+            {
+                ambiente.localizacao = localizacaoCandidata
             }
-        }
+        )
     }
 
     private fun obterAmbientesPorIds(ids: Set<Long>): List<Ambiente> {
@@ -50,6 +57,12 @@ class AmbienteNaoPublicadoUseCases(
             throw NoSuchElementException("Nenhum ambiente encontrado para os IDs fornecidos")
         }
         return ambientes
+    }
+
+    private fun deletarLocalizacaoOrfao(localizacaoExistenteId: Long?, localizacaoAtualizadaId: Long? = null) {
+        if (localizacaoExistenteId != localizacaoAtualizadaId) {
+            repoLoc.deleteIfOrphan(localizacaoExistenteId ?: return)
+        }
     }
 
     @Transactional
@@ -65,16 +78,22 @@ class AmbienteNaoPublicadoUseCases(
     @Transactional
     override fun atualizarDadosBasicosAmbiente(
         id: Long,
-        ambienteAtualizado: AmbienteBasicoReq
+        ambienteBasicoReq: AmbienteBasicoReq
     ): AmbienteBasicoRes {
         val ambienteExistente = obterAmbiente(id)
-        ambienteExistente.nome = ambienteAtualizado.nome
-        ambienteExistente.capacidade = ambienteAtualizado.capacidade
-        ambienteExistente.localizacao.bloco = ambienteAtualizado.localizacao.bloco
-        ambienteExistente.localizacao.unidade = ambienteAtualizado.localizacao.unidade
-        ambienteExistente.localizacao.andar = ambienteAtualizado.localizacao.andar
-        verificarNomeLocalizacaoAlteracao(ambienteExistente)
-        return AmbienteBasicoRes.from(repoAmb.save(ambienteExistente))
+        val localizacaoExistenteId = ambienteExistente.localizacao.id
+        val localizacaoCandidata = Localizacao(
+            bloco = ambienteBasicoReq.localizacao.bloco,
+            unidade = ambienteBasicoReq.localizacao.unidade,
+            andar = ambienteBasicoReq.localizacao.andar
+        )
+        ambienteExistente.nome = ambienteBasicoReq.nome
+        ambienteExistente.capacidade = ambienteBasicoReq.capacidade
+        verificarNomeLocalizacaoAlteracao(ambienteExistente, localizacaoCandidata)
+        val ambienteAtualizado = repoAmb.save(ambienteExistente)
+        repoAmb.flush()
+        deletarLocalizacaoOrfao(localizacaoExistenteId, ambienteAtualizado.localizacao.id)
+        return AmbienteBasicoRes.from(ambienteAtualizado)
     }
 
     @Transactional
@@ -83,9 +102,9 @@ class AmbienteNaoPublicadoUseCases(
         geometriasAdd: Set<GeometriaAmbienteReq>
     ): ListaGeometriasAmbienteRes {
         val ambienteExistente = obterAmbiente(id)
-        val geometrias = geometriasAdd.map { GeometriaFactory.criar(it) }.toMutableSet()
+        val geometrias = geometriasAdd.map { GeometriaFactory.criar(it) }.toSet()
 
-        ambienteExistente.geometrias.addAll(geometrias)
+        ambienteExistente.adicionarGeometrias(geometrias)
 
         val ambienteAtualizado = repoAmb.save(ambienteExistente)
         val geometriasRes = ambienteAtualizado.geometrias.map { GeometriaAmbienteRes.from(it) }
@@ -102,10 +121,9 @@ class AmbienteNaoPublicadoUseCases(
         geometriasAtualizadas: Set<GeometriaAmbienteReq>
     ): ListaGeometriasAmbienteRes {
         val ambienteExistente = obterAmbiente(id)
-        val geometrias = geometriasAtualizadas.map { GeometriaFactory.criar(it) }.toMutableSet()
+        val geometrias = geometriasAtualizadas.map { GeometriaFactory.criar(it) }.toSet()
 
-        ambienteExistente.geometrias.clear()
-        ambienteExistente.geometrias.addAll(geometrias)
+        ambienteExistente.substituirGeometrias(geometrias)
 
         val ambienteAtualizado = repoAmb.save(ambienteExistente)
         val geometriasRes = ambienteAtualizado.geometrias.map { GeometriaAmbienteRes.from(it) }
@@ -145,8 +163,8 @@ class AmbienteNaoPublicadoUseCases(
         esquadrias: Set<EsquadriaReq>
     ): EsquadriasDetalhesRes {
         val ambienteExistente = obterAmbiente(id)
-        val esquadriasNovas = esquadrias.map { EsquadriaFactory.criar(it) }
-        ambienteExistente.esquadrias.addAll(esquadriasNovas)
+        val esquadriasNovas = esquadrias.map { EsquadriaFactory.criar(it) }.toSet()
+        ambienteExistente.adicionarEsquadrias(esquadriasNovas)
         val ambienteAtualizado = repoAmb.save(ambienteExistente)
         return EsquadriasDetalhesRes.from(ambienteAtualizado)
     }
@@ -157,9 +175,8 @@ class AmbienteNaoPublicadoUseCases(
         esquadrias: Set<EsquadriaReq>
     ): EsquadriasDetalhesRes {
         val ambienteExistente = obterAmbiente(id)
-        val esquadriasAtualizadas = esquadrias.map { EsquadriaFactory.criar(it) }
-        ambienteExistente.esquadrias.clear()
-        ambienteExistente.esquadrias.addAll(esquadriasAtualizadas)
+        val esquadriasAtualizadas = esquadrias.map { EsquadriaFactory.criar(it) }.toSet()
+        ambienteExistente.substituirEsquadrias(esquadriasAtualizadas)
         val ambienteAtualizado = repoAmb.save(ambienteExistente)
         return EsquadriasDetalhesRes.from(ambienteAtualizado)
     }
@@ -169,8 +186,11 @@ class AmbienteNaoPublicadoUseCases(
         id: Long,
         informacaoAdicional: String
     ): String {
+        val novaInformacaoAdicional = informacaoAdicional.trim()
         val ambienteExistente = obterAmbiente(id)
-        ambienteExistente.informacaoAdicional = informacaoAdicional
+        if (novaInformacaoAdicional == ambienteExistente.informacaoAdicional)
+            throw IllegalArgumentException("A nova informação adicional deve ser diferente da atual.")
+        ambienteExistente.informacaoAdicional = novaInformacaoAdicional
         val ambienteAtualizado = repoAmb.save(ambienteExistente)
         return ambienteAtualizado.informacaoAdicional
     }
@@ -218,7 +238,12 @@ class AmbienteNaoPublicadoUseCases(
     @Transactional
     override fun deletarAmbientes(ids: Set<Long>) {
         val ambientes = obterAmbientesPorIds(ids)
+        val localizacoesIds = ambientes.mapNotNull { it.localizacao.id }.toSet()
+
         repoAmb.deleteAll(ambientes)
+        repoAmb.flush()
+
+        localizacoesIds.forEach { repoLoc.deleteIfOrphan(it) }
     }
 
 }

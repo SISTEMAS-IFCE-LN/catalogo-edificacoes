@@ -48,6 +48,10 @@
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>runtime</scope>
@@ -78,6 +82,9 @@
                 <configuration>
                     <args>
                         <arg>-Xjsr305=strict</arg>
+                        <!-- Necessário para emitir anotações type-use no bytecode em runtime.
+                             Isso permite ao Bean Validation validar itens de coleções, como Set<@Digits BigDecimal>. -->
+                        <arg>-Xemit-jvm-type-annotations</arg>
                     </args>
                     <!-- Configura plugins do compilador Kotlin para suportar recursos do Spring,
                     JPA e abrir classes anotadas automaticamente. -->

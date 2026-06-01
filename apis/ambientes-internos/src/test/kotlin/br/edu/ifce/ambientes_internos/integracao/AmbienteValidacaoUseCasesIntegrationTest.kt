@@ -224,7 +224,7 @@ class AmbienteValidacaoUseCasesIntegrationTest {
         assertEquals(1, resultado.ambientes.size)
         assertEquals(1, resultado.dadosPaginacao.totalElements)
         assertEquals("Sala em validação", resultado.ambientes.first().nome)
-        assertEquals(Bloco.BLOCO_10, resultado.ambientes.first().localizacao.bloco)
+        assertEquals(Bloco.BLOCO_10.nome, resultado.ambientes.first().localizacao.bloco)
     }
 
     @Test

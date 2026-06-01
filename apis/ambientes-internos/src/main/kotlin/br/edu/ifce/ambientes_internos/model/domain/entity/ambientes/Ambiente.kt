@@ -7,11 +7,15 @@ import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.enums.Mater
 import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.enums.TipoEsquadria
 import br.edu.ifce.ambientes_internos.model.domain.entity.geometrias.Geometria
 import jakarta.persistence.*
+import org.hibernate.annotations.BatchSize
 import java.math.BigDecimal
 
 @Entity
 @Table(
-    uniqueConstraints = [UniqueConstraint(name = "uk_ambiente_nome_localizacao", columnNames = ["nome", "localizacao_id"]) ]
+    uniqueConstraints = [UniqueConstraint(
+        name = "uk_ambiente_nome_localizacao",
+        columnNames = ["nome", "localizacao_id"]
+    )]
 )
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
 @DiscriminatorColumn(name = "tipo", discriminatorType = DiscriminatorType.STRING)
@@ -23,7 +27,7 @@ abstract class Ambiente(
     @Column(nullable = false, length = 50)
     var nome: String,
 
-    @ManyToOne(cascade = [CascadeType.ALL])
+    @ManyToOne(cascade = [CascadeType.PERSIST, CascadeType.MERGE])
     @JoinColumn(name = "localizacao_id", nullable = false)
     var localizacao: Localizacao,
 
@@ -34,15 +38,16 @@ abstract class Ambiente(
     @Column(name = "tipo", nullable = false, insertable = false, updatable = false)
     var tipo: TipoAmbiente?,
 
-    @OneToMany(cascade = [CascadeType.ALL], fetch = FetchType.EAGER, orphanRemoval = true)
-    @JoinColumn(name = "ambiente_id")
+    @OneToMany(mappedBy = "ambiente", cascade = [CascadeType.ALL], orphanRemoval = true)
+    @BatchSize(size = 20)
     val geometrias: MutableSet<Geometria>,
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection
+    @BatchSize(size = 10)
     val pesDireitos: MutableSet<BigDecimal>,
 
-    @OneToMany(cascade = [CascadeType.ALL], fetch = FetchType.EAGER, orphanRemoval = true)
-    @JoinColumn(name = "ambiente_id")
+    @OneToMany(mappedBy = "ambiente", cascade = [CascadeType.ALL], orphanRemoval = true)
+    @BatchSize(size = 50)
     val esquadrias: MutableSet<Esquadria>,
 
     @Column(length = 255)
@@ -52,6 +57,11 @@ abstract class Ambiente(
     @Column(nullable = false)
     var status: StatusAmbiente,
 ) {
+
+    init {
+        geometrias.toList().forEach { adicionarGeometria(it) }
+        esquadrias.toList().forEach { adicionarEsquadria(it) }
+    }
 
     fun calcularAreaAmbienteM2(): BigDecimal {
         return geometrias
@@ -74,6 +84,34 @@ abstract class Ambiente(
             .filter { it.tipo == tipo && it.material == material }
             .map { it.geometria.calcularAreaTotalM2() }
             .fold(BigDecimal.ZERO) { acc, area -> acc + area }
+    }
+
+    fun adicionarGeometria(geometria: Geometria) {
+        geometrias.add(geometria)
+        geometria.ambiente = this
+    }
+
+    fun adicionarGeometrias(geometrias: Set<Geometria>) {
+        geometrias.forEach { adicionarGeometria(it) }
+    }
+
+    fun substituirGeometrias(novasGeometrias: Set<Geometria>) {
+        geometrias.clear()
+        adicionarGeometrias(novasGeometrias)
+    }
+
+    fun adicionarEsquadria(esquadria: Esquadria) {
+        esquadrias.add(esquadria)
+        esquadria.ambiente = this
+    }
+
+    fun adicionarEsquadrias(esquadrias: Set<Esquadria>) {
+        esquadrias.forEach { adicionarEsquadria(it) }
+    }
+
+    fun substituirEsquadrias(novasEsquadrias: Set<Esquadria>) {
+        esquadrias.clear()
+        adicionarEsquadrias(novasEsquadrias)
     }
 
     override fun equals(other: Any?): Boolean {

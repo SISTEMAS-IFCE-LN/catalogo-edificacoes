@@ -6,3 +6,6 @@ spring:
       - ${PROFILE_ACTIVE:dev}
   jpa:
     open-in-view: false
+  sql:
+    init:
+      mode: never

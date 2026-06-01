@@ -1,0 +1,912 @@
+{
+  "info": {
+    "_postman_id": "12a2ba33-e0c2-4ac0-859b-fad0fff94a61",
+    "name": "catalogo-edificacoes",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "47361745",
+    "_collection_link": "https://go.postman.co/collection/47361745-12a2ba33-e0c2-4ac0-859b-fad0fff94a61?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "nao-publicados",
+      "item": [
+        {
+          "name": "listarAmbientes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}{{NAO_PUB_PATH}}?page=0&size=15",
+              "host": [
+                "{{BASE_URL}}{{NAO_PUB_PATH}}"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "15"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "listarAmbientesPorTipo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}{{NAO_PUB_PATH}}/tipo?tipo=auditorio&page=0&size=15",
+              "host": [
+                "{{BASE_URL}}{{NAO_PUB_PATH}}"
+              ],
+              "path": [
+                "tipo"
+              ],
+              "query": [
+                {
+                  "key": "tipo",
+                  "value": "auditorio"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "15"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "listarAmbientesPorNome",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}{{NAO_PUB_PATH}}/nome?nome=info&page=0&size=15",
+              "host": [
+                "{{BASE_URL}}{{NAO_PUB_PATH}}"
+              ],
+              "path": [
+                "nome"
+              ],
+              "query": [
+                {
+                  "key": "nome",
+                  "value": "info"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "15"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "listarAmbientesPorLocalizacao",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}{{NAO_PUB_PATH}}/localizacao?bloco=3&unidade=alta&andar=0&page=0&size=15",
+              "host": [
+                "{{BASE_URL}}{{NAO_PUB_PATH}}"
+              ],
+              "path": [
+                "localizacao"
+              ],
+              "query": [
+                {
+                  "key": "bloco",
+                  "value": "3"
+                },
+                {
+                  "key": "unidade",
+                  "value": "alta"
+                },
+                {
+                  "key": "andar",
+                  "value": "0"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "15"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "obterAmbientePorId",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}{{NAO_PUB_PATH}}/12",
+              "host": [
+                "{{BASE_URL}}{{NAO_PUB_PATH}}"
+              ],
+              "path": [
+                "12"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "cadastrarAmbiente",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"tipo\": \"SALA_AULA\",\r\n  \"nome\": \"Sala de Aula 101\",\r\n  \"localizacao\": {\r\n    \"bloco\": \"BLOCO_1\",\r\n    \"unidade\": \"SEDE\",\r\n    \"andar\": 1\r\n  },\r\n  \"capacidade\": 30,\r\n  \"geometrias\": [\r\n    {\r\n      \"tipo\": \"RETANGULAR\",\r\n      \"base\": 7.5,\r\n      \"altura\": 6.0,\r\n      \"repeticao\": 1\r\n    }\r\n  ],\r\n  \"pesDireitos\": [\r\n    3.5,\r\n    2.8\r\n  ],\r\n  \"esquadrias\": [\r\n    {\r\n      \"tipo\": \"PORTA\",\r\n      \"geometria\": {\r\n        \"base\": 0.8,\r\n        \"altura\": 2.1,\r\n        \"repeticao\": 1\r\n      },\r\n      \"material\": \"ALUMINIO\",\r\n      \"alturaPeitoril\": 0,\r\n      \"informacaoAdicional\": \"Porta de entrada principal\"\r\n    },\r\n    {\r\n      \"tipo\": \"JANELA\",\r\n      \"geometria\": {\r\n        \"base\": 1.5,\r\n        \"altura\": 1.2,\r\n        \"repeticao\": 2\r\n      },\r\n      \"material\": \"ALUMINIO_VIDRO\",\r\n      \"alturaPeitoril\": 0.9,\r\n      \"informacaoAdicional\": \"Janelas de correr com vidro fumê\"\r\n    }\r\n  ],\r\n  \"informacaoAdicional\": \"Sala de aula com boa iluminação natural\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}{{NAO_PUB_PATH}}",
+              "host": [
+                "{{BASE_URL}}{{NAO_PUB_PATH}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "atualizarDadosBasicos",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"nome\": \"Sala Teste Atualizada\",\r\n  \"capacidade\": 40,\r\n  \"localizacao\": {\r\n    \"bloco\": \"BLOCO_2\",\r\n    \"unidade\": \"CIDADE_ALTA\",\r\n    \"andar\": 1\r\n  }\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}{{NAO_PUB_PATH}}/121/dados-basicos",
+              "host": [
+                "{{BASE_URL}}{{NAO_PUB_PATH}}"
+              ],
+              "path": [
+                "121",
+                "dados-basicos"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "incluirGeometrias",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "[\r\n    {\r\n        \"tipo\": \"RETANGULAR\",\r\n        \"base\": 15.65,\r\n        \"altura\": 4.25,\r\n        \"repeticao\": 1\r\n    }\r\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}{{NAO_PUB_PATH}}/121/geometrias/incluir",
+              "host": [
+                "{{BASE_URL}}{{NAO_PUB_PATH}}"
+              ],
+              "path": [
+                "121",
+                "geometrias",
+                "incluir"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "atualizarGeometrias",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "[\r\n    {\r\n        \"tipo\": \"RETANGULAR\",\r\n        \"base\": 15,\r\n        \"altura\": 3.25,\r\n        \"repeticao\": 1\r\n    }\r\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}{{NAO_PUB_PATH}}/121/geometrias/atualizar",
+              "host": [
+                "{{BASE_URL}}{{NAO_PUB_PATH}}"
+              ],
+              "path": [
+                "121",
+                "geometrias",
+                "atualizar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "incluirPesDireitos",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "[2.30, 3.20]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}{{NAO_PUB_PATH}}/121/pes-direitos/incluir",
+              "host": [
+                "{{BASE_URL}}{{NAO_PUB_PATH}}"
+              ],
+              "path": [
+                "121",
+                "pes-direitos",
+                "incluir"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "atualizarPesDireitos",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "[3.20]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}{{NAO_PUB_PATH}}/121/pes-direitos/atualizar",
+              "host": [
+                "{{BASE_URL}}{{NAO_PUB_PATH}}"
+              ],
+              "path": [
+                "121",
+                "pes-direitos",
+                "atualizar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "incluirEsquadrias",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "[\r\n    {\r\n        \"tipo\": \"PORTA\",\r\n        \"geometria\": {\r\n            \"base\": 0.9,\r\n            \"altura\": 2.1,\r\n            \"repeticao\": 2\r\n        },\r\n        \"material\": \"MADEIRA_VENEZIANA\",\r\n        \"informacaoAdicional\": \"Portas Auxiliares\"\r\n    },\r\n    {\r\n        \"tipo\": \"JANELA\",\r\n        \"geometria\": {\r\n            \"base\": 0.6,\r\n            \"altura\": 0.6,\r\n            \"repeticao\": 4\r\n        },\r\n        \"material\": \"MADEIRA_VIDRO\",\r\n        \"alturaPeitoril\": 1.6,\r\n        \"informacaoAdicional\": \"Janelas altas fixas\"\r\n    }\r\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}{{NAO_PUB_PATH}}/121/esquadrias/incluir",
+              "host": [
+                "{{BASE_URL}}{{NAO_PUB_PATH}}"
+              ],
+              "path": [
+                "121",
+                "esquadrias",
+                "incluir"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "atualizarEsquadrias",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "[\r\n    {\r\n        \"tipo\": \"PORTA\",\r\n        \"geometria\": {\r\n            \"base\": 0.9,\r\n            \"altura\": 2.1,\r\n            \"repeticao\": 1\r\n        },\r\n        \"material\": \"MADEIRA_VENEZIANA\",\r\n        \"informacaoAdicional\": \"Portas Principal\"\r\n    },\r\n    {\r\n        \"tipo\": \"JANELA\",\r\n        \"geometria\": {\r\n            \"base\": 1.20,\r\n            \"altura\": 0.6,\r\n            \"repeticao\": 2\r\n        },\r\n        \"material\": \"MADEIRA_VIDRO\",\r\n        \"alturaPeitoril\": 1.6\r\n    }\r\n]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}{{NAO_PUB_PATH}}/121/esquadrias/atualizar",
+              "host": [
+                "{{BASE_URL}}{{NAO_PUB_PATH}}"
+              ],
+              "path": [
+                "121",
+                "esquadrias",
+                "atualizar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "atualizarInformacaoAdicional",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "Sala de aula do integrado",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}{{NAO_PUB_PATH}}/121/informacao-adicional",
+              "host": [
+                "{{BASE_URL}}{{NAO_PUB_PATH}}"
+              ],
+              "path": [
+                "121",
+                "informacao-adicional"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "alterarTipoDadosAmbiente",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"tipo\": \"LABORATORIO\",\r\n  \"nome\": \"Laboratório 101\",\r\n  \"localizacao\": {\r\n    \"bloco\": \"BLOCO_1\",\r\n    \"unidade\": \"SEDE\",\r\n    \"andar\": 1\r\n  },\r\n  \"capacidade\": 30,\r\n  \"geometrias\": [\r\n    {\r\n      \"tipo\": \"RETANGULAR\",\r\n      \"base\": 7.5,\r\n      \"altura\": 6.0,\r\n      \"repeticao\": 1\r\n    }\r\n  ],\r\n  \"pesDireitos\": [\r\n    3.5,\r\n    2.8\r\n  ],\r\n  \"esquadrias\": [\r\n    {\r\n      \"tipo\": \"PORTA\",\r\n      \"geometria\": {\r\n        \"base\": 0.8,\r\n        \"altura\": 2.1,\r\n        \"repeticao\": 1\r\n      },\r\n      \"material\": \"ALUMINIO\",\r\n      \"alturaPeitoril\": 0,\r\n      \"informacaoAdicional\": \"Porta de entrada principal\"\r\n    },\r\n    {\r\n      \"tipo\": \"JANELA\",\r\n      \"geometria\": {\r\n        \"base\": 1.5,\r\n        \"altura\": 1.2,\r\n        \"repeticao\": 2\r\n      },\r\n      \"material\": \"ALUMINIO_VIDRO\",\r\n      \"alturaPeitoril\": 0.9,\r\n      \"informacaoAdicional\": \"Janelas de correr com vidro fumê\"\r\n    }\r\n  ],\r\n  \"informacaoAdicional\": \"Sala de aula com boa iluminação natural\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}{{NAO_PUB_PATH}}/121",
+              "host": [
+                "{{BASE_URL}}{{NAO_PUB_PATH}}"
+              ],
+              "path": [
+                "121"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "duplicarAmbiente",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"nome\": \"Laboratório 102\",\r\n    \"localizacao\": {\r\n        \"bloco\": \"BLOCO_1\",\r\n        \"unidade\": \"SEDE\",\r\n        \"andar\": 1\r\n    }\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}{{NAO_PUB_PATH}}/122/duplicar",
+              "host": [
+                "{{BASE_URL}}{{NAO_PUB_PATH}}"
+              ],
+              "path": [
+                "122",
+                "duplicar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "enviarValidacao",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "[119,121]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}{{NAO_PUB_PATH}}/validar",
+              "host": [
+                "{{BASE_URL}}{{NAO_PUB_PATH}}"
+              ],
+              "path": [
+                "validar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "deletarAmbientes",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "[120]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}{{NAO_PUB_PATH}}",
+              "host": [
+                "{{BASE_URL}}{{NAO_PUB_PATH}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "validacao",
+      "item": [
+        {
+          "name": "listarAmbientes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}{{VAL_PATH}}?page=0&size=15",
+              "host": [
+                "{{BASE_URL}}{{VAL_PATH}}"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "15"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "listarAmbientesPorTipo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}{{VAL_PATH}}/tipo?tipo=aula&page=0&size=15",
+              "host": [
+                "{{BASE_URL}}{{VAL_PATH}}"
+              ],
+              "path": [
+                "tipo"
+              ],
+              "query": [
+                {
+                  "key": "tipo",
+                  "value": "aula"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "15"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "listarAmbientesPorNome",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}{{VAL_PATH}}/nome?nome=101&page=0&size=15",
+              "host": [
+                "{{BASE_URL}}{{VAL_PATH}}"
+              ],
+              "path": [
+                "nome"
+              ],
+              "query": [
+                {
+                  "key": "nome",
+                  "value": "101"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "15"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "listarAmbientesPorLocalizacao",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}{{VAL_PATH}}/localizacao?unidade=sede&page=0&size=15",
+              "host": [
+                "{{BASE_URL}}{{VAL_PATH}}"
+              ],
+              "path": [
+                "localizacao"
+              ],
+              "query": [
+                {
+                  "key": "bloco",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "unidade",
+                  "value": "sede"
+                },
+                {
+                  "key": "andar",
+                  "value": "0",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "15"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "obterAmbientePorId",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}{{VAL_PATH}}/121",
+              "host": [
+                "{{BASE_URL}}{{VAL_PATH}}"
+              ],
+              "path": [
+                "121"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "publicarAmbiente",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}{{VAL_PATH}}/121/publicar",
+              "host": [
+                "{{BASE_URL}}{{VAL_PATH}}"
+              ],
+              "path": [
+                "121",
+                "publicar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "privarAmbiente",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}{{VAL_PATH}}/121/privar",
+              "host": [
+                "{{BASE_URL}}{{VAL_PATH}}"
+              ],
+              "path": [
+                "121",
+                "privar"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "publicado",
+      "item": [
+        {
+          "name": "listarAmbientes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}{{PUB_PATH}}?page=0&size=15",
+              "host": [
+                "{{BASE_URL}}{{PUB_PATH}}"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "15"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "listarAmbientesPorTipo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}{{PUB_PATH}}/tipo?tipo=aula&page=0&size=15",
+              "host": [
+                "{{BASE_URL}}{{PUB_PATH}}"
+              ],
+              "path": [
+                "tipo"
+              ],
+              "query": [
+                {
+                  "key": "tipo",
+                  "value": "aula"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "15"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "listarAmbientesPorNome",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}{{PUB_PATH}}/nome?nome=101&page=0&size=15",
+              "host": [
+                "{{BASE_URL}}{{PUB_PATH}}"
+              ],
+              "path": [
+                "nome"
+              ],
+              "query": [
+                {
+                  "key": "nome",
+                  "value": "101"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "15"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "listarAmbientesPorLocalizacao",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}{{PUB_PATH}}/localizacao?unidade=sede&page=0&size=15",
+              "host": [
+                "{{BASE_URL}}{{PUB_PATH}}"
+              ],
+              "path": [
+                "localizacao"
+              ],
+              "query": [
+                {
+                  "key": "bloco",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "unidade",
+                  "value": "sede"
+                },
+                {
+                  "key": "andar",
+                  "value": "0",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "15"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "obterAmbientePorId",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}{{PUB_PATH}}/121",
+              "host": [
+                "{{BASE_URL}}{{PUB_PATH}}"
+              ],
+              "path": [
+                "121"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "listarEsquadriasAmbientes",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}{{PUB_PATH}}/esquadrias?ids=119,121&page=0&size=15",
+              "host": [
+                "{{BASE_URL}}{{PUB_PATH}}"
+              ],
+              "path": [
+                "esquadrias"
+              ],
+              "query": [
+                {
+                  "key": "ids",
+                  "value": "119,121"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "15"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": ""
+    },
+    {
+      "key": "NAO_PUB_PATH",
+      "value": ""
+    },
+    {
+      "key": "VAL_PATH",
+      "value": ""
+    },
+    {
+      "key": "PUB_PATH",
+      "value": ""
+    }
+  ]
+}

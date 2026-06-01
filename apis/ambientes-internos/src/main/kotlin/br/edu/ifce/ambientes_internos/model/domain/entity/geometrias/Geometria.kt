@@ -1,5 +1,6 @@
 package br.edu.ifce.ambientes_internos.model.domain.entity.geometrias
 
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Ambiente
 import br.edu.ifce.ambientes_internos.model.domain.entity.geometrias.enums.TipoGeometria
 import jakarta.persistence.Column
 import jakarta.persistence.DiscriminatorColumn
@@ -7,11 +8,14 @@ import jakarta.persistence.DiscriminatorType
 import jakarta.persistence.Entity
 import jakarta.persistence.EnumType
 import jakarta.persistence.Enumerated
+import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
 import jakarta.persistence.GenerationType
 import jakarta.persistence.Id
 import jakarta.persistence.Inheritance
 import jakarta.persistence.InheritanceType
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.ManyToOne
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -36,6 +40,10 @@ abstract class Geometria(
     @Column(nullable = false, columnDefinition = "INT DEFAULT 1")
     var repeticao: Int
 ) {
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ambiente_id", nullable = true)
+    lateinit var ambiente: Ambiente
 
     abstract fun calcularAreaM2(): BigDecimal
 
