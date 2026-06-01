@@ -8,18 +8,20 @@ import org.springframework.data.domain.Page
 import java.math.BigDecimal
 
 data class EsquadriasAmbientesPaginadosRes(
-    val ambientes: Map<AmbienteNomeLocalizacaoRes, EsquadriasDetalhesRes>,
+    val ambientes: List<Pair<AmbienteNomeLocalizacaoRes, EsquadriasDetalhesRes>>,
     val totalTipoMaterial: List<EsquadriaTipoMaterialRes>,
     val dadosPaginacao: DadosPaginacao
 ) {
     companion object {
         fun from(page: Page<Ambiente>): EsquadriasAmbientesPaginadosRes {
-            val ambientes = page.content.associate { ambiente ->
-                AmbienteNomeLocalizacaoRes(
-                    id = ambiente.id!!,
-                    nome = ambiente.nome,
-                    localizacao = LocalizacaoRes.from(ambiente.localizacao)
-                ) to EsquadriasDetalhesRes.from(ambiente)
+            val ambientes = page.content.map { ambiente ->
+                Pair(
+                    AmbienteNomeLocalizacaoRes(
+                        id = ambiente.id!!,
+                        nome = ambiente.nome,
+                        localizacao = LocalizacaoRes.from(ambiente.localizacao)
+                    ), EsquadriasDetalhesRes.from(ambiente)
+                )
             }
             val totalTipoMaterial = page.content.flatMap { ambiente ->
                 ambiente.calcularAreaEsquadriasPorTipoMaterial().map { EsquadriaTipoMaterialRes.from(it) }
