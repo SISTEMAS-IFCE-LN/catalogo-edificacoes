@@ -10,4 +10,43 @@
     </parent>
     <artifactId>main-app</artifactId>
     <packaging>jar</packaging>
+
+    <dependencies>
+        <dependency>
+            <groupId>br.edu.ifce</groupId>
+            <artifactId>security-module</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>br.edu.ifce</groupId>
+            <artifactId>ambientes-internos-module</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <sourceDirectory>${project.basedir}/src/main/kotlin</sourceDirectory>
+        <plugins>
+            <plugin>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>br.edu.ifce.CatalogoEdificacoesAppKt</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>

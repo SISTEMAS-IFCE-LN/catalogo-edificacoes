@@ -1,5 +1,6 @@
 package br.edu.ifce.ambientes_internos.integracao
 
+import br.edu.ifce.ambientes_internos.TestApplication
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -13,7 +14,7 @@ import jakarta.servlet.ServletException
 import jakarta.validation.ConstraintViolationException
 import kotlin.test.assertTrue
 
-@SpringBootTest
+@SpringBootTest(classes = [TestApplication::class])
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @DisplayName("Testes de integração dos endpoints base de ambientes")

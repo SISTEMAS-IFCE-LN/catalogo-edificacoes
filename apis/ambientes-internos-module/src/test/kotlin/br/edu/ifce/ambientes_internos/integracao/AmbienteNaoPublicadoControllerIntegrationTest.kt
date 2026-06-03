@@ -1,5 +1,6 @@
 package br.edu.ifce.ambientes_internos.integracao
 
+import br.edu.ifce.ambientes_internos.TestApplication
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -16,7 +17,7 @@ import jakarta.validation.ConstraintViolationException
 import kotlin.test.assertTrue
 import java.util.UUID
 
-@SpringBootTest
+@SpringBootTest(classes = [TestApplication::class])
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @DisplayName("Testes de integração do controller de ambientes não publicados")

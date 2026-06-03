@@ -31,7 +31,7 @@ segurança e as diferentes regras de negócio de domínio coexistam sem gerar de
 * **Papel:** Atua como a raiz de composição (*Composition Root*) do sistema — o único módulo executável.
 * **Responsabilidade:** Este módulo não possui regras de negócio ou de segurança corporativa. Sua função é:
     * Consolidar `security-module` e `ambientes-internos-module` em uma única unidade executável final.
-    * Conter a classe `AmbientesInternosApp` anotada com
+    * Conter a classe `CatalogoEdificacoesApp` anotada com
       `@SpringBootApplication(scanBasePackages = ["br.edu.ifce.ambientes_internos", "br.edu.ifce.security"])`.
     * Centralizar `application.yml`, `application-dev.yml` e `data.sql` (incluindo o *seed* idempotente do
       Administrador padrão).

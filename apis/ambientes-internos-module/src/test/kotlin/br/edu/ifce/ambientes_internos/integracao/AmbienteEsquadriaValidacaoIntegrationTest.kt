@@ -1,5 +1,6 @@
 package br.edu.ifce.ambientes_internos.integracao
 
+import br.edu.ifce.ambientes_internos.TestApplication
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -14,7 +15,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import jakarta.servlet.ServletException
 import java.util.UUID
 
-@SpringBootTest
+@SpringBootTest(classes = [TestApplication::class])
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @DisplayName("Testes de integração para validações de esquadrias em ambientes")

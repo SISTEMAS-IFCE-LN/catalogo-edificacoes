@@ -214,7 +214,7 @@
 **Objetivo:** Criar o pacote executável que integra segurança e domínio.
 
 1. Criar a pasta `main-app` e sua estrutura `src/main/kotlin/br/edu/ifce/`.
-2. Mover a classe `AmbientesInternosApp.kt` para `main-app`:
+2. Mover a classe `CatalogoEdificacoesApp.kt` para `main-app`:
 
 ```kotlin
 package br.edu.ifce
@@ -223,10 +223,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
 @SpringBootApplication(scanBasePackages = ["br.edu.ifce.ambientes_internos", "br.edu.ifce.security"])
-class AmbientesInternosApp
+class CatalogoEdificacoesApp
 
 fun main(args: Array<String>) {
-    runApplication<AmbientesInternosApp>(*args)
+    runApplication<CatalogoEdificacoesApp>(*args)
 }
 ```
 
@@ -257,7 +257,7 @@ fun main(args: Array<String>) {
         <plugins>
             <plugin><groupId>org.jetbrains.kotlin</groupId><artifactId>kotlin-maven-plugin</artifactId></plugin>
             <plugin><groupId>org.springframework.boot</groupId><artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration><mainClass>br.edu.ifce.AmbientesInternosAppKt</mainClass></configuration>
+                <configuration><mainClass>br.edu.ifce.CatalogoEdificacoesAppKt</mainClass></configuration>
             </plugin>
         </plugins>
     </build>
