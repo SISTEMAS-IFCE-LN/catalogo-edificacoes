@@ -12,5 +12,5 @@ O subdomínio de Ambientes Externos incluirá áreas como pátios, jardins, ruas
 ## Atores Envolvidos
 - **Validador:** Responsável por revisar e aprovar as informações cadastradas no catálogo, garantindo a precisão e conformidade com os padrões estabelecidos.
 - **Gestor do Sistema:** Responsável por gerenciar as informações do catálogo, incluindo a criação, atualização e exclusão de registros.
-- **Servidor:** Usuário que consulta e utiliza as informações do catálogo para suas atividades diárias.
-- **Público Externo:** Usuário que acessa o catálogo para obter informações sobre as edificações do IFCE, como empresas prestadoras de serviços, órgãos de controle e a comunidade acadêmica.
+- **Colaborador:** Usuário que consulta e utiliza as informações do catálogo para suas atividades diárias, autenticado via Google OAuth 2.0 e detentor, no mínimo, do perfil `ROLE_COLABORADOR` (RN-4.3 e RN-4.6).
+- **Público Externo:** Usuário que acessa o catálogo para obter informações sobre as edificações do IFCE, como empresas prestadoras de serviços, órgãos de controle e a comunidade acadêmica, sem necessidade de autenticação (RN-4.4).
