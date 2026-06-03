@@ -1,0 +1,41 @@
+# ============== Build context ==============
+# Exclui artefatos de build, IDEs, controle de versão e documentação
+# para que o `docker build` não carregue lixo para dentro do contexto.
+
+# Artefatos Maven (inclui o target/ legacy que ainda existe na árvore)
+target/
+**/target/
+**/dependency-reduced-pom.xml
+**/*.jar
+!**/main-app/target/*.jar
+
+# Wrapper Maven (não é necessário dentro do build context — a imagem base
+# já provê o cliente Maven via `maven:3.9.11-eclipse-temurin-21`)
+.mvn/
+**/.mvn/
+!**/.mvn/wrapper/maven-wrapper.properties
+
+# Controle de versão e IDEs
+.git/
+.gitattributes
+.gitignore
+.idea/
+**/.idea/
+.vscode/
+**/.vscode/
+*.iml
+*.iws
+*.ipr
+.classpath
+.project
+.settings/
+
+# Documentação (não é usada pelo build)
+docs/
+README.md
+LICENSE
+HELP.md
+
+# Docker (evita autorreferência)
+Dockerfile
+.dockerignore

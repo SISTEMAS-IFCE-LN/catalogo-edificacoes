@@ -36,7 +36,7 @@
 
 **Objetivo:** Criar o `pom.xml` raiz para centralizar versões e coordenação dos submódulos.
 
-1. Na raiz de `apis/ambientes-internos`, substituir o conteúdo do `pom.xml` por:
+1. Na raiz de `apis`, substituir o conteúdo do `pom.xml` por:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
