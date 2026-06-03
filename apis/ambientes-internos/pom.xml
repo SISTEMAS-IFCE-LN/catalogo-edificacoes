@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  LEGACY / TRANSITÓRIO
+  Este pom.xml e a pasta apis/ambientes-internos/ serão removidos após a
+  arquitetura modular (security-module, ambientes-internos-module, main-app)
+  estar totalmente finalizada. Ver docs/planejamento/sec-details-plan.md.
+  Enquanto isso, este arquivo NÃO faz parte do reator Maven, cuja raiz
+  passa a ser apis/pom.xml.
+-->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
