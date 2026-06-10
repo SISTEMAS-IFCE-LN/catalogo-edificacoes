@@ -4,6 +4,7 @@ import br.edu.ifce.ambientes_internos.model.application.interfaces.IAmbienteVali
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbienteRes
 import jakarta.validation.constraints.Positive
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -15,6 +16,7 @@ private const val AMBIENTE_VALIDACAO_PATH = "/api/ambientes/validacao"
 @Validated
 @RestController
 @RequestMapping(AMBIENTE_VALIDACAO_PATH)
+@PreAuthorize("hasAuthority('ROLE_VALIDADOR')")
 class AmbienteValidacaoController(
     private val useCasesValidacao: IAmbienteValidacaoUseCases
 ) : BaseController<AmbienteRes>(useCasesValidacao) {

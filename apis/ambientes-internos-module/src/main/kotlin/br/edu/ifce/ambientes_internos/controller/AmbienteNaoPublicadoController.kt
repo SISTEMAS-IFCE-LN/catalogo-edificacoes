@@ -12,6 +12,7 @@ import jakarta.validation.constraints.NotEmpty
 import jakarta.validation.constraints.Positive
 import jakarta.validation.constraints.Size
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
 import java.math.BigDecimal
@@ -24,6 +25,7 @@ private const val MSG_VAL_PD_ESCALA = "O pé direito deve ter no máximo 7 dígi
 @Validated
 @RestController
 @RequestMapping(AMBIENTE_NAO_PUBLICADO_PATH)
+@PreAuthorize("hasAuthority('ROLE_GESTOR_SISTEMA')")
 class AmbienteNaoPublicadoController(
     private val useCasesNaoPublicado: IAmbienteNaoPublicadoUseCases
 ) : BaseController<AmbienteRes>(useCasesNaoPublicado) {

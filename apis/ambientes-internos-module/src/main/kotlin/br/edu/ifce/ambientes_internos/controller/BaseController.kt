@@ -9,6 +9,7 @@ import jakarta.validation.constraints.Positive
 import jakarta.validation.constraints.Size
 import org.springframework.data.domain.Pageable
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
@@ -82,6 +83,7 @@ abstract class BaseController<RES>(protected val useCases: IAmbienteUseCases<RES
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('ROLE_COLABORADOR')")
     fun obterAmbientePorId(@PathVariable @Positive(message = MSG_VAL_ID) id: Long): ResponseEntity<RES> {
         return ResponseEntity.ok(useCases.obterAmbientePorId(id))
     }
