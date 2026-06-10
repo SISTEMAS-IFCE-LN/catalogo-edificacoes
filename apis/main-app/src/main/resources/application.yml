@@ -43,3 +43,4 @@ rsa:
 app:
   bootstrap:
     admin-email: ${BOOTSTRAP_ADMIN_EMAIL:}
+    allow-reactivate: ${BOOTSTRAP_ALLOW_REACTIVATE:true}

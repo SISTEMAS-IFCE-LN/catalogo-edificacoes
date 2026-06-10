@@ -15,7 +15,7 @@ class Usuario(
     val email: String,
 
     @Column(nullable = false)
-    val nome: String,
+    var nome: String,
 
     @Column(nullable = false)
     var ativo: Boolean = true,

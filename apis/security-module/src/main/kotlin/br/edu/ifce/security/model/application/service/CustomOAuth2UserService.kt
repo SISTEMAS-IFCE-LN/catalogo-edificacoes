@@ -39,6 +39,9 @@ class CustomOAuth2UserService(
             } else {
                 throw ResponseStatusException(HttpStatus.FORBIDDEN, "Acesso Negado: Usuário externo não registrado.")
             }
+        } else if (usuario.nome != nome) {
+            usuario.nome = nome
+            usuarioRepository.save(usuario)
         }
 
         if (!usuario.ativo) throw ResponseStatusException(HttpStatus.FORBIDDEN, "Acesso Negado: Usuário inativo.")
