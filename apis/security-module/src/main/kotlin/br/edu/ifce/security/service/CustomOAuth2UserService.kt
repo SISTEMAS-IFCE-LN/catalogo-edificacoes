@@ -1,5 +1,6 @@
 package br.edu.ifce.security.service
 
+import br.edu.ifce.security.domain.Perfil
 import br.edu.ifce.security.domain.Usuario
 import br.edu.ifce.security.repository.UsuarioRepository
 import org.springframework.http.HttpStatus
@@ -22,7 +23,7 @@ class CustomOAuth2UserService(
         val oAuth2User = super.loadUser(userRequest)
         val email = oAuth2User.attributes["email"] as String?
             ?: throw ResponseStatusException(HttpStatus.FORBIDDEN, "Email não fornecido pelo provedor OAuth2")
-        val nome = oAuth2User.attributes["nome"] as String?
+        val nome = oAuth2User.attributes["name"] as String?
             ?: throw ResponseStatusException(HttpStatus.FORBIDDEN, "Nome não fornecido pelo provedor OAuth2")
 
         var usuario = usuarioRepository.findByEmail(email)
@@ -33,6 +34,7 @@ class CustomOAuth2UserService(
                     email = email,
                     nome = nome
                 )
+                usuario.perfis.add(Perfil.ROLE_COLABORADOR)
                 usuarioRepository.save(usuario)
             } else {
                 throw ResponseStatusException(HttpStatus.FORBIDDEN, "Acesso Negado: Usuário externo não registrado.")
