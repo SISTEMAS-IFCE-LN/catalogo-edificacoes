@@ -1,4 +1,4 @@
-package br.edu.ifce.security.domain
+package br.edu.ifce.security.model.domain
 
 import jakarta.persistence.*
 import java.time.LocalDateTime

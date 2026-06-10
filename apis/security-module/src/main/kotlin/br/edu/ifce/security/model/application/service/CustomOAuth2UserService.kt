@@ -1,8 +1,8 @@
-package br.edu.ifce.security.service
+package br.edu.ifce.security.model.application.service
 
-import br.edu.ifce.security.domain.Perfil
-import br.edu.ifce.security.domain.Usuario
-import br.edu.ifce.security.repository.UsuarioRepository
+import br.edu.ifce.security.model.domain.Perfil
+import br.edu.ifce.security.model.domain.Usuario
+import br.edu.ifce.security.model.repository.UsuarioRepository
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService

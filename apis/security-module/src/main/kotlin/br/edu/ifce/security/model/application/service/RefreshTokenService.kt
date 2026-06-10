@@ -1,8 +1,8 @@
-package br.edu.ifce.security.service
+package br.edu.ifce.security.model.application.service
 
-import br.edu.ifce.security.domain.RefreshToken
-import br.edu.ifce.security.domain.Usuario
-import br.edu.ifce.security.repository.RefreshTokenRepository
+import br.edu.ifce.security.model.domain.RefreshToken
+import br.edu.ifce.security.model.domain.Usuario
+import br.edu.ifce.security.model.repository.RefreshTokenRepository
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional

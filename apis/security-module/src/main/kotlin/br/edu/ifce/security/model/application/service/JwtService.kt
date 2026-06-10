@@ -1,4 +1,4 @@
-package br.edu.ifce.security.service
+package br.edu.ifce.security.model.application.service
 
 import org.springframework.security.oauth2.jwt.JwtClaimsSet
 import org.springframework.security.oauth2.jwt.JwtDecoder

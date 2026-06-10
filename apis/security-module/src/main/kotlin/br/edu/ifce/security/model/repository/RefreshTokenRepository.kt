@@ -1,7 +1,7 @@
-package br.edu.ifce.security.repository
+package br.edu.ifce.security.model.repository
 
-import br.edu.ifce.security.domain.RefreshToken
-import br.edu.ifce.security.domain.Usuario
+import br.edu.ifce.security.model.domain.RefreshToken
+import br.edu.ifce.security.model.domain.Usuario
 import org.springframework.data.jpa.repository.JpaRepository
 import java.time.LocalDateTime
 

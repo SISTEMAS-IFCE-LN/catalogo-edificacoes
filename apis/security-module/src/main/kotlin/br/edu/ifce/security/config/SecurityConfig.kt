@@ -1,6 +1,6 @@
 package br.edu.ifce.security.config
 
-import br.edu.ifce.security.service.CustomOAuth2UserService
+import br.edu.ifce.security.model.application.service.CustomOAuth2UserService
 import com.nimbusds.jose.jwk.JWKSet
 import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet
