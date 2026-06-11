@@ -15,6 +15,17 @@ spring:
   sql:
     init:
       mode: never
+
+app:
+  bootstrap:
+    admin-email: ${BOOTSTRAP_ADMIN_EMAIL:test-admin@ifce.edu.br}
+    allow-reactivate: ${BOOTSTRAP_ALLOW_REACTIVATE:true}
+
+jwt:
+  access-token-expiration: 900
+  refresh-expiration: 43200
+  cookie-secure: false
+
 logging:
   level:
     org.hibernate.SQL: DEBUG
