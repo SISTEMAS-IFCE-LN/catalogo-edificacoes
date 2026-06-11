@@ -30,7 +30,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
-@EnableConfigurationProperties(RsaKeyProperties::class)
+@EnableConfigurationProperties(RsaKeyProperties::class, JwtProperties::class)
 class SecurityConfig(
     private val customOAuth2UserService: CustomOAuth2UserService,
     private val rsaKeyProperties: RsaKeyProperties
