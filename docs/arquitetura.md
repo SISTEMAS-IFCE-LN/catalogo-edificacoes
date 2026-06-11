@@ -12,18 +12,17 @@ O ecossistema é segmentado em unidades independentes de compilação (módulos)
 segurança e as diferentes regras de negócio de domínio coexistam sem gerar dependências cíclicas ou acoplamento rígido.
 
 ```
-                  ┌─────────────────────────┐
-                  │        main-app         │
-                  │   (Ponto de Entrada)    │
-                  └────────────┬────────────┘
-                               │ (Agrega)
-             ┌─────────────────┴───────────────────────┐
-             ▼                                         ▼
+                   ┌─────────────────────────┐
+                   │        main-app         │
+                   │   (Ponto de Entrada)    │
+                   └────────────┬────────────┘
+                                │ (Agrega)
+              ┌─────────────────┴───────────────────────┐
+              ▼                                         ▼
 ┌─────────────────────────┐         ┌────────────────────────────────────┐
 │     security-module     │         │     ambientes-internos-module      │
 │  (Identidade e Acesso)  │         │   (Domínio de Ambientes Internos)  │
 └─────────────────────────┘         └────────────────────────────────────┘
-
 ```
 
 ### 1.1. Módulo de Inicialização e Orquestração (`main-app`)
@@ -33,8 +32,7 @@ segurança e as diferentes regras de negócio de domínio coexistam sem gerar de
     * Consolidar `security-module` e `ambientes-internos-module` em uma única unidade executável final.
     * Conter a classe `CatalogoEdificacoesApp` anotada com
       `@SpringBootApplication(scanBasePackages = ["br.edu.ifce.ambientes_internos", "br.edu.ifce.security"])`.
-    * Centralizar `application.yml`, `application-dev.yml` e `data.sql` (incluindo o *seed* idempotente do
-      Administrador padrão).
+    * Centralizar `application.yml`, `application-dev.yml` e `data-dev.sql` (carga de 120 ambientes fake para dev).
     * Definir as propriedades globais de OAuth2 (Google), das chaves RSA para JWT, das configurações de cookie
       (`HttpOnly`, `Secure`, `SameSite`) e das regras de CORS para SPA/mobile.
     * Expor o pacote executável de entrada do sistema (ponto único de inicialização).
@@ -48,12 +46,14 @@ segurança e as diferentes regras de negócio de domínio coexistam sem gerar de
     * Emissão e validação de **JWT próprio** (assinatura RSA) para acesso à API.
     * Gestão de **refresh tokens** persistidos, com rotação a cada uso, entregues em cookie `HttpOnly`, `Secure` e
       `SameSite=Strict`.
-    * Entidade `Utilizador` e enum `Perfil` (`ROLE_COLABORADOR`, `ROLE_VALIDADOR`, `ROLE_GESTOR_SISTEMA`,
+    * Entidade `Usuario` e enum `Perfil` (`ROLE_COLABORADOR`, `ROLE_VALIDADOR`, `ROLE_GESTOR_SISTEMA`,
       `ROLE_ADMINISTRADOR`), com suporte a **múltiplos perfis cumulativos** e regra de **lockout prevention**
       (RN-4.9).
-    * Subpacotes internos: `domain`, `repository`, `service`, `config`, `controller`.
-    * Configuração do `SecurityFilterChain` com `oauth2Login`, `oauth2ResourceServer` (JWT) e endpoints públicos
-      pré-declarados (ex.: listagens de ambientes publicados).
+    * `BootstrapAdminRunner`: garante a presença de um administrador institucional conhecido no boot, lendo a env
+      var `BOOTSTRAP_ADMIN_EMAIL`. Aborta o boot se a env var não estiver configurada.
+    * Subpacotes internos: `model.{domain, repository, application.{interfaces, service}}` e `config`/`controller`.
+    * Configuração do `SecurityFilterChain` com `oauth2Login` (sessão `IF_REQUIRED` para o handshake) e
+      `oauth2ResourceServer.jwt()` (sessão `STATELESS` para a API).
 * Os demais módulos de domínio recorrem a este componente apenas para validar as credenciais anexadas às requisições
   e para aplicar anotações `@PreAuthorize` declarativas, mantendo seus códigos limpos de lógicas de infraestrutura
   de segurança.
@@ -64,7 +64,8 @@ segurança e as diferentes regras de negócio de domínio coexistam sem gerar de
 * **Responsabilidade:** Contém as entidades de domínio, os casos de uso e as interfaces de persistência do
   subdomínio de ambientes. Este módulo:
     * Concentra **apenas** o domínio de ambientes internos — sem conter lógica de autenticação ou autorização.
-    * **Não** declara dependência de `spring-security` em seu `pom.xml`, preservando coesão e baixo acoplamento.
+    * **Declara** dependência de `spring-security` (starter) **apenas** para usar a anotação `@PreAuthorize` nos
+      controllers; **não** importa lógica de autenticação, emissão de tokens ou gestão de identidade.
     * Recebe a segurança de forma transversal, por composição em `main-app` e por anotações `@PreAuthorize`
       declarativas aplicadas nos controllers, sem acoplar a este módulo a infraestrutura de identidade.
 * A arquitetura multi-módulos permite que novos subdomínios (áreas externas, relatórios avançados, etc.) sejam
@@ -78,27 +79,83 @@ de testes do projeto.
 
 * **Testes unitários e JPA do domínio** permanecem válidos após a separação em módulos, exigindo apenas ajustes
   mínimos de caminho/imports quando a nova estrutura assim o requerer.
-* **Testes de integração de controllers** passam a considerar a segurança adicionada: chamadas hoje anônimas para
-  endpoints protegidos exigirão um utilizador autenticado, simulado preferencialmente com `@WithMockUser` ou
-  configuração equivalente em `MockMvc`.
+* **Testes de integração de controllers** passaram a considerar a segurança adicionada. As classes de teste de
+  controller agora usam `@WithMockUser(authorities = [...])` em nível de classe para simular a autenticação, e
+  `@Import(TestSecurityConfig::class)` para carregar uma config de segurança minimalista (gera chaves RSA em memória)
+  sem depender de todo o `SecurityConfig` real.
 * **Testes que validam erros de validação por parâmetros** continuam cobrindo `400 Bad Request`, mas apenas depois
   de satisfazer os requisitos de autenticação quando o endpoint estiver protegido.
 * **Endpoints públicos** (notadamente as listagens e detalhes de ambientes publicados — ver RN-4.4) continuam
   sendo testados sem autenticação, para garantir que a regra de acesso público não se torne regressiva.
-* Sempre que um teste atual passar a falhar por `401/403` após a introdução da segurança, o teste correspondente
-  deve ser atualizado **no mesmo ciclo do commit** que introduz a segurança, preservando a cobertura.
+* O `TestApplication` do `ambientes-internos-module` foi atualizado para escanear tanto `br.edu.ifce.ambientes_internos`
+  quanto `br.edu.ifce.security` (entidades, repositórios JPA, services) **mas exclui** os componentes de runtime do
+  `security-module` (controllers, services de auth, `BootstrapAdminRunner`, properties) que não fazem sentido em
+  testes unitários do domínio.
+
+### 1.5. Bootstrap do administrador institucional
+
+`BootstrapAdminRunner` (em `br.edu.ifce.security.config`) é um `ApplicationRunner` que roda após o JPA criar o
+schema. Seu comportamento está documentado em [`docs/seguranca.md`](./seguranca.md#9-bootstrap-do-administrador-institucional) e [`docs/operacao.md`](./operacao.md#4-procedimento-de-bootstrap-em-produção).
+
+Em resumo:
+
+- Lê `BOOTSTRAP_ADMIN_EMAIL` (obrigatória — aborta o boot se vazia).
+- Idempotente: cria/atualiza o usuário, atribui `ROLE_ADMINISTRADOR` + `ROLE_COLABORADOR`.
+- Suporta reativação (flag `BOOTSTRAP_ALLOW_REACTIVATE`, default `true`).
+
+### 1.6. Mapeamento de endpoints HTTP
+
+Definido em `SecurityConfig.apiFilterChain` (chain 2, com `@Order(2)`). Endpoints públicos (`permitAll`):
+
+| Path                           | Descrição                                      |
+|--------------------------------|------------------------------------------------|
+| `/api/ambientes/publicados/**` | Listagens e detalhes de ambientes publicados.  |
+| `/auth/**`                     | Login, refresh, logout.                        |
+| `/health`                      | Health check.                                  |
+| `/oauth2/**` e `/login/**`     | Handshake OAuth2 (chain 1, com `IF_REQUIRED`). |
+
+Endpoints protegidos por `@PreAuthorize`:
+
+| Path                                         | Authority                                                           |
+|----------------------------------------------|---------------------------------------------------------------------|
+| `/api/ambientes/nao-publicados/**`           | `ROLE_GESTOR_SISTEMA`                                               |
+| `/api/ambientes/validacao/**`                | `ROLE_VALIDADOR`                                                    |
+| `/api/ambientes/{path}/{id}` (GET)           | `ROLE_COLABORADOR` (herdado de `BaseController.obterAmbientePorId`) |
+| `/api/ambientes/publicados/esquadrias` (GET) | `ROLE_COLABORADOR`                                                  |
+| `/api/utilizadores/**`                       | `ROLE_ADMINISTRADOR`                                                |
+
+Detalhamento completo em [`docs/seguranca.md`](./seguranca.md).
+
+### 1.7. Configuração centralizada de tokens
+
+`JwtProperties` (em `br.edu.ifce.security.config`) agrupa tempos e flags de cookie em uma única classe
+configurável externamente:
+
+| Property                      | Env var                       | Default        |
+|-------------------------------|-------------------------------|----------------|
+| `jwt.access-token-expiration` | `JWT_ACCESS_TOKEN_EXPIRATION` | `900` (15 min) |
+| `jwt.refresh-expiration`      | `JWT_REFRESH_EXPIRATION`      | `43200` (12 h) |
+| `jwt.cookie-secure`           | `JWT_COOKIE_SECURE`           | `true`         |
+
+`accessTokenExpiration` e `cookieSecure` são lidos em tempo de execução pelo `AuthController` (cookie) e pelo
+`JwtService`/`LoginResponse` (expiração do access token). `refreshExpiration` é lido pelo `RefreshTokenService`
+para a expiração do token persistido. O `maxAge` do cookie de refresh é derivado do mesmo valor, garantindo
+coerência entre token e cookie.
 
 ---
 
 ## 2. Padrão Arquitetural Interno das Camadas
 
 Dentro de cada módulo de negócio, adota-se uma divisão interna por camadas funcionais para garantir a testabilidade e a
-evolução independente do código:
+evolução independente do código. O `security-module` segue o mesmo padrão, com a diferença de que a camada
+de serviço lida com autenticação, tokens e gestão de identidade em vez de regras de domínio:
 
 1. **Camada de Exposição (Controladores REST):** Responsável por receber as requisições externas, realizar validações
-   sintáticas primárias de entrada e formatar os dados de resposta para o cliente.
+   sintáticas primárias de entrada e formatar os dados de resposta para o cliente. Aplica `@PreAuthorize` para
+   autorização declarativa.
 2. **Camada de Aplicação (Casos de Uso / Serviços):** Onde reside a lógica de negócio e a coordenação das operações. É
    nesta camada que as regras operacionais são processadas de forma isolada de preocupações de rede ou banco de dados.
+   No `security-module`, esta camada lida com orquestração de login, refresh, gestão de perfis e lockout prevention.
 3. **Camada de Acesso a Dados (Repositórios):** Interfaces responsáveis pela abstração dos mecanismos de persistência e
    consultas ao banco de dados.
 4. **Camada de Domínio (Entidades):** Representação pura dos modelos conceituais do sistema, contendo seus atributos e

@@ -1,5 +1,7 @@
 # Contexto dos Ambientes Internos
 
+> **Nomenclatura consolidada:** neste documento, **Gestor do Sistema** mapeia para `ROLE_GESTOR_SISTEMA`, e o usuário do sistema é chamado de **Usuário** (entidade `Usuario`). A nomenclatura "Servidor" (presente em versões anteriores) foi renomeada para "Gestor do Sistema" para alinhar com o `Perfil` correspondente.
+
 ## Casos de Uso
 
 A seguir estão descritos os principais casos de uso relacionados ao gerenciamento e consulta dos ambientes internos das edificações do IFCE.

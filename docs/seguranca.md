@@ -1,0 +1,348 @@
+# Segurança do Catálogo de Edificações
+
+Este documento descreve em detalhe o modelo de autenticação, autorização, gestão de tokens e configuração externa de segurança do sistema.
+
+---
+
+## 1. Visão geral
+
+O sistema adota o fluxo **OAuth2 Authorization Code com PKCE** com o Google como provedor de identidade, e o backend Kotlin/Spring atuando como **broker** que emite e valida credenciais próprias (JWT) para acesso à API.
+
+Componentes centrais:
+
+| Componente | Caminho | Responsabilidade |
+|---|---|---|
+| `CustomOAuth2UserService` | `br.edu.ifce.security.model.application.service` | Provisiona/ativa o `Usuario` a partir dos atributos do Google. |
+| `JwtService` | `br.edu.ifce.security.model.application.service` | Emite e valida o JWT próprio. |
+| `RefreshTokenService` | `br.edu.ifce.security.model.application.service` | Persiste e rotaciona refresh tokens. |
+| `AuthService` | `br.edu.ifce.security.model.application.service` | Orquestra login/refresh/logout. |
+| `AuthController` | `br.edu.ifce.security.controller` | Adaptador HTTP para o fluxo de autenticação. |
+| `UsuarioService` | `br.edu.ifce.security.model.application.service` | Gestão de perfis e desativação (com lockout prevention). |
+| `UsuarioController` | `br.edu.ifce.security.controller` | Endpoints administrativos de perfis. |
+| `SecurityConfig` | `br.edu.ifce.security.config` | `SecurityFilterChain`, `oauth2Login`, `oauth2ResourceServer.jwt()`. |
+| `RsaKeyProperties` | `br.edu.ifce.security.config` | Bind de `rsa.public-key` / `rsa.private-key`. |
+| `JwtProperties` | `br.edu.ifce.security.config` | Bind de `jwt.access-token-expiration` / `jwt.refresh-expiration` / `jwt.cookie-secure`. |
+| `BootstrapAdminRunner` | `br.edu.ifce.security.config` | Garante a presença de um administrador institucional conhecido no boot. |
+
+---
+
+## 2. Fluxo de autenticação OAuth2 + JWT
+
+```
+┌────────┐         ┌──────────┐         ┌────────┐        ┌──────────┐
+│  SPA   │         │ Backend  │         │ Google │        │  Banco   │
+└───┬────┘         └────┬─────┘         └───┬────┘        └────┬─────┘
+    │  GET /oauth2/    │                   │                  │
+    │  authorization/  │                   │                  │
+    │  google          │                   │                  │
+    ├─────────────────►│                   │                  │
+    │                  │  302 → accounts   │                  │
+    │                  │  .google.com/...  │                  │
+    │◄─────────────────┤                   │                  │
+    │                                       │                  │
+    │  [ usuário autentica no Google ]      │                  │
+    │                                       │                  │
+    │  302 → /login/oauth2/code/google       │                  │
+    │  ?code=...&state=...                 │                  │
+    ├──────────────────►│                   │                  │
+    │                  │  troca code por   │                  │
+    │                  │  access_token     │                  │
+    │                  ├──────────────────►│                  │
+    │                  │◄──────────────────┤                  │
+    │                  │  userinfo (id,    │                  │
+    │                  │  email, name)     │                  │
+    │                  ├──────────────────►│                  │
+    │                  │◄──────────────────┤                  │
+    │                  │                                       │
+    │                  │  CustomOAuth2UserService:           │
+    │                  │  - email termina em @ifce.edu.br?    │
+    │                  │  - provisiona Usuario (se novo)      │
+    │                  │  - atribui ROLE_COLABORADOR          │
+    │                  │  - sincroniza nome (se divergente)   │
+    │                  ├──────────────────────────────────────►
+    │                  │◄──────────────────────────────────────┤
+    │                  │                                       │
+    │                  │ 302 → /auth/login/success             │
+    │  POST /auth/login/success              │                  │
+    ├──────────────────►│                                       │
+    │                  │  AuthService:                          │
+    │                  │  - gera JWT (15 min)                  │
+    │                  │  - gera refresh token (12 h)          │
+    │                  │  - persiste refresh (revoga antigos)  │
+    │                  │  - retorna access token no body       │
+    │                  │  - seta cookie HttpOnly refreshToken  │
+    │◄─────────────────┤                                       │
+    │  { accessToken }  │                                       │
+    │  Set-Cookie:      │                                       │
+    │   refreshToken=.. │                                       │
+```
+
+### Pontos de atenção
+
+- O `oauth2Login` requer `SessionCreationPolicy.IF_REQUIRED` no `SecurityConfig` (chain 1) para armazenar temporariamente o `Authentication` durante o handshake.
+- A API em si opera com `SessionCreationPolicy.STATELESS` (chain 2) e valida o JWT a cada requisição.
+- O cookie `refreshToken` é `HttpOnly`, `Secure` (configurável via `JWT_COOKIE_SECURE`), `SameSite=Strict`, `path=/`.
+
+---
+
+## 3. Fluxo de refresh (com rotação)
+
+```
+┌────────┐                  ┌──────────┐                  ┌────────┐
+│  SPA   │                  │ Backend  │                  │  Banco │
+└───┬────┘                  └────┬─────┘                  └────┬───┘
+    │  access token expirou      │                              │
+    │  POST /auth/refresh         │                              │
+    │  (cookie refreshToken)      │                              │
+    ├───────────────────────────►│                              │
+    │                            │  RefreshTokenService:        │
+    │                            │  - buscarParaRotacao()       │
+    │                            ├─────────────────────────────►│
+    │                            │◄─────────────────────────────┤
+    │                            │  - se válido: gerar novo    │
+    │                            │    access token + revogar    │
+    │                            │    antigo + criar novo      │
+    │                            ├─────────────────────────────►│
+    │                            │  200 OK                      │
+    │                            │  Set-Cookie: refreshToken=.. │
+    │                            │  Body: { accessToken }      │
+    │◄───────────────────────────┤                              │
+    │  { accessToken }            │                              │
+    │  Set-Cookie: refreshToken=.. │                             │
+```
+
+**Importante:** a cada refresh bem-sucedido, o refresh token antigo é **revogado** e um novo é emitido (rotação). Tokens revogados não podem ser reutilizados.
+
+---
+
+## 4. Perfis e hierarquia cumulativa
+
+Quatro perfis, armazenados no campo `perfis` da tabela `usuario_perfis` como `Set<Perfil>`:
+
+| Perfil | Permissões representadas |
+|---|---|
+| `ROLE_COLABORADOR` | Listar e consultar ambientes publicados. **Obrigatório para todos os usuários.** |
+| `ROLE_VALIDADOR` | Listar e gerenciar ambientes em validação (publicar, privar). |
+| `ROLE_GESTOR_SISTEMA` | CRUD de ambientes não publicados; submeter para validação. |
+| `ROLE_ADMINISTRADOR` | Gerir perfis de outros usuários; desativar contas. |
+
+**Regra universal:** o `UsuarioService.atualizarPerfis` sempre **adiciona** `ROLE_COLABORADOR` ao set final, garantindo que nenhum usuário perca o acesso mínimo.
+
+---
+
+## 5. Lockout prevention
+
+`UsuarioService.verificarExclusaoAdm()` é invocado por `atualizarPerfis` e `desativarUsuario` para impedir que o sistema fique sem administrador ativo.
+
+```kotlin
+private fun verificarExclusaoAdm() {
+    val totalAdmins = repository.countByAtivoTrueAndPerfisContains(Perfil.ROLE_ADMINISTRADOR)
+    if (totalAdmins <= 1) {
+        throw ResponseStatusException(
+            HttpStatus.CONFLICT,
+            "Ação negada: Não é possível remover/desativar o último Administrador do sistema."
+        )
+    }
+}
+```
+
+**Cenários bloqueados com `409 Conflict`:**
+- `PATCH /api/utilizadores/{id}/perfis` removendo `ROLE_ADMINISTRADOR` do último admin ativo.
+- `PATCH /api/utilizadores/{id}/desativar` quando o usuário é o último admin ativo.
+
+---
+
+## 6. Mapeamento de endpoints HTTP
+
+Definido em `SecurityConfig.apiFilterChain` (chain 2, com `@Order(2)`).
+
+### 6.1. Endpoints públicos (`permitAll`)
+
+| Path | Método | Observação |
+|---|---|---|
+| `/api/ambientes/publicados/**` | todos | Listagens e detalhes de ambientes publicados. |
+| `/auth/**` | todos | Login, refresh, logout. |
+| `/health` | todos | Health check. |
+| `/oauth2/**` | todos | Handshake OAuth2 (chain 1, com `IF_REQUIRED`). |
+| `/login/**` | todos | Handshake OAuth2. |
+
+### 6.2. Endpoints protegidos por `@PreAuthorize`
+
+| Path base | Classe | Authority exigida |
+|---|---|---|
+| `/api/ambientes/nao-publicados/**` | `AmbienteNaoPublicadoController` | `ROLE_GESTOR_SISTEMA` |
+| `/api/ambientes/validacao/**` | `AmbienteValidacaoController` | `ROLE_VALIDADOR` |
+| `/api/ambientes/{qualquer}/{id}` (GET) | `BaseController.obterAmbientePorId` | `ROLE_COLABORADOR` |
+| `/api/ambientes/publicados/esquadrias` (GET) | `AmbientePublicadoController.listarEsquadriasAmbientes` | `ROLE_COLABORADOR` |
+| `/api/utilizadores/**` | `UsuarioController` | `ROLE_ADMINISTRADOR` |
+
+### 6.3. Resposta a acessos não autorizados
+
+- Sem `Authentication` em endpoint protegido → `401 Unauthorized`.
+- `Authentication` presente mas sem `Authority` exigida → `403 Forbidden`.
+- Lockout prevention violado → `409 Conflict`.
+
+---
+
+## 7. Configuração externa
+
+### 7.1. `JwtProperties` (`br.edu.ifce.security.config`)
+
+```kotlin
+@ConfigurationProperties(prefix = "jwt")
+data class JwtProperties(
+    var accessTokenExpiration: Long = 900L,    // 15 min, em segundos
+    var refreshExpiration: Long = 43200L,    // 12 h, em segundos
+    var cookieSecure: Boolean = true         // Secure flag do cookie
+)
+```
+
+| Property | Env var | Default | Unidade | Descrição |
+|---|---|---|---|---|
+| `jwt.access-token-expiration` | `JWT_ACCESS_TOKEN_EXPIRATION` | `900` | segundos | Vida do access token. |
+| `jwt.refresh-expiration` | `JWT_REFRESH_EXPIRATION` | `43200` | segundos | Vida do refresh token **e** do cookie que o contém. |
+| `jwt.cookie-secure` | `JWT_COOKIE_SECURE` | `true` | boolean | Se `true`, cookie só é enviado em conexões HTTPS. **Desligar em dev local (HTTP).** |
+
+### 7.2. `RsaKeyProperties` (`br.edu.ifce.security.config`)
+
+```kotlin
+@ConfigurationProperties(prefix = "rsa")
+data class RsaKeyProperties(
+    var publicKey: RSAPublicKey? = null,
+    var privateKey: RSAPrivateKey? = null,
+)
+```
+
+| Property | Env var | Formato |
+|---|---|---|
+| `rsa.public-key` | `JWT_PUBLIC_KEY` | Conteúdo do arquivo `public.pem` em formato PEM, com `\n` literais. |
+| `rsa.private-key` | `JWT_PRIVATE_KEY` | Conteúdo do arquivo `private_pkcs8.pem` em formato PEM, com `\n` literais. |
+
+### 7.3. `app.bootstrap.*` (gerido por `BootstrapAdminRunner`)
+
+| Property | Env var | Default | Descrição |
+|---|---|---|---|
+| `app.bootstrap.admin-email` | `BOOTSTRAP_ADMIN_EMAIL` | (vazio) | Email do admin institucional. **Obrigatório** — aborta o boot se vazio. |
+| `app.bootstrap.allow-reactivate` | `BOOTSTRAP_ALLOW_REACTIVATE` | `true` | Kill switch geral. Quando `false`, o bootstrap é no-op total. |
+
+### 7.4. OAuth2 Google
+
+| Property | Env var | Descrição |
+|---|---|---|
+| `spring.security.oauth2.client.registration.google.client-id` | `GOOGLE_CLIENT_ID` | Client ID do projeto no Google Cloud Console. |
+| `spring.security.oauth2.client.registration.google.client-secret` | `GOOGLE_CLIENT_SECRET` | Client Secret do projeto no Google Cloud Console. |
+
+### 7.5. Cookies de sessão (geridos pelo Spring)
+
+```yaml
+server:
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        secure: true       # override para false em application-dev.yml
+        same-site: strict
+```
+
+O cookie de sessão HTTP (gerado durante o `oauth2Login`) é independente do cookie de refresh token. Ambos devem respeitar o ambiente (HTTPS em prod).
+
+---
+
+## 8. Geração de chaves RSA
+
+Para gerar o par RSA usado para assinar e validar o JWT:
+
+```bash
+# 1. Gerar chave privada (formato PKCS#1, 2048 bits)
+openssl genrsa -out private.pem 2048
+
+# 2. Gerar chave pública correspondente
+openssl rsa -in private.pem -pubout -out public.pem
+
+# 3. Converter para PKCS#8 (formato preferido pelo Java)
+openssl pkcs8 -topk8 -in private.pem -out private_pkcs8.pem -nocrypt
+```
+
+Para configurar como env var (Linux/macOS):
+
+```bash
+export JWT_PUBLIC_KEY="$(cat public.pem | tr -d '\n')"
+export JWT_PRIVATE_KEY="$(cat private_pkcs8.pem | tr -d '\n')"
+```
+
+No Windows PowerShell:
+
+```powershell
+$env:JWT_PUBLIC_KEY = (Get-Content public.pem -Raw) -replace "`r`n","\`n"
+$env:JWT_PRIVATE_KEY = (Get-Content private_pkcs8.pem -Raw) -replace "`r`n","\`n"
+```
+
+> **Importante:** os arquivos `*.pem` **nunca** devem ser commitados. Adicione ao `.gitignore` se forem criados no repositório.
+
+---
+
+## 9. Bootstrap do administrador institucional
+
+`BootstrapAdminRunner` é um `ApplicationRunner` que roda após o `ApplicationContext` estar pronto. Comportamento:
+
+| Cenário | Resultado |
+|---|---|
+| `BOOTSTRAP_ADMIN_EMAIL` vazia | `IllegalStateException` → boot abortado. |
+| Email não existe no banco | Cria `Usuario` com `ROLE_ADMINISTRADOR` + `ROLE_COLABORADOR`. |
+| Email existe, ativo, já admin | No-op silencioso. |
+| Email existe, ativo, sem admin role | Promove (log `WARN`). |
+| Email existe, inativo, `allow-reactivate=true` | Reativa + garante perfis (log `WARN`). |
+| Email existe, inativo, `allow-reactivate=false` | `IllegalStateException` → boot abortado. |
+
+**Procedimento recomendado para produção:**
+
+1. Antes do primeiro deploy, defina `BOOTSTRAP_ADMIN_EMAIL=ti@ifce.edu.br` (email do setor de TI).
+2. Faça o deploy. O runner cria o usuário e o sistema sobe.
+3. O primeiro admin loga via Google usando esse email e usa o sistema normalmente.
+4. Admins subsequentes podem ser promovidos via `PATCH /api/utilizadores/{id}/perfis` com `ROLE_ADMINISTRADOR`.
+
+---
+
+## 10. Exemplo de payload JWT
+
+Header:
+
+```json
+{
+  "alg": "RS256",
+  "typ": "JWT",
+  "kid": "..."
+}
+```
+
+Payload (claims):
+
+```json
+{
+  "sub": "1",
+  "email": "ti@ifce.edu.br",
+  "roles": [
+    "ROLE_ADMINISTRADOR",
+    "ROLE_COLABORADOR"
+  ],
+  "iat": 1717000000,
+  "exp": 1717000900
+}
+```
+
+`sub` é o `Usuario.id`. `roles` é o claim convertido em `GrantedAuthority` pelo `JwtAuthenticationConverter` (com `authorityPrefix=""` para manter o prefixo `ROLE_`).
+
+---
+
+## 11. Tratamento de erros
+
+| Cenário | HTTP Status | Origem |
+|---|---|---|
+| Cookie de refresh ausente | `401` | `AuthController.refresh` retorna `ResponseEntity.status(UNAUTHORIZED)`. |
+| Cookie de refresh inválido/expirado/revogado | `401` | `RefreshTokenService.buscarParaRotacao` retorna `null`. |
+| Login com Google de e-mail `@ifce.edu.br` mas inativo | `403` | `CustomOAuth2UserService` lança `ResponseStatusException`. |
+| Login com e-mail externo não pré-cadastrado | `403` | `CustomOAuth2UserService` lança `ResponseStatusException`. |
+| Lockout prevention (remover/desativar último admin) | `409` | `UsuarioService.verificarExclusaoAdm` lança `ResponseStatusException`. |
+| Atualizar perfis de usuário inexistente | `404` | `UsuarioService.atualizarPerfis` lança `ResponseStatusException`. |
+| Endpoint protegido sem `Authorization: Bearer <jwt>` | `401` | `oauth2ResourceServer.jwt()` falha. |
+| Endpoint protegido com `Authority` insuficiente | `403` | `@PreAuthorize` falha. |

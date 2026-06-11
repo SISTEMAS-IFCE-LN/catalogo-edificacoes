@@ -2,7 +2,7 @@
 
 ## Regras de Negócio
 
-As regras a seguir complementam e detalham as regras iniciais, incorporando a estrutura definida no modelo de domínio
+As regras a seguir complementam e detalhem as regras iniciais, incorporando a estrutura definida no modelo de domínio
 atual e o contexto do domínio do IFCE.
 
 ### 1. Regras Gerais do Ambiente
@@ -90,6 +90,8 @@ atual e o contexto do domínio do IFCE.
   estão publicados. Suas ações incluem:
     * Obter detalhes completos de um ambiente publicado por ID.
     * Consultar, de forma paginada, as esquadrias de um conjunto de ambientes publicados.
+    * A consulta por ID (`GET /api/ambientes/{path}/{id}`) é exigida para todos os ambientes, inclusive publicados,
+      e exige `ROLE_COLABORADOR` (autorização implementada no método `obterAmbientePorId` de `BaseController`).
 
 * **RN-4.4:** Usuários identificados como **Público Externo** podem apenas consultar informações simplificadas dos
   ambientes que estão publicados. Suas ações incluem:
@@ -102,20 +104,54 @@ atual e o contexto do domínio do IFCE.
   Code com PKCE**, com o backend atuando como *broker*. Não há login por usuário/senha local e nenhuma outra identidade
   externa é aceita nesta fase.
 
-* **RN-4.6:** E-mails com domínio `@ifce.edu.br` configuram o acesso **institucional**: no primeiro login, o utilizador
+* **RN-4.6:** E-mails com domínio `@ifce.edu.br` configuram o acesso **institucional**: no primeiro login, o usuário
   é provisionado automaticamente com o perfil `ROLE_COLABORADOR`, desde que a conta Google esteja válida.
+  Adicionalmente, no primeiro login o `CustomOAuth2UserService` sincroniza o `nome` do usuário a partir do atributo
+  `name` retornado pelo Google (substituindo valores placeholder como o email).
 
-* **RN-4.7:** Utilizadores externos (e-mail fora de `@ifce.edu.br`) só obtêm acesso se estiverem **pré-cadastrados** por
+* **RN-4.7:** Usuários externos (e-mail fora de `@ifce.edu.br`) só obtêm acesso se estiverem **pré-cadastrados** por
   um Administrador. Caso contrário, o sistema recusa o login retornando `403 Forbidden`, sem criar registro pendente.
 
-* **RN-4.8:** Um mesmo utilizador pode acumular **múltiplos perfis** simultâneos, conforme o conjunto:
-  `ROLE_COLABORADOR`, `ROLE_VALIDADOR`, `ROLE_GESTOR_SISTEMA`, `ROLE_ADMINISTRADOR`. Todo utilizador deve manter, no
-  mínimo, `ROLE_COLABORADOR` (regra universal cumulativa).
+* **RN-4.8:** Um mesmo usuário pode acumular **múltiplos perfis** simultâneos, conforme o conjunto:
+  `ROLE_COLABORADOR`, `ROLE_VALIDADOR`, `ROLE_GESTOR_SISTEMA`, `ROLE_ADMINISTRADOR`. Todo usuário deve manter, no
+  mínimo, `ROLE_COLABORADOR` (regra universal cumulativa). O `UsuarioService.atualizarPerfis` sempre força a
+  presença de `ROLE_COLABORADOR` no conjunto final, mesmo que o solicitante tente removê-lo.
 
-* **RN-4.9:** **Lockout prevention:** é vedado remover `ROLE_ADMINISTRADOR` ou desativar o utilizador quando existir *
-  *apenas um** Administrador ativo no sistema. Nessas condições, a operação deve ser rejeitada com `409 Conflict` e
-  mensagem de negócio clara, preservando ao menos um Administrador ativo.
+* **RN-4.9:** **Lockout prevention:** é vedado remover `ROLE_ADMINISTRADOR` ou desativar o usuário quando existir
+  **apenas um** Administrador ativo no sistema. Nessas condições, a operação deve ser rejeitada com `409 Conflict` e
+  mensagem de negócio clara, preservando ao menos um Administrador ativo. Implementado em
+  `UsuarioService.verificarExclusaoAdm()`.
 
 * **RN-4.10:** O **JWT próprio** emitido pelo backend é o credencial de acesso à API, enquanto o **refresh token** é
   entregue em cookie `HttpOnly`, `Secure` e `SameSite=Strict`, com **rotação** a cada uso. O acesso aos endpoints
-  protegidos é feito pelo header `Authorization: Bearer <access_token>`.
+  protegidos é feito pelo header `Authorization: Bearer <access_token>`. As durações do access token e do refresh
+  token são configuráveis externamente (ver RN-4.13).
+
+* **RN-4.11:** O **administrador institucional** é provisionado no boot pelo `BootstrapAdminRunner`, lendo a env var
+  `BOOTSTRAP_ADMIN_EMAIL`. Se a env var não estiver configurada, o sistema aborta a inicialização com
+  `IllegalStateException`. O runner é idempotente:
+    * Se o usuário não existir no banco, é criado com `ROLE_ADMINISTRADOR` + `ROLE_COLABORADOR` e nome placeholder igual
+      ao email.
+    * Se existir, estiver inativo e a flag `BOOTSTRAP_ALLOW_REACTIVATE` for `true`, o usuário é reativado e os perfis
+      são garantidos.
+    * Se existir, estiver ativo e já tiver `ROLE_ADMINISTRADOR`, é no-op silencioso.
+    * Se existir, estiver ativo mas sem `ROLE_ADMINISTRADOR`, é promovido e logado em `WARN`.
+  Em todos os casos o nome do `Usuario` é mantido o que estiver (placeholder ou nome real vindo de login Google
+  anterior).
+
+* **RN-4.12:** A flag `BOOTSTRAP_ALLOW_REACTIVATE` (default `true`) funciona como **kill switch geral** do
+  `BootstrapAdminRunner`. Quando `false`, o runner é um no-op total: não cria, não reativa, não promove. Útil
+  quando o operador precisa de uma desativação permanente do admin institucional sem ter que remover a env var
+  `BOOTSTRAP_ADMIN_EMAIL`.
+
+* **RN-4.13:** As durações do access token e do refresh token são configuráveis externamente, em segundos:
+
+    | Property | Env var | Default | Unidade |
+    |---|---|---|---|
+    | `jwt.access-token-expiration` | `JWT_ACCESS_TOKEN_EXPIRATION` | `900` (15 min) | segundos |
+    | `jwt.refresh-expiration` | `JWT_REFRESH_EXPIRATION` | `43200` (12 h) | segundos |
+    | `jwt.cookie-secure` | `JWT_COOKIE_SECURE` | `true` | boolean |
+
+    O `maxAge` do cookie HttpOnly de refresh é derivado de `jwt.refresh-expiration`, garantindo coerência entre a
+    vida do token persistido e a vida do cookie. A flag `cookie-secure` deve ser `false` apenas em ambiente de
+    desenvolvimento local (HTTP). O profile `dev` no `application-dev.yml` já define `cookie-secure: false`.

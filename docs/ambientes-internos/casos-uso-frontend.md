@@ -1,5 +1,7 @@
 # Casos de Uso — Frontend (Ambientes Internos)
 
+> **Nomenclatura consolidada:** neste documento, **Gestor do Sistema** mapeia para `ROLE_GESTOR_SISTEMA`, e o usuário do sistema é chamado de **Usuário** (entidade `Usuario`). A nomenclatura "Servidor" (presente em versões anteriores) foi renomeada para "Gestor do Sistema" para alinhar com o `Perfil` correspondente.
+
 Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/casos-uso.md`) em fluxos, telas e comportamentos esperados do frontend. O foco é a experiência do usuário, interações de UI, validações no cliente, estados e critérios de aceitação.
 
 ## Visão Geral
