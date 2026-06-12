@@ -38,8 +38,8 @@ jwt:
   cookie-secure: ${JWT_COOKIE_SECURE:true}
 
 rsa:
-  public-key: ${JWT_PUBLIC_KEY}
-  private-key: ${JWT_PRIVATE_KEY}
+  public-key-path: ${JWT_PUBLIC_KEY_PATH:file:./keys/public.pem}
+  private-key-path: ${JWT_PRIVATE_KEY_PATH:file:./keys/private_pkcs8.pem}
 
 app:
   bootstrap:

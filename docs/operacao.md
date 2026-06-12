@@ -51,19 +51,92 @@ ver [Segurança](./seguranca.md)).
 
 ## 3. Geração de chaves RSA
 
-Para gerar o par RSA usado para assinar e validar o JWT, ver a
-seção [Geração de chaves RSA](./seguranca.md#8-geração-de-chaves-rsa) no documento de segurança.
+A aplicação lê as chaves RSA diretamente de arquivos `.pem` no boot, parseando PEM (PKCS#8 para chave privada,
+X.509 para chave pública) e convertendo para `RSAPublicKey` / `RSAPrivateKey`. O conteúdo **não** é mais
+injetado via env var inline.
 
-Resumo:
+### 3.1. Gerar os arquivos
+
+Linux/macOS:
 
 ```bash
-openssl genrsa -out private.pem 2048
-openssl rsa -in private.pem -pubout -out public.pem
-openssl pkcs8 -topk8 -in private.pem -out private_pkcs8.pem -nocrypt
+mkdir -p ./keys
+openssl genrsa -out ./keys/private.pem 2048
+openssl rsa -in ./keys/private.pem -pubout -out ./keys/public.pem
+openssl pkcs8 -topk8 -in ./keys/private.pem -out ./keys/private_pkcs8.pem -nocrypt
 ```
 
-Em seguida, configure as env vars `JWT_PUBLIC_KEY` e `JWT_PRIVATE_KEY` com o conteúdo dos arquivos (com `\n` literais
-preservados).
+Windows PowerShell (com `openssl` via Git Bash ou WSL):
+
+```powershell
+mkdir keys
+& "C:\Program Files\Git\usr\bin\openssl.exe" genrsa -out keys\private.pem 2048
+& "C:\Program Files\Git\usr\bin\openssl.exe" rsa -in keys\private.pem -pubout -out keys\public.pem
+& "C:\Program Files\Git\usr\bin\openssl.exe" pkcs8 -topk8 -in keys\private.pem -out keys\private_pkcs8.pem -nocrypt
+```
+
+> **Importante:** adicione `./keys/` (ou o diretório escolhido) ao `.gitignore`. Os arquivos `.pem` **nunca** devem
+> ser commitados.
+
+### 3.2. Apontar os caminhos
+
+Por padrão, o `application.yml` lê de `./keys/`:
+
+```yaml
+rsa:
+  public-key-path: file:./keys/public.pem
+  private-key-path: file:./keys/private_pkcs8.pem
+```
+
+Variantes suportadas via env var (sobrescreve o default):
+
+| Estilo | Exemplo | Quando usar |
+|---|---|---|
+| `file:` relativo | `file:./keys/public.pem` | Dev local, container sem path fixo. |
+| `file:` absoluto | `file:/etc/catalogo/public.pem` | Produção Linux (Secret montado em volume). |
+| Caminho puro | `./keys/public.pem` | Equivalente a `file:./keys/public.pem`. |
+| `classpath:` | `classpath:keys/public.pem` | Testes com `src/test/resources/keys/public.pem`. |
+
+Em Docker:
+
+```dockerfile
+# Dockerfile
+RUN mkdir -p /etc/catalogo
+COPY --chown=app:app public.pem /etc/catalogo/
+COPY --chown=app:app private_pkcs8.pem /etc/catalogo/
+
+ENV JWT_PUBLIC_KEY_PATH=file:/etc/catalogo/public.pem
+ENV JWT_PRIVATE_KEY_PATH=file:/etc/catalogo/private_pkcs8.pem
+```
+
+Em Kubernetes (montando Secret como volume):
+
+```yaml
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+    - name: catalogo
+      env:
+        - name: JWT_PUBLIC_KEY_PATH
+          value: file:/etc/catalogo-secrets/public.pem
+        - name: JWT_PRIVATE_KEY_PATH
+          value: file:/etc/catalogo-secrets/private_pkcs8.pem
+      volumeMounts:
+        - name: rsa-keys
+          mountPath: /etc/catalogo-secrets
+          readOnly: true
+  volumes:
+    - name: rsa-keys
+      secret:
+        secretName: catalogo-rsa-keys
+```
+
+### 3.3. Migração de ambientes anteriores
+
+Se você já tinha `JWT_PUBLIC_KEY` / `JWT_PRIVATE_KEY` configurados com o conteúdo inline, atualize para
+`JWT_PUBLIC_KEY_PATH` / `JWT_PRIVATE_KEY_PATH` apontando para os arquivos `.pem`. O formato antigo não é mais
+suportado.
 
 ---
 
@@ -76,7 +149,7 @@ Antes do primeiro deploy, o operador **deve** definir a env var `BOOTSTRAP_ADMIN
 
 - [ ] `BOOTSTRAP_ADMIN_EMAIL` definido para o email institucional do admin.
 - [ ] `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` configurados.
-- [ ] `JWT_PUBLIC_KEY` e `JWT_PRIVATE_KEY` configurados.
+- [ ] `JWT_PUBLIC_KEY_PATH` e `JWT_PRIVATE_KEY_PATH` apontando para os arquivos `.pem` (ver seção 3).
 - [ ] `JWT_COOKIE_SECURE=true` (default).
 - [ ] HTTPS configurado no reverse proxy / load balancer.
 - [ ] CORS configurado com origens permitidas (atualmente `*` em dev; ajustar em prod).
@@ -105,18 +178,18 @@ Antes do primeiro deploy, o operador **deve** definir a env var `BOOTSTRAP_ADMIN
 
 ## 5. Variáveis de ambiente — resumo
 
-| Env var                       | Default | Obrigatória em prod? | Origem               |
-|-------------------------------|---------|----------------------|----------------------|
-| `PROFILE_ACTIVE`              | `dev`   | Não                  | application.yml      |
-| `GOOGLE_CLIENT_ID`            | —       | Sim                  | Google Cloud Console |
-| `GOOGLE_CLIENT_SECRET`        | —       | Sim                  | Google Cloud Console |
-| `JWT_PUBLIC_KEY`              | —       | Sim                  | `openssl`            |
-| `JWT_PRIVATE_KEY`             | —       | Sim                  | `openssl`            |
-| `JWT_ACCESS_TOKEN_EXPIRATION` | `900`   | Não                  | application.yml      |
-| `JWT_REFRESH_EXPIRATION`      | `43200` | Não                  | application.yml      |
-| `JWT_COOKIE_SECURE`           | `true`  | Não                  | application.yml      |
-| `BOOTSTRAP_ADMIN_EMAIL`       | (vazio) | **Sim**              | Operador             |
-| `BOOTSTRAP_ALLOW_REACTIVATE`  | `true`  | Não                  | application.yml      |
+| Env var                       | Default                                  | Obrigatória em prod? | Origem               |
+|-------------------------------|------------------------------------------|----------------------|----------------------|
+| `PROFILE_ACTIVE`              | `dev`                                    | Não                  | application.yml      |
+| `GOOGLE_CLIENT_ID`            | —                                        | Sim                  | Google Cloud Console |
+| `GOOGLE_CLIENT_SECRET`        | —                                        | Sim                  | Google Cloud Console |
+| `JWT_PUBLIC_KEY_PATH`         | `file:./keys/public.pem`                 | Sim                  | `openssl` + path     |
+| `JWT_PRIVATE_KEY_PATH`        | `file:./keys/private_pkcs8.pem`           | Sim                  | `openssl` + path     |
+| `JWT_ACCESS_TOKEN_EXPIRATION` | `900`                                    | Não                  | application.yml      |
+| `JWT_REFRESH_EXPIRATION`      | `43200`                                  | Não                  | application.yml      |
+| `JWT_COOKIE_SECURE`           | `true`                                   | Não                  | application.yml      |
+| `BOOTSTRAP_ADMIN_EMAIL`       | (vazio)                                  | **Sim**              | Operador             |
+| `BOOTSTRAP_ALLOW_REACTIVATE`  | `true`                                   | Não                  | application.yml      |
 
 Para configurações específicas do Spring (datasource, JPA), ver `main-app/src/main/resources/application.yml`.
 
@@ -128,7 +201,9 @@ Para configurações específicas do Spring (datasource, JPA), ver `main-app/src
 |--------------------------------------------------------------------------------------------------|---------------------------------------------------------|---------------------------------------------------------------------------------------------------------|
 | Boot aborta com `IllegalStateException: BOOTSTRAP_ADMIN_EMAIL não configurado`                   | Env var ausente                                         | Definir `BOOTSTRAP_ADMIN_EMAIL` no ambiente.                                                            |
 | Boot aborta com `IllegalStateException: ... allow-reactivate=false`                              | Admin desativado e flag desligada                       | Reativar manualmente no banco ou setar `BOOTSTRAP_ALLOW_REACTIVATE=true` no próximo boot.               |
-| `401 Unauthorized` em todos os endpoints                                                         | Chave RSA inválida ou ausente                           | Verificar `JWT_PUBLIC_KEY` / `JWT_PRIVATE_KEY`.                                                         |
+| `401 Unauthorized` em todos os endpoints                                                         | Chave RSA inválida ou arquivo inacessível               | Verificar `JWT_PUBLIC_KEY_PATH` / `JWT_PRIVATE_KEY_PATH` e permissões dos arquivos `.pem`.             |
+| `JwtException: Unable to load RSA key` no boot                                                  | Arquivo `.pem` corrompido ou formato inválido            | Regerar com `openssl`; garantir PKCS#8 para a chave privada.                                           |
+| `FileNotFoundException` no boot                                                                  | Path do `.pem` não existe                               | Verificar `JWT_PUBLIC_KEY_PATH` / `JWT_PRIVATE_KEY_PATH`; rodar `ls -la ./keys/` em dev.               |
 | `403 Forbidden` em endpoint aparentemente público                                                | `permitAll` não cobre o path                            | Verificar `SecurityConfig.apiFilterChain`.                                                              |
 | Cookie de refresh não persiste no navegador em dev                                               | `JWT_COOKIE_SECURE=true` em HTTP                        | `application-dev.yml` define `false`. Verificar se o profile está ativo.                                |
 | `UsernameNotFoundException` ao autenticar                                                        | `CustomOAuth2UserService` não provisionou o usuário     | Verificar email termina em `@ifce.edu.br` (auto-provisionamento) ou se foi pré-cadastrado por um admin. |

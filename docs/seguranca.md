@@ -205,18 +205,28 @@ data class JwtProperties(
 
 ### 7.2. `RsaKeyProperties` (`br.edu.ifce.security.config`)
 
+A aplicação lê as chaves RSA diretamente de arquivos `.pem` no boot, parseando PEM (PKCS#8 para chave privada,
+X.509 para chave pública) e convertendo para `RSAPublicKey` / `RSAPrivateKey`. O conteúdo **não** é mais injetado
+via env var inline.
+
 ```kotlin
 @ConfigurationProperties(prefix = "rsa")
 data class RsaKeyProperties(
-    var publicKey: RSAPublicKey? = null,
-    var privateKey: RSAPrivateKey? = null,
-)
+    var publicKeyPath: String? = null,
+    var privateKeyPath: String? = null,
+) {
+    val publicKey: RSAPublicKey? by lazy { /* parseia publicKeyPath */ }
+    val privateKey: RSAPrivateKey? by lazy { /* parseia privateKeyPath */ }
+}
 ```
 
-| Property | Env var | Formato |
-|---|---|---|
-| `rsa.public-key` | `JWT_PUBLIC_KEY` | Conteúdo do arquivo `public.pem` em formato PEM, com `\n` literais. |
-| `rsa.private-key` | `JWT_PRIVATE_KEY` | Conteúdo do arquivo `private_pkcs8.pem` em formato PEM, com `\n` literais. |
+| Property | Env var | Default | Descrição |
+|---|---|---|---|
+| `rsa.public-key-path` | `JWT_PUBLIC_KEY_PATH` | `file:./keys/public.pem` | Caminho do `.pem` da chave pública. Suporta `file:`, `classpath:` ou caminho relativo/absoluto. |
+| `rsa.private-key-path` | `JWT_PRIVATE_KEY_PATH` | `file:./keys/private_pkcs8.pem` | Caminho do `.pem` da chave privada (formato PKCS#8). |
+
+A leitura é **lazy** — as chaves só são parseadas na primeira vez que o `JwtEncoder` ou `JwtDecoder` é invocado,
+evitando custo desnecessário se a aplicação for usada apenas para endpoints públicos no momento do boot.
 
 ### 7.3. `app.bootstrap.*` (gerido por `BootstrapAdminRunner`)
 
@@ -250,34 +260,51 @@ O cookie de sessão HTTP (gerado durante o `oauth2Login`) é independente do coo
 
 ## 8. Geração de chaves RSA
 
-Para gerar o par RSA usado para assinar e validar o JWT:
+Para gerar o par RSA usado para assinar e validar o JWT, **gere os arquivos `.pem` e aponte a aplicação para eles**
+via `JWT_PUBLIC_KEY_PATH` e `JWT_PRIVATE_KEY_PATH`.
+
+### 8.1. Gerar os arquivos
+
+Linux/macOS:
 
 ```bash
-# 1. Gerar chave privada (formato PKCS#1, 2048 bits)
-openssl genrsa -out private.pem 2048
-
-# 2. Gerar chave pública correspondente
-openssl rsa -in private.pem -pubout -out public.pem
-
-# 3. Converter para PKCS#8 (formato preferido pelo Java)
-openssl pkcs8 -topk8 -in private.pem -out private_pkcs8.pem -nocrypt
+mkdir -p ./keys
+openssl genrsa -out ./keys/private.pem 2048
+openssl rsa -in ./keys/private.pem -pubout -out ./keys/public.pem
+openssl pkcs8 -topk8 -in ./keys/private.pem -out ./keys/private_pkcs8.pem -nocrypt
 ```
 
-Para configurar como env var (Linux/macOS):
-
-```bash
-export JWT_PUBLIC_KEY="$(cat public.pem | tr -d '\n')"
-export JWT_PRIVATE_KEY="$(cat private_pkcs8.pem | tr -d '\n')"
-```
-
-No Windows PowerShell:
+Windows PowerShell (com `openssl` via Git Bash ou WSL):
 
 ```powershell
-$env:JWT_PUBLIC_KEY = (Get-Content public.pem -Raw) -replace "`r`n","\`n"
-$env:JWT_PRIVATE_KEY = (Get-Content private_pkcs8.pem -Raw) -replace "`r`n","\`n"
+mkdir keys
+& "C:\Program Files\Git\usr\bin\openssl.exe" genrsa -out keys\private.pem 2048
+& "C:\Program Files\Git\usr\bin\openssl.exe" rsa -in keys\private.pem -pubout -out keys\public.pem
+& "C:\Program Files\Git\usr\bin\openssl.exe" pkcs8 -topk8 -in keys\private.pem -out keys\private_pkcs8.pem -nocrypt
 ```
 
-> **Importante:** os arquivos `*.pem` **nunca** devem ser commitados. Adicione ao `.gitignore` se forem criados no repositório.
+### 8.2. Apontar a aplicação para os arquivos
+
+Por padrão, o `application.yml` lê de `./keys/`:
+
+```yaml
+rsa:
+  public-key-path: file:./keys/public.pem
+  private-key-path: file:./keys/private_pkcs8.pem
+```
+
+Variantes suportadas via env var (sobrescreve o default):
+
+| Estilo | Exemplo | Quando usar |
+|---|---|---|
+| `file:` relativo | `file:./keys/public.pem` | Dev local, container sem path fixo. |
+| `file:` absoluto | `file:/etc/catalogo/public.pem` | Produção Linux (Secret montado em volume). |
+| Caminho puro | `./keys/public.pem` | Equivalente a `file:./keys/public.pem`. |
+| `classpath:` | `classpath:keys/public.pem` | Testes com `src/test/resources/keys/public.pem`. |
+
+> **Importante:** os arquivos `*.pem` **nunca** devem ser commitados. Adicione `./keys/` (ou o diretório
+> escolhido) ao `.gitignore`. Em Docker/Kubernetes, monte o diretório como Secret em volume (ver
+> [`docs/operacao.md`](./operacao.md#32-apontar-os-caminhos)).
 
 ---
 

@@ -27,28 +27,64 @@ cd catalogo-edificacoes
 
 ### 2.2. Gerar chaves RSA (apenas para executar fora de testes)
 
-```bash
-mkdir -p ~/.catalogo-keys
-cd ~/.catalogo-keys
+A aplicação lê as chaves RSA a partir de arquivos `.pem` no boot, via `ResourceUtils`. Suporta `file:` (filesystem), `classpath:` (resources do JAR) ou caminho relativo/absoluto direto.
 
-openssl genrsa -out private.pem 2048
-openssl rsa -in private.pem -pubout -out public.pem
-openssl pkcs8 -topk8 -in private.pem -out private_pkcs8.pem -nocrypt
-```
+#### Gerar os arquivos
 
-Configurar as env vars (Linux/macOS):
+Linux/macOS:
 
 ```bash
-export JWT_PUBLIC_KEY="$(cat ~/.catalogo-keys/public.pem | tr -d '\n')"
-export JWT_PRIVATE_KEY="$(cat ~/.catalogo-keys/private_pkcs8.pem | tr -d '\n')"
+mkdir -p ./keys
+openssl genrsa -out ./keys/private.pem 2048
+openssl rsa -in ./keys/private.pem -pubout -out ./keys/public.pem
+openssl pkcs8 -topk8 -in ./keys/private.pem -out ./keys/private_pkcs8.pem -nocrypt
 ```
 
-Windows PowerShell:
+Windows PowerShell (assumindo `openssl` disponível via Git Bash ou WSL):
 
 ```powershell
-$env:JWT_PUBLIC_KEY = (Get-Content "$HOME\.catalogo-keys\public.pem" -Raw) -replace "`r`n","\`n"
-$env:JWT_PRIVATE_KEY = (Get-Content "$HOME\.catalogo-keys\private_pkcs8.pem" -Raw) -replace "`r`n","\`n"
+mkdir keys
+& "C:\Program Files\Git\usr\bin\openssl.exe" genrsa -out keys\private.pem 2048
+& "C:\Program Files\Git\usr\bin\openssl.exe" rsa -in keys\private.pem -pubout -out keys\public.pem
+& "C:\Program Files\Git\usr\bin\openssl.exe" pkcs8 -topk8 -in keys\private.pem -out keys\private_pkcs8.pem -nocrypt
 ```
+
+> **Importante:** adicione `./keys/` ao `.gitignore`. Os arquivos `.pem` **nunca** devem ser commitados.
+
+#### Apontar os caminhos
+
+Por padrão, o `application.yml` aponta para:
+
+```yaml
+rsa:
+  public-key-path: file:./keys/public.pem
+  private-key-path: file:./keys/private_pkcs8.pem
+```
+
+**Variantes suportadas:**
+
+| Estilo | Exemplo | Quando usar |
+|---|---|---|
+| `file:` relativo | `file:./keys/public.pem` | Dev local, container sem path fixo. |
+| `file:` absoluto | `file:/etc/catalogo/public.pem` | Produção Linux/Kubernetes (Secret montado em volume). |
+| Caminho puro | `./keys/public.pem` | Equivalente a `file:./keys/public.pem`. |
+| `classpath:` | `classpath:keys/public.pem` | Testes com `src/test/resources/keys/public.pem`. |
+
+Para sobrescrever via env var:
+
+```bash
+export JWT_PUBLIC_KEY_PATH="file:/etc/catalogo/public.pem"
+export JWT_PRIVATE_KEY_PATH="file:/etc/catalogo/private_pkcs8.pem"
+```
+
+Ou em `.env`:
+
+```bash
+JWT_PUBLIC_KEY_PATH=file:./keys/public.pem
+JWT_PRIVATE_KEY_PATH=file:./keys/private_pkcs8.pem
+```
+
+> **Migração:** se você tinha `JWT_PUBLIC_KEY` / `JWT_PRIVATE_KEY` configurados em ambientes anteriores, atualize para `JWT_PUBLIC_KEY_PATH` / `JWT_PRIVATE_KEY_PATH` apontando para os arquivos `.pem`. A quebra é intencional — passar o conteúdo inline não é mais suportado.
 
 ### 2.3. Configurar credenciais do Google (opcional em dev puro)
 
