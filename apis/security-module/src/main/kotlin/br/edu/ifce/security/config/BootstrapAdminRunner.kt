@@ -4,7 +4,6 @@ import br.edu.ifce.security.model.domain.Perfil
 import br.edu.ifce.security.model.domain.Usuario
 import br.edu.ifce.security.model.repository.UsuarioRepository
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.ApplicationArguments
 import org.springframework.boot.ApplicationRunner
 import org.springframework.core.annotation.Order
@@ -15,40 +14,37 @@ import org.springframework.transaction.annotation.Transactional
 @Order(1)
 class BootstrapAdminRunner(
     private val usuarioRepository: UsuarioRepository,
-    @field:Value($$"${app.bootstrap.admin-email:}")
-    private val bootstrapAdminEmail: String,
-    @field:Value($$"${app.bootstrap.allow-reactivate:true}")
-    private val allowReactivate: Boolean
+    private val bootstrapProperties: BootstrapProperties
 ) : ApplicationRunner {
 
     private val log = LoggerFactory.getLogger(javaClass)
 
     @Transactional
     override fun run(args: ApplicationArguments?) {
-        if (!allowReactivate) {
-            log.warn("O administrador padrão não será cadastrado: app.bootstrap.allow-reactivate=false")
+        if (!bootstrapProperties.allowReactivate) {
+            log.warn("O administrador padrão não será cadastrado: bootstrap.allow-reactivate=false")
             return
         }
 
-        if (bootstrapAdminEmail.isBlank()) {
+        if (bootstrapProperties.adminEmail.isBlank()) {
             throw IllegalStateException(
                 "BOOTSTRAP_ADMIN_EMAIL não configurado: " +
-                        "Defina a env var app.bootstrap.admin-email antes de iniciar a aplicação " +
-                        "para garantir a existência do administrador padrão."
+                        "Defina a env var BOOTSTRAP_ADMIN_EMAIL (propriedade bootstrap.admin-email) " +
+                        "antes de iniciar a aplicação para garantir a existência do administrador padrão."
             )
         }
 
-        val usuario = usuarioRepository.findByEmail(bootstrapAdminEmail)
+        val usuario = usuarioRepository.findByEmail(bootstrapProperties.adminEmail)
 
         if (usuario == null) {
             val novo = Usuario(
-                email = bootstrapAdminEmail,
-                nome = bootstrapAdminEmail
+                email = bootstrapProperties.adminEmail,
+                nome = bootstrapProperties.adminEmail
             ).apply {
                 perfis = mutableSetOf(Perfil.ROLE_ADMINISTRADOR, Perfil.ROLE_COLABORADOR)
             }
             usuarioRepository.save(novo)
-            log.info("Administrador padrão criado: $bootstrapAdminEmail")
+            log.info("Administrador padrão criado: ${bootstrapProperties.adminEmail}")
             return
         }
 
@@ -60,12 +56,12 @@ class BootstrapAdminRunner(
         }
 
         if (precisaReativar) {
-            log.warn("Reativando administrador padrão desativado: $bootstrapAdminEmail")
+            log.warn("Reativando administrador padrão desativado: ${bootstrapProperties.adminEmail}")
             usuario.ativo = true
         }
 
         if (!jaPossuiAdmin) {
-            log.warn("Promovendo usuário a administrador padrão: $bootstrapAdminEmail")
+            log.warn("Promovendo usuário a administrador padrão: ${bootstrapProperties.adminEmail}")
             usuario.perfis = mutableSetOf(Perfil.ROLE_ADMINISTRADOR, Perfil.ROLE_COLABORADOR)
         }
 

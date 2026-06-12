@@ -16,10 +16,9 @@ spring:
     init:
       mode: never
 
-app:
-  bootstrap:
-    admin-email: ${BOOTSTRAP_ADMIN_EMAIL:test-admin@ifce.edu.br}
-    allow-reactivate: ${BOOTSTRAP_ALLOW_REACTIVATE:true}
+bootstrap:
+  admin-email: ${BOOTSTRAP_ADMIN_EMAIL:test-admin@ifce.edu.br}
+  allow-reactivate: ${BOOTSTRAP_ALLOW_REACTIVATE:true}
 
 jwt:
   access-token-expiration: 900

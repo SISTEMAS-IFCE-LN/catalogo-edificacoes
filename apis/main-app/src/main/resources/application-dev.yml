@@ -27,9 +27,8 @@ server:
       cookie:
         secure: false
 
-app:
-  bootstrap:
-    admin-email: ${BOOTSTRAP_ADMIN_EMAIL:dev-admin@ifce.edu.br}
+bootstrap:
+  admin-email: ${BOOTSTRAP_ADMIN_EMAIL:dev-admin@ifce.edu.br}
 
 jwt:
   cookie-secure: ${JWT_COOKIE_SECURE:false}

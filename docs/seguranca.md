@@ -228,12 +228,12 @@ data class RsaKeyProperties(
 A leitura é **lazy** — as chaves só são parseadas na primeira vez que o `JwtEncoder` ou `JwtDecoder` é invocado,
 evitando custo desnecessário se a aplicação for usada apenas para endpoints públicos no momento do boot.
 
-### 7.3. `app.bootstrap.*` (gerido por `BootstrapAdminRunner`)
+### 7.3. `bootstrap.*` (gerido por `BootstrapAdminRunner`)
 
 | Property | Env var | Default | Descrição |
 |---|---|---|---|
-| `app.bootstrap.admin-email` | `BOOTSTRAP_ADMIN_EMAIL` | (vazio) | Email do admin institucional. **Obrigatório** — aborta o boot se vazio. |
-| `app.bootstrap.allow-reactivate` | `BOOTSTRAP_ALLOW_REACTIVATE` | `true` | Kill switch geral. Quando `false`, o bootstrap é no-op total. |
+| `bootstrap.admin-email` | `BOOTSTRAP_ADMIN_EMAIL` | (vazio) | Email do admin institucional. **Obrigatório** — aborta o boot se vazio. |
+| `bootstrap.allow-reactivate` | `BOOTSTRAP_ALLOW_REACTIVATE` | `true` | Kill switch geral. Quando `false`, o bootstrap é no-op total. |
 
 ### 7.4. OAuth2 Google
 
