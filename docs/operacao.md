@@ -44,9 +44,6 @@ apis/main-app/src/main/resources/
 └── data-dev.sql           # 120 ambientes fake
 ```
 
-Não há `data.sql` com seed do admin — o provisionamento é responsabilidade do `BootstrapAdminRunner` (
-ver [Segurança](./seguranca.md)).
-
 ---
 
 ## 3. Geração de chaves RSA
@@ -151,7 +148,11 @@ Antes do primeiro deploy, o operador **deve** definir a env var `BOOTSTRAP_ADMIN
 - [ ] `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` configurados.
 - [ ] `JWT_PUBLIC_KEY_PATH` e `JWT_PRIVATE_KEY_PATH` apontando para os arquivos `.pem` (ver seção 3).
 - [ ] `JWT_COOKIE_SECURE=true` (default).
-- [ ] HTTPS configurado no reverse proxy / load balancer.
+- [ ] HTTPS configurado no reverse proxy / load balancer, com headers `X-Forwarded-Proto` e `X-Forwarded-Host` injetados.
+      O `application.yml` já define `server.forward-headers-strategy: framework` para que o Spring respeite esses
+      headers na construção do `baseUrl` do template `{baseUrl}/login/oauth2/code/{registrationId}`.
+- [ ] Redirect URI resolvido registrado no Google Cloud Console para o ambiente (dev: `http://localhost:8080/login/oauth2/code/google`,
+      prod: `https://<domínio>/login/oauth2/code/google`).
 - [ ] CORS configurado com origens permitidas (atualmente `*` em dev; ajustar em prod).
 
 ### 4.2. Primeiro boot
@@ -208,3 +209,4 @@ Para configurações específicas do Spring (datasource, JPA), ver `main-app/src
 | Cookie de refresh não persiste no navegador em dev                                               | `JWT_COOKIE_SECURE=true` em HTTP                        | `application-dev.yml` define `false`. Verificar se o profile está ativo.                                |
 | `UsernameNotFoundException` ao autenticar                                                        | `CustomOAuth2UserService` não provisionou o usuário     | Verificar email termina em `@ifce.edu.br` (auto-provisionamento) ou se foi pré-cadastrado por um admin. |
 | Testes do `ambientes-internos-module` falham com `ApplicationContext failure threshold exceeded` | `target/classes` ou `target/test-classes` desatualizado | Rodar `mvn clean install` no `security-module` antes de testar o `ambientes-internos-module`.           |
+| Google retorna `redirect_uri_mismatch` no handshake OAuth2                          | Reverse proxy não injeta `X-Forwarded-Proto` / `X-Forwarded-Host`, ou URI do Google Console está incorreto | Verificar config do proxy (nginx/ALB/etc.); conferir que o `redirect_uri` resolvido bate com o registrado no Google Cloud Console. O `application.yml` já define `server.forward-headers-strategy: framework`. |

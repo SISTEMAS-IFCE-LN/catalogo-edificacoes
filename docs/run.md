@@ -84,8 +84,6 @@ JWT_PUBLIC_KEY_PATH=file:./keys/public.pem
 JWT_PRIVATE_KEY_PATH=file:./keys/private_pkcs8.pem
 ```
 
-> **Migração:** se você tinha `JWT_PUBLIC_KEY` / `JWT_PRIVATE_KEY` configurados em ambientes anteriores, atualize para `JWT_PUBLIC_KEY_PATH` / `JWT_PRIVATE_KEY_PATH` apontando para os arquivos `.pem`. A quebra é intencional — passar o conteúdo inline não é mais suportado.
-
 ### 2.3. Configurar credenciais do Google (opcional em dev puro)
 
 Para testar o fluxo OAuth2 real, é necessário um projeto no Google Cloud Console com OAuth2 Client configurado. Sem isso, a aplicação sobe mas o login redireciona para uma URL do Google que falha.
