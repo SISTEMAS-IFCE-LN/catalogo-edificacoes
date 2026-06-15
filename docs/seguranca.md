@@ -222,8 +222,10 @@ data class RsaKeyProperties(
 
 | Property | Env var | Default | Descrição |
 |---|---|---|---|
-| `rsa.public-key-path` | `JWT_PUBLIC_KEY_PATH` | `file:./keys/public.pem` | Caminho do `.pem` da chave pública. Suporta `file:`, `classpath:` ou caminho relativo/absoluto. |
-| `rsa.private-key-path` | `JWT_PRIVATE_KEY_PATH` | `file:./keys/private_pkcs8.pem` | Caminho do `.pem` da chave privada (formato PKCS#8). |
+| `rsa.public-key-path` | `JWT_PUBLIC_KEY_PATH` | `file:../.keys/public.pem` | Caminho do `.pem` da chave pública. Suporta `file:`, `classpath:` ou caminho relativo/absoluto. |
+| `rsa.private-key-path` | `JWT_PRIVATE_KEY_PATH` | `file:../.keys/private_pkcs8.pem` | Caminho do `.pem` da chave privada (formato PKCS#8). |
+
+> **Importante sobre caminhos relativos:** o caminho `../.keys/` é **relativo ao working directory do processo Java**.
 
 A leitura é **lazy** — as chaves só são parseadas na primeira vez que o `JwtEncoder` ou `JwtDecoder` é invocado,
 evitando custo desnecessário se a aplicação for usada apenas para endpoints públicos no momento do boot.
@@ -269,9 +271,9 @@ Linux/macOS:
 
 ```bash
 mkdir -p ./keys
-openssl genrsa -out ./keys/private.pem 2048
-openssl rsa -in ./keys/private.pem -pubout -out ./keys/public.pem
-openssl pkcs8 -topk8 -in ./keys/private.pem -out ./keys/private_pkcs8.pem -nocrypt
+openssl genrsa -out ./.keys/private.pem 2048
+openssl rsa -in ./.keys/private.pem -pubout -out ./.keys/public.pem
+openssl pkcs8 -topk8 -in ./.keys/private.pem -out ./.keys/private_pkcs8.pem -nocrypt
 ```
 
 Windows PowerShell (com `openssl` via Git Bash ou WSL):
@@ -285,24 +287,26 @@ mkdir keys
 
 ### 8.2. Apontar a aplicação para os arquivos
 
-Por padrão, o `application.yml` lê de `./keys/`:
+Por padrão, o `application.yml` lê de `./.keys/`:
 
 ```yaml
 rsa:
-  public-key-path: file:./keys/public.pem
-  private-key-path: file:./keys/private_pkcs8.pem
+  public-key-path: file:./.keys/public.pem
+  private-key-path: file:./.keys/private_pkcs8.pem
 ```
 
 Variantes suportadas via env var (sobrescreve o default):
 
 | Estilo | Exemplo | Quando usar |
 |---|---|---|
-| `file:` relativo | `file:./keys/public.pem` | Dev local, container sem path fixo. |
+| `file:` relativo | `file:../.keys/public.pem` | Dev local, container sem path fixo. |
 | `file:` absoluto | `file:/etc/catalogo/public.pem` | Produção Linux (Secret montado em volume). |
-| Caminho puro | `./keys/public.pem` | Equivalente a `file:./keys/public.pem`. |
-| `classpath:` | `classpath:keys/public.pem` | Testes com `src/test/resources/keys/public.pem`. |
+| Caminho puro | `../.keys/public.pem` | Equivalente a `file:../.keys/public.pem`. |
+| `classpath:` | `classpath:.keys/public.pem` | Testes com `src/test/resources/.keys/public.pem`. |
 
-> **Importante:** os arquivos `*.pem` **nunca** devem ser commitados. Adicione `./keys/` (ou o diretório
+> **Importante sobre caminhos relativos:** o caminho `../.keys/` é **relativo ao working directory do processo Java**.
+
+> **Importante:** os arquivos `*.pem` **nunca** devem ser commitados. Adicione `./.keys/` (ou o diretório
 > escolhido) ao `.gitignore`. Em Docker/Kubernetes, monte o diretório como Secret em volume (ver
 > [`docs/operacao.md`](./operacao.md#32-apontar-os-caminhos)).
 

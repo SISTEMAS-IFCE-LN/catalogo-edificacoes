@@ -58,9 +58,9 @@ Linux/macOS:
 
 ```bash
 mkdir -p ./keys
-openssl genrsa -out ./keys/private.pem 2048
-openssl rsa -in ./keys/private.pem -pubout -out ./keys/public.pem
-openssl pkcs8 -topk8 -in ./keys/private.pem -out ./keys/private_pkcs8.pem -nocrypt
+openssl genrsa -out ./.keys/private.pem 2048
+openssl rsa -in ./.keys/private.pem -pubout -out ./.keys/public.pem
+openssl pkcs8 -topk8 -in ./.keys/private.pem -out ./.keys/private_pkcs8.pem -nocrypt
 ```
 
 Windows PowerShell (com `openssl` via Git Bash ou WSL):
@@ -72,27 +72,29 @@ mkdir keys
 & "C:\Program Files\Git\usr\bin\openssl.exe" pkcs8 -topk8 -in keys\private.pem -out keys\private_pkcs8.pem -nocrypt
 ```
 
-> **Importante:** adicione `./keys/` (ou o diretório escolhido) ao `.gitignore`. Os arquivos `.pem` **nunca** devem
+> **Importante:** adicione `./.keys/` (ou o diretório escolhido) ao `.gitignore`. Os arquivos `.pem` **nunca** devem
 > ser commitados.
 
 ### 3.2. Apontar os caminhos
 
-Por padrão, o `application.yml` lê de `./keys/`:
+Por padrão, o `application.yml` lê de `./.keys/`:
 
 ```yaml
 rsa:
-  public-key-path: file:./keys/public.pem
-  private-key-path: file:./keys/private_pkcs8.pem
+  public-key-path: file:./.keys/public.pem
+  private-key-path: file:./.keys/private_pkcs8.pem
 ```
 
 Variantes suportadas via env var (sobrescreve o default):
 
 | Estilo | Exemplo | Quando usar |
 |---|---|---|
-| `file:` relativo | `file:./keys/public.pem` | Dev local, container sem path fixo. |
+| `file:` relativo | `file:../.keys/public.pem` | Dev local, container sem path fixo. |
 | `file:` absoluto | `file:/etc/catalogo/public.pem` | Produção Linux (Secret montado em volume). |
-| Caminho puro | `./keys/public.pem` | Equivalente a `file:./keys/public.pem`. |
-| `classpath:` | `classpath:keys/public.pem` | Testes com `src/test/resources/keys/public.pem`. |
+| Caminho puro | `../.keys/public.pem` | Equivalente a `file:../.keys/public.pem`. |
+| `classpath:` | `classpath:.keys/public.pem` | Testes com `src/test/resources/.keys/public.pem`. |
+
+> **Importante sobre caminhos relativos:** o caminho `../.keys/` é **relativo ao working directory do processo Java**.
 
 Em Docker:
 
@@ -184,8 +186,8 @@ Antes do primeiro deploy, o operador **deve** definir a env var `BOOTSTRAP_ADMIN
 | `PROFILE_ACTIVE`              | `dev`                                    | Não                  | application.yml      |
 | `GOOGLE_CLIENT_ID`            | —                                        | Sim                  | Google Cloud Console |
 | `GOOGLE_CLIENT_SECRET`        | —                                        | Sim                  | Google Cloud Console |
-| `JWT_PUBLIC_KEY_PATH`         | `file:./keys/public.pem`                 | Sim                  | `openssl` + path     |
-| `JWT_PRIVATE_KEY_PATH`        | `file:./keys/private_pkcs8.pem`           | Sim                  | `openssl` + path     |
+| `JWT_PUBLIC_KEY_PATH`         | `file:./.keys/public.pem`                 | Sim                  | `openssl` + path     |
+| `JWT_PRIVATE_KEY_PATH`        | `file:./.keys/private_pkcs8.pem`           | Sim                  | `openssl` + path     |
 | `JWT_ACCESS_TOKEN_EXPIRATION` | `900`                                    | Não                  | application.yml      |
 | `JWT_REFRESH_EXPIRATION`      | `43200`                                  | Não                  | application.yml      |
 | `JWT_COOKIE_SECURE`           | `true`                                   | Não                  | application.yml      |
@@ -204,7 +206,7 @@ Para configurações específicas do Spring (datasource, JPA), ver `main-app/src
 | Boot aborta com `IllegalStateException: ... allow-reactivate=false`                              | Admin desativado e flag desligada                       | Reativar manualmente no banco ou setar `BOOTSTRAP_ALLOW_REACTIVATE=true` no próximo boot.               |
 | `401 Unauthorized` em todos os endpoints                                                         | Chave RSA inválida ou arquivo inacessível               | Verificar `JWT_PUBLIC_KEY_PATH` / `JWT_PRIVATE_KEY_PATH` e permissões dos arquivos `.pem`.             |
 | `JwtException: Unable to load RSA key` no boot                                                  | Arquivo `.pem` corrompido ou formato inválido            | Regerar com `openssl`; garantir PKCS#8 para a chave privada.                                           |
-| `FileNotFoundException` no boot                                                                  | Path do `.pem` não existe                               | Verificar `JWT_PUBLIC_KEY_PATH` / `JWT_PRIVATE_KEY_PATH`; rodar `ls -la ./keys/` em dev.               |
+| `FileNotFoundException` no boot                                                                  | Path do `.pem` não existe                               | Verificar `JWT_PUBLIC_KEY_PATH` / `JWT_PRIVATE_KEY_PATH`; rodar `ls -la ./.keys/` em dev.               |
 | `403 Forbidden` em endpoint aparentemente público                                                | `permitAll` não cobre o path                            | Verificar `SecurityConfig.apiFilterChain`.                                                              |
 | Cookie de refresh não persiste no navegador em dev                                               | `JWT_COOKIE_SECURE=true` em HTTP                        | `application-dev.yml` define `false`. Verificar se o profile está ativo.                                |
 | `UsernameNotFoundException` ao autenticar                                                        | `CustomOAuth2UserService` não provisionou o usuário     | Verificar email termina em `@ifce.edu.br` (auto-provisionamento) ou se foi pré-cadastrado por um admin. |

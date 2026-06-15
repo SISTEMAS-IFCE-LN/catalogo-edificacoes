@@ -39,8 +39,8 @@ jwt:
   cookie-secure: ${JWT_COOKIE_SECURE:true}
 
 rsa:
-  public-key-path: ${JWT_PUBLIC_KEY_PATH:file:./keys/public.pem}
-  private-key-path: ${JWT_PRIVATE_KEY_PATH:file:./keys/private_pkcs8.pem}
+  public-key-path: ${JWT_PUBLIC_KEY_PATH:file:./.keys/public.pem}
+  private-key-path: ${JWT_PRIVATE_KEY_PATH:file:./.keys/private_pkcs8.pem}
 
 bootstrap:
   admin-email: ${BOOTSTRAP_ADMIN_EMAIL:}

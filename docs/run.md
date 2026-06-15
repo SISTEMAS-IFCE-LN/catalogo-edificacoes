@@ -35,9 +35,9 @@ Linux/macOS:
 
 ```bash
 mkdir -p ./keys
-openssl genrsa -out ./keys/private.pem 2048
-openssl rsa -in ./keys/private.pem -pubout -out ./keys/public.pem
-openssl pkcs8 -topk8 -in ./keys/private.pem -out ./keys/private_pkcs8.pem -nocrypt
+openssl genrsa -out ./.keys/private.pem 2048
+openssl rsa -in ./.keys/private.pem -pubout -out ./.keys/public.pem
+openssl pkcs8 -topk8 -in ./.keys/private.pem -out ./.keys/private_pkcs8.pem -nocrypt
 ```
 
 Windows PowerShell (assumindo `openssl` disponível via Git Bash ou WSL):
@@ -49,7 +49,7 @@ mkdir keys
 & "C:\Program Files\Git\usr\bin\openssl.exe" pkcs8 -topk8 -in keys\private.pem -out keys\private_pkcs8.pem -nocrypt
 ```
 
-> **Importante:** adicione `./keys/` ao `.gitignore`. Os arquivos `.pem` **nunca** devem ser commitados.
+> **Importante:** adicione `./.keys/` ao `.gitignore`. Os arquivos `.pem` **nunca** devem ser commitados.
 
 #### Apontar os caminhos
 
@@ -57,18 +57,20 @@ Por padrão, o `application.yml` aponta para:
 
 ```yaml
 rsa:
-  public-key-path: file:./keys/public.pem
-  private-key-path: file:./keys/private_pkcs8.pem
+  public-key-path: file:./.keys/public.pem
+  private-key-path: file:./.keys/private_pkcs8.pem
 ```
 
 **Variantes suportadas:**
 
 | Estilo | Exemplo | Quando usar |
 |---|---|---|
-| `file:` relativo | `file:./keys/public.pem` | Dev local, container sem path fixo. |
+| `file:` relativo | `file:../.keys/public.pem` | Dev local, container sem path fixo. |
 | `file:` absoluto | `file:/etc/catalogo/public.pem` | Produção Linux/Kubernetes (Secret montado em volume). |
-| Caminho puro | `./keys/public.pem` | Equivalente a `file:./keys/public.pem`. |
-| `classpath:` | `classpath:keys/public.pem` | Testes com `src/test/resources/keys/public.pem`. |
+| Caminho puro | `../.keys/public.pem` | Equivalente a `file:../.keys/public.pem`. |
+| `classpath:` | `classpath:.keys/public.pem` | Testes com `src/test/resources/.keys/public.pem`. |
+
+> **Importante sobre caminhos relativos:** o caminho `../.keys/` é **relativo ao working directory do processo Java**. Quando você executa `./mvnw -pl main-app -am spring-boot:run` a partir do diretório `apis/`, o working directory do Maven é `apis/`, mas o Spring Boot muda o working directory para `apis/main-app/` durante a execução. Portanto o caminho `../.keys/public.pem` resolve para `apis/.keys/public.pem`. Os scripts `run-windows.bat` e `run-linux.sh` já fazem o `cd` correto para `apis/` antes de invocar o `mvnw`.
 
 Para sobrescrever via env var:
 
@@ -80,8 +82,8 @@ export JWT_PRIVATE_KEY_PATH="file:/etc/catalogo/private_pkcs8.pem"
 Ou em `.env`:
 
 ```bash
-JWT_PUBLIC_KEY_PATH=file:./keys/public.pem
-JWT_PRIVATE_KEY_PATH=file:./keys/private_pkcs8.pem
+JWT_PUBLIC_KEY_PATH=file:./.keys/public.pem
+JWT_PRIVATE_KEY_PATH=file:./.keys/private_pkcs8.pem
 ```
 
 ### 2.3. Configurar credenciais do Google (opcional em dev puro)
@@ -121,13 +123,7 @@ cd apis
 ./mvnw clean install
 ```
 
-(Linux/macOS) ou:
-
-```powershell
-.\mvnw.cmd clean install
-```
-
-(Windows). O output esperado em sucesso:
+O output esperado em sucesso:
 
 ```
 [INFO] Reactor Summary for catalogo-edificacoes-parent 0.0.1-SNAPSHOT:
@@ -156,13 +152,36 @@ Total atual (junho/2026): **170 testes, 0 falhas, 0 erros**.
 
 ### 3.3. Iniciar a aplicação em modo dev
 
+**Recomendado: usar os scripts de execução**
+
+Os scripts `run-windows.bat` e `run-linux.sh` já fazem o `cd` correto para o diretório `apis/` e invocam o `mvnw` com os parâmetros corretos:
+
 ```bash
-./mvnw -pl main-app spring-boot:run
+# Linux/macOS
+cd apis
+./run-linux.sh
 ```
 
-Ou, após `mvn install`:
+```powershell
+# Windows
+cd apis
+.\run-windows.bat
+```
+
+**Alternativa: invocar o mvnw diretamente**
+
+Se preferir invocar o `mvnw` diretamente, certifique-se de estar no diretório `apis/` (raiz do projeto Maven multi-módulo):
 
 ```bash
+cd apis
+./mvnw clean install
+./mvnw spring-boot:run -pl main-app
+```
+
+Ou
+
+```bash
+./mvnw clean install
 java -jar apis/main-app/target/main-app-0.0.1-SNAPSHOT.jar
 ```
 
