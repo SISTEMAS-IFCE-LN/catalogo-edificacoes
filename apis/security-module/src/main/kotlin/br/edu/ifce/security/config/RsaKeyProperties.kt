@@ -1,8 +1,9 @@
 package br.edu.ifce.security.config
 
 import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.util.ResourceUtils
+import org.springframework.core.io.ClassPathResource
 import java.nio.file.Files
+import java.nio.file.Path
 import java.security.KeyFactory
 import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
@@ -35,9 +36,13 @@ data class RsaKeyProperties(
         return KeyFactory.getInstance("RSA").generatePrivate(spec) as RSAPrivateKey
     }
 
-    private fun readPem(path: String): String {
-        val resource = ResourceUtils.getFile(path)
-        return Files.readString(resource.toPath())
+    private fun readPem(location: String): String {
+        val cleaned = location.removePrefix("file:").removePrefix("classpath:")
+        return if (location.startsWith("classpath:")) {
+            ClassPathResource(cleaned).inputStream.use { it.readBytes().toString(Charsets.UTF_8) }
+        } else {
+            Files.readString(Path.of(cleaned))
+        }
     }
 
     private fun decodePemBody(pem: String): ByteArray {
