@@ -15,7 +15,7 @@ O subdomínio de Ambientes Externos incluirá áreas como pátios, jardins, ruas
 - **Gestor do Sistema:** Responsável por gerenciar as informações do catálogo, incluindo a criação, atualização e exclusão de registros de ambientes não publicados. Mapeado para `ROLE_GESTOR_SISTEMA` (RN-4.2).
 - **Colaborador:** Usuário que consulta e utiliza as informações do catálogo para suas atividades diárias, autenticado via Google OAuth 2.0 e detentor, no mínimo, do perfil `ROLE_COLABORADOR` (RN-4.3 e RN-4.6). Este perfil é cumulativo e obrigatório para todos os usuários autenticados (RN-4.8).
 - **Público Externo:** Usuário que acessa o catálogo para obter informações sobre as edificações do IFCE, como empresas prestadoras de serviços, órgãos de controle e a comunidade acadêmica, sem necessidade de autenticação (RN-4.4).
-- **Administrador:** Responsável pela gestão de perfis de outros usuários e pela desativação de contas. Único ator com permissão para `PATCH /api/utilizadores/{id}/perfis` e `PATCH /api/utilizadores/{id}/desativar`. Mapeado para `ROLE_ADMINISTRADOR` (RN-4.8 e RN-4.9). O sistema garante que sempre exista pelo menos um Administrador ativo (lockout prevention).
+- **Administrador:** Responsável pela gestão de perfis de outros usuários e pela desativação de contas. Único ator com permissão para `PATCH /api/usuarios/{id}/perfis` e `PATCH /api/usuarios/{id}/desativar`. Mapeado para `ROLE_ADMINISTRADOR` (RN-4.8 e RN-4.9). O sistema garante que sempre exista pelo menos um Administrador ativo (lockout prevention).
 
 ## Autenticação e Identidade
 

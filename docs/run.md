@@ -202,8 +202,8 @@ A aplicação sobe em `http://localhost:8080` com o profile `dev` ativo.
 | `/api/ambientes/publicados/esquadrias?ids=1,2` | GET | Bearer | Esquadrias de um conjunto. |
 | `/api/ambientes/nao-publicados` | GET | Bearer (`GESTOR_SISTEMA`) | Lista não publicados. |
 | `/api/ambientes/validacao` | GET | Bearer (`VALIDADOR`) | Lista em validação. |
-| `/api/utilizadores/{id}/perfis` | PATCH | Bearer (`ADMINISTRADOR`) | Atualiza perfis. |
-| `/api/utilizadores/{id}/desativar` | PATCH | Bearer (`ADMINISTRADOR`) | Desativa usuário. |
+| `/api/usuarios/{id}/perfis` | PATCH | Bearer (`ADMINISTRADOR`) | Atualiza perfis. |
+| `/api/usuarios/{id}/desativar` | PATCH | Bearer (`ADMINISTRADOR`) | Desativa usuário. |
 
 ### 3.5. Smoke test via Postman
 

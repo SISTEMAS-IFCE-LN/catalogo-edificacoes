@@ -173,7 +173,7 @@ Antes do primeiro deploy, o operador **deve** definir a env var `BOOTSTRAP_ADMIN
 
 ### 4.3. Após o primeiro login
 
-- Promova outros admins institucionais via `PATCH /api/utilizadores/{id}/perfis` (apenas o admin pode).
+- Promova outros admins institucionais via `PATCH /api/usuarios/{id}/perfis` (apenas o admin pode).
 - Crie usuários externos pré-cadastrados diretamente no banco se necessário.
 - Monitore logs do `BootstrapAdminRunner` em reativações inesperadas.
 

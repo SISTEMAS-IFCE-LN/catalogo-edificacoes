@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/api/utilizadores")
+@RequestMapping("/api/usuarios")
 @PreAuthorize("hasAuthority('ROLE_ADMINISTRADOR')")
 class UsuarioController(private val service: IUsuarioService) {
 

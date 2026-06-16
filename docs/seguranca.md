@@ -148,8 +148,8 @@ private fun verificarExclusaoAdm() {
 ```
 
 **Cenários bloqueados com `409 Conflict`:**
-- `PATCH /api/utilizadores/{id}/perfis` removendo `ROLE_ADMINISTRADOR` do último admin ativo.
-- `PATCH /api/utilizadores/{id}/desativar` quando o usuário é o último admin ativo.
+- `PATCH /api/usuarios/{id}/perfis` removendo `ROLE_ADMINISTRADOR` do último admin ativo.
+- `PATCH /api/usuarios/{id}/desativar` quando o usuário é o último admin ativo.
 
 ---
 
@@ -175,7 +175,7 @@ Definido em `SecurityConfig.apiFilterChain` (chain 2, com `@Order(2)`).
 | `/api/ambientes/validacao/**` | `AmbienteValidacaoController` | `ROLE_VALIDADOR` |
 | `/api/ambientes/{qualquer}/{id}` (GET) | `BaseController.obterAmbientePorId` | `ROLE_COLABORADOR` |
 | `/api/ambientes/publicados/esquadrias` (GET) | `AmbientePublicadoController.listarEsquadriasAmbientes` | `ROLE_COLABORADOR` |
-| `/api/utilizadores/**` | `UsuarioController` | `ROLE_ADMINISTRADOR` |
+| `/api/usuarios/**` | `UsuarioController` | `ROLE_ADMINISTRADOR` |
 
 ### 6.3. Resposta a acessos não autorizados
 
@@ -331,7 +331,7 @@ Variantes suportadas via env var (sobrescreve o default):
 1. Antes do primeiro deploy, defina `BOOTSTRAP_ADMIN_EMAIL=ti@ifce.edu.br` (email do setor de TI).
 2. Faça o deploy. O runner cria o usuário e o sistema sobe.
 3. O primeiro admin loga via Google usando esse email e usa o sistema normalmente.
-4. Admins subsequentes podem ser promovidos via `PATCH /api/utilizadores/{id}/perfis` com `ROLE_ADMINISTRADOR`.
+4. Admins subsequentes podem ser promovidos via `PATCH /api/usuarios/{id}/perfis` com `ROLE_ADMINISTRADOR`.
 
 ---
 

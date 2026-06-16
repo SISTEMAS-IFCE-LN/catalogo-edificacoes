@@ -126,7 +126,7 @@ Endpoints protegidos por `@PreAuthorize`:
 | `/api/ambientes/validacao/**`                | `ROLE_VALIDADOR`                                                    |
 | `/api/ambientes/{path}/{id}` (GET)           | `ROLE_COLABORADOR` (herdado de `BaseController.obterAmbientePorId`) |
 | `/api/ambientes/publicados/esquadrias` (GET) | `ROLE_COLABORADOR`                                                  |
-| `/api/utilizadores/**`                       | `ROLE_ADMINISTRADOR`                                                |
+| `/api/usuarios/**`                       | `ROLE_ADMINISTRADOR`                                                |
 
 Detalhamento completo em [`docs/seguranca.md`](./seguranca.md).
 
