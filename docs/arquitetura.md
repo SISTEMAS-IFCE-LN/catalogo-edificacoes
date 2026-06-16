@@ -43,6 +43,10 @@ segurança e as diferentes regras de negócio de domínio coexistam sem gerar de
 * **Responsabilidade:** É o encarregado de interceptar as requisições HTTP recebidas, verificar as permissões
   declaradas e isolar toda a infraestrutura de identidade. Concentra, em especial:
     * Autenticação **OAuth2 (Google)** via Authorization Code com PKCE, com o backend atuando como *broker*.
+    * `OAuth2LoginSuccessHandler`: handler que emite JWT + refresh token diretamente no callback OAuth2 (dentro da
+      chain 1, onde o `Authentication` está disponível) e retorna JSON na response.
+    * `JwtConfig`: classe de configuração que define os beans `JwtEncoder` e `JwtDecoder` a partir das chaves RSA,
+      isolando-os do `SecurityConfig` para evitar ciclos de dependência.
     * Emissão e validação de **JWT próprio** (assinatura RSA) para acesso à API.
     * Gestão de **refresh tokens** persistidos, com rotação a cada uso, entregues em cookie `HttpOnly`, `Secure` e
       `SameSite=Strict`.
@@ -110,7 +114,7 @@ Definido em `SecurityConfig.apiFilterChain` (chain 2, com `@Order(2)`). Endpoint
 | Path                           | Descrição                                      |
 |--------------------------------|------------------------------------------------|
 | `/api/ambientes/publicados/**` | Listagens e detalhes de ambientes publicados.  |
-| `/auth/**`                     | Login, refresh, logout.                        |
+| `/auth/**`                     | Refresh, logout.                             |
 | `/health`                      | Health check.                                  |
 | `/oauth2/**` e `/login/**`     | Handshake OAuth2 (chain 1, com `IF_REQUIRED`). |
 
@@ -137,10 +141,7 @@ configurável externamente:
 | `jwt.refresh-expiration`      | `JWT_REFRESH_EXPIRATION`      | `43200` (12 h) |
 | `jwt.cookie-secure`           | `JWT_COOKIE_SECURE`           | `true`         |
 
-`accessTokenExpiration` e `cookieSecure` são lidos em tempo de execução pelo `AuthController` (cookie) e pelo
-`JwtService`/`LoginResponse` (expiração do access token). `refreshExpiration` é lido pelo `RefreshTokenService`
-para a expiração do token persistido. O `maxAge` do cookie de refresh é derivado do mesmo valor, garantindo
-coerência entre token e cookie.
+`accessTokenExpiration` e `cookieSecure` são lidos em tempo de execução pelo `OAuth2LoginSuccessHandler` (cookie e expiração do access token) e pelo `AuthController` (cookie de refresh). O `JwtService`/`LoginResponse` também usa `accessTokenExpiration` para a expiração do token. `refreshExpiration` é lido pelo `RefreshTokenService` para a expiração do token persistido. O `maxAge` do cookie de refresh é derivado do mesmo valor, garantindo coerência entre token e cookie.
 
 ---
 

@@ -194,8 +194,7 @@ A aplicação sobe em `http://localhost:8080` com o profile `dev` ativo.
 | `/health` | GET | Não | Health check. |
 | `/actuator/health` | GET | Não | Se actuator estiver habilitado. |
 | `/h2-console` | GET (navegador) | Não | Console do H2 in-memory, habilitado em dev. |
-| `/oauth2/authorization/google` | GET (navegador) | Não | Inicia o handshake OAuth2 com Google. |
-| `/auth/login/success` | POST | Sim (sessão OAuth2) | Chamado pelo `defaultSuccessUrl`; emite JWT. |
+| `/oauth2/authorization/google` | GET (navegador) | Não | Inicia o handshake OAuth2. O callback retorna JSON com `accessToken` (via `OAuth2LoginSuccessHandler`). |
 | `/auth/refresh` | POST | Cookie | Renova o access token. |
 | `/auth/logout` | POST | Cookie | Revoga refresh token e limpa cookie. |
 | `/api/ambientes/publicados` | GET | Não | Lista ambientes publicados (público). |

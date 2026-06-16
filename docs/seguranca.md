@@ -16,10 +16,12 @@ Componentes centrais:
 | `JwtService` | `br.edu.ifce.security.model.application.service` | Emite e valida o JWT próprio. |
 | `RefreshTokenService` | `br.edu.ifce.security.model.application.service` | Persiste e rotaciona refresh tokens. |
 | `AuthService` | `br.edu.ifce.security.model.application.service` | Orquestra login/refresh/logout. |
-| `AuthController` | `br.edu.ifce.security.controller` | Adaptador HTTP para o fluxo de autenticação. |
+| `OAuth2LoginSuccessHandler` | `br.edu.ifce.security.config` | Gera JWT + refresh token diretamente no callback OAuth2 e retorna JSON na response. |
+| `AuthController` | `br.edu.ifce.security.controller` | Adaptador HTTP para refresh e logout. |
 | `UsuarioService` | `br.edu.ifce.security.model.application.service` | Gestão de perfis e desativação (com lockout prevention). |
 | `UsuarioController` | `br.edu.ifce.security.controller` | Endpoints administrativos de perfis. |
-| `SecurityConfig` | `br.edu.ifce.security.config` | `SecurityFilterChain`, `oauth2Login`, `oauth2ResourceServer.jwt()`. |
+| `SecurityConfig` | `br.edu.ifce.security.config` | `SecurityFilterChain`, `oauth2Login`, `oauth2ResourceServer.jwt()`, CORS. |
+| `JwtConfig` | `br.edu.ifce.security.config` | Beans `JwtEncoder` e `JwtDecoder` (RSA). |
 | `RsaKeyProperties` | `br.edu.ifce.security.config` | Bind de `rsa.public-key` / `rsa.private-key`. |
 | `JwtProperties` | `br.edu.ifce.security.config` | Bind de `jwt.access-token-expiration` / `jwt.refresh-expiration` / `jwt.cookie-secure`. |
 | `BootstrapAdminRunner` | `br.edu.ifce.security.config` | Garante a presença de um administrador institucional conhecido no boot. |
@@ -62,15 +64,12 @@ Componentes centrais:
     │                  ├──────────────────────────────────────►
     │                  │◄──────────────────────────────────────┤
     │                  │                                       │
-    │                  │ 302 → /auth/login/success             │
-    │  POST /auth/login/success              │                  │
-    ├──────────────────►│                                       │
-    │                  │  AuthService:                          │
-    │                  │  - gera JWT (15 min)                  │
-    │                  │  - gera refresh token (12 h)          │
-    │                  │  - persiste refresh (revoga antigos)  │
-    │                  │  - retorna access token no body       │
-    │                  │  - seta cookie HttpOnly refreshToken  │
+    │                  │  OAuth2LoginSuccessHandler:          │
+    │                  │  - gera JWT (15 min)                 │
+    │                  │  - gera refresh token (12 h)         │
+    │                  │  - persiste refresh (revoga antigos) │
+    │                  │  - retorna JSON com access token     │
+    │                  │  - seta cookie HttpOnly refreshToken │
     │◄─────────────────┤                                       │
     │  { accessToken }  │                                       │
     │  Set-Cookie:      │                                       │
@@ -81,7 +80,9 @@ Componentes centrais:
 
 - O `oauth2Login` requer `SessionCreationPolicy.IF_REQUIRED` no `SecurityConfig` (chain 1) para armazenar temporariamente o `Authentication` durante o handshake.
 - A API em si opera com `SessionCreationPolicy.STATELESS` (chain 2) e valida o JWT a cada requisição.
+- O cookie de sessão HTTP é `SameSite=Lax` (necessário para o callback cross-site do OAuth2).
 - O cookie `refreshToken` é `HttpOnly`, `Secure` (configurável via `JWT_COOKIE_SECURE`), `SameSite=Strict`, `path=/`.
+- O `OAuth2LoginSuccessHandler` gera os tokens diretamente no callback OAuth2 (dentro da chain 1, onde o `Authentication` está disponível) e retorna JSON na response, eliminando a necessidade de um endpoint `POST /auth/login/success` separado.
 
 ---
 
@@ -161,7 +162,7 @@ Definido em `SecurityConfig.apiFilterChain` (chain 2, com `@Order(2)`).
 | Path | Método | Observação |
 |---|---|---|
 | `/api/ambientes/publicados/**` | todos | Listagens e detalhes de ambientes publicados. |
-| `/auth/**` | todos | Login, refresh, logout. |
+| `/auth/**` | todos | Refresh, logout. |
 | `/health` | todos | Health check. |
 | `/oauth2/**` | todos | Handshake OAuth2 (chain 1, com `IF_REQUIRED`). |
 | `/login/**` | todos | Handshake OAuth2. |
@@ -253,10 +254,10 @@ server:
       cookie:
         http-only: true
         secure: true       # override para false em application-dev.yml
-        same-site: strict
+        same-site: lax
 ```
 
-O cookie de sessão HTTP (gerado durante o `oauth2Login`) é independente do cookie de refresh token. Ambos devem respeitar o ambiente (HTTPS em prod).
+O cookie de sessão HTTP (gerado durante o `oauth2Login`) é `SameSite=Lax` para permitir o envio no redirect cross-site do callback OAuth2. O cookie de refresh token é independente e usa `SameSite=Strict`. Ambos devem respeitar o ambiente (HTTPS em prod).
 
 ---
 

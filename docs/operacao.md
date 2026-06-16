@@ -169,7 +169,7 @@ Antes do primeiro deploy, o operador **deve** definir a env var `BOOTSTRAP_ADMIN
 3. Acessar `/oauth2/authorization/google` com uma conta Google cujo email é o `BOOTSTRAP_ADMIN_EMAIL`.
 4. Após o handshake, o `CustomOAuth2UserService` encontra o usuário criado pelo bootstrap, sincroniza o nome e
    prossegue.
-5. O `AuthController.loginSuccess` emite o JWT e o cookie de refresh.
+5. O `OAuth2LoginSuccessHandler` emite o JWT (retornado como JSON) e o cookie de refresh.
 
 ### 4.3. Após o primeiro login
 
