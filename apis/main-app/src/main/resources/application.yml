@@ -31,7 +31,7 @@ server:
       cookie:
         http-only: true
         secure: true
-        same-site: strict
+        same-site: lax
 
 jwt:
   access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:900}

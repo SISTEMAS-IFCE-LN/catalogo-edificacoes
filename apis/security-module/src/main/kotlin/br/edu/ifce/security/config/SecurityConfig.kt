@@ -1,10 +1,6 @@
 package br.edu.ifce.security.config
 
 import br.edu.ifce.security.model.application.service.CustomOAuth2UserService
-import com.nimbusds.jose.jwk.JWKSet
-import com.nimbusds.jose.jwk.RSAKey
-import com.nimbusds.jose.jwk.source.ImmutableJWKSet
-import com.nimbusds.jose.proc.SecurityContext
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -13,10 +9,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
-import org.springframework.security.oauth2.jwt.JwtDecoder
-import org.springframework.security.oauth2.jwt.JwtEncoder
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder
-import org.springframework.security.oauth2.jwt.NimbusJwtEncoder
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter
 import org.springframework.security.web.SecurityFilterChain
@@ -37,7 +29,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 )
 class SecurityConfig(
     private val customOAuth2UserService: CustomOAuth2UserService,
-    private val rsaKeyProperties: RsaKeyProperties
+    private val oAuth2LoginSuccessHandler: OAuth2LoginSuccessHandler
 ) {
 
     private val oauth2Endpoints = listOf(
@@ -65,7 +57,7 @@ class SecurityConfig(
                 oauth2.userInfoEndpoint { userInfo ->
                     userInfo.userService(customOAuth2UserService)
                 }
-                oauth2.defaultSuccessUrl("/auth/login/success", true)
+                oauth2.successHandler(oAuth2LoginSuccessHandler)
                 oauth2.failureUrl("/auth/login/failure")
             }
         return http.build()
@@ -91,21 +83,6 @@ class SecurityConfig(
                 }
             }
         return http.build()
-    }
-
-    @Bean
-    fun jwtEncoder(): JwtEncoder {
-        val rsaKey = RSAKey.Builder(rsaKeyProperties.publicKey)
-            .privateKey(rsaKeyProperties.privateKey)
-            .build()
-        val jwkSet = JWKSet(rsaKey)
-        val jwkSource = ImmutableJWKSet<SecurityContext>(jwkSet)
-        return NimbusJwtEncoder(jwkSource)
-    }
-
-    @Bean
-    fun jwtDecoder(): JwtDecoder {
-        return NimbusJwtDecoder.withPublicKey(rsaKeyProperties.publicKey).build()
     }
 
     @Bean

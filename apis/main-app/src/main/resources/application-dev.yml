@@ -26,6 +26,11 @@ server:
     session:
       cookie:
         secure: false
+        same-site: lax
+
+logging:
+  level:
+    org.springframework.security: DEBUG
 
 bootstrap:
   admin-email: ${BOOTSTRAP_ADMIN_EMAIL:dev-admin@ifce.edu.br}

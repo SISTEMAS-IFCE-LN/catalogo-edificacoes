@@ -7,7 +7,9 @@ import org.springframework.context.annotation.FilterType
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories
 import br.edu.ifce.security.config.BootstrapAdminRunner
 import br.edu.ifce.security.config.SecurityConfig
+import br.edu.ifce.security.config.JwtConfig
 import br.edu.ifce.security.config.JwtProperties
+import br.edu.ifce.security.config.OAuth2LoginSuccessHandler
 import br.edu.ifce.security.config.RsaKeyProperties
 import br.edu.ifce.security.controller.AuthController
 import br.edu.ifce.security.controller.UsuarioController
@@ -28,6 +30,7 @@ import br.edu.ifce.security.model.application.service.UsuarioService
             classes = [
                 BootstrapAdminRunner::class,
                 SecurityConfig::class,
+                JwtConfig::class,
                 AuthController::class,
                 UsuarioController::class,
                 AuthService::class,
@@ -36,7 +39,8 @@ import br.edu.ifce.security.model.application.service.UsuarioService
                 RefreshTokenService::class,
                 UsuarioService::class,
                 JwtProperties::class,
-                RsaKeyProperties::class
+                RsaKeyProperties::class,
+                OAuth2LoginSuccessHandler::class
             ]
         )
     ]

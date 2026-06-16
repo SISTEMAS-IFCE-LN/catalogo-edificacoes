@@ -6,9 +6,7 @@ import br.edu.ifce.security.model.dto.LoginResponse
 import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
-import org.springframework.security.core.Authentication
 import org.springframework.web.bind.annotation.CookieValue
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
@@ -20,23 +18,6 @@ class AuthController(
     private val authService: IAuthService,
     private val jwtProperties: JwtProperties
 ) {
-
-    @PostMapping("/login/success", consumes = [MediaType.APPLICATION_JSON_VALUE])
-    fun loginSuccess(
-        authentication: Authentication,
-        response: HttpServletResponse
-    ): ResponseEntity<LoginResponse> {
-        val email = authentication.name
-        val tokensPair = authService.loginSuccess(email)
-            ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
-        response.addCookie(criarCookieRefreshToken(tokensPair.refreshToken))
-        return ResponseEntity.ok(
-            LoginResponse(
-                accessToken = tokensPair.accessToken,
-                expiresIn = jwtProperties.accessTokenExpiration
-            )
-        )
-    }
 
     @PostMapping("/refresh")
     fun refresh(
