@@ -3,7 +3,7 @@ package br.edu.ifce.security.controller
 import br.edu.ifce.security.config.JwtProperties
 import br.edu.ifce.security.model.application.interfaces.IAuthService
 import br.edu.ifce.security.model.application.interfaces.ICookieService
-import br.edu.ifce.security.model.dto.LoginResponse
+import br.edu.ifce.security.model.dto.LoginRes
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -24,14 +24,14 @@ class AuthController(
     fun refresh(
         @CookieValue(value = "refreshToken", required = false) refreshTokenCookie: String?,
         response: HttpServletResponse
-    ): ResponseEntity<LoginResponse> {
+    ): ResponseEntity<LoginRes> {
         val tokenCookie = refreshTokenCookie
             ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
         val tokensPair = authService.refresh(tokenCookie)
             ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
         response.addCookie(cookieService.criarCookieRefreshToken(tokensPair.refreshToken))
         return ResponseEntity.ok(
-            LoginResponse(
+            LoginRes(
                 accessToken = tokensPair.accessToken,
                 expiresIn = jwtProperties.accessTokenExpiration
             )

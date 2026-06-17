@@ -2,7 +2,7 @@ package br.edu.ifce.security.config
 
 import br.edu.ifce.security.model.application.interfaces.IAuthService
 import br.edu.ifce.security.model.application.interfaces.ICookieService
-import br.edu.ifce.security.model.dto.LoginResponse
+import br.edu.ifce.security.model.dto.LoginRes
 import com.fasterxml.jackson.databind.ObjectMapper
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
@@ -35,7 +35,7 @@ class OAuth2LoginSuccessHandler(
 
         response.addCookie(cookieService.criarCookieRefreshToken(tokensPair.refreshToken))
 
-        val loginResponse = LoginResponse(
+        val loginResponse = LoginRes(
             accessToken = tokensPair.accessToken,
             expiresIn = jwtProperties.accessTokenExpiration
         )
