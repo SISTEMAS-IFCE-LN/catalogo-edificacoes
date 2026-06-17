@@ -1,9 +1,9 @@
 package br.edu.ifce.security.config
 
 import br.edu.ifce.security.model.application.interfaces.IAuthService
+import br.edu.ifce.security.model.application.interfaces.ICookieService
 import br.edu.ifce.security.model.dto.LoginResponse
 import com.fasterxml.jackson.databind.ObjectMapper
-import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.HttpStatus
@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component
 @Component
 class OAuth2LoginSuccessHandler(
     private val authService: IAuthService,
+    private val cookieService: ICookieService,
     private val jwtProperties: JwtProperties,
     private val objectMapper: ObjectMapper
 ) : AuthenticationSuccessHandler {
@@ -32,7 +33,7 @@ class OAuth2LoginSuccessHandler(
             return
         }
 
-        response.addCookie(criarCookieRefreshToken(tokensPair.refreshToken))
+        response.addCookie(cookieService.criarCookieRefreshToken(tokensPair.refreshToken))
 
         val loginResponse = LoginResponse(
             accessToken = tokensPair.accessToken,
@@ -42,15 +43,5 @@ class OAuth2LoginSuccessHandler(
         response.contentType = MediaType.APPLICATION_JSON_VALUE
         response.status = HttpStatus.OK.value()
         objectMapper.writeValue(response.outputStream, loginResponse)
-    }
-
-    private fun criarCookieRefreshToken(token: String): Cookie {
-        return Cookie("refreshToken", token).apply {
-            isHttpOnly = true
-            secure = jwtProperties.cookieSecure
-            path = "/"
-            maxAge = jwtProperties.refreshExpiration.toInt()
-            setAttribute("SameSite", "Strict")
-        }
     }
 }
