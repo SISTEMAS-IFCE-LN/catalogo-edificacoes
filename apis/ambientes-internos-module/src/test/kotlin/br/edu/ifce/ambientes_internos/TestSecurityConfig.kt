@@ -1,9 +1,11 @@
 package br.edu.ifce.ambientes_internos
 
+import br.edu.ifce.security.config.JwtProperties
 import com.nimbusds.jose.jwk.JWKSet
 import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet
 import com.nimbusds.jose.proc.SecurityContext
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -22,6 +24,7 @@ import java.security.interfaces.RSAPublicKey
 
 @TestConfiguration
 @EnableWebSecurity
+@EnableConfigurationProperties(JwtProperties::class)
 class TestSecurityConfig {
 
     @Bean
