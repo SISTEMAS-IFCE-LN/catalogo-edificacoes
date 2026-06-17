@@ -20,7 +20,7 @@ class Usuario(
     @Column(nullable = false)
     var ativo: Boolean = true,
 
-    @Column(nullable = false, unique = false)
+    @Column(nullable = false, updatable = false)
     val criadoEm: LocalDateTime = LocalDateTime.now(),
 
     @ElementCollection(fetch = FetchType.EAGER)
