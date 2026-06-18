@@ -17,6 +17,7 @@
     <description>POM raiz do projeto Catálogo de Edificações</description>
 
     <modules>
+        <module>common-module</module>
         <module>security-module</module>
         <module>ambientes-internos-module</module>
         <module>main-app</module>
@@ -29,6 +30,11 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>br.edu.ifce</groupId>
+                <artifactId>common-module</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>br.edu.ifce</groupId>
                 <artifactId>security-module</artifactId>

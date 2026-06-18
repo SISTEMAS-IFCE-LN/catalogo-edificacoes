@@ -1,18 +1,16 @@
 package br.edu.ifce.security.model.application.service
 
 import br.edu.ifce.security.config.JwtProperties
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.InjectMocks
 import org.mockito.junit.jupiter.MockitoExtension
 
 @ExtendWith(MockitoExtension::class)
 class CookieServiceTest {
 
-    private fun props(secure: Boolean = true) = JwtProperties(accessTokenExpiration = 900L, refreshExpiration = 43200L, cookieSecure = secure)
+    private fun props(secure: Boolean = true) =
+        JwtProperties(accessTokenExpiration = 900L, refreshExpiration = 43200L, cookieSecure = secure)
 
     @Test
     fun `criarCookieRefreshToken com token retorna cookie configurado`() {

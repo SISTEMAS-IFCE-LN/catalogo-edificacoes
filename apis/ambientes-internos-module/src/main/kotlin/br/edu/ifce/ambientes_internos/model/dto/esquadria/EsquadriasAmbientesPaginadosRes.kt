@@ -1,7 +1,7 @@
 package br.edu.ifce.ambientes_internos.model.dto.esquadria
 
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Ambiente
-import br.edu.ifce.ambientes_internos.model.dto.DadosPaginacao
+import br.edu.ifce.common.dto.DadosPaginacao
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbienteNomeLocalizacaoRes
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.LocalizacaoRes
 import org.springframework.data.domain.Page

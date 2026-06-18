@@ -1,23 +1,15 @@
 package br.edu.ifce.security.model.application.service
 
 import br.edu.ifce.security.config.JwtProperties
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentCaptor
 import org.mockito.Mock
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
-import org.springframework.security.oauth2.jwt.BadJwtException
-import org.springframework.security.oauth2.jwt.Jwt
-import org.springframework.security.oauth2.jwt.JwtClaimsSet
-import org.springframework.security.oauth2.jwt.JwtDecoder
-import org.springframework.security.oauth2.jwt.JwtEncoder
-import org.springframework.security.oauth2.jwt.JwtEncoderParameters
+import org.springframework.security.oauth2.jwt.*
 
 @ExtendWith(MockitoExtension::class)
 class JwtServiceTest {
@@ -28,10 +20,11 @@ class JwtServiceTest {
     @Mock
     lateinit var jwtDecoder: JwtDecoder
 
-    private val jwtProperties = JwtProperties(accessTokenExpiration = 900L, refreshExpiration = 43200L, cookieSecure = true)
+    private val jwtProperties =
+        JwtProperties(accessTokenExpiration = 900L, refreshExpiration = 43200L, cookieSecure = true)
     private lateinit var jwtService: JwtService
 
-    @org.junit.jupiter.api.BeforeEach
+    @BeforeEach
     fun setup() {
         jwtService = JwtService(jwtEncoder, jwtDecoder, jwtProperties)
     }

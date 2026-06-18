@@ -4,21 +4,16 @@ import br.edu.ifce.security.config.JwtProperties
 import br.edu.ifce.security.model.domain.RefreshToken
 import br.edu.ifce.security.model.domain.Usuario
 import br.edu.ifce.security.model.repository.RefreshTokenRepository
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mock
-import org.mockito.Mockito.never
-import org.mockito.Mockito.times
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.`when`
+import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 
 @ExtendWith(MockitoExtension::class)
 class RefreshTokenServiceTest {
@@ -26,10 +21,11 @@ class RefreshTokenServiceTest {
     @Mock
     lateinit var refreshTokenRepository: RefreshTokenRepository
 
-    private val jwtProperties = JwtProperties(accessTokenExpiration = 900L, refreshExpiration = 43200L, cookieSecure = true)
+    private val jwtProperties =
+        JwtProperties(accessTokenExpiration = 900L, refreshExpiration = 43200L, cookieSecure = true)
     private lateinit var refreshTokenService: RefreshTokenService
 
-    @org.junit.jupiter.api.BeforeEach
+    @BeforeEach
     fun setup() {
         refreshTokenService = RefreshTokenService(refreshTokenRepository, jwtProperties)
     }
@@ -39,7 +35,12 @@ class RefreshTokenServiceTest {
     @Test
     fun `gerarRefreshToken revoga token antigo e cria novo quando ja existe um ativo`() {
         val usuario = criarUsuario()
-        val tokenAntigo = RefreshToken(token = "antigo", usuario = usuario, expiraEm = LocalDateTime.now().plusHours(1), revogado = false)
+        val tokenAntigo = RefreshToken(
+            token = "antigo",
+            usuario = usuario,
+            expiraEm = LocalDateTime.now().plusHours(1),
+            revogado = false
+        )
         `when`(refreshTokenRepository.findByUsuarioAndRevogadoFalse(usuario)).thenReturn(tokenAntigo)
         `when`(refreshTokenRepository.save(any(RefreshToken::class.java))).thenAnswer { it.arguments[0] }
 
@@ -63,13 +64,22 @@ class RefreshTokenServiceTest {
 
         assertNotNull(novo)
         assertNotNull(novo.token)
-        try { UUID.fromString(novo.token) } catch (e: Exception) { assert(false) { "token deveria ser UUID: ${novo.token}" } }
+        try {
+            UUID.fromString(novo.token)
+        } catch (e: Exception) {
+            assert(false) { "token deveria ser UUID: ${novo.token}" }
+        }
         verify(refreshTokenRepository, times(1)).save(any(RefreshToken::class.java))
     }
 
     @Test
     fun `validarRefreshToken retorna token quando nao revogado e nao expirado`() {
-        val token = RefreshToken(token = "t", usuario = criarUsuario(), expiraEm = LocalDateTime.now().plusHours(1), revogado = false)
+        val token = RefreshToken(
+            token = "t",
+            usuario = criarUsuario(),
+            expiraEm = LocalDateTime.now().plusHours(1),
+            revogado = false
+        )
         `when`(refreshTokenRepository.findByToken("t")).thenReturn(token)
 
         val result = refreshTokenService.validarRefreshToken("t")
@@ -89,7 +99,12 @@ class RefreshTokenServiceTest {
 
     @Test
     fun `validarRefreshToken retorna null quando token esta revogado`() {
-        val token = RefreshToken(token = "t", usuario = criarUsuario(), expiraEm = LocalDateTime.now().plusHours(1), revogado = true)
+        val token = RefreshToken(
+            token = "t",
+            usuario = criarUsuario(),
+            expiraEm = LocalDateTime.now().plusHours(1),
+            revogado = true
+        )
         `when`(refreshTokenRepository.findByToken("t")).thenReturn(token)
 
         val result = refreshTokenService.validarRefreshToken("t")
@@ -99,7 +114,12 @@ class RefreshTokenServiceTest {
 
     @Test
     fun `validarRefreshToken retorna null quando token esta expirado`() {
-        val token = RefreshToken(token = "t", usuario = criarUsuario(), expiraEm = LocalDateTime.now().minusHours(1), revogado = false)
+        val token = RefreshToken(
+            token = "t",
+            usuario = criarUsuario(),
+            expiraEm = LocalDateTime.now().minusHours(1),
+            revogado = false
+        )
         `when`(refreshTokenRepository.findByToken("t")).thenReturn(token)
 
         val result = refreshTokenService.validarRefreshToken("t")
@@ -109,7 +129,12 @@ class RefreshTokenServiceTest {
 
     @Test
     fun `revogarRefreshToken marca como revogado quando token existe`() {
-        val token = RefreshToken(token = "t", usuario = criarUsuario(), expiraEm = LocalDateTime.now().plusHours(1), revogado = false)
+        val token = RefreshToken(
+            token = "t",
+            usuario = criarUsuario(),
+            expiraEm = LocalDateTime.now().plusHours(1),
+            revogado = false
+        )
         `when`(refreshTokenRepository.findByToken("t")).thenReturn(token)
 
         refreshTokenService.revogarRefreshToken("t")

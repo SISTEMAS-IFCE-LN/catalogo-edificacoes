@@ -3,11 +3,7 @@ package br.edu.ifce.security.model.application.service
 import br.edu.ifce.security.model.domain.Perfil
 import br.edu.ifce.security.model.domain.Usuario
 import br.edu.ifce.security.model.repository.UsuarioRepository
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertThrows
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentCaptor
@@ -22,7 +18,7 @@ import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.web.server.ResponseStatusException
-import java.util.Optional
+import java.util.*
 
 @ExtendWith(MockitoExtension::class)
 class UsuarioServiceTest {

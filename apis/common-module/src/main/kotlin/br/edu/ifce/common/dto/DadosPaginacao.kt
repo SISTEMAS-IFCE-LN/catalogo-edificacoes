@@ -1,4 +1,4 @@
-package br.edu.ifce.security.model.dto
+package br.edu.ifce.common.dto
 
 import org.springframework.data.domain.Page
 

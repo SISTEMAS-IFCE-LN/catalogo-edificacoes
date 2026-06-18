@@ -1,7 +1,7 @@
 package br.edu.ifce.ambientes_internos.model.dto.ambiente
 
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Ambiente
-import br.edu.ifce.ambientes_internos.model.dto.DadosPaginacao
+import br.edu.ifce.common.dto.DadosPaginacao
 import org.springframework.data.domain.Page
 import java.math.BigDecimal
 

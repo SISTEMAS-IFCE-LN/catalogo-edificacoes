@@ -4,19 +4,12 @@ import br.edu.ifce.security.model.domain.Perfil
 import br.edu.ifce.security.model.domain.RefreshToken
 import br.edu.ifce.security.model.domain.Usuario
 import br.edu.ifce.security.model.repository.UsuarioRepository
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
-import org.mockito.Mockito.never
-import org.mockito.Mockito.times
-import org.mockito.Mockito.verify
-import org.mockito.Mockito.verifyNoInteractions
-import org.mockito.Mockito.`when`
+import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
 
 @ExtendWith(MockitoExtension::class)
@@ -39,7 +32,8 @@ class AuthServiceTest {
         val usuario = Usuario(id = 1, email = "user@ifce.edu.br", nome = "User").apply {
             perfis = mutableSetOf(Perfil.ROLE_COLABORADOR)
         }
-        val novoRefresh = RefreshToken(token = "refresh-xyz", usuario = usuario, expiraEm = java.time.LocalDateTime.now().plusDays(1))
+        val novoRefresh =
+            RefreshToken(token = "refresh-xyz", usuario = usuario, expiraEm = java.time.LocalDateTime.now().plusDays(1))
         `when`(usuarioRepository.findByEmail("user@ifce.edu.br")).thenReturn(usuario)
         `when`(jwtService.gerarAccessToken(1L, "user@ifce.edu.br", listOf("ROLE_COLABORADOR"))).thenReturn("access-xyz")
         `when`(refreshTokenService.gerarRefreshToken(usuario)).thenReturn(novoRefresh)
@@ -67,8 +61,10 @@ class AuthServiceTest {
         val usuario = Usuario(id = 5, email = "user@ifce.edu.br", nome = "User").apply {
             perfis = mutableSetOf(Perfil.ROLE_COLABORADOR)
         }
-        val refreshToken = RefreshToken(token = "old-refresh", usuario = usuario, expiraEm = java.time.LocalDateTime.now().plusDays(1))
-        val novoRefresh = RefreshToken(token = "new-refresh", usuario = usuario, expiraEm = java.time.LocalDateTime.now().plusDays(1))
+        val refreshToken =
+            RefreshToken(token = "old-refresh", usuario = usuario, expiraEm = java.time.LocalDateTime.now().plusDays(1))
+        val novoRefresh =
+            RefreshToken(token = "new-refresh", usuario = usuario, expiraEm = java.time.LocalDateTime.now().plusDays(1))
         `when`(refreshTokenService.validarRefreshToken("cookie-abc")).thenReturn(refreshToken)
         `when`(jwtService.gerarAccessToken(5L, "user@ifce.edu.br", listOf("ROLE_COLABORADOR"))).thenReturn("access-new")
         `when`(refreshTokenService.gerarRefreshToken(usuario)).thenReturn(novoRefresh)
@@ -113,7 +109,8 @@ class AuthServiceTest {
         val usuario = Usuario(id = 2, email = "admin@ifce.edu.br", nome = "Admin").apply {
             perfis = mutableSetOf(Perfil.ROLE_ADMINISTRADOR, Perfil.ROLE_COLABORADOR)
         }
-        val novoRefresh = RefreshToken(token = "refresh-xyz", usuario = usuario, expiraEm = java.time.LocalDateTime.now().plusDays(1))
+        val novoRefresh =
+            RefreshToken(token = "refresh-xyz", usuario = usuario, expiraEm = java.time.LocalDateTime.now().plusDays(1))
         val captorRoles = arrayOfNulls<Any>(1)
         `when`(usuarioRepository.findByEmail("admin@ifce.edu.br")).thenReturn(usuario)
         org.mockito.Mockito.doAnswer {

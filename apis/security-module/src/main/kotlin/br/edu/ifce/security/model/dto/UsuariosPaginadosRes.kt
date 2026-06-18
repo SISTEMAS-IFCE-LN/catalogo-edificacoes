@@ -1,5 +1,6 @@
 package br.edu.ifce.security.model.dto
 
+import br.edu.ifce.common.dto.DadosPaginacao
 import br.edu.ifce.security.model.domain.Usuario
 import org.springframework.data.domain.Page
 
