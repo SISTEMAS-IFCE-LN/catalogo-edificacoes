@@ -31,3 +31,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Catálogo de Edificações - chaves RSA e arquivos de ambiente
+.keys/
+**/.keys/
+.env
+.env.local
+.env.*.local

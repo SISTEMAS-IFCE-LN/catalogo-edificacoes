@@ -1,0 +1,39 @@
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:testdb
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    defer-datasource-initialization: true
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:data-dev.sql
+  h2:
+    console:
+      enabled: true
+      path: /h2
+
+server:
+  servlet:
+    session:
+      cookie:
+        secure: false
+        same-site: lax
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+
+bootstrap:
+  admin-email: ${BOOTSTRAP_ADMIN_EMAIL:dev-admin@ifce.edu.br}
+
+jwt:
+  cookie-secure: ${JWT_COOKIE_SECURE:false}

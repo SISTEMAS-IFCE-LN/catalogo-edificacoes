@@ -1,10 +1,12 @@
 # Casos de Uso — Frontend (Ambientes Internos)
 
+> **Nomenclatura consolidada:** neste documento, **Gestor do Sistema** mapeia para `ROLE_GESTOR_SISTEMA`, e o usuário do sistema é chamado de **Usuário** (entidade `Usuario`). A nomenclatura "Servidor" (presente em versões anteriores) foi renomeada para "Gestor do Sistema" para alinhar com o `Perfil` correspondente.
+
 Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/casos-uso.md`) em fluxos, telas e comportamentos esperados do frontend. O foco é a experiência do usuário, interações de UI, validações no cliente, estados e critérios de aceitação.
 
 ## Visão Geral
 
-- Público-alvo: Validador, Gestor do Sistema, Servidor, Público Externo.
+- Público-alvo: Validador, Gestor do Sistema, Colaborador, Público Externo.
 - Objetivo: mapear cada caso de uso do backend para telas, componentes e interações no frontend.
 - Regras gerais de UI:
   - Paginação padrão: 100 itens por página (conforme backend), com opções de navegação e busca por texto.
@@ -329,12 +331,12 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 
 ---
 
-## Ator: Servidor (UI)
+## Ator: Colaborador (UI)
 
 ### UC19-FE: Detalhes de um Ambiente Publicado
 
 - Tela: `DetalheAmbiente` (rota `/ambientes/publicados/{id}`).
-- Pré-condições: selecionou um ambiente da lista e está logado com role `servidor`.
+- Pré-condições: selecionou um ambiente da lista e está logado com role `colaborador` (autenticado via Google OAuth 2.0, RN-4.5/RN-4.6).
 - Fluxo principal (UI): Similar ao UC02-FE, mas sem ações adicionais.
 - Estados e erros: Os mesmos do UC02-FE.
 - Critérios de aceitação: Os mesmos do UC02-FE.
@@ -342,7 +344,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 ### UC20-FE: Obter Detalhes de Esquadrias de uma lista de Ambientes Publicados
 
 - Tela: Tela `Publicados` por meio de `AcoesLote`, ação `Detalhes Esquadrias`.
-- Pré-condições: Usuário logado com role `servidor` e ambientes com `status = PUBLICADO` selecionados.
+- Pré-condições: Usuário logado com role `colaborador` (autenticado via Google OAuth 2.0, RN-4.5/RN-4.6) e ambientes com `status = PUBLICADO` selecionados.
 - Fluxo principal (UI):
   1. O usuário seleciona um ou mais ambientes na lista e seleciona `Detalhes Esquadrias`.
   2. O frontend envia `GET /api/ambientes/publicados/esquadrias` passando a lista de ids por parâmetro.

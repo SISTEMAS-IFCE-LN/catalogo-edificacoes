@@ -1,5 +1,7 @@
 # Contexto dos Ambientes Internos
 
+> **Nomenclatura consolidada:** neste documento, **Gestor do Sistema** mapeia para `ROLE_GESTOR_SISTEMA`, e o usuário do sistema é chamado de **Usuário** (entidade `Usuario`). A nomenclatura "Servidor" (presente em versões anteriores) foi renomeada para "Gestor do Sistema" para alinhar com o `Perfil` correspondente.
+
 ## Casos de Uso
 
 A seguir estão descritos os principais casos de uso relacionados ao gerenciamento e consulta dos ambientes internos das edificações do IFCE.
@@ -369,15 +371,15 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
 
 ---
 
-### Ator: Servidor
+### Ator: Colaborador
 
 #### **UC19: Obter Detalhes de um Ambiente Publicado**
 
-* **Descrição:** Permite ao Servidor visualizar todas as informações detalhadas de um ambiente específico publicado, buscando por ID.
-* **Ator Primário:** Servidor.
-* **Pré-condições:** O Servidor está autenticado e possui permissão para visualizar ambientes publicados. O ambiente a ser consultado existe e tem atributo `status = PUBLICADO`.
+* **Descrição:** Permite ao Colaborador visualizar todas as informações detalhadas de um ambiente específico publicado, buscando por ID.
+* **Ator Primário:** Colaborador.
+* **Pré-condições:** O Colaborador está autenticado via Google OAuth 2.0 e possui o perfil `ROLE_COLABORADOR` (RN-4.3, RN-4.5, RN-4.6). O ambiente a ser consultado existe e tem atributo `status = PUBLICADO`.
 * **Fluxo Principal:**
-        1. O Servidor realiza uma requisição `GET` ao endpoint `/api/ambientes/publicados/{id}`.
+        1. O Colaborador realiza uma requisição `GET` ao endpoint `/api/ambientes/publicados/{id}`.
         2. O Sistema recupera e exibe os detalhes do ambiente solicitado.
         3. Os detalhes incluem as seguintes informações do ambiente:
             * ID;
@@ -394,17 +396,17 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
             * Área total das Janelas.
 * **Fluxos Alternativos:**
     * **FA01 - Ambiente não encontrado:** Se o ID não corresponder a nenhum ambiente publicado, o Sistema exibe uma mensagem de erro.
-    * **FA02 - Erro ao obter detalhes:** Se ocorrer um erro ao buscar os detalhes do ambiente, o Sistema informa o Servidor sobre a falha.
+    * **FA02 - Erro ao obter detalhes:** Se ocorrer um erro ao buscar os detalhes do ambiente, o Sistema informa o Colaborador sobre a falha.
 * **Pós-condições:** Nenhuma alteração no estado do sistema.
 
 #### **UC20: Obter Detalhes de Esquadrias de uma lista de Ambientes Publicados**
 
-* **Descrição:** Permite ao Servidor visualizar todas as informações detalhadas de esquadrias de um conjunto de ambientes publicados de forma paginada.
-* **Ator Primário:** Servidor.
-* **Pré-condições:** O Servidor está autenticado e possui permissão para visualizar ambientes publicados. Os ambientes a serem consultados existem e têm atributo `status = PUBLICADO`.
+* **Descrição:** Permite ao Colaborador visualizar todas as informações detalhadas de esquadrias de um conjunto de ambientes publicados de forma paginada.
+* **Ator Primário:** Colaborador.
+* **Pré-condições:** O Colaborador está autenticado via Google OAuth 2.0 e possui o perfil `ROLE_COLABORADOR` (RN-4.3, RN-4.5, RN-4.6). Os ambientes a serem consultados existem e têm atributo `status = PUBLICADO`.
 * **Fluxo Principal:**
-        1. O servidor preenche os parâmetros de consulta com a lista de IDs dos ambientes publicados a serem consultados.
-        2. O Servidor realiza uma requisição `GET` ao endpoint `/api/ambientes/publicados/esquadrias?ids=1,2,3`.
+        1. O Colaborador preenche os parâmetros de consulta com a lista de IDs dos ambientes publicados a serem consultados.
+        2. O Colaborador realiza uma requisição `GET` ao endpoint `/api/ambientes/publicados/esquadrias?ids=1,2,3`.
         3. O Sistema recupera e exibe, de forma paginada e limitada a 100 registros por página, os detalhes das esquadrias dos ambientes solicitados.
         4. Os detalhes incluem as seguintes informações das esquadrias de cada ambiente:
             * Nomes e Localizações dos ambientes consultados;
@@ -419,7 +421,7 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
                 * Área total por tipo e material.
 * **Fluxos Alternativos:**
     * **FA01 - Ambiente não encontrado:** Se algum dos IDs não corresponderem a um ambiente publicado, o Sistema exibe uma mensagem de erro.
-    * **FA02 - Erro ao obter detalhes:** Se ocorrer um erro ao buscar os detalhes das esquadrias, o Sistema informa o Servidor sobre a falha.
+    * **FA02 - Erro ao obter detalhes:** Se ocorrer um erro ao buscar os detalhes das esquadrias, o Sistema informa o Colaborador sobre a falha.
     * **FA03 - Nenhuma esquadria encontrada:** Se não houver esquadrias que correspondam aos filtros aplicados, o Sistema exibe uma mensagem indicando que a lista está vazia.
 * **Pós-condições:** Nenhuma alteração no estado do sistema.
 

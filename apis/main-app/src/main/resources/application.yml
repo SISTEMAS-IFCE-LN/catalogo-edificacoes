@@ -1,0 +1,47 @@
+spring:
+  application:
+    name: catalogo-edificacoes
+  profiles:
+    active:
+      - ${PROFILE_ACTIVE:dev}
+  jpa:
+    open-in-view: false
+  sql:
+    init:
+      mode: never
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope:
+              - email
+              - profile
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+        provider:
+          google:
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+
+server:
+  forward-headers-strategy: framework
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        secure: true
+        same-site: lax
+
+jwt:
+  access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:900}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION:43200}
+  cookie-secure: ${JWT_COOKIE_SECURE:true}
+
+rsa:
+  public-key-path: ${JWT_PUBLIC_KEY_PATH:file:./.keys/public.pem}
+  private-key-path: ${JWT_PRIVATE_KEY_PATH:file:./.keys/private_pkcs8.pem}
+
+bootstrap:
+  admin-email: ${BOOTSTRAP_ADMIN_EMAIL:}
+  allow-reactivate: ${BOOTSTRAP_ALLOW_REACTIVATE:true}
