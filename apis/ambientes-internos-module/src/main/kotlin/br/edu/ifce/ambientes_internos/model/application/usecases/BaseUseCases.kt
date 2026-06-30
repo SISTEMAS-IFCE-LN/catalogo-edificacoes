@@ -76,13 +76,12 @@ abstract class BaseUseCases(
 
         val bloco = localizacao.bloco?.trim()?.ifBlank { null }?.replace(" ", "_")
         val unidade = localizacao.unidade?.trim()?.ifBlank { null }?.replace(" ", "_")
-        val andar = localizacao.andar?.toString()
         val pageableLimitado = limitarPageable(pageable)
 
         val page = repoAmb.findByLocalizacaoContainingIgnoreCaseAndStatus(
             bloco = bloco,
             unidade = unidade,
-            andar = andar,
+            andar = localizacao.andar,
             status = status,
             pageable = pageableLimitado
         )

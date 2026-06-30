@@ -69,15 +69,15 @@ interface AmbienteRepository : JpaRepository<Ambiente, Long> {
         """
             select a from Ambiente a
             where a.status = :status
-            and (:bloco is null or upper(cast(a.localizacao.bloco as string)) like concat('%', upper(:bloco), '%'))
-            and (:unidade is null or upper(cast(a.localizacao.unidade as string)) like concat('%', upper(:unidade), '%'))
-            and (:andar is null or cast(a.localizacao.andar as string) like :andar)
+            and (:bloco is null or upper(a.localizacao.bloco) like concat('%', upper(:bloco), '%'))
+            and (:unidade is null or upper(a.localizacao.unidade) like concat('%', upper(:unidade), '%'))
+            and (:andar is null or a.localizacao.andar = :andar)
         """
     )
     fun findByLocalizacaoContainingIgnoreCaseAndStatus(
         @Param("bloco") bloco: String?,
         @Param("unidade") unidade: String?,
-        @Param("andar") andar: String?,
+        @Param("andar") andar: Int?,
         @Param("status") status: StatusAmbiente,
         pageable: Pageable
     ): Page<Ambiente>
@@ -87,8 +87,7 @@ interface AmbienteRepository : JpaRepository<Ambiente, Long> {
         """
             select a from Ambiente a
             where a.status = :status
-            and upper(cast(a.tipo as string))
-            like concat('%', upper(:tipo), '%')
+            and upper(a.tipo) like concat('%', upper(:tipo), '%')
         """
     )
     fun findByTipoAndStatus(
