@@ -12,9 +12,9 @@ O sistema suporta múltiplos profiles via `spring.profiles.active`. O profile de
 
 | Profile | Quando usar                   | Observações                                                                                                                   |
 |---------|-------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
-| `dev`   | Desenvolvimento local         | Carrega `data-dev.sql` (120 ambientes fake). `cookie.secure: false`. `BOOTSTRAP_ADMIN_EMAIL` default `dev-admin@ifce.edu.br`. |
+| `dev`   | Desenvolvimento local         | Carrega `data-dev.sql` (120 ambientes fake). `cookie.secure: false`. `BOOTSTRAP_ADMIN_EMAIL` default `dev-admin@ifce.edu.br`. Banco: H2 in-memory. |
 | `test`  | Suíte de testes automatizados | `application-test.yml` em `src/test/resources`. H2 in-memory.                                                                 |
-| `prod`  | Produção                      | `data.sql` é mínimo (sem seed fake). Exige todas as env vars reais.                                                           |
+| `prod`  | Produção                      | Banco: PostgreSQL. `data.sql` é mínimo (sem seed fake). Exige todas as env vars reais (incluindo `SPRING_DATASOURCE_*`). `ddl-auto: update` (provisório). |
 
 Para ativar um profile específico:
 
@@ -41,7 +41,8 @@ A propriedade `spring.sql.init.mode` controla quando scripts SQL são executados
 apis/main-app/src/main/resources/
 ├── application.yml
 ├── application-dev.yml
-└── data-dev.sql           # 120 ambientes fake
+├── application-prod.yml  # PostgreSQL (ddl-auto: update, provisório)
+└── data-dev.sql          # 120 ambientes fake (apenas dev)
 ```
 
 ---
@@ -150,6 +151,8 @@ Antes do primeiro deploy, o operador **deve** definir a env var `BOOTSTRAP_ADMIN
 - [ ] `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` configurados.
 - [ ] `JWT_PUBLIC_KEY_PATH` e `JWT_PRIVATE_KEY_PATH` apontando para os arquivos `.pem` (ver seção 3).
 - [ ] `JWT_COOKIE_SECURE=true` (default).
+- [ ] `SPRING_DATASOURCE_URL` configurado para o banco PostgreSQL de produção (ex.: `jdbc:postgresql://host:5432/catalogo_edificacoes`).
+- [ ] `SPRING_DATASOURCE_USERNAME` e `SPRING_DATASOURCE_PASSWORD` definidos.
 - [ ] HTTPS configurado no reverse proxy / load balancer, com headers `X-Forwarded-Proto` e `X-Forwarded-Host` injetados.
       O `application.yml` já define `server.forward-headers-strategy: framework` para que o Spring respeite esses
       headers na construção do `baseUrl` do template `{baseUrl}/login/oauth2/code/{registrationId}`.
@@ -193,6 +196,9 @@ Antes do primeiro deploy, o operador **deve** definir a env var `BOOTSTRAP_ADMIN
 | `JWT_COOKIE_SECURE`           | `true`                                   | Não                  | application.yml      |
 | `BOOTSTRAP_ADMIN_EMAIL`       | (vazio)                                  | **Sim**              | Operador             |
 | `BOOTSTRAP_ALLOW_REACTIVATE`  | `true`                                   | Não                  | application.yml      |
+| `SPRING_DATASOURCE_URL`       | `jdbc:postgresql://localhost:5432/catalogo_edificacoes` | **Sim (prod)**       | Operador             |
+| `SPRING_DATASOURCE_USERNAME`  | `catalogo`                               | **Sim (prod)**       | Operador             |
+| `SPRING_DATASOURCE_PASSWORD`  | (vazio)                                  | **Sim (prod)**       | Operador             |
 
 Para configurações específicas do Spring (datasource, JPA), ver `main-app/src/main/resources/application.yml`.
 

@@ -150,42 +150,61 @@ Para um módulo específico:
 
 Total atual (junho/2026): **170 testes, 0 falhas, 0 erros**.
 
-### 3.3. Iniciar a aplicação em modo dev
+### 3.3. Iniciar a aplicação
 
-**Recomendado: usar os scripts de execução**
+Os scripts `run-windows.bat` e `run-linux.sh` já fazem o `cd` correto para o diretório `apis/`, carregam as variáveis do `.env` e invocam o `mvnw` com os parâmetros corretos — inclusive o profile Maven `-Pprod` quando `PROFILE_ACTIVE=prod`.
 
-Os scripts `run-windows.bat` e `run-linux.sh` já fazem o `cd` correto para o diretório `apis/` e invocam o `mvnw` com os parâmetros corretos:
+#### Configuração do `.env`
+
+| Profile | Variáveis obrigatórias no `.env` |
+|---------|----------------------------------|
+| `dev` (default) | `PROFILE_ACTIVE=dev`, `BOOTSTRAP_ADMIN_EMAIL`, chaves RSA (`JWT_PUBLIC_KEY_PATH`, `JWT_PRIVATE_KEY_PATH`). |
+| `prod` | `PROFILE_ACTIVE=prod`, `BOOTSTRAP_ADMIN_EMAIL`, chaves RSA, `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`. |
+
+#### Modo dev
 
 ```bash
 # Linux/macOS
 cd apis
 ./run-linux.sh
-```
 
-```powershell
 # Windows
 cd apis
 .\run-windows.bat
 ```
 
-**Alternativa: invocar o mvnw diretamente**
+A aplicação sobe em `http://localhost:8080` com o profile `dev` ativo e banco H2 in-memory.
 
-Se preferir invocar o `mvnw` diretamente, certifique-se de estar no diretório `apis/` (raiz do projeto Maven multi-módulo):
+#### Modo prod
 
+1. Preencha o `.env` com `PROFILE_ACTIVE=prod` e as credenciais do PostgreSQL.
+2. Execute o mesmo script de dev.
+
+```bash
+# Linux/macOS
+cd apis
+./run-linux.sh
+
+# Windows
+cd apis
+.\run-windows.bat
+```
+
+#### Alternativa: invocar o mvnw diretamente
+
+Dev:
 ```bash
 cd apis
 ./mvnw clean install
 ./mvnw spring-boot:run -pl main-app
 ```
 
-Ou
-
+Prod:
 ```bash
-./mvnw clean install
-java -jar apis/main-app/target/main-app-0.0.1-SNAPSHOT.jar
+cd apis
+./mvnw -Pprod clean install
+./mvnw -Pprod spring-boot:run -pl main-app
 ```
-
-A aplicação sobe em `http://localhost:8080` com o profile `dev` ativo.
 
 ### 3.4. Endpoints úteis para smoke test
 
