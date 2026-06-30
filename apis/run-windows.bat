@@ -79,11 +79,25 @@ if not exist "%PRIVATE_KEY_FILE%" (
     exit /b 1
 )
 
+REM -----------------------------------------------------------------------------
+REM Define o profile Maven com base no PROFILE_ACTIVE do Spring.
+REM Em prod o driver PostgreSQL so entra no classpath com -Pprod.
+REM -----------------------------------------------------------------------------
+set "MAVEN_PROFILE="
+if "%PROFILE_ACTIVE%"=="prod" (
+    set "MAVEN_PROFILE=-Pprod"
+    echo [INFO] Profile 'prod' detectado; usando PostgreSQL: !MAVEN_PROFILE!
+)
+
 echo [INFO] Variaveis carregadas:
 echo        PROFILE_ACTIVE    = %PROFILE_ACTIVE%
 echo        BOOTSTRAP_ADMIN   = %BOOTSTRAP_ADMIN_EMAIL%
 echo        JWT_PUBLIC_KEY    = %JWT_PUBLIC_KEY_PATH%
 echo        JWT_PRIVATE_KEY   = %JWT_PRIVATE_KEY_PATH%
+if "%PROFILE_ACTIVE%"=="prod" (
+    echo        DATASOURCE_URL    = !SPRING_DATASOURCE_URL!
+    echo        DATASOURCE_USER   = !SPRING_DATASOURCE_USERNAME!
+)
 echo.
 
 REM -----------------------------------------------------------------------------
@@ -129,6 +143,7 @@ REM ----------------------------------------------------------------------------
 echo [INFO] Iniciando aplicacao a partir de %APIS_DIR%...
 echo.
 cd /d "%APIS_DIR%"
-call "%MVNW%" clean -f main-app/pom.xml spring-boot:run
+call "%MVNW%" %MAVEN_PROFILE% clean install -DskipTests
+call "%MVNW%" %MAVEN_PROFILE% spring-boot:run -pl main-app
 
 endlocal

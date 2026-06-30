@@ -84,11 +84,25 @@ if [[ ! -f "$PRIVATE_KEY_FILE" ]]; then
     exit 1
 fi
 
+# -----------------------------------------------------------------------------
+# Define o profile Maven com base no PROFILE_ACTIVE do Spring.
+# Em prod o driver PostgreSQL so entra no classpath com -Pprod.
+# -----------------------------------------------------------------------------
+MAVEN_PROFILE=""
+if [[ "${PROFILE_ACTIVE:-dev}" == "prod" ]]; then
+    MAVEN_PROFILE="-Pprod"
+    echo "[INFO] Profile 'prod' detectado; usando PostgreSQL ($MAVEN_PROFILE)."
+fi
+
 echo "[INFO] Vari??veis carregadas:"
 echo "        PROFILE_ACTIVE    = ${PROFILE_ACTIVE:-}"
 echo "        BOOTSTRAP_ADMIN   = ${BOOTSTRAP_ADMIN_EMAIL:-}"
 echo "        JWT_PUBLIC_KEY    = $JWT_PUBLIC_KEY_PATH"
 echo "        JWT_PRIVATE_KEY   = $JWT_PRIVATE_KEY_PATH"
+if [[ "${PROFILE_ACTIVE:-dev}" == "prod" ]]; then
+    echo "        DATASOURCE_URL    = ${SPRING_DATASOURCE_URL:-}"
+    echo "        DATASOURCE_USER   = ${SPRING_DATASOURCE_USERNAME:-}"
+fi
 echo
 
 # -----------------------------------------------------------------------------
@@ -139,5 +153,5 @@ chmod +x "$MVNW"
 echo "[INFO] Iniciando aplica????o a partir de $APIS_DIR..."
 echo
 cd "$APIS_DIR"
-"$MVNW" clean install -DskipTests
-exec "$MVNW" spring-boot:run -pl main-app
+"$MVNW" $MAVEN_PROFILE clean install -DskipTests
+exec "$MVNW" $MAVEN_PROFILE spring-boot:run -pl main-app
