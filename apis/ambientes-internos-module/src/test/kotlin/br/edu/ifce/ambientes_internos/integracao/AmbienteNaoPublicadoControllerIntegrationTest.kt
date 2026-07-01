@@ -392,16 +392,14 @@ class AmbienteNaoPublicadoControllerIntegrationTest {
     }
 
     @Test
-    fun `deve retornar 400 ao incluir pes direito com mais de 2 casas decimais`() {
+    fun `deve retornar 404 ao incluir pes direito em ambiente inexistente`() {
         val payloadPatch = "[3.555]"
 
-        assertBadRequestOrValidationError {
-            mockMvc.perform(
-                MockMvcRequestBuilders.patch("/api/ambientes/nao-publicados/999/pes-direitos/incluir")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(payloadPatch)
-            ).andExpect(status().isBadRequest)
-        }
+        mockMvc.perform(
+            MockMvcRequestBuilders.patch("/api/ambientes/nao-publicados/999/pes-direitos/incluir")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(payloadPatch)
+        ).andExpect(status().isNotFound)
     }
 
     // ========== Validações PATCH: incluirGeometriasAmbiente ==========

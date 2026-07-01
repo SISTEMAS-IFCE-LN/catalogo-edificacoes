@@ -3,7 +3,7 @@ package br.edu.ifce
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 
-@SpringBootApplication(scanBasePackages = ["br.edu.ifce.ambientes_internos", "br.edu.ifce.security"])
+@SpringBootApplication(scanBasePackages = ["br.edu.ifce.ambientes_internos", "br.edu.ifce.security", "br.edu.ifce.common"])
 class CatalogoEdificacoesApp
 
 fun main(args: Array<String>) {
