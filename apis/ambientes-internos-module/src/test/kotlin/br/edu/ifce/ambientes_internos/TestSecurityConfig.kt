@@ -36,6 +36,7 @@ class TestSecurityConfig {
                 auth.requestMatchers("/api/ambientes/publicados/**").permitAll()
                 auth.requestMatchers("/auth/**").permitAll()
                 auth.requestMatchers("/health").permitAll()
+                auth.requestMatchers("/test/**").permitAll()
                 auth.anyRequest().authenticated()
             }
             .oauth2ResourceServer { rs ->
