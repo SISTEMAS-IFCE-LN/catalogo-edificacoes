@@ -1,0 +1,66 @@
+networks:
+  catalogo-net:
+    driver: bridge
+
+volumes:
+  pgdata:
+    name: pgdata
+
+services:
+  db:
+    container_name: catalogo-db
+    image: postgres:17-trixie
+    user: postgres
+    restart: unless-stopped
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USERNAME}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U catalogo -d catalogo_edificacoes"]
+      start_period: 1m
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    networks:
+      - catalogo-net
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 2G
+
+  api:
+    container_name: catalogo-api
+    build:
+      context: ./apis
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      - PROFILE_ACTIVE=${PROFILE_ACTIVE}
+      - DB_HOST=${DB_HOST}
+      - DB_NAME=${DB_NAME}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - BOOTSTRAP_ADMIN_EMAIL=${BOOTSTRAP_ADMIN_EMAIL}
+      - JWT_PUBLIC_KEY_PATH=file:./.keys/public.pem
+      - JWT_PRIVATE_KEY_PATH=file:./.keys/private_pkcs8.pem
+      - JWT_COOKIE_SECURE=${JWT_COOKIE_SECURE}
+    volumes:
+      - ./apis/.keys:/app/.keys:ro
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - catalogo-net
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 1G

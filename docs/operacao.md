@@ -12,9 +12,9 @@ O sistema suporta múltiplos profiles via `spring.profiles.active`. O profile de
 
 | Profile | Quando usar                   | Observações                                                                                                                   |
 |---------|-------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
-| `dev`   | Desenvolvimento local         | Carrega `data-dev.sql` (120 ambientes fake). `cookie.secure: false`. `BOOTSTRAP_ADMIN_EMAIL` default `dev-admin@ifce.edu.br`. |
+| `dev`   | Desenvolvimento local         | Carrega `data-dev.sql` (120 ambientes fake). `cookie.secure: false`. `BOOTSTRAP_ADMIN_EMAIL` default `dev-admin@ifce.edu.br`. Banco: H2 in-memory. |
 | `test`  | Suíte de testes automatizados | `application-test.yml` em `src/test/resources`. H2 in-memory.                                                                 |
-| `prod`  | Produção                      | `data.sql` é mínimo (sem seed fake). Exige todas as env vars reais.                                                           |
+| `prod`  | Produção                      | Banco: PostgreSQL. `data.sql` é mínimo (sem seed fake). Exige todas as env vars reais (incluindo `DB_HOST`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`). `ddl-auto: update` (provisório). |
 
 Para ativar um profile específico:
 
@@ -41,7 +41,8 @@ A propriedade `spring.sql.init.mode` controla quando scripts SQL são executados
 apis/main-app/src/main/resources/
 ├── application.yml
 ├── application-dev.yml
-└── data-dev.sql           # 120 ambientes fake
+├── application-prod.yml  # PostgreSQL (ddl-auto: update, provisório)
+└── data-dev.sql          # 120 ambientes fake (apenas dev)
 ```
 
 ---
@@ -150,6 +151,8 @@ Antes do primeiro deploy, o operador **deve** definir a env var `BOOTSTRAP_ADMIN
 - [ ] `GOOGLE_CLIENT_ID` e `GOOGLE_CLIENT_SECRET` configurados.
 - [ ] `JWT_PUBLIC_KEY_PATH` e `JWT_PRIVATE_KEY_PATH` apontando para os arquivos `.pem` (ver seção 3).
 - [ ] `JWT_COOKIE_SECURE=true` (default).
+- [ ] `DB_HOST` configurado para o banco PostgreSQL de produção (ex.: `jdbc:postgresql://host:5432`).
+- [ ] `DB_NAME`, `DB_USERNAME` e `DB_PASSWORD` definidos.
 - [ ] HTTPS configurado no reverse proxy / load balancer, com headers `X-Forwarded-Proto` e `X-Forwarded-Host` injetados.
       O `application.yml` já define `server.forward-headers-strategy: framework` para que o Spring respeite esses
       headers na construção do `baseUrl` do template `{baseUrl}/login/oauth2/code/{registrationId}`.
@@ -193,15 +196,58 @@ Antes do primeiro deploy, o operador **deve** definir a env var `BOOTSTRAP_ADMIN
 | `JWT_COOKIE_SECURE`           | `true`                                   | Não                  | application.yml      |
 | `BOOTSTRAP_ADMIN_EMAIL`       | (vazio)                                  | **Sim**              | Operador             |
 | `BOOTSTRAP_ALLOW_REACTIVATE`  | `true`                                   | Não                  | application.yml      |
+| `DB_HOST`                     | `jdbc:postgresql://localhost:5432`       | **Sim (prod)**       | Operador             |
+| `DB_NAME`                     | `catalogo_edificacoes`                   | **Sim (prod)**       | Operador             |
+| `DB_USERNAME`                 | `catalogo`                               | **Sim (prod)**       | Operador             |
+| `DB_PASSWORD`                 | (vazio)                                  | **Sim (prod)**       | Operador             |
 
 Para configurações específicas do Spring (datasource, JPA), ver `main-app/src/main/resources/application.yml`.
 
 ---
 
-## 6. Troubleshooting
+## 7. Docker Compose
+
+O repositório inclui um `docker-compose.yml` na **raiz** que sobe a aplicação + banco Postgres 17 para um fluxo de dev local integrado (sem precisar de Postgres instalado na máquina).
+
+**Arquivos envolvidos:**
+
+| Arquivo | Localização | Função |
+|---|---|---|
+| `docker-compose.yml` | raiz | Define os serviços `db` (Postgres) e `api` (build local). |
+| `.env` | raiz | Alimenta a interpolação `${...}` do Compose. **Não commitar.** |
+| `.env.example` | raiz | Espelho commitado com placeholders. |
+| `apis/Dockerfile` | `apis/` | Multi-stage build (Maven 3.9 + distroless java21). |
+| `apis/.keys/` | `apis/` | Bind mount no container (`/app/.keys:ro`) para as chaves RSA. |
+
+**Comandos:**
+
+```bash
+# subir (primeira vez, com volume novo)
+docker compose up -d --build
+
+# acompanhar logs
+docker compose logs -f db
+docker compose logs -f api
+
+# parar (preserva o volume pgdata)
+docker compose down
+
+# parar e re-inicializar o banco (apaga pgdata)
+docker compose down -v
+```
+
+**Sobre o `pgdata` volume:**
+
+A imagem oficial `postgres:17-trixie` só lê `POSTGRES_USER`/`POSTGRES_DB`/`POSTGRES_PASSWORD` na **primeira inicialização** (quando o data dir está vazio). Em boots subsequentes, essas variáveis são ignoradas. Se o volume `pgdata` foi inicializado com credenciais erradas (ex.: variáveis vazias), o `db` sempre sobe com o usuário default `postgres`. Para corrigir, use `docker compose down -v` para remover o volume e re-inicializar.
+
+---
+
+## 8. Troubleshooting
 
 | Sintoma                                                                                          | Causa provável                                          | Solução                                                                                                 |
 |--------------------------------------------------------------------------------------------------|---------------------------------------------------------|---------------------------------------------------------------------------------------------------------|
+| `FATAL: role "catalogo" does not exist` no healthcheck do `db`                                  | Volume `pgdata` foi inicializado com credenciais diferentes (ex.: variáveis vazias na primeira vez) | `docker compose down -v` remove o volume e re-inicializa com as env vars corretas.                      |
+| `The server requested SCRAM-based authentication, but no password was provided` no `api`         | `DB_PASSWORD` está vazio e o Postgres usa SCRAM (default) | Definir `DB_PASSWORD` não-vazio no `.env` raiz e re-inicializar o volume com `docker compose down -v`.   |
 | Boot aborta com `IllegalStateException: BOOTSTRAP_ADMIN_EMAIL não configurado`                   | Env var ausente                                         | Definir `BOOTSTRAP_ADMIN_EMAIL` no ambiente.                                                            |
 | Boot aborta com `IllegalStateException: ... allow-reactivate=false`                              | Admin desativado e flag desligada                       | Reativar manualmente no banco ou setar `BOOTSTRAP_ALLOW_REACTIVATE=true` no próximo boot.               |
 | `401 Unauthorized` em todos os endpoints                                                         | Chave RSA inválida ou arquivo inacessível               | Verificar `JWT_PUBLIC_KEY_PATH` / `JWT_PRIVATE_KEY_PATH` e permissões dos arquivos `.pem`.             |

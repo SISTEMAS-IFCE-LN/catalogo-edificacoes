@@ -23,19 +23,29 @@ segurança e as diferentes regras de negócio de domínio coexistam sem gerar de
 │     security-module     │         │     ambientes-internos-module      │
 │  (Identidade e Acesso)  │         │   (Domínio de Ambientes Internos)  │
 └─────────────────────────┘         └────────────────────────────────────┘
+┌─────────────────────────┐
+│     common-module       │
+│  (Utilitários shared)   │
+└─────────────────────────┘
 ```
 
 ### 1.1. Módulo de Inicialização e Orquestração (`main-app`)
 
 * **Papel:** Atua como a raiz de composição (*Composition Root*) do sistema — o único módulo executável.
 * **Responsabilidade:** Este módulo não possui regras de negócio ou de segurança corporativa. Sua função é:
-    * Consolidar `security-module` e `ambientes-internos-module` em uma única unidade executável final.
+    * Consolidar `security-module`, `common-module` e `ambientes-internos-module` em uma única unidade executável final.
     * Conter a classe `CatalogoEdificacoesApp` anotada com
       `@SpringBootApplication(scanBasePackages = ["br.edu.ifce.ambientes_internos", "br.edu.ifce.security"])`.
     * Centralizar `application.yml`, `application-dev.yml` e `data-dev.sql` (carga de 120 ambientes fake para dev).
     * Definir as propriedades globais de OAuth2 (Google), das chaves RSA para JWT, das configurações de cookie
       (`HttpOnly`, `Secure`, `SameSite`) e das regras de CORS para SPA/mobile.
     * Expor o pacote executável de entrada do sistema (ponto único de inicialização).
+
+#### 1.1.1. Módulo de Utilitários Compartilhados (`common-module`)
+
+* **Papel:** Concentra utilitários e abstrações compartilhadas entre os módulos de domínio.
+* **Responsabilidade:** Fornece tipos, validações e helpers comuns que evitam duplicação entre `security-module` e `ambientes-internos-module`. É declarado no `<modules>` do parent e listado no `<dependencyManagement>` (`apis/pom.xml:34-37`).
+* **Observação:** Não define regras de negócio nem infraestrutura de segurança/identidade.
 
 ### 1.2. Módulo de Segurança (`security-module`)
 
