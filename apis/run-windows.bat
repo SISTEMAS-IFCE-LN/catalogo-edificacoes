@@ -20,10 +20,11 @@ setlocal EnableExtensions EnableDelayedExpansion
 
 REM -----------------------------------------------------------------------------
 REM Carrega o arquivo .env se existir.
-REM O .env deve ficar em apis/.env (mesmo diretorio deste script).
+REM O .env fica na raiz do repositorio (um nivel acima de apis/),
+REM junto com o docker-compose.yml.
 REM -----------------------------------------------------------------------------
 set "SCRIPT_DIR=%~dp0"
-set "ENV_FILE=%SCRIPT_DIR%.env"
+set "ENV_FILE=%SCRIPT_DIR%..\.env"
 
 if not exist "%ENV_FILE%" (
     echo [ERRO] Arquivo .env nao encontrado em: %ENV_FILE%
@@ -95,8 +96,9 @@ echo        BOOTSTRAP_ADMIN   = %BOOTSTRAP_ADMIN_EMAIL%
 echo        JWT_PUBLIC_KEY    = %JWT_PUBLIC_KEY_PATH%
 echo        JWT_PRIVATE_KEY   = %JWT_PRIVATE_KEY_PATH%
 if "%PROFILE_ACTIVE%"=="prod" (
-    echo        DATASOURCE_URL    = !SPRING_DATASOURCE_URL!
-    echo        DATASOURCE_USER   = !SPRING_DATASOURCE_USERNAME!
+    echo        DB_HOST           = %DB_HOST%
+    echo        DB_NAME           = %DB_NAME%
+    echo        DB_USERNAME       = %DB_USERNAME%
 )
 echo.
 
@@ -122,8 +124,8 @@ REM     apis/
 REM       mvnw.cmd
 REM       main-app/  (contem CatalogoEdificacoesApp.kt)
 REM       run-windows.bat   (este script)
-REM       .env
 REM       .keys/  (contem public.pem, private_pkcs8.pem)
+REM     .env  (raiz, consumido por este script e pelo docker-compose)
 REM -----------------------------------------------------------------------------
 REM %~dp0 termina com barra invertida; removemos para evitar ".\" no path.
 set "APIS_DIR=%SCRIPT_DIR:~0,-1%"

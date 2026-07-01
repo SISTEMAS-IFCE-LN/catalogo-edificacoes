@@ -5,18 +5,21 @@ WORKDIR /build
 # Copia SOMENTE a árvore de POMs do reator (mantém o cache de dependências
 # estável: alterações em código-fonte não invalidam o `go-offline`).
 COPY pom.xml ./pom.xml
+COPY common-module/pom.xml ./common-module/pom.xml
 COPY security-module/pom.xml ./security-module/pom.xml
 COPY ambientes-internos-module/pom.xml ./ambientes-internos-module/pom.xml
 COPY main-app/pom.xml ./main-app/pom.xml
 
 # Pré-resolve dependências do reator (módulos `-am` resolvidos em cascata).
 RUN mvn -B -ntp -q -e -DskipTests \
+        -Pprod \
         -pl main-app -am \
         dependency:go-offline
 
 # Copia o restante do código-fonte e empacota o jar executável.
 COPY . .
 RUN mvn -B -ntp -e -DskipTests \
+        -Pprod \
         -pl main-app -am \
         clean package
 

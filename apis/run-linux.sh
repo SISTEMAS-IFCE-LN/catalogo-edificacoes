@@ -18,10 +18,11 @@ set -euo pipefail
 
 # -----------------------------------------------------------------------------
 # Carrega o arquivo .env se existir.
-# O .env deve ficar em apis/.env (mesmo diret??rio deste script).
+# O .env fica na raiz do repositório (um nível acima de apis/),
+# junto com o docker-compose.yml.
 # -----------------------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ENV_FILE="$SCRIPT_DIR/.env"
+ENV_FILE="$SCRIPT_DIR/../.env"
 
 if [[ ! -f "$ENV_FILE" ]]; then
     echo "[ERRO] Arquivo .env n??o encontrado em: $ENV_FILE"
@@ -100,8 +101,9 @@ echo "        BOOTSTRAP_ADMIN   = ${BOOTSTRAP_ADMIN_EMAIL:-}"
 echo "        JWT_PUBLIC_KEY    = $JWT_PUBLIC_KEY_PATH"
 echo "        JWT_PRIVATE_KEY   = $JWT_PRIVATE_KEY_PATH"
 if [[ "${PROFILE_ACTIVE:-dev}" == "prod" ]]; then
-    echo "        DATASOURCE_URL    = ${SPRING_DATASOURCE_URL:-}"
-    echo "        DATASOURCE_USER   = ${SPRING_DATASOURCE_USERNAME:-}"
+    echo "        DB_HOST           = ${DB_HOST:-}"
+    echo "        DB_NAME           = ${DB_NAME:-}"
+    echo "        DB_USERNAME       = ${DB_USERNAME:-}"
 fi
 echo
 
@@ -131,8 +133,8 @@ fi
 #       mvnw
 #       main-app/  (contem CatalogoEdificacoesApp.kt)
 #       run-linux.sh   (este script)
-#       .env
 #       .keys/  (contem public.pem, private_pkcs8.pem)
+#     .env  (raiz, consumido por este script e pelo docker-compose)
 # -----------------------------------------------------------------------------
 APIS_DIR="$SCRIPT_DIR"
 MVNW="$APIS_DIR/mvnw"
