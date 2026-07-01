@@ -17,7 +17,7 @@ Este diretório concentra toda a documentação técnica e de negócio do projet
 
 ## Estado atual da implementação
 
-- **Módulos Maven:** `main-app` (composition root), `security-module` (identidade e autorização), `ambientes-internos-module` (domínio de ambientes).
+- **Módulos Maven:** `main-app` (composition root), `security-module` (identidade e autorização), `ambientes-internos-module` (domínio de ambientes), `common-module` (utilitários compartilhados).
 - **Autenticação:** OAuth2 Authorization Code com PKCE + Google como provedor; backend como broker; JWT próprio (RSA) para acesso à API; refresh token em cookie HttpOnly com rotação.
 - **Perfis:** `ROLE_COLABORADOR` (mínimo obrigatório), `ROLE_VALIDADOR`, `ROLE_GESTOR_SISTEMA`, `ROLE_ADMINISTRADOR` — cumulativos.
 - **Bootstrap do admin:** via `BOOTSTRAP_ADMIN_EMAIL` no `BootstrapAdminRunner`; aborta o boot se a env var não estiver configurada.

@@ -159,7 +159,7 @@ Os scripts `run-windows.bat` e `run-linux.sh` já fazem o `cd` correto para o di
 | Profile | Variáveis obrigatórias no `.env` |
 |---------|----------------------------------|
 | `dev` (default) | `PROFILE_ACTIVE=dev`, `BOOTSTRAP_ADMIN_EMAIL`, chaves RSA (`JWT_PUBLIC_KEY_PATH`, `JWT_PRIVATE_KEY_PATH`). |
-| `prod` | `PROFILE_ACTIVE=prod`, `BOOTSTRAP_ADMIN_EMAIL`, chaves RSA, `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`. |
+| `prod` | `PROFILE_ACTIVE=prod`, `BOOTSTRAP_ADMIN_EMAIL`, chaves RSA, `DB_HOST`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`. |
 
 #### Modo dev
 
@@ -190,6 +190,39 @@ cd apis
 .\run-windows.bat
 ```
 
+> **Nota:** o `.env` (e o `.env.example`) ficam na **raiz do repositório**, junto com o `docker-compose.yml`. Os scripts `run-linux.sh` / `run-windows.bat` e o `docker-compose.yml` leem o mesmo arquivo. O `.env` **não deve ser commitado** (já está no `.gitignore` da raiz).
+
+#### 3.4. Subir via Docker Compose
+
+A partir da **raiz do repositório**:
+
+```bash
+docker compose up -d --build
+```
+
+Este comando:
+
+- Constrói a imagem da API via `apis/Dockerfile` (multi-stage: Maven + distroless).
+- Sobe o `catalogo-db` (Postgres 17-trixie) com o `pgdata` volume nomeado.
+- Sobe o `catalogo-api` aguardando o `db` ficar `service_healthy`.
+
+O `docker-compose.yml` e o `.env` ficam **na raiz do repositório** (ao lado deste `docs/`). O Compose lê as variáveis do `.env` para interpolação dos blocos `environment:` dos serviços. **Não confundir** com `apis/.env` (não existe mais — o `.env` foi unificado na raiz para alimentar tanto o Compose quanto os scripts `run-linux.sh` / `run-windows.bat`).
+
+**Primeira inicialização:**
+
+O `pgdata` é criado do zero na primeira vez. Se você já subiu o stack antes (com variáveis erradas ou senha vazia), o `pgdata` retém a inicialização antiga — o Postgres ignora `POSTGRES_USER`/`POSTGRES_PASSWORD` em boots subsequentes. Para re-inicializar:
+
+```bash
+docker compose down -v          # remove containers E o volume pgdata
+docker compose up -d --build
+```
+
+**Verificação:**
+
+```bash
+docker compose logs -f api      # deve mostrar "Bootstrap admin pré-cadastrado..."
+```
+
 #### Alternativa: invocar o mvnw diretamente
 
 Dev:
@@ -206,12 +239,11 @@ cd apis
 ./mvnw -Pprod spring-boot:run -pl main-app
 ```
 
-### 3.4. Endpoints úteis para smoke test
+### 3.5. Endpoints úteis para smoke test
 
 | Endpoint | Método | Auth? | Descrição |
 |---|---|---|---|
 | `/health` | GET | Não | Health check. |
-| `/actuator/health` | GET | Não | Se actuator estiver habilitado. |
 | `/h2-console` | GET (navegador) | Não | Console do H2 in-memory, habilitado em dev. |
 | `/oauth2/authorization/google` | GET (navegador) | Não | Inicia o handshake OAuth2. O callback retorna JSON com `accessToken` (via `OAuth2LoginSuccessHandler`). |
 | `/auth/refresh` | POST | Cookie | Renova o access token. |
@@ -224,7 +256,7 @@ cd apis
 | `/api/usuarios/{id}/perfis` | PATCH | Bearer (`ADMINISTRADOR`) | Atualiza perfis. |
 | `/api/usuarios/{id}/desativar` | PATCH | Bearer (`ADMINISTRADOR`) | Desativa usuário. |
 
-### 3.5. Smoke test via Postman
+### 3.6. Smoke test via Postman
 
 A coleção Postman está em `docs/catalogo-edificacoes.postman_collection.json`. Importar no Postman:
 
