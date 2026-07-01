@@ -368,13 +368,52 @@ Payload (claims):
 
 ## 11. Tratamento de erros
 
+A API adota duas camadas complementares de tratamento de erros:
+
+1. **Handler global** (`GlobalExceptionHandler` no `common-module`): captura exceções lançadas pelos controllers e use cases da API e devolve um body padronizado `ErroRes` (campos `dataHora`, `status`, `mensagem`).
+2. **Tratamento local/framework**: casos tratados diretamente nos controllers (`AuthController.refresh`), pelo Spring Security (401/403 de auth) ou pelo handshake OAuth2 (`CustomOAuth2UserService`, chain 1).
+
+### 11.1. Body padronizado de erro
+
+Todas as respostas de erro tratadas pelo `GlobalExceptionHandler` seguem o formato:
+
+```json
+{
+  "dataHora": "2026-07-01 14:30:00",
+  "status": 400,
+  "mensagem": "O nome é obrigatório."
+}
+```
+
+- `dataHora`: timestamp formatado (`yyyy-MM-dd HH:mm:ss`).
+- `status`: código HTTP numérico.
+- `mensagem`: mensagem legível da falha (primeira violação de validação, mensagem de negócio ou mensagem genérica para 500).
+
+### 11.2. Cenários tratados pelo `GlobalExceptionHandler` (chain 2 — API)
+
 | Cenário | HTTP Status | Origem |
 |---|---|---|
-| Cookie de refresh ausente | `401` | `AuthController.refresh` retorna `ResponseEntity.status(UNAUTHORIZED)`. |
-| Cookie de refresh inválido/expirado/revogado | `401` | `RefreshTokenService.buscarParaRotacao` retorna `null`. |
-| Login com Google de e-mail `@ifce.edu.br` mas inativo | `403` | `CustomOAuth2UserService` lança `ResponseStatusException`. |
-| Login com e-mail externo não pré-cadastrado | `403` | `CustomOAuth2UserService` lança `ResponseStatusException`. |
-| Lockout prevention (remover/desativar último admin) | `409` | `UsuarioService.verificarExclusaoAdm` lança `ResponseStatusException`. |
-| Atualizar perfis de usuário inexistente | `404` | `UsuarioService.atualizarPerfis` lança `ResponseStatusException`. |
-| Endpoint protegido sem `Authorization: Bearer <jwt>` | `401` | `oauth2ResourceServer.jwt()` falha. |
-| Endpoint protegido com `Authority` insuficiente | `403` | `@PreAuthorize` falha. |
+| Body JSON inválido / mal formatado | `400` | `HttpMessageNotReadableException`. |
+| Validação de `@RequestBody @Valid` (ex.: `MethodArgumentNotValidException`) | `400` | Mensagem do primeiro campo com erro. |
+| Validação de `@PathVariable`/`@RequestParam` com `@Validated` | `400` | `ConstraintViolationException`. |
+| Validação de negócio (ex.: "Já existe ambiente com esse nome") | `400` | `IllegalArgumentException` (factories, use cases). |
+| Recurso inexistente (ex.: "Ambiente não encontrado") | `404` | `NoSuchElementException`. |
+| Usuário inexistente / lockout prevention | `404` / `409` | `ResponseStatusException` (`UsuarioService`). |
+| Parâmetro obrigatório ausente | `400` | `MissingServletRequestParameterException`. |
+| Violação de constraint do banco | `400` | `DataIntegrityViolationException` (mensagem da causa raiz). |
+| Método HTTP não suportado | `405` | `HttpRequestMethodNotSupportedException`. |
+| `Content-Type` não suportado | `415` | `HttpMediaTypeNotSupportedException`. |
+| Erro inesperado do servidor | `500` | `Exception` (fallback, mensagem genérica). |
+
+### 11.3. Cenários tratados localmente ou pelo framework
+
+| Cenário | HTTP Status | Origem |
+|---|---|---|
+| Cookie de refresh ausente | `401` | `AuthController.refresh` retorna `ResponseEntity.status(UNAUTHORIZED)` direto (não passa pelo handler). |
+| Cookie de refresh inválido/expirado/revogado | `401` | `RefreshTokenService` retorna `null` → `AuthController.refresh` converte. |
+| Login com Google de e-mail `@ifce.edu.br` mas inativo | `403` | `CustomOAuth2UserService` lança `ResponseStatusException` (chain 1, OAuth2 handshake). |
+| Login com e-mail externo não pré-cadastrado | `403` | `CustomOAuth2UserService` lança `ResponseStatusException` (chain 1). |
+| Endpoint protegido sem `Authorization: Bearer <jwt>` | `401` | `oauth2ResourceServer.jwt()` falha (Spring Security, não passa pelo handler). |
+| Endpoint protegido com `Authority` insuficiente | `403` | `@PreAuthorize` falha (Spring Security). |
+
+> **Nota:** o `GlobalExceptionHandler` é um `@RestControllerAdvice` que atua apenas no `DispatcherServlet` da API (chain 2). As exceções lançadas no handshake OAuth2 (chain 1) e na camada de filtros do Spring Security são tratadas pelo próprio Spring Security, fora do escopo do handler global.
