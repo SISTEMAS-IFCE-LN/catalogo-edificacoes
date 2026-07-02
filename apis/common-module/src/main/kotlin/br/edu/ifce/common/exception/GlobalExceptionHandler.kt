@@ -6,6 +6,8 @@ import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
+import org.springframework.security.access.AccessDeniedException
+import org.springframework.security.authorization.AuthorizationDeniedException
 import org.springframework.web.HttpMediaTypeNotSupportedException
 import org.springframework.web.HttpRequestMethodNotSupportedException
 import org.springframework.web.bind.MethodArgumentNotValidException
@@ -96,6 +98,18 @@ class GlobalExceptionHandler {
         val mensagem = ex.mostSpecificCause?.message ?: ex.message ?: "Violação de integridade de dados."
         log.debug("DataIntegrityViolationException: {}", mensagem)
         return responderErro(HttpStatus.BAD_REQUEST, mensagem)
+    }
+
+    @ExceptionHandler(AccessDeniedException::class)
+    fun handleAccessDenied(ex: AccessDeniedException): ResponseEntity<ErroRes> {
+        log.debug("Acesso negado: {}", ex.message)
+        return responderErro(HttpStatus.FORBIDDEN, "Acesso negado: você não tem permissão para acessar este recurso.")
+    }
+
+    @ExceptionHandler(AuthorizationDeniedException::class)
+    fun handleAuthorizationDenied(ex: AuthorizationDeniedException): ResponseEntity<ErroRes> {
+        log.debug("Autorização negada: {}", ex.message)
+        return responderErro(HttpStatus.FORBIDDEN, "Acesso negado: você não tem permissão para realizar esta ação.")
     }
 
     @ExceptionHandler(Exception::class)

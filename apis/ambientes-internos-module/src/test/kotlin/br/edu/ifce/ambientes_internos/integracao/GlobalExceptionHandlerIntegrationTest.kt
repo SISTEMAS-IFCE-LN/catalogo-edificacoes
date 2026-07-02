@@ -190,4 +190,26 @@ class GlobalExceptionHandlerIntegrationTest {
             .andExpect(jsonPath("$.dataHora").isNotEmpty)
             .andExpect(jsonPath("$.dataHora").value(org.hamcrest.Matchers.matchesPattern("\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}")))
     }
+
+    // ========== AccessDeniedException → 403 ==========
+
+    @Test
+    fun `AccessDeniedException retorna 403 com mensagem`() {
+        mockMvc.perform(get("/test/excecoes/access-denied"))
+            .andExpect(status().isForbidden)
+            .andExpect(jsonPath("$.status").value(403))
+            .andExpect(jsonPath("$.mensagem").value("Acesso negado: você não tem permissão para acessar este recurso."))
+            .andExpect(jsonPath("$.dataHora").isNotEmpty)
+    }
+
+    // ========== AuthorizationDeniedException → 403 ==========
+
+    @Test
+    fun `AuthorizationDeniedException retorna 403 com mensagem`() {
+        mockMvc.perform(get("/test/excecoes/authorization-denied"))
+            .andExpect(status().isForbidden)
+            .andExpect(jsonPath("$.status").value(403))
+            .andExpect(jsonPath("$.mensagem").value("Acesso negado: você não tem permissão para realizar esta ação."))
+            .andExpect(jsonPath("$.dataHora").isNotEmpty)
+    }
 }

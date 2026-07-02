@@ -2,6 +2,8 @@ package br.edu.ifce.ambientes_internos.testcontroller
 
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
+import org.springframework.security.access.AccessDeniedException
+import org.springframework.security.authorization.AuthorizationDeniedException
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -85,6 +87,16 @@ class TestExceptionController {
     @GetMapping("/general")
     fun general() {
         throw RuntimeException("boom")
+    }
+
+    @GetMapping("/access-denied")
+    fun accessDenied() {
+        throw AccessDeniedException("Acesso negado: permissão insuficiente")
+    }
+
+    @GetMapping("/authorization-denied")
+    fun authorizationDenied() {
+        throw AuthorizationDeniedException("Autorização negada: recurso protegido")
     }
 }
 
