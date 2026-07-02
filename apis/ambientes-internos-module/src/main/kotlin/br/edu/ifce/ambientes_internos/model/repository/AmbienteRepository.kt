@@ -1,7 +1,9 @@
 package br.edu.ifce.ambientes_internos.model.repository
 
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Ambiente
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Bloco
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.StatusAmbiente
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Unidade
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.EntityGraph
@@ -27,8 +29,6 @@ interface AmbienteRepository : JpaRepository<Ambiente, Long> {
     fun findAllByIdInAndStatus(ids: Set<Long>, status: StatusAmbiente): List<Ambiente>
 
     fun findAllByIdInAndStatus(ids: Set<Long>, status: StatusAmbiente, pageable: Pageable): Page<Ambiente>
-
-    fun existsByLocalizacaoId(localizacaoId: Long): Boolean
 
     fun existsByNomeAndLocalizacaoId(nome: String, localizacaoId: Long): Boolean
 
@@ -69,14 +69,16 @@ interface AmbienteRepository : JpaRepository<Ambiente, Long> {
         """
             select a from Ambiente a
             where a.status = :status
-            and (:bloco is null or upper(a.localizacao.bloco) like concat('%', upper(:bloco), '%'))
-            and (:unidade is null or upper(a.localizacao.unidade) like concat('%', upper(:unidade), '%'))
+            and (:filtrarBlocos = false or a.localizacao.bloco in :blocos)
+            and (:filtrarUnidades = false or a.localizacao.unidade in :unidades)
             and (:andar is null or a.localizacao.andar = :andar)
         """
     )
-    fun findByLocalizacaoContainingIgnoreCaseAndStatus(
-        @Param("bloco") bloco: String?,
-        @Param("unidade") unidade: String?,
+    fun findByLocalizacaoAndStatus(
+        @Param("blocos") blocos: Set<Bloco>,
+        @Param("unidades") unidades: Set<Unidade>,
+        @Param("filtrarBlocos") filtrarBlocos: Boolean,
+        @Param("filtrarUnidades") filtrarUnidades: Boolean,
         @Param("andar") andar: Int?,
         @Param("status") status: StatusAmbiente,
         pageable: Pageable

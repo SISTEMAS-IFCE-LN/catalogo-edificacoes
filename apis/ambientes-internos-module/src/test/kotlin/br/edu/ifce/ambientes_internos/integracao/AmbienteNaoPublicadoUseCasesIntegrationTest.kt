@@ -481,6 +481,56 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
         }
     }
 
+    @Test
+    fun `Deve filtrar ambientes nao publicados por unidade parcial`() {
+        val ambiente1 = ambientesNPUseCases.cadastrarAmbiente(
+            criarSalaAula(nome = "Sala Cidade Alta", unidade = Unidade.CIDADE_ALTA)
+        )
+        ambientesNPUseCases.cadastrarAmbiente(
+            criarSalaAula(nome = "Sala UEPE", unidade = Unidade.UEPE, bloco = Bloco.BLOCO_11)
+        )
+
+        val ambientesPorLocalizacao = ambientesNPUseCases.listarAmbientesPorLocalizacao(
+            LocalizacaoPesquisaReq(bloco = null, unidade = "alta", andar = null),
+            PageRequest.of(0, 10)
+        )
+
+        assertEquals(1, ambientesPorLocalizacao.dadosPaginacao.totalElements)
+        assertEquals(ambiente1.nome, ambientesPorLocalizacao.ambientes.first().nome)
+    }
+
+    @Test
+    fun `Deve filtrar ambientes por bloco parcial case-insensitive - ex BIBLIOTECA`() {
+        val ambienteBiblioteca = ambientesNPUseCases.cadastrarAmbiente(
+            criarSalaAula(nome = "Sala na Biblioteca", bloco = Bloco.BIBLIOTECA_ACADEMICA)
+        )
+        ambientesNPUseCases.cadastrarAmbiente(
+            criarSalaAula(nome = "Sala no Bloco 1", bloco = Bloco.BLOCO_1, andar = 1)
+        )
+
+        // Test 1: Partial lowercase search "bibli" should match "BIBLIOTECA_ACADEMICA"
+        val resultado1 = ambientesNPUseCases.listarAmbientesPorLocalizacao(
+            LocalizacaoPesquisaReq(bloco = "bibli", unidade = null, andar = null),
+            PageRequest.of(0, 10)
+        )
+        assertEquals(1, resultado1.dadosPaginacao.totalElements)
+        assertEquals(ambienteBiblioteca.nome, resultado1.ambientes.first().nome)
+
+        // Test 2: Uppercase partial search "BIBLIO" should also work
+        val resultado2 = ambientesNPUseCases.listarAmbientesPorLocalizacao(
+            LocalizacaoPesquisaReq(bloco = "BIBLIO", unidade = null, andar = null),
+            PageRequest.of(0, 10)
+        )
+        assertEquals(1, resultado2.dadosPaginacao.totalElements)
+
+        // Test 3: Mixed case "BiBlIo TeCA" should normalize and match
+        val resultado3 = ambientesNPUseCases.listarAmbientesPorLocalizacao(
+            LocalizacaoPesquisaReq(bloco = "BiBlIo TeCA", unidade = null, andar = null),
+            PageRequest.of(0, 10)
+        )
+        assertEquals(1, resultado3.dadosPaginacao.totalElements)
+    }
+
     companion object {
         @JvmStatic
         fun filtrosNomeNaoPublicados(): Stream<Arguments> = Stream.of(
