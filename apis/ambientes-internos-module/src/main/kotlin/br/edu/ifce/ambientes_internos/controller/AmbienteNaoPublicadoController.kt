@@ -12,7 +12,6 @@ import jakarta.validation.constraints.NotEmpty
 import jakarta.validation.constraints.Positive
 import jakarta.validation.constraints.Size
 import org.springframework.http.ResponseEntity
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
 import java.math.BigDecimal
@@ -25,7 +24,6 @@ private const val MSG_VAL_PD_ESCALA = "O pé direito deve ter no máximo 7 dígi
 @Validated
 @RestController
 @RequestMapping(AMBIENTE_NAO_PUBLICADO_PATH)
-@PreAuthorize("hasAuthority('ROLE_GESTOR_SISTEMA')")
 class AmbienteNaoPublicadoController(
     private val useCasesNaoPublicado: IAmbienteNaoPublicadoUseCases
 ) : BaseController<AmbienteRes>(useCasesNaoPublicado) {
@@ -75,10 +73,10 @@ class AmbienteNaoPublicadoController(
         id: Long,
         @RequestBody @NotEmpty(message = "$MSG_LISTA_VAZIA um pé direito.")
         pesDireitos: Set<
-            @Positive(message = MSG_VAL_PD)
-            @Digits(integer = 7, fraction = 2, message = MSG_VAL_PD_ESCALA)
-            BigDecimal
-        >
+                @Positive(message = MSG_VAL_PD)
+                @Digits(integer = 7, fraction = 2, message = MSG_VAL_PD_ESCALA)
+                BigDecimal
+                >
     ): ResponseEntity<Set<BigDecimal>> {
         return ResponseEntity.ok(useCasesNaoPublicado.incluirPesDireitosAmbiente(id, pesDireitos))
     }
@@ -89,10 +87,10 @@ class AmbienteNaoPublicadoController(
         id: Long,
         @RequestBody @NotEmpty(message = "$MSG_LISTA_VAZIA um pé direito.")
         pesDireitos: Set<
-            @Positive(message = MSG_VAL_PD)
-            @Digits(integer = 7, fraction = 2, message = MSG_VAL_PD_ESCALA)
-            BigDecimal
-        >
+                @Positive(message = MSG_VAL_PD)
+                @Digits(integer = 7, fraction = 2, message = MSG_VAL_PD_ESCALA)
+                BigDecimal
+                >
     ): ResponseEntity<Set<BigDecimal>> {
         return ResponseEntity.ok(useCasesNaoPublicado.atualizarPesDireitosAmbiente(id, pesDireitos))
     }
