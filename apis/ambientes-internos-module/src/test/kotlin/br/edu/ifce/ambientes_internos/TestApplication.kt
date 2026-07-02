@@ -23,7 +23,7 @@ import br.edu.ifce.security.model.application.service.UsuarioService
 @EntityScan(basePackages = ["br.edu.ifce.ambientes_internos.model.domain", "br.edu.ifce.security.model.domain"])
 @EnableJpaRepositories(basePackages = ["br.edu.ifce.ambientes_internos.model.repository", "br.edu.ifce.security.model.repository"])
 @ComponentScan(
-    basePackages = ["br.edu.ifce.ambientes_internos", "br.edu.ifce.security"],
+    basePackages = ["br.edu.ifce.ambientes_internos", "br.edu.ifce.security", "br.edu.ifce.common"],
     excludeFilters = [
         ComponentScan.Filter(
             type = FilterType.ASSIGNABLE_TYPE,

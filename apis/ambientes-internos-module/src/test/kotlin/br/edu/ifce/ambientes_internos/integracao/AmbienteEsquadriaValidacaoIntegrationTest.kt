@@ -4,7 +4,6 @@ import br.edu.ifce.ambientes_internos.TestApplication
 import br.edu.ifce.ambientes_internos.TestSecurityConfig
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
@@ -15,7 +14,6 @@ import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import jakarta.servlet.ServletException
 import java.util.UUID
 
 @SpringBootTest(classes = [TestApplication::class])
@@ -153,13 +151,11 @@ class AmbienteEsquadriaValidacaoIntegrationTest {
             ]
         """.trimIndent()
 
-        assertThrows<ServletException> {
-            mockMvc.perform(
-                MockMvcRequestBuilders.patch("/api/ambientes/nao-publicados/1/esquadrias/incluir")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(payloadPatch)
-            ).andReturn()
-        }
+        mockMvc.perform(
+            MockMvcRequestBuilders.patch("/api/ambientes/nao-publicados/1/esquadrias/incluir")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(payloadPatch)
+        ).andExpect(status().isBadRequest)
     }
 
     @Test
@@ -179,13 +175,11 @@ class AmbienteEsquadriaValidacaoIntegrationTest {
             ]
         """.trimIndent()
 
-        assertThrows<ServletException> {
-            mockMvc.perform(
-                MockMvcRequestBuilders.patch("/api/ambientes/nao-publicados/1/esquadrias/incluir")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(payloadPatch)
-            ).andReturn()
-        }
+        mockMvc.perform(
+            MockMvcRequestBuilders.patch("/api/ambientes/nao-publicados/1/esquadrias/incluir")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(payloadPatch)
+        ).andExpect(status().isBadRequest)
     }
 
     @Test
@@ -205,13 +199,11 @@ class AmbienteEsquadriaValidacaoIntegrationTest {
             ]
         """.trimIndent()
 
-        assertThrows<ServletException> {
-            mockMvc.perform(
-                MockMvcRequestBuilders.patch("/api/ambientes/nao-publicados/1/esquadrias/incluir")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(payloadPatch)
-            ).andReturn()
-        }
+        mockMvc.perform(
+            MockMvcRequestBuilders.patch("/api/ambientes/nao-publicados/1/esquadrias/incluir")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(payloadPatch)
+        ).andExpect(status().isBadRequest)
     }
 
     @Test
@@ -231,13 +223,11 @@ class AmbienteEsquadriaValidacaoIntegrationTest {
             ]
         """.trimIndent()
 
-        assertThrows<ServletException> {
-            mockMvc.perform(
-                MockMvcRequestBuilders.patch("/api/ambientes/nao-publicados/1/esquadrias/incluir")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(payloadPatch)
-            ).andReturn()
-        }
+        mockMvc.perform(
+            MockMvcRequestBuilders.patch("/api/ambientes/nao-publicados/1/esquadrias/incluir")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(payloadPatch)
+        ).andExpect(status().isBadRequest)
     }
 
     private fun payloadCadastroAmbiente(

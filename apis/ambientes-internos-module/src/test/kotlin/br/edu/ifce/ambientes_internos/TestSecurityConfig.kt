@@ -34,8 +34,11 @@ class TestSecurityConfig {
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests { auth ->
                 auth.requestMatchers("/api/ambientes/publicados/**").permitAll()
+                auth.requestMatchers("/api/ambientes/nao-publicados/**").hasAuthority("ROLE_GESTOR_SISTEMA")
+                auth.requestMatchers("/api/ambientes/validacao/**").hasAuthority("ROLE_VALIDADOR")
                 auth.requestMatchers("/auth/**").permitAll()
                 auth.requestMatchers("/health").permitAll()
+                auth.requestMatchers("/test/**").permitAll()
                 auth.anyRequest().authenticated()
             }
             .oauth2ResourceServer { rs ->
