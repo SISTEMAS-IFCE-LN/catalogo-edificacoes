@@ -25,11 +25,13 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 @EnableConfigurationProperties(
     RsaKeyProperties::class,
     JwtProperties::class,
-    BootstrapProperties::class
+    BootstrapProperties::class,
+    FrontendProperties::class
 )
 class SecurityConfig(
     private val customOAuth2UserService: CustomOAuth2UserService,
-    private val oAuth2LoginSuccessHandler: OAuth2LoginSuccessHandler
+    private val oAuth2LoginSuccessHandler: OAuth2LoginSuccessHandler,
+    private val frontendProperties: FrontendProperties
 ) {
 
     private val oauth2Endpoints = listOf(
@@ -47,7 +49,6 @@ class SecurityConfig(
     fun oauth2LoginFilterChain(http: HttpSecurity): SecurityFilterChain {
         http
             .securityMatcher(oauth2Matcher)
-            .csrf { it.disable() }
             .cors { it.configurationSource(corsConfigurationSource()) }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) }
             .authorizeHttpRequests { auth ->
@@ -58,7 +59,9 @@ class SecurityConfig(
                     userInfo.userService(customOAuth2UserService)
                 }
                 oauth2.successHandler(oAuth2LoginSuccessHandler)
-                oauth2.failureUrl("/auth/login/failure")
+
+                val errorTarget = frontendProperties.callbackErrorUrl?.takeIf { it.isNotBlank() } ?: "/failure.html"
+                oauth2.failureUrl(errorTarget)
             }
         return http.build()
     }
@@ -103,7 +106,7 @@ class SecurityConfig(
         val configuration = CorsConfiguration()
         // TODO: restringir origens antes de ir para produção.
         // Manter "*" apenas durante o desenvolvimento para simplificar testes locais.
-        configuration.allowedOrigins = listOf("*")
+        configuration.allowedOriginPatterns = listOf("*")
         configuration.allowedMethods = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
         configuration.allowedHeaders = listOf("*")
         configuration.allowCredentials = true
