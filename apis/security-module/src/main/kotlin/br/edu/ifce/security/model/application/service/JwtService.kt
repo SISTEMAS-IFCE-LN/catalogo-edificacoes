@@ -6,6 +6,7 @@ import org.springframework.security.oauth2.jwt.JwtEncoder
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters
 import org.springframework.stereotype.Service
 import java.time.Instant
+import java.util.UUID
 
 @Service
 class JwtService(
@@ -17,8 +18,10 @@ class JwtService(
         val expiracao = agora.plusSeconds(jwtProperties.accessTokenExpiration)
 
         val claim = JwtClaimsSet.builder()
+            .issuer("catalogo-edificacoes-backend")
             .issuedAt(agora)
             .expiresAt(expiracao)
+            .id(UUID.randomUUID().toString())
             .subject(userId.toString())
             .claim("email", email)
             .claim("roles", roles)

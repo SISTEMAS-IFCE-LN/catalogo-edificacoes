@@ -16,7 +16,7 @@ class CookieService(
             secure = jwtProperties.cookieSecure
             path = "/"
             maxAge = jwtProperties.refreshExpiration.toInt()
-            setAttribute("SameSite", "Strict")
+            setAttribute("SameSite", "None")
         }
 
     }
@@ -27,7 +27,7 @@ class CookieService(
             secure = jwtProperties.cookieSecure
             path = "/"
             maxAge = 0
-            setAttribute("SameSite", "Strict")
+            setAttribute("SameSite", "None")
         }
     }
 }
