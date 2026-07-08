@@ -56,5 +56,7 @@ class JwtServiceTest {
         assertEquals(listOf("ROLE_X", "ROLE_Y"), claims.getClaim("roles"))
         assertNotNull(claims.issuedAt)
         assertNotNull(claims.expiresAt)
+        assertEquals("catalogo-edificacoes-backend", claims.getClaim("iss"))
+        assertNotNull(claims.id)
     }
 }

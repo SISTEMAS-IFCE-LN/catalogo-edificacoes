@@ -24,7 +24,7 @@ class CookieServiceTest {
         assertTrue(cookie.secure)
         assertEquals("/", cookie.path)
         assertEquals(43200, cookie.maxAge)
-        assertEquals("Strict", cookie.getAttribute("SameSite"))
+        assertEquals("None", cookie.getAttribute("SameSite"))
     }
 
     @Test
@@ -39,7 +39,7 @@ class CookieServiceTest {
         assertTrue(cookie.secure)
         assertEquals("/", cookie.path)
         assertEquals(0, cookie.maxAge)
-        assertEquals("Strict", cookie.getAttribute("SameSite"))
+        assertEquals("None", cookie.getAttribute("SameSite"))
     }
 
     @Test
