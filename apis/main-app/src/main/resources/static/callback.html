@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Catálogo Edificações - Teste Local</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f6f9; }
+        .container { background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        textarea { width: 100%; font-family: monospace; padding: 10px; background: #272822; color: #f8f8f2; border-radius: 4px; box-sizing: border-box; }
+        .btn { display: inline-block; padding: 10px 15px; background: #0056b3; color: white; text-decoration: none; border-radius: 4px; margin-top: 15px; cursor: pointer;}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Handshake Efetuado com Sucesso!</h2>
+        <p>Copie o <strong>Access Token (JWT)</strong> para utilizar no Postman:</p>
+        <textarea id="tokenDisplay" rows="8" readonly></textarea>
+        <div class="btn" onclick="copyToken()">Copiar Token</div>
+    </div>
+    <script>
+        const hash = window.location.hash || '';
+        const token = hash.startsWith('#') ? (new URLSearchParams(hash.slice(1))).get('token') : null;
+
+        if (token) {
+            document.getElementById('tokenDisplay').value = token;
+            window.history.replaceState({}, document.title, "/callback.html");
+        } else {
+            document.getElementById('tokenDisplay').value = "Nenhum token capturado.";
+        }
+        function copyToken() {
+            const copyText = document.getElementById("tokenDisplay");
+            copyText.select();
+            navigator.clipboard.writeText(copyText.value);
+            alert("Token copiado para a área de transferência!");
+        }
+    </script>
+</body>
+</html>
