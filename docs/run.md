@@ -245,7 +245,7 @@ cd apis
 |---|---|---|---|
 | `/health` | GET | Não | Health check. |
 | `/h2-console` | GET (navegador) | Não | Console do H2 in-memory, habilitado em dev. |
-| `/oauth2/authorization/google` | GET (navegador) | Não | Inicia o handshake OAuth2. O callback retorna JSON com `accessToken` (via `OAuth2LoginSuccessHandler`). |
+| `/oauth2/authorization/google` | GET (navegador) | Não | Inicia o handshake OAuth2. O callback redireciona para `/callback.html#token=...` com o access token no fragmento da URL. |
 | `/auth/refresh` | POST | Cookie | Renova o access token. |
 | `/auth/logout` | POST | Cookie | Revoga refresh token e limpa cookie. |
 | `/api/ambientes/publicados` | GET | Não | Lista ambientes publicados (público). |

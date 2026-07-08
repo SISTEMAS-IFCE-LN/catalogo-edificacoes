@@ -16,7 +16,7 @@ Componentes centrais:
 | `JwtService` | `br.edu.ifce.security.model.application.service` | Emite e valida o JWT próprio. |
 | `RefreshTokenService` | `br.edu.ifce.security.model.application.service` | Persiste e rotaciona refresh tokens. |
 | `AuthService` | `br.edu.ifce.security.model.application.service` | Orquestra login/refresh/logout. |
-| `OAuth2LoginSuccessHandler` | `br.edu.ifce.security.config` | Gera JWT + refresh token diretamente no callback OAuth2 e retorna JSON na response. |
+| `OAuth2LoginSuccessHandler` | `br.edu.ifce.security.config` | Gera JWT + refresh token no callback OAuth2 e redireciona para o frontend com `#token=` no fragmento da URL. |
 | `AuthController` | `br.edu.ifce.security.controller` | Adaptador HTTP para refresh e logout. |
 | `UsuarioService` | `br.edu.ifce.security.model.application.service` | Gestão de perfis e desativação (com lockout prevention). |
 | `UsuarioController` | `br.edu.ifce.security.controller` | Endpoints administrativos de perfis. |
@@ -24,6 +24,7 @@ Componentes centrais:
 | `JwtConfig` | `br.edu.ifce.security.config` | Beans `JwtEncoder` e `JwtDecoder` (RSA). |
 | `RsaKeyProperties` | `br.edu.ifce.security.config` | Bind de `rsa.public-key` / `rsa.private-key`. |
 | `JwtProperties` | `br.edu.ifce.security.config` | Bind de `jwt.access-token-expiration` / `jwt.refresh-expiration` / `jwt.cookie-secure`. |
+| `FrontendProperties` | `br.edu.ifce.security.config` | Bind de `frontend.callback-success-url` / `frontend.callback-error-url`. |
 | `BootstrapAdminRunner` | `br.edu.ifce.security.config` | Garante a presença de um administrador institucional conhecido no boot. |
 
 ---
@@ -68,12 +69,12 @@ Componentes centrais:
     │                  │  - gera JWT (15 min)                 │
     │                  │  - gera refresh token (12 h)         │
     │                  │  - persiste refresh (revoga antigos) │
-    │                  │  - retorna JSON com access token     │
     │                  │  - seta cookie HttpOnly refreshToken │
+    │                  │  - redireciona (302) com #token=    │
     │◄─────────────────┤                                       │
-    │  { accessToken }  │                                       │
-    │  Set-Cookie:      │                                       │
-    │   refreshToken=.. │                                       │
+    │  302 /callback.html#token=...                            │
+    │  Set-Cookie:                                             │
+    │   refreshToken=..                                        │
 ```
 
 ### Pontos de atenção
@@ -81,8 +82,8 @@ Componentes centrais:
 - O `oauth2Login` requer `SessionCreationPolicy.IF_REQUIRED` no `SecurityConfig` (chain 1) para armazenar temporariamente o `Authentication` durante o handshake.
 - A API em si opera com `SessionCreationPolicy.STATELESS` (chain 2) e valida o JWT a cada requisição.
 - O cookie de sessão HTTP é `SameSite=Lax` (necessário para o callback cross-site do OAuth2).
-- O cookie `refreshToken` é `HttpOnly`, `Secure` (configurável via `JWT_COOKIE_SECURE`), `SameSite=Strict`, `path=/`.
-- O `OAuth2LoginSuccessHandler` gera os tokens diretamente no callback OAuth2 (dentro da chain 1, onde o `Authentication` está disponível) e retorna JSON na response, eliminando a necessidade de um endpoint `POST /auth/login/success` separado.
+- O cookie `refreshToken` é `HttpOnly`, `Secure` (configurável via `JWT_COOKIE_SECURE`), `SameSite=None`, `path=/`.
+- O `OAuth2LoginSuccessHandler` gera os tokens diretamente no callback OAuth2 (dentro da chain 1, onde o `Authentication` está disponível) e redireciona o navegador para a URL de callback configurada, anexando o access token no fragmento (`#token=...`). O fragmento nunca é enviado ao servidor, mitigando fugas em logs ou headers `Referer`.
 
 ---
 
@@ -238,14 +239,21 @@ evitando custo desnecessário se a aplicação for usada apenas para endpoints p
 | `bootstrap.admin-email` | `BOOTSTRAP_ADMIN_EMAIL` | (vazio) | Email do admin institucional. **Obrigatório** — aborta o boot se vazio. |
 | `bootstrap.allow-reactivate` | `BOOTSTRAP_ALLOW_REACTIVATE` | `true` | Kill switch geral. Quando `false`, o bootstrap é no-op total. |
 
-### 7.4. OAuth2 Google
+### 7.4. `FrontendProperties`
+
+| Property | Env var | Default | Descrição |
+|---|---|---|---|
+| `frontend.callback-success-url` | `FRONTEND_CALLBACK_SUCCESS_URL` | (vazio — fallback `/callback.html`) | URL de sucesso do OAuth2. |
+| `frontend.callback-error-url` | `FRONTEND_CALLBACK_ERROR_URL` | (vazio — fallback `/failure.html`) | URL de erro do OAuth2. |
+
+### 7.5. OAuth2 Google
 
 | Property | Env var | Descrição |
 |---|---|---|
 | `spring.security.oauth2.client.registration.google.client-id` | `GOOGLE_CLIENT_ID` | Client ID do projeto no Google Cloud Console. |
 | `spring.security.oauth2.client.registration.google.client-secret` | `GOOGLE_CLIENT_SECRET` | Client Secret do projeto no Google Cloud Console. |
 
-### 7.5. Cookies de sessão (geridos pelo Spring)
+### 7.6. Cookies de sessão (geridos pelo Spring)
 
 ```yaml
 server:
@@ -257,7 +265,7 @@ server:
         same-site: lax
 ```
 
-O cookie de sessão HTTP (gerado durante o `oauth2Login`) é `SameSite=Lax` para permitir o envio no redirect cross-site do callback OAuth2. O cookie de refresh token é independente e usa `SameSite=Strict`. Ambos devem respeitar o ambiente (HTTPS em prod).
+O cookie de sessão HTTP (gerado durante o `oauth2Login`) é `SameSite=Lax` para permitir o envio no redirect cross-site do callback OAuth2. O cookie de refresh token é independente e usa `SameSite=None` (preparação para SPA em origem diferente). Ambos devem respeitar o ambiente (HTTPS em prod).
 
 ---
 
@@ -351,12 +359,14 @@ Payload (claims):
 
 ```json
 {
+  "iss": "catalogo-edificacoes-backend",
   "sub": "1",
   "email": "ti@ifce.edu.br",
   "roles": [
     "ROLE_ADMINISTRADOR",
     "ROLE_COLABORADOR"
   ],
+  "jti": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
   "iat": 1717000000,
   "exp": 1717000900
 }
@@ -411,9 +421,11 @@ Todas as respostas de erro tratadas pelo `GlobalExceptionHandler` seguem o forma
 |---|---|---|
 | Cookie de refresh ausente | `401` | `AuthController.refresh` retorna `ResponseEntity.status(UNAUTHORIZED)` direto (não passa pelo handler). |
 | Cookie de refresh inválido/expirado/revogado | `401` | `RefreshTokenService` retorna `null` → `AuthController.refresh` converte. |
-| Login com Google de e-mail `@ifce.edu.br` mas inativo | `403` | `CustomOAuth2UserService` lança `ResponseStatusException` (chain 1, OAuth2 handshake). |
-| Login com e-mail externo não pré-cadastrado | `403` | `CustomOAuth2UserService` lança `ResponseStatusException` (chain 1). |
+| Login com Google de e-mail `@ifce.edu.br` mas inativo | redireciona para `/failure.html` | `CustomOAuth2UserService` lança `OAuth2AuthenticationException` → `.failureUrl()` na chain 1. |
+| Login com e-mail externo não pré-cadastrado | redireciona para `/failure.html` | `CustomOAuth2UserService` lança `OAuth2AuthenticationException` → `.failureUrl()` na chain 1. |
 | Endpoint protegido sem `Authorization: Bearer <jwt>` | `401` | `oauth2ResourceServer.jwt()` falha (Spring Security, não passa pelo handler). |
 | Endpoint protegido com `Authority` insuficiente | `403` | `@PreAuthorize` falha (Spring Security). |
 
 > **Nota:** o `GlobalExceptionHandler` é um `@RestControllerAdvice` que atua apenas no `DispatcherServlet` da API (chain 2). As exceções lançadas no handshake OAuth2 (chain 1) e na camada de filtros do Spring Security são tratadas pelo próprio Spring Security, fora do escopo do handler global.
+>
+> A partir do refactor de segurança, as falhas de negócio no `CustomOAuth2UserService` (domínio não autorizado, usuário inativo, email não fornecido) disparam `OAuth2AuthenticationException`, que o Spring Security captura e redireciona o navegador para a URL configurada em `oauth2.failureUrl()` (default local: `/failure.html`).

@@ -123,7 +123,7 @@ atual e o contexto do domínio do IFCE.
   `UsuarioService.verificarExclusaoAdm()`.
 
 * **RN-4.10:** O **JWT próprio** emitido pelo backend é o credencial de acesso à API, enquanto o **refresh token** é
-  entregue em cookie `HttpOnly`, `Secure` e `SameSite=Strict`, com **rotação** a cada uso. O acesso aos endpoints
+  entregue em cookie `HttpOnly`, `Secure` e `SameSite=None`, com **rotação** a cada uso. O acesso aos endpoints
   protegidos é feito pelo header `Authorization: Bearer <access_token>`. As durações do access token e do refresh
   token são configuráveis externamente (ver RN-4.13).
 

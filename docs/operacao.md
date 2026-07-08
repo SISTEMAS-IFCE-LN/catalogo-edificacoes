@@ -172,7 +172,7 @@ Antes do primeiro deploy, o operador **deve** definir a env var `BOOTSTRAP_ADMIN
 3. Acessar `/oauth2/authorization/google` com uma conta Google cujo email é o `BOOTSTRAP_ADMIN_EMAIL`.
 4. Após o handshake, o `CustomOAuth2UserService` encontra o usuário criado pelo bootstrap, sincroniza o nome e
    prossegue.
-5. O `OAuth2LoginSuccessHandler` emite o JWT (retornado como JSON) e o cookie de refresh.
+5. O `OAuth2LoginSuccessHandler` emite o JWT e o cookie de refresh, e redireciona o navegador para a URL de callback com o access token no fragmento (`#token=...`).
 
 ### 4.3. Após o primeiro login
 
@@ -196,6 +196,8 @@ Antes do primeiro deploy, o operador **deve** definir a env var `BOOTSTRAP_ADMIN
 | `JWT_COOKIE_SECURE`           | `true`                                   | Não                  | application.yml      |
 | `BOOTSTRAP_ADMIN_EMAIL`       | (vazio)                                  | **Sim**              | Operador             |
 | `BOOTSTRAP_ALLOW_REACTIVATE`  | `true`                                   | Não                  | application.yml      |
+| `FRONTEND_CALLBACK_SUCCESS_URL` | (vazio)                               | Não                  | FrontendProperties   |
+| `FRONTEND_CALLBACK_ERROR_URL`   | (vazio)                               | Não                  | FrontendProperties   |
 | `DB_HOST`                     | `jdbc:postgresql://localhost:5432`       | **Sim (prod)**       | Operador             |
 | `DB_NAME`                     | `catalogo_edificacoes`                   | **Sim (prod)**       | Operador             |
 | `DB_USERNAME`                 | `catalogo`                               | **Sim (prod)**       | Operador             |
