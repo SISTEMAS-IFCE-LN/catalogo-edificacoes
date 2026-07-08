@@ -42,6 +42,10 @@ rsa:
   public-key-path: ${JWT_PUBLIC_KEY_PATH:file:./.keys/public.pem}
   private-key-path: ${JWT_PRIVATE_KEY_PATH:file:./.keys/private_pkcs8.pem}
 
+frontend:
+  callback-success-url: ${FRONTEND_CALLBACK_SUCCESS_URL:}
+  callback-error-url: ${FRONTEND_CALLBACK_ERROR_URL:}
+
 bootstrap:
   admin-email: ${BOOTSTRAP_ADMIN_EMAIL:}
   allow-reactivate: ${BOOTSTRAP_ALLOW_REACTIVATE:true}
