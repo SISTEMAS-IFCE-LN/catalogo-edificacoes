@@ -308,10 +308,9 @@ Configuração de conexão (preenchida automaticamente):
 ### 6.1. Adicionar um novo endpoint protegido
 
 1. Adicionar a regra em `SecurityConfig.apiFilterChain` (`permitAll` ou exigir auth).
-2. Adicionar `@PreAuthorize` no controller se aplicável.
-3. Adicionar `@WithMockUser(authorities = [...])` nos testes do controller.
-4. Adicionar caso de teste em `ambientes-internos-module/src/test/kotlin/.../integracao/`.
-5. Adicionar entrada na tabela de mapeamento HTTP em `docs/seguranca.md`.
+2. Adicionar `@WithMockUser(authorities = [...])` nos testes do controller.
+3. Adicionar caso de teste em `ambientes-internos-module/src/test/kotlin/.../integracao/`.
+4. Adicionar entrada na tabela de mapeamento HTTP em `docs/seguranca.md`.
 
 ### 6.2. Adicionar uma nova env var
 

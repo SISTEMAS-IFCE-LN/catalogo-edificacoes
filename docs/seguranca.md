@@ -168,15 +168,15 @@ Definido em `SecurityConfig.apiFilterChain` (chain 2, com `@Order(2)`).
 | `/oauth2/**` | todos | Handshake OAuth2 (chain 1, com `IF_REQUIRED`). |
 | `/login/**` | todos | Handshake OAuth2. |
 
-### 6.2. Endpoints protegidos por `@PreAuthorize`
+### 6.2. Endpoints protegidos por `SecurityConfig`
 
-| Path base | Classe | Authority exigida |
-|---|---|---|
-| `/api/ambientes/nao-publicados/**` | `AmbienteNaoPublicadoController` | `ROLE_GESTOR_SISTEMA` |
-| `/api/ambientes/validacao/**` | `AmbienteValidacaoController` | `ROLE_VALIDADOR` |
-| `/api/ambientes/{qualquer}/{id}` (GET) | `BaseController.obterAmbientePorId` | `ROLE_COLABORADOR` |
-| `/api/ambientes/publicados/esquadrias` (GET) | `AmbientePublicadoController.listarEsquadriasAmbientes` | `ROLE_COLABORADOR` |
-| `/api/usuarios/**` | `UsuarioController` | `ROLE_ADMINISTRADOR` |
+| Path | Authority exigida |
+|---|---|
+| `/api/ambientes/nao-publicados/**` (GET, POST, PATCH, DELETE) | `ROLE_GESTOR_SISTEMA` |
+| `/api/ambientes/validacao/**` (GET, PATCH) | `ROLE_VALIDADOR` |
+| `/api/ambientes/publicados/{id}` (GET) | `ROLE_COLABORADOR` |
+| `/api/ambientes/publicados/esquadrias` (GET) | `ROLE_COLABORADOR` |
+| `/api/usuarios/**` (GET, PATCH) | `ROLE_ADMINISTRADOR` |
 
 ### 6.3. Resposta a acessos não autorizados
 
@@ -424,7 +424,7 @@ Todas as respostas de erro tratadas pelo `GlobalExceptionHandler` seguem o forma
 | Login com Google de e-mail `@ifce.edu.br` mas inativo | redireciona para `/failure.html` | `CustomOAuth2UserService` lança `OAuth2AuthenticationException` → `.failureUrl()` na chain 1. |
 | Login com e-mail externo não pré-cadastrado | redireciona para `/failure.html` | `CustomOAuth2UserService` lança `OAuth2AuthenticationException` → `.failureUrl()` na chain 1. |
 | Endpoint protegido sem `Authorization: Bearer <jwt>` | `401` | `oauth2ResourceServer.jwt()` falha (Spring Security, não passa pelo handler). |
-| Endpoint protegido com `Authority` insuficiente | `403` | `@PreAuthorize` falha (Spring Security). |
+| Endpoint protegido com `Authority` insuficiente | `403` | `SecurityConfig` — regra de autoridade (Spring Security). |
 
 > **Nota:** o `GlobalExceptionHandler` é um `@RestControllerAdvice` que atua apenas no `DispatcherServlet` da API (chain 2). As exceções lançadas no handshake OAuth2 (chain 1) e na camada de filtros do Spring Security são tratadas pelo próprio Spring Security, fora do escopo do handler global.
 >
