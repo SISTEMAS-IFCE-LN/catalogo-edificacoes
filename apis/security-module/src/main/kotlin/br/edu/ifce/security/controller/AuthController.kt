@@ -1,5 +1,6 @@
 package br.edu.ifce.security.controller
 
+import br.edu.ifce.common.config.ApiPaths.AUTH_PATH
 import br.edu.ifce.security.config.JwtProperties
 import br.edu.ifce.security.model.application.interfaces.IAuthService
 import br.edu.ifce.security.model.application.interfaces.ICookieService
@@ -13,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@RequestMapping("/auth")
+@RequestMapping(AUTH_PATH)
 class AuthController(
     private val authService: IAuthService,
     private val cookieService: ICookieService,

@@ -6,6 +6,11 @@ import br.edu.ifce.ambientes_internos.model.dto.esquadria.EsquadriaReq
 import br.edu.ifce.ambientes_internos.model.dto.esquadria.EsquadriasDetalhesRes
 import br.edu.ifce.ambientes_internos.model.dto.geometria.GeometriaAmbienteReq
 import br.edu.ifce.ambientes_internos.model.dto.geometria.ListaGeometriasAmbienteRes
+import br.edu.ifce.common.config.ApiPaths.AMBIENTES_NAO_PUBLICADOS_PATH
+import br.edu.ifce.common.config.MsgsSpringValidation.MSG_ESCALA
+import br.edu.ifce.common.config.MsgsSpringValidation.MSG_LISTA_VAZIA
+import br.edu.ifce.common.config.MsgsSpringValidation.MSG_MAX_CARACTERES
+import br.edu.ifce.common.config.MsgsSpringValidation.MSG_POSITIVO
 import jakarta.validation.Valid
 import jakarta.validation.constraints.Digits
 import jakarta.validation.constraints.NotEmpty
@@ -17,13 +22,9 @@ import org.springframework.web.bind.annotation.*
 import java.math.BigDecimal
 import java.net.URI
 
-private const val AMBIENTE_NAO_PUBLICADO_PATH = "/api/ambientes/nao-publicados"
-private const val MSG_VAL_PD = "O pé direito deve ser positivo"
-private const val MSG_VAL_PD_ESCALA = "O pé direito deve ter no máximo 7 dígitos inteiros e 2 casas decimais."
-
 @Validated
 @RestController
-@RequestMapping(AMBIENTE_NAO_PUBLICADO_PATH)
+@RequestMapping(AMBIENTES_NAO_PUBLICADOS_PATH)
 class AmbienteNaoPublicadoController(
     private val useCasesNaoPublicado: IAmbienteNaoPublicadoUseCases
 ) : BaseController<AmbienteRes>(useCasesNaoPublicado) {
@@ -32,13 +33,13 @@ class AmbienteNaoPublicadoController(
     fun cadastrarAmbiente(@RequestBody @Valid ambienteReq: AmbienteReq): ResponseEntity<AmbienteRes> {
         val ambienteRes = useCasesNaoPublicado.cadastrarAmbiente(ambienteReq)
         return ResponseEntity
-            .created(URI.create("${AMBIENTE_NAO_PUBLICADO_PATH}/${ambienteRes.id}"))
+            .created(URI.create("${AMBIENTES_NAO_PUBLICADOS_PATH}/${ambienteRes.id}"))
             .body(ambienteRes)
     }
 
     @PatchMapping("/{id}/dados-basicos")
     fun atualizarDadosBasicosAmbiente(
-        @PathVariable @Positive(message = MSG_VAL_ID)
+        @PathVariable @Positive(message = MSG_POSITIVO)
         id: Long,
         @RequestBody @Valid
         ambienteAtualizado: AmbienteBasicoReq
@@ -49,7 +50,7 @@ class AmbienteNaoPublicadoController(
 
     @PatchMapping("/{id}/geometrias/incluir")
     fun incluirGeometriasAmbiente(
-        @PathVariable @Positive(message = MSG_VAL_ID)
+        @PathVariable @Positive(message = MSG_POSITIVO)
         id: Long,
         @RequestBody @NotEmpty(message = "$MSG_LISTA_VAZIA uma geometria.")
         geometriasAdd: Set<@Valid GeometriaAmbienteReq>
@@ -59,7 +60,7 @@ class AmbienteNaoPublicadoController(
 
     @PatchMapping("/{id}/geometrias/atualizar")
     fun atualizarGeometriasAmbiente(
-        @PathVariable @Positive(message = MSG_VAL_ID)
+        @PathVariable @Positive(message = MSG_POSITIVO)
         id: Long,
         @RequestBody @NotEmpty(message = "$MSG_LISTA_VAZIA uma geometria.")
         geometriasAtualizadas: Set<@Valid GeometriaAmbienteReq>
@@ -69,12 +70,12 @@ class AmbienteNaoPublicadoController(
 
     @PatchMapping("/{id}/pes-direitos/incluir")
     fun incluirPesDireitosAmbiente(
-        @PathVariable @Positive(message = MSG_VAL_ID)
+        @PathVariable @Positive(message = MSG_POSITIVO)
         id: Long,
         @RequestBody @NotEmpty(message = "$MSG_LISTA_VAZIA um pé direito.")
         pesDireitos: Set<
-                @Positive(message = MSG_VAL_PD)
-                @Digits(integer = 7, fraction = 2, message = MSG_VAL_PD_ESCALA)
+                @Positive(message = MSG_POSITIVO)
+                @Digits(integer = 7, fraction = 2, message = MSG_ESCALA)
                 BigDecimal
                 >
     ): ResponseEntity<Set<BigDecimal>> {
@@ -83,12 +84,12 @@ class AmbienteNaoPublicadoController(
 
     @PatchMapping("/{id}/pes-direitos/atualizar")
     fun atualizarPesDireitosAmbiente(
-        @PathVariable @Positive(message = MSG_VAL_ID)
+        @PathVariable @Positive(message = MSG_POSITIVO)
         id: Long,
         @RequestBody @NotEmpty(message = "$MSG_LISTA_VAZIA um pé direito.")
         pesDireitos: Set<
-                @Positive(message = MSG_VAL_PD)
-                @Digits(integer = 7, fraction = 2, message = MSG_VAL_PD_ESCALA)
+                @Positive(message = MSG_POSITIVO)
+                @Digits(integer = 7, fraction = 2, message = MSG_ESCALA)
                 BigDecimal
                 >
     ): ResponseEntity<Set<BigDecimal>> {
@@ -97,7 +98,7 @@ class AmbienteNaoPublicadoController(
 
     @PatchMapping("/{id}/esquadrias/incluir")
     fun incluirEsquadriasAmbiente(
-        @PathVariable @Positive(message = MSG_VAL_ID)
+        @PathVariable @Positive(message = MSG_POSITIVO)
         id: Long,
         @RequestBody @NotEmpty(message = "$MSG_LISTA_VAZIA uma esquadria.")
         esquadrias: Set<@Valid EsquadriaReq>
@@ -107,7 +108,7 @@ class AmbienteNaoPublicadoController(
 
     @PatchMapping("/{id}/esquadrias/atualizar")
     fun atualizarEsquadriasAmbiente(
-        @PathVariable @Positive(message = MSG_VAL_ID)
+        @PathVariable @Positive(message = MSG_POSITIVO)
         id: Long,
         @RequestBody @NotEmpty(message = "$MSG_LISTA_VAZIA uma esquadria.")
         esquadrias: Set<@Valid EsquadriaReq>
@@ -117,7 +118,7 @@ class AmbienteNaoPublicadoController(
 
     @PatchMapping("/{id}/informacao-adicional")
     fun atualizarInformacaoAdicionalAmbiente(
-        @PathVariable @Positive(message = MSG_VAL_ID)
+        @PathVariable @Positive(message = MSG_POSITIVO)
         id: Long,
         @RequestBody @Size(
             max = 255,
@@ -131,34 +132,34 @@ class AmbienteNaoPublicadoController(
 
     @PostMapping("/{id}")
     fun alterarTipoDadosAmbiente(
-        @PathVariable @Positive(message = MSG_VAL_ID)
+        @PathVariable @Positive(message = MSG_POSITIVO)
         id: Long,
         @RequestBody @Valid
         ambiente: AmbienteReq
     ): ResponseEntity<AmbienteRes> {
         val ambienteRes = useCasesNaoPublicado.alterarTipoDadosAmbiente(id, ambiente)
         return ResponseEntity
-            .created(URI.create("${AMBIENTE_NAO_PUBLICADO_PATH}/${ambienteRes.id}"))
+            .created(URI.create("${AMBIENTES_NAO_PUBLICADOS_PATH}/${ambienteRes.id}"))
             .body(ambienteRes)
     }
 
     @PostMapping("/{id}/duplicar")
     fun duplicarAmbiente(
-        @PathVariable @Positive(message = MSG_VAL_ID)
+        @PathVariable @Positive(message = MSG_POSITIVO)
         id: Long,
         @RequestBody @Valid
         dados: AmbienteNomeLocalizacaoReq
     ): ResponseEntity<AmbienteRes> {
         val ambienteRes = useCasesNaoPublicado.duplicarAmbiente(id, dados)
         return ResponseEntity
-            .created(URI.create("${AMBIENTE_NAO_PUBLICADO_PATH}/${ambienteRes.id}"))
+            .created(URI.create("${AMBIENTES_NAO_PUBLICADOS_PATH}/${ambienteRes.id}"))
             .body(ambienteRes)
     }
 
     @PatchMapping("/validar")
     fun enviarValidacaoAmbientes(
         @RequestBody @NotEmpty(message = "$MSG_LISTA_VAZIA um ID.")
-        ids: Set<@Positive(message = MSG_VAL_ID) Long>
+        ids: Set<@Positive(message = MSG_POSITIVO) Long>
     ): ResponseEntity<Void> {
         useCasesNaoPublicado.enviarValidacaoAmbientes(ids)
         return ResponseEntity.noContent().build()
@@ -167,7 +168,7 @@ class AmbienteNaoPublicadoController(
     @DeleteMapping
     fun deletarAmbientes(
         @RequestBody @NotEmpty(message = "$MSG_LISTA_VAZIA um ID.")
-        ids: Set<@Positive(message = MSG_VAL_ID) Long>
+        ids: Set<@Positive(message = MSG_POSITIVO) Long>
     ): ResponseEntity<Void> {
         useCasesNaoPublicado.deletarAmbientes(ids)
         return ResponseEntity.noContent().build()

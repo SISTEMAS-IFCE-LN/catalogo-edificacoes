@@ -1,5 +1,10 @@
 package br.edu.ifce.security.config
 
+import br.edu.ifce.common.config.ApiPaths.AMBIENTES_NAO_PUBLICADOS_PATH
+import br.edu.ifce.common.config.ApiPaths.AMBIENTES_PUBLICADOS_PATH
+import br.edu.ifce.common.config.ApiPaths.AMBIENTES_VALIDACAO_PATH
+import br.edu.ifce.common.config.ApiPaths.AUTH_PATH
+import br.edu.ifce.common.config.ApiPaths.USUARIOS_PATH
 import br.edu.ifce.security.model.application.service.CustomOAuth2UserService
 import br.edu.ifce.security.model.domain.Perfil
 import org.springframework.boot.context.properties.EnableConfigurationProperties
@@ -82,33 +87,33 @@ class SecurityConfig(
                         HttpMethod.POST,
                         HttpMethod.PATCH,
                         HttpMethod.DELETE
-                    ), "/api/ambientes/nao-publicados/**"
+                    ), "${AMBIENTES_NAO_PUBLICADOS_PATH}/**"
                 ).hasAuthority(Perfil.ROLE_GESTOR_SISTEMA.name)
                 auth.customRequestMatchers(
                     listOf(
                         HttpMethod.GET,
                         HttpMethod.PATCH
-                    ), "/api/ambientes/validacao/**"
+                    ), "${AMBIENTES_VALIDACAO_PATH}/**"
                 ).hasAuthority(Perfil.ROLE_VALIDADOR.name)
                 auth.customRequestMatchers(
                     listOf(
                         HttpMethod.GET,
                         HttpMethod.PATCH
-                    ), "/api/usuarios/**"
+                    ), "${USUARIOS_PATH}/**"
                 ).hasAuthority(Perfil.ROLE_ADMINISTRADOR.name)
                 auth.requestMatchers(
                     HttpMethod.GET,
-                    "/api/ambientes/publicados/{id}",
-                    "/api/ambientes/publicados/esquadrias"
+                    "${AMBIENTES_PUBLICADOS_PATH}/{id}",
+                    "${AMBIENTES_PUBLICADOS_PATH}/esquadrias"
                 ).hasAuthority(Perfil.ROLE_COLABORADOR.name)
                 auth.requestMatchers(
                     HttpMethod.GET,
+                    "${AMBIENTES_PUBLICADOS_PATH}/**",
                     "/callback.html",
                     "/failure.html",
-                    "/actuator/health",
-                    "/api/ambientes/publicados/**"
+                    "/actuator/health"
                 ).permitAll()
-                auth.requestMatchers(HttpMethod.POST, "/auth/**").permitAll()
+                auth.requestMatchers(HttpMethod.POST, "${AUTH_PATH}/**").permitAll()
                 auth.anyRequest().denyAll()
             }
             .oauth2ResourceServer { rs ->

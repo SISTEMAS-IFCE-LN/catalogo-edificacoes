@@ -3,6 +3,8 @@ package br.edu.ifce.ambientes_internos.controller
 import br.edu.ifce.ambientes_internos.model.application.interfaces.IAmbienteUseCases
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbientesBasicosPaginadosRes
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.LocalizacaoPesquisaReq
+import br.edu.ifce.common.config.MsgsSpringValidation.MSG_MAX_CARACTERES
+import br.edu.ifce.common.config.MsgsSpringValidation.MSG_POSITIVO
 import jakarta.validation.constraints.Min
 import jakarta.validation.constraints.NotBlank
 import jakarta.validation.constraints.Positive
@@ -13,11 +15,6 @@ import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestParam
-
-const val MSG_VAL_ID = "O ID deve ser positivo."
-const val MSG_LISTA_VAZIA = "Deve conter pelo menos "
-const val MSG_MAX_CARACTERES = "Deve conter no máximo {max} caracteres."
-const val MSG_OBRIGATORIO = "do ambiente é obrigatório."
 
 @Validated
 abstract class BaseController<RES>(protected val useCases: IAmbienteUseCases<RES>) {
@@ -30,7 +27,7 @@ abstract class BaseController<RES>(protected val useCases: IAmbienteUseCases<RES
     @GetMapping("/tipo")
     fun listarAmbientesPorTipo(
         @RequestParam
-        @NotBlank(message = "O tipo $MSG_OBRIGATORIO")
+        @NotBlank(message = "O tipo do ambiente é obrigatório.")
         @Size(
             max = 50,
             message = MSG_MAX_CARACTERES
@@ -44,7 +41,7 @@ abstract class BaseController<RES>(protected val useCases: IAmbienteUseCases<RES
     @GetMapping("/nome")
     fun listarAmbientesPorNome(
         @RequestParam
-        @NotBlank(message = "O nome $MSG_OBRIGATORIO")
+        @NotBlank(message = "O nome do ambiente é obrigatório.")
         @Size(
             max = 50,
             message = MSG_MAX_CARACTERES
@@ -82,7 +79,7 @@ abstract class BaseController<RES>(protected val useCases: IAmbienteUseCases<RES
     }
 
     @GetMapping("/{id}")
-    fun obterAmbientePorId(@PathVariable @Positive(message = MSG_VAL_ID) id: Long): ResponseEntity<RES> {
+    fun obterAmbientePorId(@PathVariable @Positive(message = MSG_POSITIVO) id: Long): ResponseEntity<RES> {
         return ResponseEntity.ok(useCases.obterAmbientePorId(id))
     }
 
