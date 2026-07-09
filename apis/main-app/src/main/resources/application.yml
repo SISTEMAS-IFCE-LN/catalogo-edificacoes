@@ -33,6 +33,12 @@ server:
         secure: true
         same-site: lax
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+
 jwt:
   access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:900}
   refresh-expiration: ${JWT_REFRESH_EXPIRATION:43200}
