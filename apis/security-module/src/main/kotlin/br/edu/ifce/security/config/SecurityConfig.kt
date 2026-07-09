@@ -1,13 +1,15 @@
 package br.edu.ifce.security.config
 
 import br.edu.ifce.security.model.application.service.CustomOAuth2UserService
+import br.edu.ifce.security.model.domain.Perfil
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.annotation.Order
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
+import org.springframework.http.HttpMethod
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
+import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter
@@ -21,7 +23,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true)
 @EnableConfigurationProperties(
     RsaKeyProperties::class,
     JwtProperties::class,
@@ -75,12 +76,40 @@ class SecurityConfig(
             .cors { it.configurationSource(corsConfigurationSource()) }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests { auth ->
-                auth.requestMatchers("/api/ambientes/publicados/**").permitAll()
-                auth.requestMatchers("/api/ambientes/nao-publicados/**").hasAuthority("ROLE_GESTOR_SISTEMA")
-                auth.requestMatchers("/api/ambientes/validacao/**").hasAuthority("ROLE_VALIDADOR")
-                auth.requestMatchers("/auth/**").permitAll()
-                auth.requestMatchers("/health").permitAll()
-                auth.anyRequest().authenticated()
+                auth.customRequestMatchers(
+                    listOf(
+                        HttpMethod.GET,
+                        HttpMethod.POST,
+                        HttpMethod.PATCH,
+                        HttpMethod.DELETE
+                    ), "/api/ambientes/nao-publicados/**"
+                ).hasAuthority(Perfil.ROLE_GESTOR_SISTEMA.name)
+                auth.customRequestMatchers(
+                    listOf(
+                        HttpMethod.GET,
+                        HttpMethod.PATCH
+                    ), "/api/ambientes/validacao/**"
+                ).hasAuthority(Perfil.ROLE_VALIDADOR.name)
+                auth.customRequestMatchers(
+                    listOf(
+                        HttpMethod.GET,
+                        HttpMethod.PATCH
+                    ), "/api/usuarios/**"
+                ).hasAuthority(Perfil.ROLE_ADMINISTRADOR.name)
+                auth.requestMatchers(
+                    HttpMethod.GET,
+                    "/api/ambientes/publicados/{id}",
+                    "/api/ambientes/publicados/esquadrias"
+                ).hasAuthority(Perfil.ROLE_COLABORADOR.name)
+                auth.requestMatchers(
+                    HttpMethod.GET,
+                    "/callback.html",
+                    "/failure.html",
+                    "/actuator/health",
+                    "/api/ambientes/publicados/**"
+                ).permitAll()
+                auth.requestMatchers(HttpMethod.POST, "/auth/**").permitAll()
+                auth.anyRequest().denyAll()
             }
             .oauth2ResourceServer { rs ->
                 rs.jwt { jwt ->
@@ -107,7 +136,7 @@ class SecurityConfig(
         // TODO: restringir origens antes de ir para produção.
         // Manter "*" apenas durante o desenvolvimento para simplificar testes locais.
         configuration.allowedOriginPatterns = listOf("*")
-        configuration.allowedMethods = listOf("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
+        configuration.allowedMethods = listOf("GET", "POST", "PATCH", "DELETE", "OPTIONS")
         configuration.allowedHeaders = listOf("*")
         configuration.allowCredentials = true
         configuration.exposedHeaders = listOf("Authorization")
@@ -116,4 +145,13 @@ class SecurityConfig(
         source.registerCorsConfiguration("/**", configuration)
         return source
     }
+}
+
+fun AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry.customRequestMatchers(
+    methods: List<HttpMethod>,
+    vararg patterns: String
+): AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizedUrl {
+    var authorizedUrl: AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizedUrl? = null
+    methods.forEach { method -> authorizedUrl = this.requestMatchers(method, *patterns) }
+    return authorizedUrl!!
 }

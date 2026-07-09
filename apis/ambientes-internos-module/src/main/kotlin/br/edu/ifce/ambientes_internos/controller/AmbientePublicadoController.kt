@@ -7,7 +7,6 @@ import jakarta.validation.constraints.NotEmpty
 import jakarta.validation.constraints.Positive
 import org.springframework.data.domain.Pageable
 import org.springframework.http.ResponseEntity
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
@@ -24,9 +23,8 @@ class AmbientePublicadoController(
 ) : BaseController<AmbienteRes>(useCasesPublicado) {
 
     @GetMapping("/esquadrias")
-    @PreAuthorize("hasAuthority('ROLE_COLABORADOR')")
     fun listarEsquadriasAmbientes(
-        @RequestParam @NotEmpty(message = MSG_LISTA_VAZIA + "um ID.") ids: Set<@Positive(message = MSG_VAL_ID) Long>,
+        @RequestParam @NotEmpty(message = "$MSG_LISTA_VAZIA um ID.") ids: Set<@Positive(message = MSG_VAL_ID) Long>,
         pageable: Pageable
     ): ResponseEntity<EsquadriasAmbientesPaginadosRes> {
         return ResponseEntity.ok(useCasesPublicado.listarEsquadriasAmbientes(ids, pageable))

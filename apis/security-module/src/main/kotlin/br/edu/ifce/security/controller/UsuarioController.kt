@@ -1,24 +1,14 @@
 package br.edu.ifce.security.controller
 
-import br.edu.ifce.security.model.domain.Perfil
 import br.edu.ifce.security.model.application.interfaces.IUsuarioService
+import br.edu.ifce.security.model.domain.Perfil
 import br.edu.ifce.security.model.dto.UsuarioRes
 import br.edu.ifce.security.model.dto.UsuariosPaginadosRes
-import jakarta.validation.constraints.NotBlank
-import jakarta.validation.constraints.NotEmpty
-import jakarta.validation.constraints.NotNull
-import jakarta.validation.constraints.Positive
-import jakarta.validation.constraints.Size
+import jakarta.validation.constraints.*
 import org.springframework.data.domain.Pageable
 import org.springframework.http.ResponseEntity
-import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.validation.annotation.Validated
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PatchMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 private const val MSG_OBRIGATORIO = "é obrigatório(a)."
 private const val MSG_MAX_CARACTERES_EMAIL = "deve ter no máximo 255 caracteres."
@@ -27,7 +17,6 @@ private const val MSG_MAX_CARACTERES_NOME = "deve ter no máximo 100 caracteres.
 @Validated
 @RestController
 @RequestMapping("/api/usuarios")
-@PreAuthorize("hasAuthority('ROLE_ADMINISTRADOR')")
 class UsuarioController(private val service: IUsuarioService) {
 
     @PatchMapping("/{id}/perfis")
