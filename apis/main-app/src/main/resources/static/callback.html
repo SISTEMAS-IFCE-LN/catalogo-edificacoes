@@ -7,7 +7,16 @@
         body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f6f9; }
         .container { background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         textarea { width: 100%; font-family: monospace; padding: 10px; background: #272822; color: #f8f8f2; border-radius: 4px; box-sizing: border-box; }
-        .btn { display: inline-block; padding: 10px 15px; background: #0056b3; color: white; text-decoration: none; border-radius: 4px; margin-top: 15px; cursor: pointer;}
+        button.btn { display: inline-block; padding: 10px 15px; background: #0056b3; color: white; text-decoration: none; border-radius: 4px; margin-top: 15px; cursor: pointer; border: none; font-size: 14px; }
+        button.btn:disabled { background: #999; cursor: not-allowed; }
+        button.btn-success { background: #27ae60; }
+        button.btn-danger { background: #c0392b; }
+        button.btn-light { background: #5dade2; }
+        .status { margin-top: 15px; padding: 8px 12px; border-radius: 4px; font-size: 13px; display: none; }
+        .status.info { background: #d6eaf8; color: #1b4f72; display: block; }
+        .status.success { background: #d5f5e3; color: #1e8449; display: block; }
+        .status.error { background: #fadbd8; color: #922b21; display: block; }
+        .timer { margin-top: 10px; font-size: 13px; color: #666; }
     </style>
 </head>
 <body>
@@ -15,23 +24,134 @@
         <h2>Handshake Efetuado com Sucesso!</h2>
         <p>Copie o <strong>Access Token (JWT)</strong> para utilizar no Postman:</p>
         <textarea id="tokenDisplay" rows="8" readonly></textarea>
-        <div class="btn" onclick="copyToken()">Copiar Token</div>
+        <div>
+            <button class="btn" id="btnNewLogin" onclick="newLogin()">Novo Login</button>
+            <button class="btn btn-light" id="btnCopy" onclick="copyToken()">Copiar Token</button>
+            <button class="btn btn-success" id="btnRefresh" onclick="doRefresh()">Renovar Token</button>
+            <button class="btn btn-danger" id="btnLogout" onclick="doLogout()">Logout</button>
+        </div>
+        <div class="timer" id="timerDisplay"></div>
+        <div class="status" id="statusDisplay"></div>
     </div>
     <script>
+        let refreshTimer = null;
+        let countdownInterval = null;
+        let nextRefreshAt = null;
+
         const hash = window.location.hash || '';
         const token = hash.startsWith('#') ? (new URLSearchParams(hash.slice(1))).get('token') : null;
 
         if (token) {
             document.getElementById('tokenDisplay').value = token;
-            window.history.replaceState({}, document.title, "/callback.html");
+            window.history.replaceState({}, document.title, '/callback.html');
+            updateStatus('Token recebido. Refresh automático agendado.', 'success');
+            scheduleRefresh(900);
         } else {
-            document.getElementById('tokenDisplay').value = "Nenhum token capturado.";
+            document.getElementById('tokenDisplay').value = 'Nenhum token capturado.';
+            updateStatus('Use "Novo Login" para autenticar.', 'info');
+            disableButtons();
         }
+
         function copyToken() {
             const copyText = document.getElementById("tokenDisplay");
             copyText.select();
             navigator.clipboard.writeText(copyText.value);
-            alert("Token copiado para a área de transferência!");
+            updateStatus('Token copiado!', 'info');
+        }
+
+        async function doRefresh() {
+            try {
+                const res = await fetch('/auth/refresh', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                if (!res.ok) {
+                    if (res.status === 401) {
+                        stopAll();
+                        updateStatus('Sessão expirada — redirecionando para login...', 'error');
+                        disableButtons();
+                        setTimeout(newLogin, 2000);
+                    } else {
+                        updateStatus('Erro ao renovar token (HTTP ' + res.status + ').', 'error');
+                    }
+                    return;
+                }
+                const data = await res.json();
+                document.getElementById('tokenDisplay').value = data.accessToken;
+                updateStatus('Token renovado com sucesso!', 'success');
+                scheduleRefresh(data.expiresIn || 900);
+            } catch (err) {
+                updateStatus('Erro de rede ao renovar token.', 'error');
+            }
+        }
+
+        function scheduleRefresh(expiresIn) {
+            if (refreshTimer) clearTimeout(refreshTimer);
+            if (countdownInterval) clearInterval(countdownInterval);
+
+            const delayMs = Math.floor(expiresIn * 0.9) * 1000;
+            nextRefreshAt = Date.now() + delayMs;
+
+            refreshTimer = setTimeout(() => {
+                doRefresh();
+            }, delayMs);
+
+            startCountdown();
+        }
+
+        function startCountdown() {
+            updateTimerDisplay();
+            if (countdownInterval) clearInterval(countdownInterval);
+            countdownInterval = setInterval(() => {
+                updateTimerDisplay();
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            if (!nextRefreshAt) return;
+            const remaining = Math.max(0, Math.floor((nextRefreshAt - Date.now()) / 1000));
+            const min = Math.floor(remaining / 60);
+            const sec = remaining % 60;
+            document.getElementById('timerDisplay').textContent =
+                'Próximo refresh automático em: ' + min + 'm ' + (sec < 10 ? '0' : '') + sec + 's';
+        }
+
+        async function doLogout() {
+            try {
+                await fetch('/auth/logout', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                updateStatus('Logout efetuado com sucesso.', 'success');
+            } catch (err) {
+                updateStatus('Erro ao fazer logout.', 'error');
+            }
+            stopAll();
+            document.getElementById('tokenDisplay').value = 'Nenhum token capturado.';
+            document.getElementById('timerDisplay').textContent = '';
+            disableButtons();
+        }
+
+        function stopAll() {
+            if (refreshTimer) { clearTimeout(refreshTimer); refreshTimer = null; }
+            if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+            nextRefreshAt = null;
+        }
+
+        function disableButtons() {
+            document.getElementById('btnCopy').disabled = true;
+            document.getElementById('btnRefresh').disabled = true;
+            document.getElementById('btnLogout').disabled = true;
+        }
+
+        function newLogin() {
+            window.location.href = '/oauth2/authorization/google';
+        }
+
+        function updateStatus(msg, type) {
+            const el = document.getElementById('statusDisplay');
+            el.textContent = msg;
+            el.className = 'status ' + type;
         }
     </script>
 </body>
