@@ -82,33 +82,33 @@ class SecurityConfig(
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
             .authorizeHttpRequests { auth ->
                 auth.customRequestMatchers(
-                    listOf(
-                        HttpMethod.GET,
-                        HttpMethod.POST,
-                        HttpMethod.PATCH,
-                        HttpMethod.DELETE
-                    ), "${AMBIENTES_NAO_PUBLICADOS_PATH}/**"
-                ).hasAuthority(Perfil.ROLE_GESTOR_SISTEMA.name)
+                    listOf(HttpMethod.GET, HttpMethod.POST, HttpMethod.PATCH, HttpMethod.DELETE),
+                    "${AMBIENTES_NAO_PUBLICADOS_PATH}/**",
+                    Perfil.ROLE_GESTOR_SISTEMA.name
+                )
                 auth.customRequestMatchers(
-                    listOf(
-                        HttpMethod.GET,
-                        HttpMethod.PATCH
-                    ), "${AMBIENTES_VALIDACAO_PATH}/**"
-                ).hasAuthority(Perfil.ROLE_VALIDADOR.name)
+                    listOf(HttpMethod.GET, HttpMethod.PATCH),
+                    "${AMBIENTES_VALIDACAO_PATH}/**",
+                    Perfil.ROLE_VALIDADOR.name
+                )
                 auth.customRequestMatchers(
-                    listOf(
-                        HttpMethod.GET,
-                        HttpMethod.PATCH
-                    ), "${USUARIOS_PATH}/**"
-                ).hasAuthority(Perfil.ROLE_ADMINISTRADOR.name)
+                    listOf(HttpMethod.GET, HttpMethod.PATCH),
+                    "${USUARIOS_PATH}/**",
+                    Perfil.ROLE_ADMINISTRADOR.name
+                )
                 auth.requestMatchers(
                     HttpMethod.GET,
-                    "${AMBIENTES_PUBLICADOS_PATH}/{id}",
-                    "${AMBIENTES_PUBLICADOS_PATH}/esquadrias"
+                    AMBIENTES_PUBLICADOS_PATH,
+                    "${AMBIENTES_PUBLICADOS_PATH}/tipo",
+                    "${AMBIENTES_PUBLICADOS_PATH}/nome",
+                    "${AMBIENTES_PUBLICADOS_PATH}/localizacao"
+                ).permitAll()
+                auth.requestMatchers(
+                    HttpMethod.GET,
+                    "${AMBIENTES_PUBLICADOS_PATH}/**"
                 ).hasAuthority(Perfil.ROLE_COLABORADOR.name)
                 auth.requestMatchers(
                     HttpMethod.GET,
-                    "${AMBIENTES_PUBLICADOS_PATH}/**",
                     "/callback.html",
                     "/failure.html",
                     "/actuator/health"
@@ -154,9 +154,10 @@ class SecurityConfig(
 
 fun AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry.customRequestMatchers(
     methods: List<HttpMethod>,
-    vararg patterns: String
-): AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizedUrl {
-    var authorizedUrl: AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizedUrl? = null
-    methods.forEach { method -> authorizedUrl = this.requestMatchers(method, *patterns) }
-    return authorizedUrl!!
+    pattern: String,
+    authority: String
+) {
+    methods.forEach { method ->
+        this.requestMatchers(method, pattern).hasAuthority(authority)
+    }
 }
