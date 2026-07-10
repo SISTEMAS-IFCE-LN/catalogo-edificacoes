@@ -26,7 +26,6 @@ server:
     session:
       cookie:
         secure: false
-        same-site: lax
 
 logging:
   level:
