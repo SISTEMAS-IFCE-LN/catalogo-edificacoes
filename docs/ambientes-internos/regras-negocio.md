@@ -90,8 +90,6 @@ atual e o contexto do domínio do IFCE.
   estão publicados. Suas ações incluem:
     * Obter detalhes completos de um ambiente publicado por ID.
     * Consultar, de forma paginada, as esquadrias de um conjunto de ambientes publicados.
-    * A consulta por ID (`GET /api/ambientes/{path}/{id}`) é exigida para todos os ambientes, inclusive publicados,
-      e exige `ROLE_COLABORADOR` (autorização implementada no método `obterAmbientePorId` de `BaseController`).
 
 * **RN-4.4:** Usuários identificados como **Público Externo** podem apenas consultar informações simplificadas dos
   ambientes que estão publicados. Suas ações incluem:
@@ -123,7 +121,7 @@ atual e o contexto do domínio do IFCE.
   `UsuarioService.verificarExclusaoAdm()`.
 
 * **RN-4.10:** O **JWT próprio** emitido pelo backend é o credencial de acesso à API, enquanto o **refresh token** é
-  entregue em cookie `HttpOnly`, `Secure` e `SameSite=Strict`, com **rotação** a cada uso. O acesso aos endpoints
+  entregue em cookie `HttpOnly`, `Secure` e `SameSite=None`, com **rotação** a cada uso. O acesso aos endpoints
   protegidos é feito pelo header `Authorization: Bearer <access_token>`. As durações do access token e do refresh
   token são configuráveis externamente (ver RN-4.13).
 
@@ -136,8 +134,8 @@ atual e o contexto do domínio do IFCE.
       são garantidos.
     * Se existir, estiver ativo e já tiver `ROLE_ADMINISTRADOR`, é no-op silencioso.
     * Se existir, estiver ativo mas sem `ROLE_ADMINISTRADOR`, é promovido e logado em `WARN`.
-  Em todos os casos o nome do `Usuario` é mantido o que estiver (placeholder ou nome real vindo de login Google
-  anterior).
+      Em todos os casos o nome do `Usuario` é mantido o que estiver (placeholder ou nome real vindo de login Google
+      anterior).
 
 * **RN-4.12:** A flag `BOOTSTRAP_ALLOW_REACTIVATE` (default `true`) funciona como **kill switch geral** do
   `BootstrapAdminRunner`. Quando `false`, o runner é um no-op total: não cria, não reativa, não promove. Útil
@@ -146,12 +144,12 @@ atual e o contexto do domínio do IFCE.
 
 * **RN-4.13:** As durações do access token e do refresh token são configuráveis externamente, em segundos:
 
-    | Property | Env var | Default | Unidade |
-    |---|---|---|---|
-    | `jwt.access-token-expiration` | `JWT_ACCESS_TOKEN_EXPIRATION` | `900` (15 min) | segundos |
-    | `jwt.refresh-expiration` | `JWT_REFRESH_EXPIRATION` | `43200` (12 h) | segundos |
-    | `jwt.cookie-secure` | `JWT_COOKIE_SECURE` | `true` | boolean |
+  | Property | Env var | Default | Unidade |
+      |---|---|---|---|
+  | `jwt.access-token-expiration` | `JWT_ACCESS_TOKEN_EXPIRATION` | `900` (15 min) | segundos |
+  | `jwt.refresh-expiration` | `JWT_REFRESH_EXPIRATION` | `43200` (12 h) | segundos |
+  | `jwt.cookie-secure` | `JWT_COOKIE_SECURE` | `true` | boolean |
 
-    O `maxAge` do cookie HttpOnly de refresh é derivado de `jwt.refresh-expiration`, garantindo coerência entre a
-    vida do token persistido e a vida do cookie. A flag `cookie-secure` deve ser `false` apenas em ambiente de
-    desenvolvimento local (HTTP). O profile `dev` no `application-dev.yml` já define `cookie-secure: false`.
+  O `maxAge` do cookie HttpOnly de refresh é derivado de `jwt.refresh-expiration`, garantindo coerência entre a
+  vida do token persistido e a vida do cookie. A flag `cookie-secure` deve ser `false` apenas em ambiente de
+  desenvolvimento local (HTTP). O profile `dev` no `application-dev.yml` já define `cookie-secure: false`.

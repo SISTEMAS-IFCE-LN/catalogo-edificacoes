@@ -245,7 +245,7 @@ cd apis
 |---|---|---|---|
 | `/health` | GET | Não | Health check. |
 | `/h2-console` | GET (navegador) | Não | Console do H2 in-memory, habilitado em dev. |
-| `/oauth2/authorization/google` | GET (navegador) | Não | Inicia o handshake OAuth2. O callback retorna JSON com `accessToken` (via `OAuth2LoginSuccessHandler`). |
+| `/oauth2/authorization/google` | GET (navegador) | Não | Inicia o handshake OAuth2. O callback redireciona para `/callback.html#token=...` com o access token no fragmento da URL. |
 | `/auth/refresh` | POST | Cookie | Renova o access token. |
 | `/auth/logout` | POST | Cookie | Revoga refresh token e limpa cookie. |
 | `/api/ambientes/publicados` | GET | Não | Lista ambientes publicados (público). |
@@ -308,10 +308,9 @@ Configuração de conexão (preenchida automaticamente):
 ### 6.1. Adicionar um novo endpoint protegido
 
 1. Adicionar a regra em `SecurityConfig.apiFilterChain` (`permitAll` ou exigir auth).
-2. Adicionar `@PreAuthorize` no controller se aplicável.
-3. Adicionar `@WithMockUser(authorities = [...])` nos testes do controller.
-4. Adicionar caso de teste em `ambientes-internos-module/src/test/kotlin/.../integracao/`.
-5. Adicionar entrada na tabela de mapeamento HTTP em `docs/seguranca.md`.
+2. Adicionar `@WithMockUser(authorities = [...])` nos testes do controller.
+3. Adicionar caso de teste em `ambientes-internos-module/src/test/kotlin/.../integracao/`.
+4. Adicionar entrada na tabela de mapeamento HTTP em `docs/seguranca.md`.
 
 ### 6.2. Adicionar uma nova env var
 

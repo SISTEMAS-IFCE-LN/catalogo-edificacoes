@@ -15,15 +15,6 @@ spring:
     init:
       mode: never
 
-server:
-  servlet:
-    session:
-      cookie:
-        secure: true
-
-jwt:
-  cookie-secure: true
-
 logging:
   level:
     org.springframework.security: INFO

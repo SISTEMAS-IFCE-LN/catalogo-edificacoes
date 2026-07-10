@@ -1,4 +1,4 @@
-package br.edu.ifce.common.exception
+package br.edu.ifce.common.dto
 
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter

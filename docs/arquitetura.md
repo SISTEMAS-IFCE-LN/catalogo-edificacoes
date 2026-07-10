@@ -54,12 +54,13 @@ segurança e as diferentes regras de negócio de domínio coexistam sem gerar de
   declaradas e isolar toda a infraestrutura de identidade. Concentra, em especial:
     * Autenticação **OAuth2 (Google)** via Authorization Code com PKCE, com o backend atuando como *broker*.
     * `OAuth2LoginSuccessHandler`: handler que emite JWT + refresh token diretamente no callback OAuth2 (dentro da
-      chain 1, onde o `Authentication` está disponível) e retorna JSON na response.
+      chain 1, onde o `Authentication` está disponível) e redireciona o navegador para a URL de callback configurada,
+      anexando o access token no fragmento (`#token=...`).
     * `JwtConfig`: classe de configuração que define os beans `JwtEncoder` e `JwtDecoder` a partir das chaves RSA,
       isolando-os do `SecurityConfig` para evitar ciclos de dependência.
     * Emissão e validação de **JWT próprio** (assinatura RSA) para acesso à API.
     * Gestão de **refresh tokens** persistidos, com rotação a cada uso, entregues em cookie `HttpOnly`, `Secure` e
-      `SameSite=Strict`.
+      `SameSite=None`.
     * Entidade `Usuario` e enum `Perfil` (`ROLE_COLABORADOR`, `ROLE_VALIDADOR`, `ROLE_GESTOR_SISTEMA`,
       `ROLE_ADMINISTRADOR`), com suporte a **múltiplos perfis cumulativos** e regra de **lockout prevention**
       (RN-4.9).
@@ -68,9 +69,8 @@ segurança e as diferentes regras de negócio de domínio coexistam sem gerar de
     * Subpacotes internos: `model.{domain, repository, application.{interfaces, service}}` e `config`/`controller`.
     * Configuração do `SecurityFilterChain` com `oauth2Login` (sessão `IF_REQUIRED` para o handshake) e
       `oauth2ResourceServer.jwt()` (sessão `STATELESS` para a API).
-* Os demais módulos de domínio recorrem a este componente apenas para validar as credenciais anexadas às requisições
-  e para aplicar anotações `@PreAuthorize` declarativas, mantendo seus códigos limpos de lógicas de infraestrutura
-  de segurança.
+* Os demais módulos de domínio recorrem a este componente apenas para validar as credenciais anexadas às requisições,
+  mantendo seus códigos limpos de lógicas de infraestrutura de segurança.
 
 ### 1.3. Módulo de Domínio de Ambientes Internos (`ambientes-internos-module`)
 
@@ -78,10 +78,8 @@ segurança e as diferentes regras de negócio de domínio coexistam sem gerar de
 * **Responsabilidade:** Contém as entidades de domínio, os casos de uso e as interfaces de persistência do
   subdomínio de ambientes. Este módulo:
     * Concentra **apenas** o domínio de ambientes internos — sem conter lógica de autenticação ou autorização.
-    * **Declara** dependência de `spring-security` (starter) **apenas** para usar a anotação `@PreAuthorize` nos
-      controllers; **não** importa lógica de autenticação, emissão de tokens ou gestão de identidade.
-    * Recebe a segurança de forma transversal, por composição em `main-app` e por anotações `@PreAuthorize`
-      declarativas aplicadas nos controllers, sem acoplar a este módulo a infraestrutura de identidade.
+    * Recebe a segurança de forma transversal, por composição em `main-app` e por regras centralizadas no
+      `SecurityConfig` do `security-module`, sem acoplar a este módulo a infraestrutura de identidade.
 * A arquitetura multi-módulos permite que novos subdomínios (áreas externas, relatórios avançados, etc.) sejam
   acoplados como novos módulos irmãos, compartilhando o mesmo ecossistema de segurança sem impactar os recursos já
   existentes.
@@ -124,19 +122,19 @@ Definido em `SecurityConfig.apiFilterChain` (chain 2, com `@Order(2)`). Endpoint
 | Path                           | Descrição                                      |
 |--------------------------------|------------------------------------------------|
 | `/api/ambientes/publicados/**` | Listagens e detalhes de ambientes publicados.  |
-| `/auth/**`                     | Refresh, logout.                             |
+| `/auth/**`                     | Refresh, logout.                               |
 | `/health`                      | Health check.                                  |
 | `/oauth2/**` e `/login/**`     | Handshake OAuth2 (chain 1, com `IF_REQUIRED`). |
 
-Endpoints protegidos por `@PreAuthorize`:
+Endpoints protegidos por `SecurityConfig`:
 
-| Path                                         | Authority                                                           |
-|----------------------------------------------|---------------------------------------------------------------------|
-| `/api/ambientes/nao-publicados/**`           | `ROLE_GESTOR_SISTEMA`                                               |
-| `/api/ambientes/validacao/**`                | `ROLE_VALIDADOR`                                                    |
-| `/api/ambientes/{path}/{id}` (GET)           | `ROLE_COLABORADOR` (herdado de `BaseController.obterAmbientePorId`) |
-| `/api/ambientes/publicados/esquadrias` (GET) | `ROLE_COLABORADOR`                                                  |
-| `/api/usuarios/**`                       | `ROLE_ADMINISTRADOR`                                                |
+| Path                                         | Authority                          |
+|----------------------------------------------|------------------------------------|
+| `/api/ambientes/nao-publicados/**`           | `ROLE_GESTOR_SISTEMA`              |
+| `/api/ambientes/validacao/**`                | `ROLE_VALIDADOR`                   |
+| `/api/ambientes/publicados/{id}` (GET)       | `ROLE_COLABORADOR`                 |
+| `/api/ambientes/publicados/esquadrias` (GET) | `ROLE_COLABORADOR`                 |
+| `/api/usuarios/**`                           | `ROLE_ADMINISTRADOR`               |
 
 Detalhamento completo em [`docs/seguranca.md`](./seguranca.md).
 
@@ -151,7 +149,7 @@ configurável externamente:
 | `jwt.refresh-expiration`      | `JWT_REFRESH_EXPIRATION`      | `43200` (12 h) |
 | `jwt.cookie-secure`           | `JWT_COOKIE_SECURE`           | `true`         |
 
-`accessTokenExpiration` e `cookieSecure` são lidos em tempo de execução pelo `OAuth2LoginSuccessHandler` (cookie e expiração do access token) e pelo `AuthController` (cookie de refresh). O `JwtService`/`LoginResponse` também usa `accessTokenExpiration` para a expiração do token. `refreshExpiration` é lido pelo `RefreshTokenService` para a expiração do token persistido. O `maxAge` do cookie de refresh é derivado do mesmo valor, garantindo coerência entre token e cookie.
+`accessTokenExpiration` é lido pelo `JwtService`/`LoginRes` para a expiração do token e pelo `CookieService` para o cookie de refresh (via `refreshExpiration`). `refreshExpiration` é lido pelo `RefreshTokenService` para a expiração do token persistido. O `maxAge` do cookie de refresh é derivado do mesmo valor, garantindo coerência entre token e cookie. As URLs de callback do frontend são configuradas via `FrontendProperties`.
 
 ---
 
@@ -162,8 +160,7 @@ evolução independente do código. O `security-module` segue o mesmo padrão, c
 de serviço lida com autenticação, tokens e gestão de identidade em vez de regras de domínio:
 
 1. **Camada de Exposição (Controladores REST):** Responsável por receber as requisições externas, realizar validações
-   sintáticas primárias de entrada e formatar os dados de resposta para o cliente. Aplica `@PreAuthorize` para
-   autorização declarativa.
+   sintáticas primárias de entrada e formatar os dados de resposta para o cliente.
 2. **Camada de Aplicação (Casos de Uso / Serviços):** Onde reside a lógica de negócio e a coordenação das operações. É
    nesta camada que as regras operacionais são processadas de forma isolada de preocupações de rede ou banco de dados.
    No `security-module`, esta camada lida com orquestração de login, refresh, gestão de perfis e lockout prevention.

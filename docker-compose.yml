@@ -54,6 +54,12 @@ services:
       - ./apis/.keys:/app/.keys:ro
     ports:
       - "8080:8080"
+    healthcheck:
+      test: ["CMD", "java", "-cp", "/app", "HealthCheck"]
+      start_period: 2m
+      interval: 10s
+      timeout: 5s
+      retries: 5
     depends_on:
       db:
         condition: service_healthy

@@ -26,10 +26,14 @@ RUN mvn -B -ntp -e -DskipTests \
 # Padroniza o nome do artefato para `app.jar` (compatível com o entrypoint).
 RUN mv main-app/target/main-app-*.jar app.jar
 
+COPY HealthCheck.java ./HealthCheck.java
+RUN javac HealthCheck.java
+
 # ============== Estágio de release ==============
 FROM gcr.io/distroless/java21-debian13:nonroot AS release
 WORKDIR /app
 COPY --from=build /build/app.jar ./app.jar
+COPY --from=build /build/HealthCheck.class ./HealthCheck.class
 EXPOSE 8080
 USER nonroot
 ENTRYPOINT [ "java", "-jar", "./app.jar" ]
