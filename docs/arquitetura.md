@@ -140,7 +140,7 @@ Detalhamento completo em [`docs/seguranca.md`](./seguranca.md).
 
 ### 1.7. Configuração centralizada de tokens
 
-`JwtProperties` (em `br.edu.ifce.security.config`) agrupa tempos e flags de cookie em uma única classe
+`JwtProperties` (em `br.edu.ifce.security.config.properties`) agrupa tempos e flags de cookie em uma única classe
 configurável externamente:
 
 | Property                      | Env var                       | Default        |
