@@ -63,17 +63,15 @@ class AuthServiceTest {
         }
         val refreshToken =
             RefreshToken(token = "old-refresh", usuario = usuario, expiraEm = java.time.LocalDateTime.now().plusDays(1))
-        val novoRefresh =
-            RefreshToken(token = "new-refresh", usuario = usuario, expiraEm = java.time.LocalDateTime.now().plusDays(1))
         `when`(refreshTokenService.validarRefreshToken("cookie-abc")).thenReturn(refreshToken)
         `when`(jwtService.gerarAccessToken(5L, "user@ifce.edu.br", listOf("ROLE_COLABORADOR"))).thenReturn("access-new")
-        `when`(refreshTokenService.gerarRefreshToken(usuario)).thenReturn(novoRefresh)
 
         val result = authService.refresh("cookie-abc")
 
         assertNotNull(result)
         assertEquals("access-new", result!!.accessToken)
-        assertEquals("new-refresh", result.refreshToken)
+        assertNull(result.refreshToken)
+        verify(refreshTokenService, never()).gerarRefreshToken(usuario)
     }
 
     @Test

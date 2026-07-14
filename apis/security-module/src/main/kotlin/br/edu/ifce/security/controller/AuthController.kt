@@ -1,7 +1,7 @@
 package br.edu.ifce.security.controller
 
 import br.edu.ifce.common.config.ApiPaths.AUTH_PATH
-import br.edu.ifce.security.config.JwtProperties
+import br.edu.ifce.security.config.properties.JwtProperties
 import br.edu.ifce.security.model.application.interfaces.IAuthService
 import br.edu.ifce.security.model.application.interfaces.ICookieService
 import br.edu.ifce.security.model.dto.LoginRes
@@ -30,7 +30,6 @@ class AuthController(
             ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
         val tokensPair = authService.refresh(tokenCookie)
             ?: return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build()
-        response.addCookie(cookieService.criarCookieRefreshToken(tokensPair.refreshToken))
         return ResponseEntity.ok(
             LoginRes(
                 accessToken = tokensPair.accessToken,
