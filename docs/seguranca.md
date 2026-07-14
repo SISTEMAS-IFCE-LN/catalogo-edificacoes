@@ -22,9 +22,9 @@ Componentes centrais:
 | `UsuarioController` | `br.edu.ifce.security.controller` | Endpoints administrativos de perfis. |
 | `SecurityConfig` | `br.edu.ifce.security.config` | `SecurityFilterChain`, `oauth2Login`, `oauth2ResourceServer.jwt()`, CORS. |
 | `JwtConfig` | `br.edu.ifce.security.config` | Beans `JwtEncoder` e `JwtDecoder` (RSA). |
-| `RsaKeyProperties` | `br.edu.ifce.security.config` | Bind de `rsa.public-key` / `rsa.private-key`. |
-| `JwtProperties` | `br.edu.ifce.security.config` | Bind de `jwt.access-token-expiration` / `jwt.refresh-expiration` / `jwt.cookie-secure`. |
-| `FrontendProperties` | `br.edu.ifce.security.config` | Bind de `frontend.callback-success-url` / `frontend.callback-error-url`. |
+| `RsaKeyProperties` | `br.edu.ifce.security.config.properties` | Bind de `rsa.public-key` / `rsa.private-key`. |
+| `JwtProperties` | `br.edu.ifce.security.config.properties` | Bind de `jwt.access-token-expiration` / `jwt.refresh-expiration` / `jwt.cookie-secure`. |
+| `FrontendProperties` | `br.edu.ifce.security.config.properties` | Bind de `frontend.callback-success-url` / `frontend.callback-error-url`. |
 | `BootstrapAdminRunner` | `br.edu.ifce.security.config` | Garante a presença de um administrador institucional conhecido no boot. |
 
 ---
@@ -188,7 +188,7 @@ Definido em `SecurityConfig.apiFilterChain` (chain 2, com `@Order(2)`).
 
 ## 7. Configuração externa
 
-### 7.1. `JwtProperties` (`br.edu.ifce.security.config`)
+### 7.1. `JwtProperties` (`br.edu.ifce.security.config.properties`)
 
 ```kotlin
 @ConfigurationProperties(prefix = "jwt")
@@ -205,7 +205,7 @@ data class JwtProperties(
 | `jwt.refresh-expiration` | `JWT_REFRESH_EXPIRATION` | `43200` | segundos | Vida do refresh token **e** do cookie que o contém. |
 | `jwt.cookie-secure` | `JWT_COOKIE_SECURE` | `true` | boolean | Se `true`, cookie só é enviado em conexões HTTPS. **Desligar em dev local (HTTP).** |
 
-### 7.2. `RsaKeyProperties` (`br.edu.ifce.security.config`)
+### 7.2. `RsaKeyProperties` (`br.edu.ifce.security.config.properties`)
 
 A aplicação lê as chaves RSA diretamente de arquivos `.pem` no boot, parseando PEM (PKCS#8 para chave privada,
 X.509 para chave pública) e convertendo para `RSAPublicKey` / `RSAPrivateKey`. O conteúdo **não** é mais injetado
