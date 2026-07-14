@@ -22,7 +22,7 @@ class RefreshTokenServiceTest {
     lateinit var refreshTokenRepository: RefreshTokenRepository
 
     private val jwtProperties =
-        JwtProperties(accessTokenExpiration = 900L, refreshExpiration = 43200L, cookieSecure = true)
+        JwtProperties(accessTokenExpiration = 900L, refreshExpiration = 3600L, cookieSecure = true)
     private lateinit var refreshTokenService: RefreshTokenService
 
     @BeforeEach
