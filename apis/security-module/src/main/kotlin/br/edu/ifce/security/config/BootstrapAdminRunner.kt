@@ -1,5 +1,6 @@
 package br.edu.ifce.security.config
 
+import br.edu.ifce.security.config.properties.BootstrapProperties
 import br.edu.ifce.security.model.domain.Perfil
 import br.edu.ifce.security.model.domain.Usuario
 import br.edu.ifce.security.model.repository.UsuarioRepository

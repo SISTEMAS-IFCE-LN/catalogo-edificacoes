@@ -1,6 +1,6 @@
 package br.edu.ifce.security.model.application.service
 
-import br.edu.ifce.security.config.JwtProperties
+import br.edu.ifce.security.config.properties.JwtProperties
 import br.edu.ifce.security.model.domain.RefreshToken
 import br.edu.ifce.security.model.domain.Usuario
 import br.edu.ifce.security.model.repository.RefreshTokenRepository
@@ -50,7 +50,7 @@ class RefreshTokenService(
     }
 
     @Transactional
-    fun limparTokensExpirados(usuario: Usuario) {
-        refreshTokenRepository.deleteByUsuarioAndExpiraEmBefore(usuario, LocalDateTime.now())
+    fun limparTokensInuteis(): Int {
+        return refreshTokenRepository.deleteByExpiraEmBeforeOrRevogadoTrue(LocalDateTime.now())
     }
 }

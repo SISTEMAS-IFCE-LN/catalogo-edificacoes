@@ -8,9 +8,10 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories
 import br.edu.ifce.security.config.BootstrapAdminRunner
 import br.edu.ifce.security.config.SecurityConfig
 import br.edu.ifce.security.config.JwtConfig
-import br.edu.ifce.security.config.JwtProperties
+import br.edu.ifce.security.config.properties.JwtProperties
 import br.edu.ifce.security.config.OAuth2LoginSuccessHandler
-import br.edu.ifce.security.config.RsaKeyProperties
+import br.edu.ifce.security.config.properties.RsaKeyProperties
+import br.edu.ifce.security.config.TokenCleanupScheduler
 import br.edu.ifce.security.controller.AuthController
 import br.edu.ifce.security.controller.UsuarioController
 import br.edu.ifce.security.model.application.service.AuthService
@@ -40,7 +41,8 @@ import br.edu.ifce.security.model.application.service.UsuarioService
                 UsuarioService::class,
                 JwtProperties::class,
                 RsaKeyProperties::class,
-                OAuth2LoginSuccessHandler::class
+                OAuth2LoginSuccessHandler::class,
+                TokenCleanupScheduler::class
             ]
         )
     ]
