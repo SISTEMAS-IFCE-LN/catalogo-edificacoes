@@ -107,6 +107,27 @@ class UsuarioServiceTest {
     }
 
     @Test
+    fun `deve ativar usuario com sucesso`() {
+        val usuario = Usuario(id = 1, email = "user@ifce.edu.br", nome = "User", ativo = false)
+        `when`(repository.findById(1L)).thenReturn(Optional.of(usuario))
+        `when`(repository.save(usuario)).thenReturn(usuario)
+
+        service.ativarUsuario(1L)
+
+        assertEquals(true, usuario.ativo)
+    }
+
+    @Test
+    fun `deve lancar 404 quando usuario nao existe ao ativar`() {
+        `when`(repository.findById(99L)).thenReturn(Optional.empty())
+
+        val ex = assertThrows(ResponseStatusException::class.java) {
+            service.ativarUsuario(99L)
+        }
+        assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
+    }
+
+    @Test
     fun `deve listar usuarios com paginacao`() {
         val u1 = Usuario(id = 1, email = "user1@ifce.edu.br", nome = "User One").apply {
             perfis = mutableSetOf(Perfil.ROLE_COLABORADOR)

@@ -11,6 +11,8 @@ interface IUsuarioService {
 
     fun desativarUsuario(id: Long)
 
+    fun ativarUsuario(id: Long)
+
     fun listarUsuarios(pageable: Pageable): UsuariosPaginadosRes
 
     fun obterUsuarioPorEmail(email: String): UsuarioRes
