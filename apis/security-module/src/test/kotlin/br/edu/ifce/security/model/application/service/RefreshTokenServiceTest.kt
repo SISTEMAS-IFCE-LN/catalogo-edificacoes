@@ -1,6 +1,6 @@
 package br.edu.ifce.security.model.application.service
 
-import br.edu.ifce.security.config.JwtProperties
+import br.edu.ifce.security.config.properties.JwtProperties
 import br.edu.ifce.security.model.domain.RefreshToken
 import br.edu.ifce.security.model.domain.Usuario
 import br.edu.ifce.security.model.repository.RefreshTokenRepository
@@ -153,24 +153,12 @@ class RefreshTokenServiceTest {
     }
 
     @Test
-    fun `limparTokensExpirados chama repository com usuario e data`() {
-        val usuario = criarUsuario()
-        val dataAntes = LocalDateTime.now()
-        val args = arrayOfNulls<Any>(2)
-        org.mockito.Mockito.doAnswer {
-            args[0] = it.arguments[0]
-            args[1] = it.arguments[1]
-            null
-        }.`when`(refreshTokenRepository).deleteByUsuarioAndExpiraEmBefore(
-            org.mockito.ArgumentMatchers.any(Usuario::class.java) ?: usuario,
-            org.mockito.ArgumentMatchers.any(LocalDateTime::class.java) ?: LocalDateTime.now()
-        )
+    fun `limparTokensExpirados deleta tokens expirados e retorna quantidade`() {
+        doReturn(5).`when`(refreshTokenRepository).deleteByExpiraEmBefore(any<LocalDateTime>() ?: LocalDateTime.now())
 
-        refreshTokenService.limparTokensExpirados(usuario)
+        val resultado = refreshTokenService.limparTokensExpirados()
 
-        assertEquals(usuario, args[0])
-        assertNotNull(args[1])
-        val data = args[1] as LocalDateTime
-        assertTrue(data.isAfter(dataAntes.minusMinutes(1)))
+        assertEquals(5, resultado)
+        verify(refreshTokenRepository).deleteByExpiraEmBefore(any<LocalDateTime>() ?: LocalDateTime.now())
     }
 }

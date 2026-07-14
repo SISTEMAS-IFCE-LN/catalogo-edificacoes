@@ -1,5 +1,6 @@
 package br.edu.ifce.security.config
 
+import br.edu.ifce.security.config.properties.FrontendProperties
 import br.edu.ifce.security.model.application.interfaces.IAuthService
 import br.edu.ifce.security.model.application.interfaces.ICookieService
 import jakarta.servlet.http.HttpServletRequest
@@ -25,7 +26,7 @@ class OAuth2LoginSuccessHandler(
         val email = authentication.name
         val tokensPair = authService.loginSuccess(email)!!
 
-        response.addCookie(cookieService.criarCookieRefreshToken(tokensPair.refreshToken))
+        response.addCookie(cookieService.criarCookieRefreshToken(tokensPair.refreshToken!!))
 
         val tokenEncoded = URLEncoder.encode(tokensPair.accessToken, StandardCharsets.UTF_8.toString())
         val frontendSuccess = frontendProperties.callbackSuccessUrl?.takeIf { it.isNotBlank() }

@@ -8,5 +8,5 @@ import java.time.LocalDateTime
 interface RefreshTokenRepository: JpaRepository<RefreshToken, Long> {
     fun findByToken(token: String): RefreshToken?
     fun findByUsuarioAndRevogadoFalse(usuario: Usuario): RefreshToken?
-    fun deleteByUsuarioAndExpiraEmBefore(usuario: Usuario, dataExpiracao: LocalDateTime)
+    fun deleteByExpiraEmBefore(dataExpiracao: LocalDateTime): Int
 }
