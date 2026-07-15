@@ -1,10 +1,10 @@
 {
   "info": {
-    "_postman_id": "12a2ba33-e0c2-4ac0-859b-fad0fff94a61",
+    "_postman_id": "eb1d24cf-6f11-4ec8-b791-90b17d2ac45a",
     "name": "catalogo-edificacoes",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "47361745",
-    "_collection_link": "https://go.postman.co/collection/47361745-12a2ba33-e0c2-4ac0-859b-fad0fff94a61?source=collection_link"
+    "_collection_link": "https://go.postman.co/collection/47361745-eb1d24cf-6f11-4ec8-b791-90b17d2ac45a?source=collection_link"
   },
   "item": [
     {
@@ -1242,6 +1242,34 @@
               "path": [
                 "1",
                 "desativar"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "ativarUsuario",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJSUzI1NiJ9.eyJzdWIiOiIxIiwiZXhwIjoxNzgyNDc2NDg5LCJpYXQiOjE3ODI0NzU1ODksImVtYWlsIjoiam9hby5mcmVpdGFzQGlmY2UuZWR1LmJyIiwicm9sZXMiOlsiUk9MRV9DT0xBQk9SQURPUiIsIlJPTEVfQURNSU5JU1RSQURPUiJdfQ.MeJRNOCs7bv60xAu_gsQo-HNX9wI9GaIyBrrWbaOj9Vz9e74k0jgXv55PP_4nHci9_hk-T0mGujY4yYH8ECuGyOd9dSIrOPTCZIreNbQMUFIuu2d9tMFEGbf7YI-olBtuPlqgw12gPS_YA5LI32Icj2D98UA0-g50nfoATwfDsp4TgyMCkePb2YFn6UnNkWrPCwnKRKwiqj5X2SQr1jz5HedykTmGIAriSsIAq3IVYGmSV4QtD4sUVCGemWBakgUqys2yZFDMkErRPusXWSM7Raud0hM3McGUeeeH0fZ8iXHueESM8RgBpH5mO2N7nMb1SCBUnt53354IsuYa5uSWu2t9nN0_weBYLDuULct_DqmzB7QZTTK4CGdXpJA8OIs2-i_pgU3bcZwYegbY89xOSscKVgz5V97bs_XNcjz0KbWMfTD6P8lj75RaXg_plTVLsbz98xPA7fjb6KWQXYWUIkrHDxSQtZVZGh44TiTVm2GiEXCD0AV-_MxrpGMXPOX-w8ydAkuHAFDu5JtkKMvMKZP-5GhfY8Fi3noUHBeyw2lu6AGahoSF13FMPWzJ9Y73GQErSD3oitXW0Jja6LKZMi3V9alIYYxswIVIfRr50XLDc-KzkBlzMC8y2-YXJJf8DFaubkMW4xHk4_X2Fb7bQp2WKT19lkjfbFNVH44xns",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}{{USERS_PATH}}/1/ativar",
+              "host": [
+                "{{BASE_URL}}{{USERS_PATH}}"
+              ],
+              "path": [
+                "1",
+                "ativar"
               ]
             }
           },
