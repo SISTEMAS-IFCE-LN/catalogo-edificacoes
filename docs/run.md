@@ -148,7 +148,7 @@ Para um módulo específico:
 ./mvnw -pl ambientes-internos-module test
 ```
 
-Total atual (junho/2026): **170 testes, 0 falhas, 0 erros**.
+Total atual (julho/2026): **203 testes, 0 falhas, 0 erros**.
 
 ### 3.3. Iniciar a aplicação
 

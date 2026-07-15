@@ -192,7 +192,7 @@ Antes do primeiro deploy, o operador **deve** definir a env var `BOOTSTRAP_ADMIN
 | `JWT_PUBLIC_KEY_PATH`         | `file:./.keys/public.pem`                 | Sim                  | `openssl` + path     |
 | `JWT_PRIVATE_KEY_PATH`        | `file:./.keys/private_pkcs8.pem`           | Sim                  | `openssl` + path     |
 | `JWT_ACCESS_TOKEN_EXPIRATION` | `900`                                    | Não                  | application.yml      |
-| `JWT_REFRESH_EXPIRATION`      | `43200`                                  | Não                  | application.yml      |
+| `JWT_REFRESH_EXPIRATION`      | `3600`                                   | Não                  | application.yml      |
 | `JWT_COOKIE_SECURE`           | `true`                                   | Não                  | application.yml      |
 | `BOOTSTRAP_ADMIN_EMAIL`       | (vazio)                                  | **Sim**              | Operador             |
 | `BOOTSTRAP_ALLOW_REACTIVATE`  | `true`                                   | Não                  | application.yml      |

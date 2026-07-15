@@ -32,49 +32,47 @@ Componentes centrais:
 ## 2. Fluxo de autenticação OAuth2 + JWT
 
 ```
-┌────────┐         ┌──────────┐         ┌────────┐        ┌──────────┐
-│  SPA   │         │ Backend  │         │ Google │        │  Banco   │
-└───┬────┘         └────┬─────┘         └───┬────┘        └────┬─────┘
-    │  GET /oauth2/    │                   │                  │
-    │  authorization/  │                   │                  │
-    │  google          │                   │                  │
-    ├─────────────────►│                   │                  │
-    │                  │  302 → accounts   │                  │
-    │                  │  .google.com/...  │                  │
-    │◄─────────────────┤                   │                  │
-    │                                       │                  │
-    │  [ usuário autentica no Google ]      │                  │
-    │                                       │                  │
-    │  302 → /login/oauth2/code/google       │                  │
-    │  ?code=...&state=...                 │                  │
-    ├──────────────────►│                   │                  │
-    │                  │  troca code por   │                  │
-    │                  │  access_token     │                  │
-    │                  ├──────────────────►│                  │
-    │                  │◄──────────────────┤                  │
-    │                  │  userinfo (id,    │                  │
-    │                  │  email, name)     │                  │
-    │                  ├──────────────────►│                  │
-    │                  │◄──────────────────┤                  │
-    │                  │                                       │
-    │                  │  CustomOAuth2UserService:           │
-    │                  │  - email termina em @ifce.edu.br?    │
-    │                  │  - provisiona Usuario (se novo)      │
-    │                  │  - atribui ROLE_COLABORADOR          │
-    │                  │  - sincroniza nome (se divergente)   │
-    │                  ├──────────────────────────────────────►
-    │                  │◄──────────────────────────────────────┤
-    │                  │                                       │
-    │                  │  OAuth2LoginSuccessHandler:          │
-    │                  │  - gera JWT (15 min)                 │
-    │                  │  - gera refresh token (12 h)         │
-    │                  │  - persiste refresh (revoga antigos) │
-    │                  │  - seta cookie HttpOnly refreshToken │
-    │                  │  - redireciona (302) com #token=    │
-    │◄─────────────────┤                                       │
-    │  302 /callback.html#token=...                            │
-    │  Set-Cookie:                                             │
-    │   refreshToken=..                                        │
+┌────────┐                               ┌──────────┐         ┌────────┐        ┌──────────┐
+│  SPA   │                               │ Backend  │         │ Google │        │  Banco   │
+└───┬────┘                               └────┬─────┘         └───┬────┘        └────┬─────┘
+    │  GET /oauth2/                           │                   │                  │
+    │  authorization/                         │                   │                  │
+    │  google                                 │                   │                  │
+    ├────────────────────────────────────────►│                   │                  │
+    │                                         │  302 → accounts   │                  │
+    │                                         │  .google.com/...  │                  │
+    │◄────────────────────────────────────────┤                   │                  │
+    │                                         │                   │                  │
+    │  [ usuário autentica no Google ]        │                   │                  │
+    │                                         │                   │                  │
+    │  302 → /login/oauth2/code/google        │                   │                  │
+    │  ?code=...&state=...                    │                   │                  │
+    ├────────────────────────────────────────►│                   │                  │
+    │                                         │  troca code por   │                  │
+    │                                         │  access_token     │                  │
+    │                                         ├──────────────────►│                  │
+    │                                         │◄──────────────────┤                  │
+    │                                         │  userinfo (id,    │                  │
+    │                                         │  email, name)     │                  │
+    │                                         ├──────────────────►│                  │
+    │                                         │◄──────────────────┤                  │
+    │                                         │                                      │
+    │                                         │  CustomOAuth2UserService:            │
+    │                                         │  - email termina em @ifce.edu.br?    │
+    │                                         │  - provisiona Usuario (se novo)      │
+    │                                         │  - atribui ROLE_COLABORADOR          │
+    │                                         │  - sincroniza nome (se divergente)   │
+    │                                         ├─────────────────────────────────────►│
+    │                                         │◄─────────────────────────────────────┤
+    │                                         │                                      │
+    │                                         │  OAuth2LoginSuccessHandler:          │
+    │                                         │  - gera JWT (15 min)                 │
+    │                                         │  - gera refresh token (1 h)          │
+    │  302 /callback.html#token=..            │  - persiste refresh (revoga antigos) │
+    │  Set-Cookie:                            │  - seta cookie HttpOnly refreshToken │
+    │  refreshToken=..                        │  - redireciona (302) com #token=     │
+    │◄────────────────────────────────────────┤                                      │
+    
 ```
 
 ### Pontos de atenção
@@ -82,38 +80,35 @@ Componentes centrais:
 - O `oauth2Login` requer `SessionCreationPolicy.IF_REQUIRED` no `SecurityConfig` (chain 1) para armazenar temporariamente o `Authentication` durante o handshake.
 - A API em si opera com `SessionCreationPolicy.STATELESS` (chain 2) e valida o JWT a cada requisição.
 - O cookie de sessão HTTP é `SameSite=Lax` (necessário para o callback cross-site do OAuth2).
-- O cookie `refreshToken` é `HttpOnly`, `Secure` (configurável via `JWT_COOKIE_SECURE`), `SameSite=None`, `path=/`.
+- O cookie `refreshToken` é `HttpOnly`, `Secure` (configurável via `JWT_COOKIE_SECURE`), `SameSite=None`, `path=/`, com `maxAge` igual ao valor de `jwt.refresh-expiration` (default 3600s / 1 h).
 - O `OAuth2LoginSuccessHandler` gera os tokens diretamente no callback OAuth2 (dentro da chain 1, onde o `Authentication` está disponível) e redireciona o navegador para a URL de callback configurada, anexando o access token no fragmento (`#token=...`). O fragmento nunca é enviado ao servidor, mitigando fugas em logs ou headers `Referer`.
 
 ---
 
-## 3. Fluxo de refresh (com rotação)
+## 3. Fluxo de refresh
 
 ```
 ┌────────┐                  ┌──────────┐                  ┌────────┐
 │  SPA   │                  │ Backend  │                  │  Banco │
 └───┬────┘                  └────┬─────┘                  └────┬───┘
-    │  access token expirou      │                              │
-    │  POST /auth/refresh         │                              │
-    │  (cookie refreshToken)      │                              │
-    ├───────────────────────────►│                              │
-    │                            │  RefreshTokenService:        │
-    │                            │  - buscarParaRotacao()       │
-    │                            ├─────────────────────────────►│
-    │                            │◄─────────────────────────────┤
+    │  access token expirou      │                             │
+    │  POST /auth/refresh        │                             │
+    │  (cookie refreshToken)     │                             │
+    ├───────────────────────────►│                             │
+    │                            │  RefreshTokenService:       │
+    │                            │  - validarRefreshToken()    │
+    │                            ├────────────────────────────►│
+    │                            │◄────────────────────────────┤
     │                            │  - se válido: gerar novo    │
-    │                            │    access token + revogar    │
-    │                            │    antigo + criar novo      │
-    │                            ├─────────────────────────────►│
-    │                            │  200 OK                      │
-    │                            │  Set-Cookie: refreshToken=.. │
+    │                            │    access token             │
+    │                            ├────────────────────────────►│
+    │                            │  200 OK                     │
     │                            │  Body: { accessToken }      │
-    │◄───────────────────────────┤                              │
-    │  { accessToken }            │                              │
-    │  Set-Cookie: refreshToken=.. │                             │
+    │◄───────────────────────────┤                             │
+    │  { accessToken }           │                             │
 ```
 
-**Importante:** a cada refresh bem-sucedido, o refresh token antigo é **revogado** e um novo é emitido (rotação). Tokens revogados não podem ser reutilizados.
+**Importante:** a cada refresh bem-sucedido, o access token é sempre renovado. O refresh token é renovado apenas quando o tempo restante de vida do refresh token atual é menor que a expiração do access token (`jwt.access-token-expiration`); caso contrário, o mesmo refresh token é reutilizado. A rotação completa do refresh token ocorre no login, quando um novo token é gerado e o antigo é revogado. Quando um novo refresh token é gerado no refresh, o `AuthController` emite um novo cookie `Set-Cookie` com o token atualizado.
 
 ---
 
@@ -194,7 +189,7 @@ Definido em `SecurityConfig.apiFilterChain` (chain 2, com `@Order(2)`).
 @ConfigurationProperties(prefix = "jwt")
 data class JwtProperties(
     var accessTokenExpiration: Long = 900L,    // 15 min, em segundos
-    var refreshExpiration: Long = 43200L,    // 12 h, em segundos
+    var refreshExpiration: Long = 3600L,    // 1 h, em segundos
     var cookieSecure: Boolean = true         // Secure flag do cookie
 )
 ```
@@ -202,7 +197,7 @@ data class JwtProperties(
 | Property | Env var | Default | Unidade | Descrição |
 |---|---|---|---|---|
 | `jwt.access-token-expiration` | `JWT_ACCESS_TOKEN_EXPIRATION` | `900` | segundos | Vida do access token. |
-| `jwt.refresh-expiration` | `JWT_REFRESH_EXPIRATION` | `43200` | segundos | Vida do refresh token **e** do cookie que o contém. |
+| `jwt.refresh-expiration` | `JWT_REFRESH_EXPIRATION` | `3600` | segundos | Vida do refresh token **e** do cookie que o contém. |
 | `jwt.cookie-secure` | `JWT_COOKIE_SECURE` | `true` | boolean | Se `true`, cookie só é enviado em conexões HTTPS. **Desligar em dev local (HTTP).** |
 
 ### 7.2. `RsaKeyProperties` (`br.edu.ifce.security.config.properties`)

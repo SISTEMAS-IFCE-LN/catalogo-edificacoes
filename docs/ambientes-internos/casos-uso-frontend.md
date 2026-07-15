@@ -36,7 +36,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 
 ## Rotas
 
-- `/login` — página de login com botão Google OAuth2 (UC27-FE).
+- `/login` — página de login com botão Google OAuth2 (UC28-FE).
 - `/ambientes/validacao` — lista de ambientes aguardando validação (UC01-FE).
 - `/ambientes/validacao/{id}` — detalhes de um ambiente aguardando validação (UC02-FE).
 - `/ambientes/nao-publicados` — lista de ambientes não publicados (UC04-FE).
@@ -342,7 +342,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 ### UC19-FE: Detalhes de um Ambiente Publicado
 
 - Tela: `DetalheAmbiente` (rota `/ambientes/publicados/{id}`).
-- Pré-condições: selecionou um ambiente da lista e está logado com role `colaborador` (autenticado via Google OAuth 2.0, RN-4.5/RN-4.6).
+- Pré-condições: selecionou um ambiente da lista e está logado com role `colaborador` (autenticado, RN-4.5).
 - Fluxo principal (UI): Similar ao UC02-FE, mas sem ações adicionais.
 - Estados e erros: Os mesmos do UC02-FE.
 - Critérios de aceitação: Os mesmos do UC02-FE.
@@ -350,7 +350,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 ### UC20-FE: Obter Detalhes de Esquadrias de uma lista de Ambientes Publicados
 
 - Tela: Tela `Publicados` por meio de `AcoesLote`, ação `Detalhes Esquadrias`.
-- Pré-condições: Usuário logado com role `colaborador` (autenticado via Google OAuth 2.0, RN-4.5/RN-4.6) e ambientes com `status = PUBLICADO` selecionados.
+- Pré-condições: Usuário logado com role `colaborador` (autenticado, RN-4.5) e ambientes com `status = PUBLICADO` selecionados.
 - Fluxo principal (UI):
   1. O usuário seleciona um ou mais ambientes na lista e seleciona `Detalhes Esquadrias`.
   2. O frontend envia `GET /api/ambientes/publicados/esquadrias?ids=1,2,3` passando a lista de ids por parâmetro.
@@ -475,7 +475,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 
 ## Ator: Qualquer Usuário (Autenticação - UI)
 
-### UC27-FE: Login via Google OAuth2
+### UC28-FE: Login via Google OAuth2
 
 - Tela: `PaginaLogin` (rota `/login`).
 - Pré-condições: Usuário não autenticado.
@@ -494,7 +494,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
   - Token é armazenado e utilizado em requisições subsequentes.
   - Mensagens de erro são exibidas para fluxos alternativos (FA01-FA04 do backend).
 
-### UC28-FE: Renovar Token de Acesso
+### UC29-FE: Renovar Token de Acesso
 
 - Componente: Hook/serviço de autenticação (não visual).
 - Pré-condições: Usuário autenticado com refresh token válido em cookie.
@@ -503,7 +503,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
   2. Antes da expiração, o frontend envia POST `/auth/refresh` automaticamente.
   3. O backend retorna novo access token (`LoginRes`: accessToken, tokenType, expiresIn).
   4. O frontend armazena o novo token e continua as requisições normalmente.
-  5. O refresh token permanece o mesmo (não é renovado).
+  5. O refresh token permanece o mesmo (não é renovado no refresh, apenas no login).
 - Estados e erros:
   - Se o cookie `refreshToken` não estiver presente ou for inválido, redirecionar para `/login`.
   - Em erro de rede, tentar novamente ou redirecionar para `/login`.
@@ -511,7 +511,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
   - Renovação ocorre automaticamente sem interrupção do usuário.
   - Novo access token é utilizado em requisições subsequentes.
 
-### UC29-FE: Encerrar Sessão (Logout)
+### UC30-FE: Encerrar Sessão (Logout)
 
 - Componente: Botão `Sair` no Header (quando usuário autenticado).
 - Pré-condições: Usuário autenticado.
@@ -532,7 +532,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 ## Considerações transversais
 
 - Autenticação e autorização: rotas e botões devem respeitar roles. O frontend deve esconder/desabilitar ações não permitidas (ex: usuário público não vê botões de deletar/publicar). Autenticação via Google OAuth2 com JWT e refresh token em cookie.
-- Gestão de tokens: implementar renovação automática do access token (UC28-FE) e limpeza adequada no logout (UC29-FE).
+- Gestão de tokens: implementar renovação automática do access token (UC29-FE) e limpeza adequada no logout (UC30-FE).
 - Tratamento de erros: padrão único para erros HTTP, exibir mensagens amigáveis e mapear códigos de erro do backend para mensagens do usuário.
 - Estado offline/timeout: exibir estado de offline e permitir re-tentar operações. Para operações críticas (deletar/publicar), usar confirmação adicional.
 - Testes: cobrir principais fluxos (criar ambiente, editar geometrias, enviar para validação, publicar, deletar, login, logout, gestão de usuários).
