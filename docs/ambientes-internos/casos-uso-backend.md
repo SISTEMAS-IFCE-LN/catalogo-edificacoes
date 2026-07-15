@@ -383,7 +383,7 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
 
 * **Descrição:** Permite ao Colaborador visualizar todas as informações detalhadas de um ambiente específico publicado, buscando por ID.
 * **Ator Primário:** Colaborador.
-* **Pré-condições:** O Colaborador está autenticado via Google OAuth 2.0 e possui o perfil `ROLE_COLABORADOR` (RN-4.3, RN-4.5, RN-4.6). O ambiente a ser consultado existe e tem atributo `status = PUBLICADO`.
+* **Pré-condições:** O Colaborador está autenticado e possui o perfil de Colaborador (RN-4.3, RN-4.5). O ambiente a ser consultado existe e tem atributo `status = PUBLICADO`.
 * **Fluxo Principal:**
         1. O Colaborador realiza uma requisição `GET` ao endpoint `/api/ambientes/publicados/{id}`.
         2. O Sistema recupera e exibe os detalhes do ambiente solicitado.
@@ -414,7 +414,7 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
 
 * **Descrição:** Permite ao Colaborador visualizar todas as informações detalhadas de esquadrias de um conjunto de ambientes publicados de forma paginada.
 * **Ator Primário:** Colaborador.
-* **Pré-condições:** O Colaborador está autenticado via Google OAuth 2.0 e possui o perfil `ROLE_COLABORADOR` (RN-4.3, RN-4.5, RN-4.6). Os ambientes a serem consultados existem e têm atributo `status = PUBLICADO`.
+* **Pré-condições:** O Colaborador está autenticado e possui o perfil de Colaborador (RN-4.3, RN-4.5). Os ambientes a serem consultados existem e têm atributo `status = PUBLICADO`.
 * **Fluxo Principal:**
         1. O Colaborador preenche os parâmetros de consulta com a lista de IDs dos ambientes publicados a serem consultados.
         2. O Colaborador realiza uma requisição `GET` ao endpoint `/api/ambientes/publicados/esquadrias?ids=1,2,3`.
@@ -535,7 +535,7 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
 
 * **Descrição:** Permite ao Administrador desativar um usuário existente no sistema, impedindo seu acesso.
 * **Ator Primário:** Administrador.
-* **Pré-condições:** O Administrador está autenticado e possui o perfil `ROLE_ADMINISTRADOR`. O usuário a ser desativado existe no sistema.
+* **Pré-condições:** O Administrador está autenticado e possui o perfil de Administrador. O usuário a ser desativado existe no sistema.
 * **Fluxo Principal:**
     1. O Administrador obtém o usuário que deseja desativar (UC23 ou UC24).
     2. O Administrador realiza uma requisição `PATCH` ao endpoint `/api/usuarios/{id}/desativar`.
@@ -546,11 +546,26 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
     * **FA01 - Usuário Não Encontrado:** Se o ID fornecido não corresponder a um usuário, o Sistema exibe uma mensagem de erro.
 * **Pós-condições:** O usuário especificado é desativado no sistema e não poderá mais realizar login.
 
+### **UC27: Ativar Usuário**
+
+* **Descrição:** Permite ao Administrador reativar um usuário desativado no sistema, restaurando seu acesso.
+* **Ator Primário:** Administrador.
+* **Pré-condições:** O Administrador está autenticado e possui o perfil de Administrador. O usuário a ser ativado existe no sistema e está desativado.
+* **Fluxo Principal:**
+    1. O Administrador obtém o usuário que deseja ativar (UC23 ou UC24).
+    2. O Administrador realiza uma requisição `PATCH` ao endpoint `/api/usuarios/{id}/ativar`.
+    3. O Sistema verifica se o usuário existe.
+    4. Se o usuário for encontrado, o Sistema o reativa no banco de dados (atributo `ativo = true`).
+    5. O Sistema retorna `204 No Content`.
+* **Fluxos Alternativos:**
+    * **FA01 - Usuário Não Encontrado:** Se o ID fornecido não corresponder a um usuário, o Sistema exibe uma mensagem de erro.
+* **Pós-condições:** O usuário especificado é reativado no sistema e poderá realizar login novamente.
+
 ---
 
 ## Ator: Qualquer Usuário (Autenticação)
 
-### **UC27: Realizar Login via Google OAuth2**
+### **UC28: Realizar Login via Google OAuth2**
 
 * **Descrição:** Permite ao usuário realizar login no sistema utilizando sua conta Google através do protocolo OAuth2.
 * **Ator Primário:** Qualquer Usuário (Colaborador, Validador, Gestor do Sistema ou Administrador).
@@ -571,7 +586,7 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
     * **FA04 - Falha na autenticação:** Se ocorrer qualquer erro durante o processo de autenticação, o Usuário é redirecionado para a página de erro.
 * **Pós-condições:** O Usuário está autenticado com um access token (JWT) válido e um refresh token armazenado em cookie.
 
-### **UC28: Renovar Token de Acesso**
+### **UC29: Renovar Token de Acesso**
 
 * **Descrição:** Permite ao usuário renovar seu access token (JWT) utilizando o refresh token armazenado em cookie, sem precisar realizar login novamente. O refresh token permanece o mesmo durante toda a sua validade (12 horas).
 * **Ator Primário:** Qualquer Usuário autenticado.
@@ -585,9 +600,9 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
 * **Fluxos Alternativos:**
     * **FA01 - Cookie ausente:** Se o cookie `refreshToken` não estiver presente, o Sistema retorna `401 Unauthorized`.
     * **FA02 - Token inválido:** Se o refresh token for inválido ou expirado, o Sistema retorna `401 Unauthorized`.
-* **Pós-condições:** O Usuário possui um novo access token válido. O refresh token e o cookie permanecem inalterados.
+* **Pós-condições:** O Usuário possui um novo access token válido. O refresh token permanece o mesmo.
 
-### **UC29: Encerrar Sessão (Logout)**
+### **UC30: Encerrar Sessão (Logout)**
 
 * **Descrição:** Permite ao usuário encerrar sua sessão no sistema, invalidando o refresh token e limpando o cookie.
 * **Ator Primário:** Qualquer Usuário autenticado.

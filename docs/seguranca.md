@@ -87,7 +87,7 @@ Componentes centrais:
 
 ---
 
-## 3. Fluxo de refresh (com rotação)
+## 3. Fluxo de refresh
 
 ```
 ┌────────┐                  ┌──────────┐                  ┌────────┐
@@ -98,22 +98,19 @@ Componentes centrais:
     │  (cookie refreshToken)      │                              │
     ├───────────────────────────►│                              │
     │                            │  RefreshTokenService:        │
-    │                            │  - buscarParaRotacao()       │
+    │                            │  - validarRefreshToken()     │
     │                            ├─────────────────────────────►│
     │                            │◄─────────────────────────────┤
     │                            │  - se válido: gerar novo    │
-    │                            │    access token + revogar    │
-    │                            │    antigo + criar novo      │
+    │                            │    access token              │
     │                            ├─────────────────────────────►│
     │                            │  200 OK                      │
-    │                            │  Set-Cookie: refreshToken=.. │
     │                            │  Body: { accessToken }      │
     │◄───────────────────────────┤                              │
     │  { accessToken }            │                              │
-    │  Set-Cookie: refreshToken=.. │                             │
 ```
 
-**Importante:** a cada refresh bem-sucedido, o refresh token antigo é **revogado** e um novo é emitido (rotação). Tokens revogados não podem ser reutilizados.
+**Importante:** a cada refresh bem-sucedido, apenas o access token é renovado; o refresh token permanece o mesmo durante toda a sua validade. A rotação do refresh token ocorre apenas no login, quando um novo token é gerado e o antigo é revogado.
 
 ---
 

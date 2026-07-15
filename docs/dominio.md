@@ -166,7 +166,7 @@ Eventos significativos que ocorrem no domínio e podem ser de interesse para out
 - **Capacidade**: Número máximo de pessoas que o ambiente pode acomodar
 - **Publicar**: Aprovar um ambiente, tornando-o oficial e imutável
 - **Privar**: Rejeitar ou retornar um ambiente para edição
-- **Validar**: Enviar um ambiente para validação
+- **Submeter**: Enviar um ambiente para validação
 - **Colaborador**: Usuário institucional com acesso completo a ambientes publicados
 - **Gestor do Sistema**: Usuário responsável por criar e editar ambientes antes da publicação
 - **Validador**: Usuário responsável por revisar e aprovar ambientes
