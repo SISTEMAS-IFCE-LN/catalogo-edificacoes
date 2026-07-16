@@ -1,10 +1,12 @@
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URI;
 
 public class HealthCheck {
     public static void main(String[] args) {
         try {
-            HttpURLConnection conn = (HttpURLConnection) new URL("http://localhost:8080/actuator/health").openConnection();
+            URL url = URI.create("http://localhost:8080/actuator/health").toURL();
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setConnectTimeout(3000);
             conn.setReadTimeout(3000);
             System.exit(conn.getResponseCode() < 400 ? 0 : 1);
