@@ -1,6 +1,6 @@
 package br.edu.ifce.security.model.application.service
 
-import br.edu.ifce.security.config.JwtProperties
+import br.edu.ifce.security.config.properties.JwtProperties
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

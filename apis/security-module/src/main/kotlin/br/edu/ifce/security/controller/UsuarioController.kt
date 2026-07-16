@@ -33,6 +33,12 @@ class UsuarioController(private val service: IUsuarioService) {
         return ResponseEntity.noContent().build()
     }
 
+    @PatchMapping("/{id}/ativar")
+    fun ativarUsuario(@PathVariable @NotNull @Positive(message = MSG_POSITIVO) id: Long): ResponseEntity<Void> {
+        service.ativarUsuario(id)
+        return ResponseEntity.noContent().build()
+    }
+
     @GetMapping
     fun listarUsuarios(pageable: Pageable): ResponseEntity<UsuariosPaginadosRes> =
         ResponseEntity.ok(service.listarUsuarios(pageable))

@@ -148,7 +148,7 @@ Para um módulo específico:
 ./mvnw -pl ambientes-internos-module test
 ```
 
-Total atual (junho/2026): **170 testes, 0 falhas, 0 erros**.
+Total atual (julho/2026): **203 testes, 0 falhas, 0 erros**.
 
 ### 3.3. Iniciar a aplicação
 
@@ -243,8 +243,8 @@ cd apis
 
 | Endpoint | Método | Auth? | Descrição |
 |---|---|---|---|
-| `/health` | GET | Não | Health check. |
-| `/h2-console` | GET (navegador) | Não | Console do H2 in-memory, habilitado em dev. |
+| `/actuator/health` | GET | Não | Health check. |
+| `/h2` | GET (navegador) | Não | Console do H2 in-memory, habilitado em dev. |
 | `/oauth2/authorization/google` | GET (navegador) | Não | Inicia o handshake OAuth2. O callback redireciona para `/callback.html#token=...` com o access token no fragmento da URL. |
 | `/auth/refresh` | POST | Cookie | Renova o access token. |
 | `/auth/logout` | POST | Cookie | Revoga refresh token e limpa cookie. |

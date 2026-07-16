@@ -5,6 +5,10 @@ import br.edu.ifce.common.config.ApiPaths.AMBIENTES_PUBLICADOS_PATH
 import br.edu.ifce.common.config.ApiPaths.AMBIENTES_VALIDACAO_PATH
 import br.edu.ifce.common.config.ApiPaths.AUTH_PATH
 import br.edu.ifce.common.config.ApiPaths.USUARIOS_PATH
+import br.edu.ifce.security.config.properties.BootstrapProperties
+import br.edu.ifce.security.config.properties.FrontendProperties
+import br.edu.ifce.security.config.properties.JwtProperties
+import br.edu.ifce.security.config.properties.RsaKeyProperties
 import br.edu.ifce.security.model.application.service.CustomOAuth2UserService
 import br.edu.ifce.security.model.domain.Perfil
 import org.springframework.boot.context.properties.EnableConfigurationProperties

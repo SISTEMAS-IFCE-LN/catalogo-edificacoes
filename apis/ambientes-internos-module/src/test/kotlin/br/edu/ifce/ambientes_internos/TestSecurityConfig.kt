@@ -1,6 +1,6 @@
 package br.edu.ifce.ambientes_internos
 
-import br.edu.ifce.security.config.JwtProperties
+import br.edu.ifce.security.config.properties.JwtProperties
 import com.nimbusds.jose.jwk.JWKSet
 import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet

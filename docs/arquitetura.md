@@ -59,7 +59,7 @@ segurança e as diferentes regras de negócio de domínio coexistam sem gerar de
     * `JwtConfig`: classe de configuração que define os beans `JwtEncoder` e `JwtDecoder` a partir das chaves RSA,
       isolando-os do `SecurityConfig` para evitar ciclos de dependência.
     * Emissão e validação de **JWT próprio** (assinatura RSA) para acesso à API.
-    * Gestão de **refresh tokens** persistidos, com rotação a cada uso, entregues em cookie `HttpOnly`, `Secure` e
+    * Gestão de **refresh tokens** persistidos, entregues em cookie `HttpOnly`, `Secure` e
       `SameSite=None`.
     * Entidade `Usuario` e enum `Perfil` (`ROLE_COLABORADOR`, `ROLE_VALIDADOR`, `ROLE_GESTOR_SISTEMA`,
       `ROLE_ADMINISTRADOR`), com suporte a **múltiplos perfis cumulativos** e regra de **lockout prevention**
@@ -140,13 +140,13 @@ Detalhamento completo em [`docs/seguranca.md`](./seguranca.md).
 
 ### 1.7. Configuração centralizada de tokens
 
-`JwtProperties` (em `br.edu.ifce.security.config`) agrupa tempos e flags de cookie em uma única classe
+`JwtProperties` (em `br.edu.ifce.security.config.properties`) agrupa tempos e flags de cookie em uma única classe
 configurável externamente:
 
 | Property                      | Env var                       | Default        |
 |-------------------------------|-------------------------------|----------------|
 | `jwt.access-token-expiration` | `JWT_ACCESS_TOKEN_EXPIRATION` | `900` (15 min) |
-| `jwt.refresh-expiration`      | `JWT_REFRESH_EXPIRATION`      | `43200` (12 h) |
+| `jwt.refresh-expiration`      | `JWT_REFRESH_EXPIRATION`      | `3600` (1 h) |
 | `jwt.cookie-secure`           | `JWT_COOKIE_SECURE`           | `true`         |
 
 `accessTokenExpiration` é lido pelo `JwtService`/`LoginRes` para a expiração do token e pelo `CookieService` para o cookie de refresh (via `refreshExpiration`). `refreshExpiration` é lido pelo `RefreshTokenService` para a expiração do token persistido. O `maxAge` do cookie de refresh é derivado do mesmo valor, garantindo coerência entre token e cookie. As URLs de callback do frontend são configuradas via `FrontendProperties`.

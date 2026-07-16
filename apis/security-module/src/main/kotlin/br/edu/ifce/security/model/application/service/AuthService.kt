@@ -1,17 +1,22 @@
 package br.edu.ifce.security.model.application.service
 
+import br.edu.ifce.security.config.properties.JwtProperties
 import br.edu.ifce.security.model.application.interfaces.IAuthService
+import br.edu.ifce.security.model.domain.RefreshToken
 import br.edu.ifce.security.model.domain.Usuario
 import br.edu.ifce.security.model.dto.TokensPair
 import br.edu.ifce.security.model.repository.UsuarioRepository
 import org.springframework.stereotype.Service
+import java.time.Duration
+import java.time.LocalDateTime
 
 @Service
 class AuthService(
     private val jwtService: JwtService,
+    private val jwtProperties: JwtProperties,
     private val refreshTokenService: RefreshTokenService,
     private val usuarioRepository: UsuarioRepository
-): IAuthService {
+) : IAuthService {
 
     override fun loginSuccess(email: String): TokensPair? {
         val usuario = usuarioRepository.findByEmail(email)
@@ -22,8 +27,7 @@ class AuthService(
     override fun refresh(refreshTokenCookie: String): TokensPair? {
         val refreshToken = refreshTokenService.validarRefreshToken(refreshTokenCookie)
             ?: return null
-        val usuario = refreshToken.usuario
-        return gerarTokensPair(usuario)
+        return gerarTokensPair(refreshToken)
     }
 
     override fun logout(refreshTokenCookie: String?) {
@@ -35,6 +39,17 @@ class AuthService(
         return TokensPair(
             accessToken = jwtService.gerarAccessToken(usuario.id!!, usuario.email, roles),
             refreshToken = refreshTokenService.gerarRefreshToken(usuario).token
+        )
+    }
+
+    private fun gerarTokensPair(refreshToken: RefreshToken): TokensPair {
+        val usuario = refreshToken.usuario
+        val roles = usuario.perfis.map { it.name }
+        val tempoRestanteRt = Duration.between(LocalDateTime.now(), refreshToken.expiraEm).seconds
+        return TokensPair(
+            accessToken = jwtService.gerarAccessToken(usuario.id!!, usuario.email, roles),
+            refreshToken = if (jwtProperties.accessTokenExpiration > tempoRestanteRt)
+                refreshTokenService.gerarRefreshToken(usuario).token else null
         )
     }
 

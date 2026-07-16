@@ -1,5 +1,6 @@
 package br.edu.ifce.security.model.application.service
 
+import br.edu.ifce.security.config.properties.JwtProperties
 import br.edu.ifce.security.model.domain.Perfil
 import br.edu.ifce.security.model.domain.RefreshToken
 import br.edu.ifce.security.model.domain.Usuario
@@ -11,12 +12,16 @@ import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.Mockito.*
 import org.mockito.junit.jupiter.MockitoExtension
+import java.time.LocalDateTime
 
 @ExtendWith(MockitoExtension::class)
 class AuthServiceTest {
 
     @Mock
     lateinit var jwtService: JwtService
+
+    @Mock
+    lateinit var jwtProperties: JwtProperties
 
     @Mock
     lateinit var refreshTokenService: RefreshTokenService
@@ -63,17 +68,16 @@ class AuthServiceTest {
         }
         val refreshToken =
             RefreshToken(token = "old-refresh", usuario = usuario, expiraEm = java.time.LocalDateTime.now().plusDays(1))
-        val novoRefresh =
-            RefreshToken(token = "new-refresh", usuario = usuario, expiraEm = java.time.LocalDateTime.now().plusDays(1))
+        `when`(jwtProperties.accessTokenExpiration).thenReturn(900L)
         `when`(refreshTokenService.validarRefreshToken("cookie-abc")).thenReturn(refreshToken)
         `when`(jwtService.gerarAccessToken(5L, "user@ifce.edu.br", listOf("ROLE_COLABORADOR"))).thenReturn("access-new")
-        `when`(refreshTokenService.gerarRefreshToken(usuario)).thenReturn(novoRefresh)
 
         val result = authService.refresh("cookie-abc")
 
         assertNotNull(result)
         assertEquals("access-new", result!!.accessToken)
-        assertEquals("new-refresh", result.refreshToken)
+        assertNull(result.refreshToken)
+        verify(refreshTokenService, never()).gerarRefreshToken(usuario)
     }
 
     @Test
@@ -88,6 +92,34 @@ class AuthServiceTest {
             org.mockito.ArgumentMatchers.anyString(),
             org.mockito.ArgumentMatchers.anyList()
         )
+    }
+
+    @Test
+    fun `refresh renova refresh token quando tempo restante eh menor que access token expiration`() {
+        val usuario = Usuario(id = 7, email = "user@ifce.edu.br", nome = "User").apply {
+            perfis = mutableSetOf(Perfil.ROLE_COLABORADOR)
+        }
+        val refreshToken = RefreshToken(
+            token = "old-refresh",
+            usuario = usuario,
+            expiraEm = LocalDateTime.now().plusSeconds(600)
+        )
+        val novoRefresh = RefreshToken(
+            token = "new-refresh",
+            usuario = usuario,
+            expiraEm = LocalDateTime.now().plusSeconds(3600)
+        )
+        `when`(jwtProperties.accessTokenExpiration).thenReturn(900L)
+        `when`(refreshTokenService.validarRefreshToken("cookie-abc")).thenReturn(refreshToken)
+        `when`(jwtService.gerarAccessToken(7L, "user@ifce.edu.br", listOf("ROLE_COLABORADOR"))).thenReturn("access-new")
+        `when`(refreshTokenService.gerarRefreshToken(usuario)).thenReturn(novoRefresh)
+
+        val result = authService.refresh("cookie-abc")
+
+        assertNotNull(result)
+        assertEquals("access-new", result!!.accessToken)
+        assertEquals("new-refresh", result.refreshToken)
+        verify(refreshTokenService).gerarRefreshToken(usuario)
     }
 
     @Test

@@ -42,6 +42,15 @@ class UsuarioService(private val repository: UsuarioRepository) : IUsuarioServic
         repository.save(usuario)
     }
 
+    @Transactional
+    override fun ativarUsuario(id: Long) {
+        val usuario = repository.findById(id)
+            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado") }
+
+        usuario.ativo = true
+        repository.save(usuario)
+    }
+
     @Transactional(readOnly = true)
     override fun listarUsuarios(pageable: Pageable): UsuariosPaginadosRes {
         val page = repository.findAll(limitarPageable(pageable))
