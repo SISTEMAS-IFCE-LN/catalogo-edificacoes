@@ -10,15 +10,13 @@ class CookieService(
     private val jwtProperties: JwtProperties
 ): ICookieService {
 
-    private val sameSite = if (jwtProperties.cookieSecure) "None" else "Lax"
-
     override fun criarCookieRefreshToken(token: String): Cookie {
         return Cookie("refreshToken", token).apply {
             isHttpOnly = true
             secure = jwtProperties.cookieSecure
             path = "/"
             maxAge = jwtProperties.refreshExpiration.toInt()
-            setAttribute("SameSite", sameSite)
+            setAttribute("SameSite", jwtProperties.sameSite)
         }
 
     }
@@ -29,7 +27,7 @@ class CookieService(
             secure = jwtProperties.cookieSecure
             path = "/"
             maxAge = 0
-            setAttribute("SameSite", sameSite)
+            setAttribute("SameSite", jwtProperties.sameSite)
         }
     }
 }

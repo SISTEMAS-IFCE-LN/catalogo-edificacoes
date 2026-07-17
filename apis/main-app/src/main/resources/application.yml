@@ -31,7 +31,7 @@ server:
       cookie:
         http-only: true
         secure: true
-        same-site: lax
+        same-site: Lax
 
 management:
   endpoints:
@@ -43,6 +43,7 @@ jwt:
   access-token-expiration: ${JWT_ACCESS_TOKEN_EXPIRATION:900}
   refresh-expiration: ${JWT_REFRESH_EXPIRATION:3600}
   cookie-secure: ${JWT_COOKIE_SECURE:true}
+  same-site: ${JWT_COOKIE_SAME_SITE:Lax}
 
 rsa:
   public-key-path: ${JWT_PUBLIC_KEY_PATH:file:./.keys/public.pem}

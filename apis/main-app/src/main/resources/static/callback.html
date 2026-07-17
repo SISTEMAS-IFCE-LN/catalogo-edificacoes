@@ -37,6 +37,7 @@
         let refreshTimer = null;
         let countdownInterval = null;
         let nextRefreshAt = null;
+        let csrfToken = null;
 
         const hash = window.location.hash || '';
         const token = hash.startsWith('#') ? (new URLSearchParams(hash.slice(1))).get('token') : null;
@@ -45,11 +46,22 @@
             document.getElementById('tokenDisplay').value = token;
             window.history.replaceState({}, document.title, '/callback.html');
             updateStatus('Token recebido. Refresh automático agendado.', 'success');
-            scheduleRefresh(900);
+            fetchCsrfToken().then(() => scheduleRefresh(900));
         } else {
             document.getElementById('tokenDisplay').value = 'Nenhum token capturado.';
             updateStatus('Use "Novo Login" para autenticar.', 'info');
             disableButtons();
+        }
+
+        async function fetchCsrfToken() {
+            try {
+                const res = await fetch('/auth/csrf-token', { credentials: 'include' });
+                if (!res.ok) throw new Error('Falha ao obter CSRF token');
+                const data = await res.json();
+                csrfToken = data.token;
+            } catch (err) {
+                updateStatus('Erro ao obter token CSRF.', 'error');
+            }
         }
 
         function copyToken() {
@@ -61,9 +73,11 @@
 
         async function doRefresh() {
             try {
+                const headers = csrfToken ? { 'X-XSRF-TOKEN': csrfToken } : {};
                 const res = await fetch('/auth/refresh', {
                     method: 'POST',
-                    credentials: 'include'
+                    credentials: 'include',
+                    headers
                 });
                 if (!res.ok) {
                     if (res.status === 401) {
@@ -118,9 +132,11 @@
 
         async function doLogout() {
             try {
+                const headers = csrfToken ? { 'X-XSRF-TOKEN': csrfToken } : {};
                 await fetch('/auth/logout', {
                     method: 'POST',
-                    credentials: 'include'
+                    credentials: 'include',
+                    headers
                 });
                 updateStatus('Logout efetuado com sucesso.', 'success');
             } catch (err) {

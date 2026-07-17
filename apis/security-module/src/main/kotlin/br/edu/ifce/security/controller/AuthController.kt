@@ -5,10 +5,13 @@ import br.edu.ifce.security.config.properties.JwtProperties
 import br.edu.ifce.security.model.application.interfaces.IAuthService
 import br.edu.ifce.security.model.application.interfaces.ICookieService
 import br.edu.ifce.security.model.dto.LoginRes
+import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.web.csrf.CsrfToken
 import org.springframework.web.bind.annotation.CookieValue
+import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
@@ -20,6 +23,13 @@ class AuthController(
     private val cookieService: ICookieService,
     private val jwtProperties: JwtProperties
 ) {
+
+    @GetMapping("/csrf-token")
+    fun csrfToken(request: HttpServletRequest): ResponseEntity<Map<String, String>> {
+        val csrfToken = request.getAttribute(CsrfToken::class.java.name) as? CsrfToken
+            ?: return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build()
+        return ResponseEntity.ok(mapOf("token" to csrfToken.token))
+    }
 
     @PostMapping("/refresh")
     fun refresh(

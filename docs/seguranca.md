@@ -23,7 +23,7 @@ Componentes centrais:
 | `SecurityConfig` | `br.edu.ifce.security.config` | `SecurityFilterChain`, `oauth2Login`, `oauth2ResourceServer.jwt()`, CORS. |
 | `JwtConfig` | `br.edu.ifce.security.config` | Beans `JwtEncoder` e `JwtDecoder` (RSA). |
 | `RsaKeyProperties` | `br.edu.ifce.security.config.properties` | Bind de `rsa.public-key` / `rsa.private-key`. |
-| `JwtProperties` | `br.edu.ifce.security.config.properties` | Bind de `jwt.access-token-expiration` / `jwt.refresh-expiration` / `jwt.cookie-secure`. |
+| `JwtProperties` | `br.edu.ifce.security.config.properties` | Bind de `jwt.access-token-expiration` / `jwt.refresh-expiration` / `jwt.cookie-secure` / `jwt.same-site`. |
 | `FrontendProperties` | `br.edu.ifce.security.config.properties` | Bind de `frontend.callback-success-url` / `frontend.callback-error-url`. |
 | `BootstrapAdminRunner` | `br.edu.ifce.security.config` | Garante a presença de um administrador institucional conhecido no boot. |
 
@@ -78,9 +78,9 @@ Componentes centrais:
 ### Pontos de atenção
 
 - O `oauth2Login` requer `SessionCreationPolicy.IF_REQUIRED` no `SecurityConfig` (chain 1) para armazenar temporariamente o `Authentication` durante o handshake.
-- A API em si opera com `SessionCreationPolicy.STATELESS` (chain 2) e valida o JWT a cada requisição.
+- A API em si opera com `SessionCreationPolicy.STATELESS` (chain 3) e valida o JWT a cada requisição.
 - O cookie de sessão HTTP é `SameSite=Lax` (necessário para o callback cross-site do OAuth2).
-- O cookie `refreshToken` é `HttpOnly`, `Secure` (configurável via `JWT_COOKIE_SECURE`), `SameSite=None`, `path=/`, com `maxAge` igual ao valor de `jwt.refresh-expiration` (default 3600s / 1 h).
+- O cookie `refreshToken` é `HttpOnly`, `Secure` (configurável via `JWT_COOKIE_SECURE`), `SameSite=Lax` (configurável via `JWT_COOKIE_SAME_SITE`), `path=/`, com `maxAge` igual ao valor de `jwt.refresh-expiration` (default 3600s / 1 h).
 - O `OAuth2LoginSuccessHandler` gera os tokens diretamente no callback OAuth2 (dentro da chain 1, onde o `Authentication` está disponível) e redireciona o navegador para a URL de callback configurada, anexando o access token no fragmento (`#token=...`). O fragmento nunca é enviado ao servidor, mitigando fugas em logs ou headers `Referer`.
 
 ---
@@ -112,7 +112,53 @@ Componentes centrais:
 
 ---
 
-## 4. Perfis e hierarquia cumulativa
+## 4. Proteção CSRF em `/auth/**`
+
+Os endpoints `POST /auth/refresh` e `POST /auth/logout` dependem do cookie `HttpOnly` `refreshToken`, o que os torna vulneráveis a ataques CSRF. A proteção é implementada via **Double Submit Cookie** com `CookieCsrfTokenRepository`.
+
+### 4.1. Arquitetura
+
+Uma `SecurityFilterChain` dedicada (`authFilterChain`, `@Order(2)`) intercepta `/auth/**` com CSRF habilitado:
+
+| Order | Chain | Matcher | CSRF | Session |
+|---|---|---|---|---|
+| 1 | `oauth2LoginFilterChain` | `/oauth2/**`, `/login/**` | habilitado (default) | `IF_REQUIRED` |
+| 2 | `authFilterChain` | `/auth/**` | habilitado (`CookieCsrfTokenRepository`) | `IF_REQUIRED` |
+| 3 | `apiFilterChain` | demais | desabilitado | `STATELESS` |
+
+### 4.2. Fluxo CSRF
+
+```
+┌────────┐                          ┌──────────┐
+│  SPA   │                          │ Backend  │
+└───┬────┘                          └────┬─────┘
+    │  1. GET /auth/csrf-token           │
+    │  (após OAuth2 redirect)            │
+    ├───────────────────────────────────►│
+    │  Set-Cookie: XSRF-TOKEN=abc123     │  CookieCsrfTokenRepository
+    │  Body: { token: "abc123" }         │  (HttpOnly=false)
+    │◄───────────────────────────────────┤
+    │                                    │
+    │  2. POST /auth/refresh             │
+    │  Cookie: refreshToken=xyz          │
+    │  Header: X-XSRF-TOKEN=abc123       │
+    ├───────────────────────────────────►│
+    │                                    │  CsrfFilter valida:
+    │                                    │  cookie XSRF-TOKEN == header X-XSRF-TOKEN?
+    │  200 OK { accessToken }            │
+    │◄───────────────────────────────────┤
+```
+
+### 4.3. Pontos de atenção
+
+- O `CookieCsrfTokenRepository.withHttpOnlyFalse()` emite o cookie `XSRF-TOKEN` com `HttpOnly=false` para que o JavaScript possa lê-lo.
+- O frontend (`callback.html`) busca o token via `GET /auth/csrf-token` e o envia no header `X-XSRF-TOKEN` em cada POST.
+- A proteção CSRF aplica-se **apenas** a `/auth/**`. A API (chain 3) continua stateless e sem CSRF, pois usa JWT via `Authorization: Bearer` (não enviado automaticamente pelo navegador).
+- O `failure.html` não é afetado — não faz chamadas a `/auth/**`.
+
+---
+
+## 5. Perfis e hierarquia cumulativa
 
 Quatro perfis, armazenados no campo `perfis` da tabela `usuario_perfis` como `Set<Perfil>`:
 
@@ -127,7 +173,7 @@ Quatro perfis, armazenados no campo `perfis` da tabela `usuario_perfis` como `Se
 
 ---
 
-## 5. Lockout prevention
+## 6. Lockout prevention
 
 `UsuarioService.verificarExclusaoAdm()` é invocado por `atualizarPerfis` e `desativarUsuario` para impedir que o sistema fique sem administrador ativo.
 
@@ -149,11 +195,11 @@ private fun verificarExclusaoAdm() {
 
 ---
 
-## 6. Mapeamento de endpoints HTTP
+## 7. Mapeamento de endpoints HTTP
 
-Definido em `SecurityConfig.apiFilterChain` (chain 2, com `@Order(2)`).
+Definido em `SecurityConfig.apiFilterChain` (chain 3, com `@Order(3)`).
 
-### 6.1. Endpoints públicos (`permitAll`)
+### 7.1. Endpoints públicos (`permitAll`)
 
 | Path | Método | Observação |
 |---|---|---|
@@ -163,7 +209,7 @@ Definido em `SecurityConfig.apiFilterChain` (chain 2, com `@Order(2)`).
 | `/oauth2/**` | todos | Handshake OAuth2 (chain 1, com `IF_REQUIRED`). |
 | `/login/**` | todos | Handshake OAuth2. |
 
-### 6.2. Endpoints protegidos por `SecurityConfig`
+### 7.2. Endpoints protegidos por `SecurityConfig`
 
 | Path | Authority exigida |
 |---|---|
@@ -173,7 +219,7 @@ Definido em `SecurityConfig.apiFilterChain` (chain 2, com `@Order(2)`).
 | `/api/ambientes/publicados/esquadrias` (GET) | `ROLE_COLABORADOR` |
 | `/api/usuarios/**` (GET, PATCH) | `ROLE_ADMINISTRADOR` |
 
-### 6.3. Resposta a acessos não autorizados
+### 7.3. Resposta a acessos não autorizados
 
 - Sem `Authentication` em endpoint protegido → `401 Unauthorized`.
 - `Authentication` presente mas sem `Authority` exigida → `403 Forbidden`.
@@ -181,16 +227,17 @@ Definido em `SecurityConfig.apiFilterChain` (chain 2, com `@Order(2)`).
 
 ---
 
-## 7. Configuração externa
+## 8. Configuração externa
 
-### 7.1. `JwtProperties` (`br.edu.ifce.security.config.properties`)
+### 8.1. `JwtProperties` (`br.edu.ifce.security.config.properties`)
 
 ```kotlin
 @ConfigurationProperties(prefix = "jwt")
 data class JwtProperties(
     var accessTokenExpiration: Long = 900L,    // 15 min, em segundos
     var refreshExpiration: Long = 3600L,    // 1 h, em segundos
-    var cookieSecure: Boolean = true         // Secure flag do cookie
+    var cookieSecure: Boolean = true,         // Secure flag do cookie
+    var sameSite: String = "Lax"              // SameSite flag do cookie
 )
 ```
 
@@ -199,8 +246,9 @@ data class JwtProperties(
 | `jwt.access-token-expiration` | `JWT_ACCESS_TOKEN_EXPIRATION` | `900` | segundos | Vida do access token. |
 | `jwt.refresh-expiration` | `JWT_REFRESH_EXPIRATION` | `3600` | segundos | Vida do refresh token **e** do cookie que o contém. |
 | `jwt.cookie-secure` | `JWT_COOKIE_SECURE` | `true` | boolean | Se `true`, cookie só é enviado em conexões HTTPS. **Desligar em dev local (HTTP).** |
+| `jwt.same-site` | `JWT_COOKIE_SAME_SITE` | `Lax` | string | Política `SameSite` do cookie de refresh token. Valores válidos: `Strict`, `Lax`, `None`. |
 
-### 7.2. `RsaKeyProperties` (`br.edu.ifce.security.config.properties`)
+### 8.2. `RsaKeyProperties` (`br.edu.ifce.security.config.properties`)
 
 A aplicação lê as chaves RSA diretamente de arquivos `.pem` no boot, parseando PEM (PKCS#8 para chave privada,
 X.509 para chave pública) e convertendo para `RSAPublicKey` / `RSAPrivateKey`. O conteúdo **não** é mais injetado
@@ -227,28 +275,28 @@ data class RsaKeyProperties(
 A leitura é **lazy** — as chaves só são parseadas na primeira vez que o `JwtEncoder` ou `JwtDecoder` é invocado,
 evitando custo desnecessário se a aplicação for usada apenas para endpoints públicos no momento do boot.
 
-### 7.3. `bootstrap.*` (gerido por `BootstrapAdminRunner`)
+### 8.3. `bootstrap.*` (gerido por `BootstrapAdminRunner`)
 
 | Property | Env var | Default | Descrição |
 |---|---|---|---|
 | `bootstrap.admin-email` | `BOOTSTRAP_ADMIN_EMAIL` | (vazio) | Email do admin institucional. **Obrigatório** — aborta o boot se vazio. |
 | `bootstrap.allow-reactivate` | `BOOTSTRAP_ALLOW_REACTIVATE` | `true` | Kill switch geral. Quando `false`, o bootstrap é no-op total. |
 
-### 7.4. `FrontendProperties`
+### 8.4. `FrontendProperties`
 
 | Property | Env var | Default | Descrição |
 |---|---|---|---|
 | `frontend.callback-success-url` | `FRONTEND_CALLBACK_SUCCESS_URL` | (vazio — fallback `/callback.html`) | URL de sucesso do OAuth2. |
 | `frontend.callback-error-url` | `FRONTEND_CALLBACK_ERROR_URL` | (vazio — fallback `/failure.html`) | URL de erro do OAuth2. |
 
-### 7.5. OAuth2 Google
+### 8.5. OAuth2 Google
 
 | Property | Env var | Descrição |
 |---|---|---|
 | `spring.security.oauth2.client.registration.google.client-id` | `GOOGLE_CLIENT_ID` | Client ID do projeto no Google Cloud Console. |
 | `spring.security.oauth2.client.registration.google.client-secret` | `GOOGLE_CLIENT_SECRET` | Client Secret do projeto no Google Cloud Console. |
 
-### 7.6. Cookies de sessão (geridos pelo Spring)
+### 8.6. Cookies de sessão (geridos pelo Spring)
 
 ```yaml
 server:
@@ -257,19 +305,19 @@ server:
       cookie:
         http-only: true
         secure: true       # override para false em application-dev.yml
-        same-site: lax
+        same-site: Lax
 ```
 
-O cookie de sessão HTTP (gerado durante o `oauth2Login`) é `SameSite=Lax` para permitir o envio no redirect cross-site do callback OAuth2. O cookie de refresh token é independente e usa `SameSite=None` (preparação para SPA em origem diferente). Ambos devem respeitar o ambiente (HTTPS em prod).
+O cookie de sessão HTTP (gerado durante o `oauth2Login`) é `SameSite=Lax` para permitir o envio no redirect cross-site do callback OAuth2. O cookie de refresh token é independente e usa `SameSite=Lax` (configurável via `JWT_COOKIE_SAME_SITE`). Ambos devem respeitar o ambiente (HTTPS em prod).
 
 ---
 
-## 8. Geração de chaves RSA
+## 9. Geração de chaves RSA
 
 Para gerar o par RSA usado para assinar e validar o JWT, **gere os arquivos `.pem` e aponte a aplicação para eles**
 via `JWT_PUBLIC_KEY_PATH` e `JWT_PRIVATE_KEY_PATH`.
 
-### 8.1. Gerar os arquivos
+### 9.1. Gerar os arquivos
 
 Linux/macOS:
 
@@ -289,7 +337,7 @@ mkdir keys
 & "C:\Program Files\Git\usr\bin\openssl.exe" pkcs8 -topk8 -in keys\private.pem -out keys\private_pkcs8.pem -nocrypt
 ```
 
-### 8.2. Apontar a aplicação para os arquivos
+### 9.2. Apontar a aplicação para os arquivos
 
 Por padrão, o `application.yml` lê de `./.keys/`:
 
@@ -316,7 +364,7 @@ Variantes suportadas via env var (sobrescreve o default):
 
 ---
 
-## 9. Bootstrap do administrador institucional
+## 10. Bootstrap do administrador institucional
 
 `BootstrapAdminRunner` é um `ApplicationRunner` que roda após o `ApplicationContext` estar pronto. Comportamento:
 
@@ -338,7 +386,7 @@ Variantes suportadas via env var (sobrescreve o default):
 
 ---
 
-## 10. Exemplo de payload JWT
+## 11. Exemplo de payload JWT
 
 Header:
 
@@ -371,14 +419,14 @@ Payload (claims):
 
 ---
 
-## 11. Tratamento de erros
+## 12. Tratamento de erros
 
 A API adota duas camadas complementares de tratamento de erros:
 
 1. **Handler global** (`GlobalExceptionHandler` no `common-module`): captura exceções lançadas pelos controllers e use cases da API e devolve um body padronizado `ErroRes` (campos `dataHora`, `status`, `mensagem`).
 2. **Tratamento local/framework**: casos tratados diretamente nos controllers (`AuthController.refresh`), pelo Spring Security (401/403 de auth) ou pelo handshake OAuth2 (`CustomOAuth2UserService`, chain 1).
 
-### 11.1. Body padronizado de erro
+### 12.1. Body padronizado de erro
 
 Todas as respostas de erro tratadas pelo `GlobalExceptionHandler` seguem o formato:
 
@@ -394,7 +442,7 @@ Todas as respostas de erro tratadas pelo `GlobalExceptionHandler` seguem o forma
 - `status`: código HTTP numérico.
 - `mensagem`: mensagem legível da falha (primeira violação de validação, mensagem de negócio ou mensagem genérica para 500).
 
-### 11.2. Cenários tratados pelo `GlobalExceptionHandler` (chain 2 — API)
+### 12.2. Cenários tratados pelo `GlobalExceptionHandler` (chain 3 — API)
 
 | Cenário | HTTP Status | Origem |
 |---|---|---|
@@ -410,7 +458,7 @@ Todas as respostas de erro tratadas pelo `GlobalExceptionHandler` seguem o forma
 | `Content-Type` não suportado | `415` | `HttpMediaTypeNotSupportedException`. |
 | Erro inesperado do servidor | `500` | `Exception` (fallback, mensagem genérica). |
 
-### 11.3. Cenários tratados localmente ou pelo framework
+### 12.3. Cenários tratados localmente ou pelo framework
 
 | Cenário | HTTP Status | Origem |
 |---|---|---|
@@ -421,6 +469,6 @@ Todas as respostas de erro tratadas pelo `GlobalExceptionHandler` seguem o forma
 | Endpoint protegido sem `Authorization: Bearer <jwt>` | `401` | `oauth2ResourceServer.jwt()` falha (Spring Security, não passa pelo handler). |
 | Endpoint protegido com `Authority` insuficiente | `403` | `SecurityConfig` — regra de autoridade (Spring Security). |
 
-> **Nota:** o `GlobalExceptionHandler` é um `@RestControllerAdvice` que atua apenas no `DispatcherServlet` da API (chain 2). As exceções lançadas no handshake OAuth2 (chain 1) e na camada de filtros do Spring Security são tratadas pelo próprio Spring Security, fora do escopo do handler global.
+> **Nota:** o `GlobalExceptionHandler` é um `@RestControllerAdvice` que atua apenas no `DispatcherServlet` da API (chain 3). As exceções lançadas no handshake OAuth2 (chain 1) e na camada de filtros do Spring Security são tratadas pelo próprio Spring Security, fora do escopo do handler global.
 >
 > A partir do refactor de segurança, as falhas de negócio no `CustomOAuth2UserService` (domínio não autorizado, usuário inativo, email não fornecido) disparam `OAuth2AuthenticationException`, que o Spring Security captura e redireciona o navegador para a URL configurada em `oauth2.failureUrl()` (default local: `/failure.html`).

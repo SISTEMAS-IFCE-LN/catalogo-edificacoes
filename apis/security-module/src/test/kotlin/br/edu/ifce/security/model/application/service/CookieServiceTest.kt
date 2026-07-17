@@ -9,8 +9,8 @@ import org.mockito.junit.jupiter.MockitoExtension
 @ExtendWith(MockitoExtension::class)
 class CookieServiceTest {
 
-    private fun props(secure: Boolean = true) =
-        JwtProperties(accessTokenExpiration = 900L, refreshExpiration = 43200L, cookieSecure = secure)
+    private fun props(secure: Boolean = true, sameSite: String = "None") =
+        JwtProperties(accessTokenExpiration = 900L, refreshExpiration = 43200L, cookieSecure = secure, sameSite = sameSite)
 
     @Test
     fun `criarCookieRefreshToken com token retorna cookie configurado`() {
