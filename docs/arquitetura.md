@@ -117,7 +117,7 @@ Em resumo:
 
 ### 1.6. Mapeamento de endpoints HTTP
 
-Definido em `SecurityConfig.apiFilterChain` (chain 2, com `@Order(2)`). Endpoints públicos (`permitAll`):
+Definido em `SecurityConfig.apiFilterChain` (chain 3, com `@Order(3)`). Endpoints públicos (`permitAll`):
 
 | Path                           | Descrição                                      |
 |--------------------------------|------------------------------------------------|

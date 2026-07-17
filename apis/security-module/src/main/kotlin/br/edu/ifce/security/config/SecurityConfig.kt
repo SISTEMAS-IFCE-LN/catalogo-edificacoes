@@ -23,6 +23,7 @@ import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher
 import org.springframework.security.web.util.matcher.OrRequestMatcher
 import org.springframework.security.web.util.matcher.RequestMatcher
@@ -54,6 +55,9 @@ class SecurityConfig(
         oauth2Endpoints.map { PathPatternRequestMatcher.withDefaults().matcher(it) }
     )
 
+    private val authMatcher: RequestMatcher = PathPatternRequestMatcher
+        .withDefaults().matcher("${AUTH_PATH}/**")
+
     @Bean
     @Order(1)
     fun oauth2LoginFilterChain(http: HttpSecurity): SecurityFilterChain {
@@ -78,9 +82,25 @@ class SecurityConfig(
 
     @Bean
     @Order(2)
+    fun authFilterChain(http: HttpSecurity): SecurityFilterChain {
+        http
+            .securityMatcher(authMatcher)
+            .csrf { csrf ->
+                csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+            }
+            .cors { it.configurationSource(corsConfigurationSource()) }
+            .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) }
+            .authorizeHttpRequests { auth ->
+                auth.anyRequest().permitAll()
+            }
+        return http.build()
+    }
+
+    @Bean
+    @Order(3)
     fun apiFilterChain(http: HttpSecurity): SecurityFilterChain {
         http
-            .securityMatcher { request -> !oauth2Matcher.matches(request) }
+            .securityMatcher { request -> !oauth2Matcher.matches(request) && !authMatcher.matches(request) }
             .csrf { it.disable() }
             .cors { it.configurationSource(corsConfigurationSource()) }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.STATELESS) }
@@ -117,7 +137,6 @@ class SecurityConfig(
                     "/failure.html",
                     "/actuator/health"
                 ).permitAll()
-                auth.requestMatchers(HttpMethod.POST, "${AUTH_PATH}/**").permitAll()
                 auth.anyRequest().denyAll()
             }
             .oauth2ResourceServer { rs ->
