@@ -60,7 +60,7 @@ segurança e as diferentes regras de negócio de domínio coexistam sem gerar de
       isolando-os do `SecurityConfig` para evitar ciclos de dependência.
     * Emissão e validação de **JWT próprio** (assinatura RSA) para acesso à API.
     * Gestão de **refresh tokens** persistidos, entregues em cookie `HttpOnly`, `Secure` e
-      `SameSite=None`.
+      `SameSite` configurável (default `Lax`).
     * Entidade `Usuario` e enum `Perfil` (`ROLE_COLABORADOR`, `ROLE_VALIDADOR`, `ROLE_GESTOR_SISTEMA`,
       `ROLE_ADMINISTRADOR`), com suporte a **múltiplos perfis cumulativos** e regra de **lockout prevention**
       (RN-4.9).
@@ -148,6 +148,7 @@ configurável externamente:
 | `jwt.access-token-expiration` | `JWT_ACCESS_TOKEN_EXPIRATION` | `900` (15 min) |
 | `jwt.refresh-expiration`      | `JWT_REFRESH_EXPIRATION`      | `3600` (1 h) |
 | `jwt.cookie-secure`           | `JWT_COOKIE_SECURE`           | `true`         |
+| `jwt.same-site`               | `JWT_COOKIE_SAME_SITE`        | `Lax`          |
 
 `accessTokenExpiration` é lido pelo `JwtService`/`LoginRes` para a expiração do token e pelo `CookieService` para o cookie de refresh (via `refreshExpiration`). `refreshExpiration` é lido pelo `RefreshTokenService` para a expiração do token persistido. O `maxAge` do cookie de refresh é derivado do mesmo valor, garantindo coerência entre token e cookie. As URLs de callback do frontend são configuradas via `FrontendProperties`.
 

@@ -23,7 +23,7 @@ Componentes centrais:
 | `SecurityConfig` | `br.edu.ifce.security.config` | `SecurityFilterChain`, `oauth2Login`, `oauth2ResourceServer.jwt()`, CORS. |
 | `JwtConfig` | `br.edu.ifce.security.config` | Beans `JwtEncoder` e `JwtDecoder` (RSA). |
 | `RsaKeyProperties` | `br.edu.ifce.security.config.properties` | Bind de `rsa.public-key` / `rsa.private-key`. |
-| `JwtProperties` | `br.edu.ifce.security.config.properties` | Bind de `jwt.access-token-expiration` / `jwt.refresh-expiration` / `jwt.cookie-secure`. |
+| `JwtProperties` | `br.edu.ifce.security.config.properties` | Bind de `jwt.access-token-expiration` / `jwt.refresh-expiration` / `jwt.cookie-secure` / `jwt.same-site`. |
 | `FrontendProperties` | `br.edu.ifce.security.config.properties` | Bind de `frontend.callback-success-url` / `frontend.callback-error-url`. |
 | `BootstrapAdminRunner` | `br.edu.ifce.security.config` | Garante a presença de um administrador institucional conhecido no boot. |
 
@@ -80,7 +80,7 @@ Componentes centrais:
 - O `oauth2Login` requer `SessionCreationPolicy.IF_REQUIRED` no `SecurityConfig` (chain 1) para armazenar temporariamente o `Authentication` durante o handshake.
 - A API em si opera com `SessionCreationPolicy.STATELESS` (chain 2) e valida o JWT a cada requisição.
 - O cookie de sessão HTTP é `SameSite=Lax` (necessário para o callback cross-site do OAuth2).
-- O cookie `refreshToken` é `HttpOnly`, `Secure` (configurável via `JWT_COOKIE_SECURE`), `SameSite=None`, `path=/`, com `maxAge` igual ao valor de `jwt.refresh-expiration` (default 3600s / 1 h).
+- O cookie `refreshToken` é `HttpOnly`, `Secure` (configurável via `JWT_COOKIE_SECURE`), `SameSite=Lax` (configurável via `JWT_COOKIE_SAME_SITE`), `path=/`, com `maxAge` igual ao valor de `jwt.refresh-expiration` (default 3600s / 1 h).
 - O `OAuth2LoginSuccessHandler` gera os tokens diretamente no callback OAuth2 (dentro da chain 1, onde o `Authentication` está disponível) e redireciona o navegador para a URL de callback configurada, anexando o access token no fragmento (`#token=...`). O fragmento nunca é enviado ao servidor, mitigando fugas em logs ou headers `Referer`.
 
 ---
@@ -190,7 +190,8 @@ Definido em `SecurityConfig.apiFilterChain` (chain 2, com `@Order(2)`).
 data class JwtProperties(
     var accessTokenExpiration: Long = 900L,    // 15 min, em segundos
     var refreshExpiration: Long = 3600L,    // 1 h, em segundos
-    var cookieSecure: Boolean = true         // Secure flag do cookie
+    var cookieSecure: Boolean = true,         // Secure flag do cookie
+    var sameSite: String = "Lax"              // SameSite flag do cookie
 )
 ```
 
@@ -199,6 +200,7 @@ data class JwtProperties(
 | `jwt.access-token-expiration` | `JWT_ACCESS_TOKEN_EXPIRATION` | `900` | segundos | Vida do access token. |
 | `jwt.refresh-expiration` | `JWT_REFRESH_EXPIRATION` | `3600` | segundos | Vida do refresh token **e** do cookie que o contém. |
 | `jwt.cookie-secure` | `JWT_COOKIE_SECURE` | `true` | boolean | Se `true`, cookie só é enviado em conexões HTTPS. **Desligar em dev local (HTTP).** |
+| `jwt.same-site` | `JWT_COOKIE_SAME_SITE` | `Lax` | string | Política `SameSite` do cookie de refresh token. Valores válidos: `Strict`, `Lax`, `None`. |
 
 ### 7.2. `RsaKeyProperties` (`br.edu.ifce.security.config.properties`)
 
@@ -257,10 +259,10 @@ server:
       cookie:
         http-only: true
         secure: true       # override para false em application-dev.yml
-        same-site: lax
+        same-site: Lax
 ```
 
-O cookie de sessão HTTP (gerado durante o `oauth2Login`) é `SameSite=Lax` para permitir o envio no redirect cross-site do callback OAuth2. O cookie de refresh token é independente e usa `SameSite=None` (preparação para SPA em origem diferente). Ambos devem respeitar o ambiente (HTTPS em prod).
+O cookie de sessão HTTP (gerado durante o `oauth2Login`) é `SameSite=Lax` para permitir o envio no redirect cross-site do callback OAuth2. O cookie de refresh token é independente e usa `SameSite=Lax` (configurável via `JWT_COOKIE_SAME_SITE`). Ambos devem respeitar o ambiente (HTTPS em prod).
 
 ---
 
