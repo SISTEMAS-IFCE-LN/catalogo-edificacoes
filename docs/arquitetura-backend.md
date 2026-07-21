@@ -1,4 +1,4 @@
-# Arquitetura do Sistema - Catálogo de Edificações
+# Arquitetura do Backend - Catálogo de Edificações
 
 Este documento descreve a organização arquitetural do ecossistema do Catálogo de Edificações. O sistema adota uma *
 *Arquitetura Modular (Multi-Módulos)** fundamentada nos princípios de separação de conceitos, alta coesão e baixo
