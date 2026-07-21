@@ -404,7 +404,6 @@ Payload (claims):
 {
   "iss": "catalogo-edificacoes-backend",
   "sub": "1",
-  "email": "ti@ifce.edu.br",
   "roles": [
     "ROLE_ADMINISTRADOR",
     "ROLE_COLABORADOR"

@@ -40,7 +40,7 @@ class AuthServiceTest {
         val novoRefresh =
             RefreshToken(token = "refresh-xyz", usuario = usuario, expiraEm = java.time.LocalDateTime.now().plusDays(1))
         `when`(usuarioRepository.findByEmail("user@ifce.edu.br")).thenReturn(usuario)
-        `when`(jwtService.gerarAccessToken(1L, "user@ifce.edu.br", listOf("ROLE_COLABORADOR"))).thenReturn("access-xyz")
+        `when`(jwtService.gerarAccessToken(1L, listOf("ROLE_COLABORADOR"))).thenReturn("access-xyz")
         `when`(refreshTokenService.gerarRefreshToken(usuario)).thenReturn(novoRefresh)
 
         val result = authService.loginSuccess("user@ifce.edu.br")
@@ -70,7 +70,7 @@ class AuthServiceTest {
             RefreshToken(token = "old-refresh", usuario = usuario, expiraEm = java.time.LocalDateTime.now().plusDays(1))
         `when`(jwtProperties.accessTokenExpiration).thenReturn(900L)
         `when`(refreshTokenService.validarRefreshToken("cookie-abc")).thenReturn(refreshToken)
-        `when`(jwtService.gerarAccessToken(5L, "user@ifce.edu.br", listOf("ROLE_COLABORADOR"))).thenReturn("access-new")
+        `when`(jwtService.gerarAccessToken(5L, listOf("ROLE_COLABORADOR"))).thenReturn("access-new")
 
         val result = authService.refresh("cookie-abc")
 
@@ -89,7 +89,6 @@ class AuthServiceTest {
         assertNull(result)
         verify(jwtService, never()).gerarAccessToken(
             org.mockito.ArgumentMatchers.anyLong(),
-            org.mockito.ArgumentMatchers.anyString(),
             org.mockito.ArgumentMatchers.anyList()
         )
     }
@@ -111,7 +110,7 @@ class AuthServiceTest {
         )
         `when`(jwtProperties.accessTokenExpiration).thenReturn(900L)
         `when`(refreshTokenService.validarRefreshToken("cookie-abc")).thenReturn(refreshToken)
-        `when`(jwtService.gerarAccessToken(7L, "user@ifce.edu.br", listOf("ROLE_COLABORADOR"))).thenReturn("access-new")
+        `when`(jwtService.gerarAccessToken(7L, listOf("ROLE_COLABORADOR"))).thenReturn("access-new")
         `when`(refreshTokenService.gerarRefreshToken(usuario)).thenReturn(novoRefresh)
 
         val result = authService.refresh("cookie-abc")
@@ -146,11 +145,10 @@ class AuthServiceTest {
         val captorRoles = arrayOfNulls<Any>(1)
         `when`(usuarioRepository.findByEmail("admin@ifce.edu.br")).thenReturn(usuario)
         org.mockito.Mockito.doAnswer {
-            captorRoles[0] = it.arguments[2]
+            captorRoles[0] = it.arguments[1]
             "access-xyz"
         }.`when`(jwtService).gerarAccessToken(
             org.mockito.ArgumentMatchers.anyLong(),
-            org.mockito.ArgumentMatchers.anyString(),
             org.mockito.ArgumentMatchers.anyList()
         )
         `when`(refreshTokenService.gerarRefreshToken(usuario)).thenReturn(novoRefresh)
@@ -159,7 +157,6 @@ class AuthServiceTest {
 
         verify(jwtService, times(1)).gerarAccessToken(
             org.mockito.ArgumentMatchers.anyLong(),
-            org.mockito.ArgumentMatchers.anyString(),
             org.mockito.ArgumentMatchers.anyList()
         )
         @Suppress("UNCHECKED_CAST")

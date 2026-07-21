@@ -13,7 +13,7 @@ class JwtService(
     private val jwtEncoder: JwtEncoder,
     private val jwtProperties: JwtProperties
 ) {
-    fun gerarAccessToken(userId: Long, email: String, roles: List<String>): String {
+    fun gerarAccessToken(userId: Long, roles: List<String>): String {
         val agora = Instant.now()
         val expiracao = agora.plusSeconds(jwtProperties.accessTokenExpiration)
 
@@ -23,7 +23,6 @@ class JwtService(
             .expiresAt(expiracao)
             .id(UUID.randomUUID().toString())
             .subject(userId.toString())
-            .claim("email", email)
             .claim("roles", roles)
             .build()
 
