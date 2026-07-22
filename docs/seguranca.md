@@ -175,7 +175,7 @@ Quatro perfis, armazenados no campo `perfis` da tabela `usuario_perfis` como `Se
 
 ## 6. Lockout prevention
 
-`UsuarioService.verificarExclusaoAdm()` é invocado por `atualizarPerfis` e `desativarUsuario` para impedir que o sistema fique sem administrador ativo.
+`UsuarioService.verificarExclusaoAdm()` é invocado por `atualizarPerfis` e `desativar` para impedir que o sistema fique sem administrador ativo.
 
 ```kotlin
 private fun verificarExclusaoAdm() {
