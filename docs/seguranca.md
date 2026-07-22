@@ -181,9 +181,8 @@ Quatro perfis, armazenados no campo `perfis` da tabela `usuario_perfis` como `Se
 private fun verificarExclusaoAdm() {
     val totalAdmins = repository.countByAtivoTrueAndPerfisContains(Perfil.ROLE_ADMINISTRADOR)
     if (totalAdmins <= 1) {
-        throw ResponseStatusException(
-            HttpStatus.CONFLICT,
-            "Ação negada: Não é possível remover/desativar o último Administrador do sistema."
+        throw UltimoAdminException(
+            "Ação negada: Não é possível remover ou desativar o último Administrador do sistema."
         )
     }
 }
@@ -450,7 +449,8 @@ Todas as respostas de erro tratadas pelo `GlobalExceptionHandler` seguem o forma
 | Validação de `@PathVariable`/`@RequestParam` com `@Validated` | `400` | `ConstraintViolationException`. |
 | Validação de negócio (ex.: "Já existe ambiente com esse nome") | `400` | `IllegalArgumentException` (factories, use cases). |
 | Recurso inexistente (ex.: "Ambiente não encontrado") | `404` | `NoSuchElementException`. |
-| Usuário inexistente / lockout prevention | `404` / `409` | `ResponseStatusException` (`UsuarioService`). |
+| Usuário inexistente | `404` | `NoSuchElementException` (mapeada pelo `GlobalExceptionHandler`). |
+| Lockout prevention | `409` | `UltimoAdminException` (mapeada pelo `GlobalExceptionHandler`). |
 | Parâmetro obrigatório ausente | `400` | `MissingServletRequestParameterException`. |
 | Violação de constraint do banco | `400` | `DataIntegrityViolationException` (mensagem da causa raiz). |
 | Método HTTP não suportado | `405` | `HttpRequestMethodNotSupportedException`. |

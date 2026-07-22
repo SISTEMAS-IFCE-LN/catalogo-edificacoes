@@ -11,7 +11,7 @@ Este documento descreve a arquitetura do frontend do sistema Catálogo de Edific
 | Access token | **Em memória** (variável de módulo, não persiste em storage) | Mais seguro contra ataque XSS; alinhado ao design do backend, que entrega o refresh token em cookie `HttpOnly` exatamente para suportar bootstrap via refresh |
 | Refresh token | Cookie `HttpOnly + Secure + SameSite=Lax` gerido pelo backend | Frontend nunca o manipula; enviado automaticamente em `/auth/refresh`                                                                                       |
 | CSRF | Tratado em `/auth/**` via Double Submit Cookie (`XSRF-TOKEN` / `X-XSRF-TOKEN`) | Backend já implementa `CookieCsrfTokenRepository.withHttpOnlyFalse()` em `authFilterChain` (`@Order(2)`)                                                    |
-| Dados do `Usuario` | `GET /api/usuario/me` (a implementar no backend) | JWT não expõe `nome`/`ativo`/`criadoEm`; endpoint necessário para popular `User`. Frontend não decodifica o JWT — apenas o transporta em `Authorization` |
+| Dados do `Usuario` | `GET /api/usuarios/me` (implementado no backend) | JWT não expõe `nome`/`ativo`/`criadoEm`; endpoint necessário para popular `User`. Frontend não decodifica o JWT — apenas o transporta em `Authorization` |
 | Renderização | **CSR puro (SPA)** | Adequado ao JWT entregue em fragmento de URL (`#token=...`, inacessível ao servidor) e aos UCs interativos (multistep, tabelas, debounce)                   |
 | Framework | **Vite + React Router v6** | Mínimo necessário para CSR; hot reload rápido; build estático simples; guarda de rotas via `<RequireAuth>`/`<RequireRole>`                                  |
 | Estilização | **Tailwind CSS 3 + shadcn/ui** | Sem lock-in, acessível (Radix), customizável, alinhado ao padrão declarativo de permissões                                                                  |
@@ -32,7 +32,7 @@ A arquitetura frontend é determinada, em grande parte, pelo contrato estabeleci
 - O refresh token é entregue em cookie `HttpOnly`, `Secure`, `SameSite=Lax`, `path=/`, `maxAge = jwt.refresh-expiration` (default 3600s).
 - Os endpoints `POST /auth/refresh` e `POST /auth/logout` são protegidos por CSRF via Double Submit Cookie; o frontend precisa obter o `XSRF-TOKEN` via `GET /auth/csrf-token` e enviá-lo no header `X-XSRF-TOKEN` em POSTs a `/auth/**`.
 - A API (chain 3, `STATELESS`) valida JWT via `Authorization: Bearer <jwt>` e não exige CSRF.
-- O JWT (RSA, 15 min) contém claims `iss`, `sub` (= `Usuario.id`), `roles` (com prefixo `ROLE_`), `jti`, `iat`, `exp`. O frontend não decodifica o JWT — apenas o transporta no header `Authorization: Bearer`. `User` completo (com `nome`, `email`, `ativo`, `criadoEm`, `perfis`) vem de `GET /api/usuario/me`.
+- O JWT (RSA, 15 min) contém claims `iss`, `sub` (= `Usuario.id`), `roles` (com prefixo `ROLE_`), `jti`, `iat`, `exp`. O frontend não decodifica o JWT — apenas o transporta no header `Authorization: Bearer`. `User` completo (com `nome`, `email`, `ativo`, `criadoEm`, `perfis`) vem de `GET /api/usuarios/me`.
 - Perfis são **cumulativos** e `UsuarioService.atualizarPerfis` sempre adiciona `ROLE_COLABORADOR`. Logo, todo usuário autenticado tem ao menos esse perfil.
 - Endpoints públicos: `/api/ambientes/publicados/**` (listagens e detalhes, este último com `permitAll` mas autoridade interna exige `ROLE_COLABORADOR` — ver abaixo), `/auth/**`, `/health`, `/oauth2/**`, `/login/**`.
 - Proteção por autoridade (chain 3):
@@ -44,6 +44,7 @@ A arquitetura frontend é determinada, em grande parte, pelo contrato estabeleci
 | `/api/ambientes/publicados/{id}` (GET) | `ROLE_COLABORADOR` |
 | `/api/ambientes/publicados/esquadrias` (GET) | `ROLE_COLABORADOR` |
 | `/api/usuarios/**` | `ROLE_ADMINISTRADOR` |
+| `/api/usuarios/me` (GET) | qualquer autenticado |
 
 ---
 
@@ -55,7 +56,7 @@ A estratégia adotada é **em memória**: o access token é mantido em uma **var
 
 Implicações:
 
-- Ao recarregar a página (F5), o token é perdido; o boot exibe brevemente `isLoading=true` e executa `POST /auth/refresh` (cookie HttpOnly é enviado automaticamente). Em 200, o novo access token é armazenado em memória e `GET /api/usuario/me` popula o `User`.
+- Ao recarregar a página (F5), o token é perdido; o boot exibe brevemente `isLoading=true` e executa `POST /auth/refresh` (cookie HttpOnly é enviado automaticamente). Em 200, o novo access token é armazenado em memória e `GET /api/usuarios/me` popula o `User`.
 - Em 401 do refresh na inicialização, o estado passa a "deslogado" sem flash de conteúdo protegido (a UI não renderiza rotas autenticadas enquanto `isLoading` ou `!isAuthenticated`).
 - Custo: uma requisição extra no cold-start. Para um sistema institucional interno, imperceptível.
 
@@ -63,7 +64,7 @@ Implicações:
 
 O frontend **não decodifica** o JWT — apenas o recebe em `#token=...` (login OAuth2) ou no `POST /auth/refresh` (boot), guarda em memória, e transporta em `Authorization: Bearer`. As razões:
 
-- `User` completo (`nome`, `email`, `ativo`, `criadoEm`, `perfis`) vem de `GET /api/usuario/me`, que é a fonte canônica e consistente com o backend.
+- `User` completo (`nome`, `email`, `ativo`, `criadoEm`, `perfis`) vem de `GET /api/usuarios/me`, que é a fonte canônica e consistente com o backend.
 - Permissões são lidas de `user.perfis`, nunca das claims `roles` do JWT (evita drift entre o token e o banco).
 - Refresh é reativo: o interceptor do Axios chama `POST /auth/refresh` em qualquer `401`, sem necessidade de prever expiração via claimed `exp`.
 - Validação do JWT (assinatura, expiração real) é exclusiva do backend — o frontend não tem a chave pública RSA configurada nem deve fazer suposições sobre claims internas.
@@ -88,7 +89,7 @@ O frontend **não decodifica** o JWT — apenas o recebe em `#token=...` (login 
 └────┬─────┘      auth.login(token):
      │             - accessToken (memória) = token
      │             - Authorization: Bearer <token> no Axios
-     │             - GET /api/usuario/me → User no Context
+     │             - GET /api/usuarios/me → User no Context
      │             - navigate('/home') conforme perfis
      ▼
   App autenticado
@@ -133,9 +134,9 @@ auth.logout():
 
 O fail-safe (limpeza local independente do resultado do backend) impede estado inconsistente.
 
-### 3.7. Dependência de backend: `GET /api/usuario/me`
+### 3.7. Dependência de backend: `GET /api/usuarios/me`
 
-Para popular `User` no `AuthContext`, o **backend deve implementar** `GET /api/usuario/me` em `UsuarioController` (faz parte do recurso "usuário", não "auth"):
+Para popular `User` no `AuthContext`, o **backend implementa** `GET /api/usuarios/me` em `UsuarioController` (faz parte do recurso "usuário", não "auth"). O path é plural (`/api/usuarios/...`) por compartilhar o `@RequestMapping` das rotas administrativas `/api/usuarios/**` de `ROLE_ADMINISTRADOR`; a rota `/me` é aberta a qualquer autenticado via matcher específico no `SecurityConfig` (colocado antes do matcher `ROLE_ADMINISTRADOR` para `/api/usuarios/**`):
 
 - Entrada: nenhuma (lê `Authentication` do SecurityContext, derivado do JWT validado).
 - Saída: representação completa de `Usuario` (id, email, nome, ativo, criadoEm, perfis).
@@ -297,7 +298,7 @@ export enum Role {
 }
 
 /**
- * Usuário autenticado. Retornado por GET /api/usuario/me.
+ * Usuário autenticado. Retornado por GET /api/usuarios/me.
  *
  * Observação: o frontend NÃO decodifica o JWT (ver §3.2). Dados completos
  * (nome, email, ativo, criadoEm, perfis) vêm deste endpoint; o JWT é apenas
@@ -442,7 +443,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Carrega Usuario via endpoint auth/me
   const loadUser = useCallback(async () => {
-    const { data } = await api.get<User>('/api/usuario/me')
+    const { data } = await api.get<User>('/api/usuarios/me')
     setState(s => ({ ...s, user: data, isAuthenticated: true, isLoading: false }))
   }, [])
 
@@ -501,7 +502,7 @@ export function useAuth(): AuthContextValue {
 // lib/auth.ts — variável de módulo (em memória)
 // O frontend NÃO decodifica o JWT (ver §3.2). Token é apenas uma string
 // opaca transportada em Authorization: Bearer. Dados do Usuario vêm de
-// /api/usuario/me; refresh é reativo (interceptor Axios trata 401).
+// /api/usuarios/me; refresh é reativo (interceptor Axios trata 401).
 
 let accessToken: string | null = null
 
@@ -1366,7 +1367,7 @@ Cobertura mínima recomendada: `lib/permissions.ts` 100%, `lib/auth.ts` 100% (tr
 ## 18. Tarefas de implementação (enfileiramento sugerido)
 
 1. **Scaffold Vite + React + TS + Tailwind + shadcn/ui**; configurar `vite-tsconfig-paths` para alias `@/`. Instalar via shadcn CLI: `button input dialog dropdown-menu avatar sheet drawer accordion table badge card form sonner`.
-2. **Backend**: adicionar `GET /api/usuario/me` em `UsuarioController`, retornando `Usuario` a partir do `Authentication` do SecurityContext. Authority: qualquer autenticado (o `SecurityConfig` deve incluir `/api/usuario/me` em `permitAll` para autenticados via JWT, fora do `/api/usuarios/**` que exige `ROLE_ADMINISTRADOR`).
+2. **Backend**: `GET /api/usuarios/me` em `UsuarioController` já implementado, retornando `UsuarioRes` a partir do `@AuthenticationPrincipal jwt: Jwt` (`jwt.subject` = `Usuario.id`). Authority: qualquer autenticado. O `SecurityConfig.apiFilterChain` abre `GET /api/usuarios/me` para `authenticated()` antes da regra `ROLE_ADMINISTRADOR` para `/api/usuarios/**`.
 3. **`lib/auth.ts` + `lib/api.ts`**: variável de módulo (apenas `set/get/clear` do token string), interceptores de request (auth + CSRF) e response (refresh 401).
 4. **`lib/csrf.ts`**: leitura de cookie XSRF-TOKEN + `ensureCsrfToken()`.
 5. **`AuthProvider` + `RequireAuth`/`RequireRole`/`PublicOnly`**.
@@ -1384,7 +1385,7 @@ Cobertura mínima recomendada: `lib/permissions.ts` 100%, `lib/auth.ts` 100% (tr
 
 | Risco | Mitigação |
 |---|---|
-| Backend não implementa `/api/usuario/me` em tempo | Degradar: frontend mostra "Carregando..." e campos limitados (sem nome). Não é a arquitetura final — é gap. |
+| Backend não implementa `/api/usuarios/me` em tempo | Degradar: frontend mostra "Carregando..." e campos limitados (sem nome). Não é a arquitetura final — é gap. |
 | `SameSite=Lax` em redirect OAuth2 cross-site | Backend já configura `SameSite=Lax` para cookie de sessão (necessário no callback). Refresh cookie idem. Nginx mantém tudo na mesma origem em prod, eliminando cross-site. |
 | XSS injeta script | Token em memória → não há onde ler. CSP estrito (apenas `'self'`, `'unsafe-inline'` para styles, scripts none) restringe injeção. Em produção, habilitar Trusted Types se o navegador suportar. |
 | Token perdido depois de refresh concorrente | Lock via `refreshPromise` compartilhada em `lib/api.ts`; equipe de teste E2E cobre rajada de 401. |
