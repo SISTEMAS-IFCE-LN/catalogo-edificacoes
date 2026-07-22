@@ -3,7 +3,7 @@ target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
-catalogo-edificacoes-plan/
+.opencode/
 
 ### STS ###
 .apt_generated
