@@ -1,5 +1,6 @@
 package br.edu.ifce.security.model.application.service
 
+import br.edu.ifce.common.domain.UltimoAdminException
 import br.edu.ifce.security.model.domain.Perfil
 import br.edu.ifce.security.model.domain.Usuario
 import br.edu.ifce.security.model.repository.UsuarioRepository
@@ -16,8 +17,6 @@ import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
-import org.springframework.http.HttpStatus
-import org.springframework.web.server.ResponseStatusException
 import java.util.*
 
 @ExtendWith(MockitoExtension::class)
@@ -43,27 +42,27 @@ class UsuarioServiceTest {
     }
 
     @Test
-    fun `deve lancar 404 quando usuario nao existe ao atualizar perfis`() {
+    fun `deve lancar NoSuchElementException quando usuario nao existe ao atualizar perfis`() {
         `when`(repository.findById(99L)).thenReturn(Optional.empty())
 
-        val ex = assertThrows(ResponseStatusException::class.java) {
+        val ex = assertThrows(NoSuchElementException::class.java) {
             service.atualizarPerfis(99L, setOf(Perfil.ROLE_COLABORADOR))
         }
-        assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
+        assertEquals("Usuário não encontrado", ex.message)
     }
 
     @Test
-    fun `deve lancar 409 ao tentar remover ROLE_ADMINISTRADOR do ultimo admin`() {
+    fun `deve lancar UltimoAdminException ao tentar remover ROLE_ADMINISTRADOR do ultimo admin`() {
         val admin = Usuario(id = 1, email = "admin@ifce.edu.br", nome = "Admin").apply {
             perfis = mutableSetOf(Perfil.ROLE_ADMINISTRADOR, Perfil.ROLE_COLABORADOR)
         }
         `when`(repository.findById(1L)).thenReturn(Optional.of(admin))
         `when`(repository.countByAtivoTrueAndPerfisContains(Perfil.ROLE_ADMINISTRADOR)).thenReturn(1)
 
-        val ex = assertThrows(ResponseStatusException::class.java) {
+        val ex = assertThrows(UltimoAdminException::class.java) {
             service.atualizarPerfis(1L, setOf(Perfil.ROLE_COLABORADOR))
         }
-        assertEquals(HttpStatus.CONFLICT, ex.statusCode)
+        assertEquals("Ação negada: Não é possível remover ou desativar o último Administrador do sistema.", ex.message)
     }
 
     @Test
@@ -86,13 +85,13 @@ class UsuarioServiceTest {
         `when`(repository.findById(1L)).thenReturn(Optional.of(usuario))
         `when`(repository.save(usuario)).thenReturn(usuario)
 
-        service.desativarUsuario(1L)
+        service.desativar(1L)
 
         assertEquals(false, usuario.ativo)
     }
 
     @Test
-    fun `deve lancar 409 ao desativar o ultimo administrador`() {
+    fun `deve lancar UltimoAdminException ao desativar o ultimo administrador`() {
         val admin = Usuario(id = 1, email = "admin@ifce.edu.br", nome = "Admin").apply {
             perfis = mutableSetOf(Perfil.ROLE_ADMINISTRADOR, Perfil.ROLE_COLABORADOR)
             ativo = true
@@ -100,10 +99,10 @@ class UsuarioServiceTest {
         `when`(repository.findById(1L)).thenReturn(Optional.of(admin))
         `when`(repository.countByAtivoTrueAndPerfisContains(Perfil.ROLE_ADMINISTRADOR)).thenReturn(1)
 
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.desativarUsuario(1L)
+        val ex = assertThrows(UltimoAdminException::class.java) {
+            service.desativar(1L)
         }
-        assertEquals(HttpStatus.CONFLICT, ex.statusCode)
+        assertEquals("Ação negada: Não é possível remover ou desativar o último Administrador do sistema.", ex.message)
     }
 
     @Test
@@ -112,19 +111,19 @@ class UsuarioServiceTest {
         `when`(repository.findById(1L)).thenReturn(Optional.of(usuario))
         `when`(repository.save(usuario)).thenReturn(usuario)
 
-        service.ativarUsuario(1L)
+        service.ativar(1L)
 
         assertEquals(true, usuario.ativo)
     }
 
     @Test
-    fun `deve lancar 404 quando usuario nao existe ao ativar`() {
+    fun `deve lancar NoSuchElementException quando usuario nao existe ao ativar`() {
         `when`(repository.findById(99L)).thenReturn(Optional.empty())
 
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.ativarUsuario(99L)
+        val ex = assertThrows(NoSuchElementException::class.java) {
+            service.ativar(99L)
         }
-        assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
+        assertEquals("Usuário não encontrado", ex.message)
     }
 
     @Test
@@ -139,7 +138,7 @@ class UsuarioServiceTest {
         val page: Page<Usuario> = PageImpl(listOf(u1, u2), pageable, 2)
         `when`(repository.findAll(pageable)).thenReturn(page)
 
-        val result = service.listarUsuarios(pageable)
+        val result = service.listar(pageable)
 
         assertEquals(2, result.usuarios.size)
         assertEquals("user1@ifce.edu.br", result.usuarios[0].email)
@@ -158,7 +157,7 @@ class UsuarioServiceTest {
         val page: Page<Usuario> = PageImpl(emptyList(), PageRequest.of(0, 100), 0)
         `when`(repository.findAll(any(Pageable::class.java))).thenReturn(page)
 
-        service.listarUsuarios(pageable)
+        service.listar(pageable)
 
         val captor = ArgumentCaptor.forClass(Pageable::class.java)
         org.mockito.Mockito.verify(repository).findAll(captor.capture())
@@ -167,13 +166,13 @@ class UsuarioServiceTest {
     }
 
     @Test
-    fun `deve obter usuario por email com sucesso`() {
+    fun `deve obter usuario por id com sucesso`() {
         val usuario = Usuario(id = 1, email = "user@ifce.edu.br", nome = "User", ativo = true).apply {
             perfis = mutableSetOf(Perfil.ROLE_COLABORADOR, Perfil.ROLE_VALIDADOR)
         }
-        `when`(repository.findByEmail("user@ifce.edu.br")).thenReturn(usuario)
+        `when`(repository.findById(1L)).thenReturn(Optional.of(usuario))
 
-        val result = service.obterUsuarioPorEmail("user@ifce.edu.br")
+        val result = service.obterPorId(1L)
 
         assertEquals(1L, result.id)
         assertEquals("user@ifce.edu.br", result.email)
@@ -186,13 +185,42 @@ class UsuarioServiceTest {
     }
 
     @Test
-    fun `deve lancar 404 quando email nao existe`() {
+    fun `deve lancar NoSuchElementException quando id nao existe`() {
+        `when`(repository.findById(99L)).thenReturn(Optional.empty())
+
+        val ex = assertThrows(NoSuchElementException::class.java) {
+            service.obterPorId(99L)
+        }
+        assertEquals("Usuário não encontrado", ex.message)
+    }
+
+    @Test
+    fun `deve obter usuario por email com sucesso`() {
+        val usuario = Usuario(id = 1, email = "user@ifce.edu.br", nome = "User", ativo = true).apply {
+            perfis = mutableSetOf(Perfil.ROLE_COLABORADOR, Perfil.ROLE_VALIDADOR)
+        }
+        `when`(repository.findByEmail("user@ifce.edu.br")).thenReturn(usuario)
+
+        val result = service.obterPorEmail("user@ifce.edu.br")
+
+        assertEquals(1L, result.id)
+        assertEquals("user@ifce.edu.br", result.email)
+        assertEquals("User", result.nome)
+        assertTrue(result.ativo)
+        assertNotNull(result.criadoEm)
+        assertEquals(2, result.perfis.size)
+        assertTrue(result.perfis.contains(Perfil.ROLE_COLABORADOR))
+        assertTrue(result.perfis.contains(Perfil.ROLE_VALIDADOR))
+    }
+
+    @Test
+    fun `deve lancar NoSuchElementException quando email nao existe`() {
         `when`(repository.findByEmail("inexistente@ifce.edu.br")).thenReturn(null)
 
-        val ex = assertThrows(ResponseStatusException::class.java) {
-            service.obterUsuarioPorEmail("inexistente@ifce.edu.br")
+        val ex = assertThrows(NoSuchElementException::class.java) {
+            service.obterPorEmail("inexistente@ifce.edu.br")
         }
-        assertEquals(HttpStatus.NOT_FOUND, ex.statusCode)
+        assertEquals("Usuário não encontrado", ex.message)
     }
 
     @Test
@@ -204,7 +232,7 @@ class UsuarioServiceTest {
         val page: Page<Usuario> = PageImpl(listOf(u1), pageable, 1)
         `when`(repository.findByNomeContainingIgnoreCase("joao", pageable)).thenReturn(page)
 
-        val result = service.listarUsuariosPorNome("joao", pageable)
+        val result = service.listarPorNome("joao", pageable)
 
         assertEquals(1, result.usuarios.size)
         assertEquals("João Silva", result.usuarios[0].nome)
@@ -218,7 +246,7 @@ class UsuarioServiceTest {
         val page: Page<Usuario> = PageImpl(emptyList(), pageable, 0)
         `when`(repository.findByNomeContainingIgnoreCase("xyz", pageable)).thenReturn(page)
 
-        val result = service.listarUsuariosPorNome("xyz", pageable)
+        val result = service.listarPorNome("xyz", pageable)
 
         assertTrue(result.usuarios.isEmpty())
         assertEquals(0L, result.dadosPaginacao.totalElements)

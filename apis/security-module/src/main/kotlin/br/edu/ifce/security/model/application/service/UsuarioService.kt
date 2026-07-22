@@ -2,15 +2,14 @@ package br.edu.ifce.security.model.application.service
 
 import br.edu.ifce.security.model.domain.Perfil
 import br.edu.ifce.security.model.application.interfaces.IUsuarioService
+import br.edu.ifce.common.domain.UltimoAdminException
 import br.edu.ifce.security.model.dto.UsuarioRes
 import br.edu.ifce.security.model.dto.UsuariosPaginadosRes
 import br.edu.ifce.security.model.repository.UsuarioRepository
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
-import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import org.springframework.web.server.ResponseStatusException
 import kotlin.math.min
 
 @Service
@@ -19,7 +18,7 @@ class UsuarioService(private val repository: UsuarioRepository) : IUsuarioServic
     @Transactional
     override fun atualizarPerfis(id: Long, novosPerfis: Set<Perfil>) {
         val usuario = repository.findById(id)
-            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado") }
+            .orElseThrow { NoSuchElementException("Usuário não encontrado") }
 
         if (usuario.perfis.contains(Perfil.ROLE_ADMINISTRADOR) && !novosPerfis.contains(Perfil.ROLE_ADMINISTRADOR))
             verificarExclusaoAdm()
@@ -32,9 +31,9 @@ class UsuarioService(private val repository: UsuarioRepository) : IUsuarioServic
     }
 
     @Transactional
-    override fun desativarUsuario(id: Long) {
+    override fun desativar(id: Long) {
         val usuario = repository.findById(id)
-            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado") }
+            .orElseThrow { NoSuchElementException("Usuário não encontrado") }
 
         if (usuario.perfis.contains(Perfil.ROLE_ADMINISTRADOR)) verificarExclusaoAdm()
 
@@ -43,29 +42,36 @@ class UsuarioService(private val repository: UsuarioRepository) : IUsuarioServic
     }
 
     @Transactional
-    override fun ativarUsuario(id: Long) {
+    override fun ativar(id: Long) {
         val usuario = repository.findById(id)
-            .orElseThrow { ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado") }
+            .orElseThrow { NoSuchElementException("Usuário não encontrado") }
 
         usuario.ativo = true
         repository.save(usuario)
     }
 
     @Transactional(readOnly = true)
-    override fun listarUsuarios(pageable: Pageable): UsuariosPaginadosRes {
+    override fun listar(pageable: Pageable): UsuariosPaginadosRes {
         val page = repository.findAll(limitarPageable(pageable))
         return UsuariosPaginadosRes.from(page)
     }
 
     @Transactional(readOnly = true)
-    override fun obterUsuarioPorEmail(email: String): UsuarioRes {
-        val usuario = repository.findByEmail(email)
-            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Usuário não encontrado")
+    override fun obterPorId(id: Long): UsuarioRes {
+        val usuario = repository.findById(id)
+            .orElseThrow { NoSuchElementException("Usuário não encontrado") }
         return UsuarioRes.from(usuario)
     }
 
     @Transactional(readOnly = true)
-    override fun listarUsuariosPorNome(nome: String, pageable: Pageable): UsuariosPaginadosRes {
+    override fun obterPorEmail(email: String): UsuarioRes {
+        val usuario = repository.findByEmail(email)
+            ?: throw NoSuchElementException("Usuário não encontrado")
+        return UsuarioRes.from(usuario)
+    }
+
+    @Transactional(readOnly = true)
+    override fun listarPorNome(nome: String, pageable: Pageable): UsuariosPaginadosRes {
         val page = repository.findByNomeContainingIgnoreCase(nome, limitarPageable(pageable))
         return UsuariosPaginadosRes.from(page)
     }
@@ -73,16 +79,13 @@ class UsuarioService(private val repository: UsuarioRepository) : IUsuarioServic
     private fun verificarExclusaoAdm() {
         val totalAdmins = repository.countByAtivoTrueAndPerfisContains(Perfil.ROLE_ADMINISTRADOR)
         if (totalAdmins <= 1)
-            throw ResponseStatusException(
-                HttpStatus.CONFLICT,
-                "Ação negada: Não é possível remover/desativar o último Administrador do sistema."
+            throw UltimoAdminException(
+                "Ação negada: Não é possível remover ou desativar o último Administrador do sistema."
             )
     }
 
     private fun limitarPageable(pageable: Pageable): Pageable {
-        if (pageable.isUnpaged) {
-            return PageRequest.of(0, PAGE_SIZE_MAX)
-        }
+        if (pageable.isUnpaged) return PageRequest.of(0, PAGE_SIZE_MAX)
         return PageRequest.of(pageable.pageNumber, min(pageable.pageSize, PAGE_SIZE_MAX), pageable.sort)
     }
 

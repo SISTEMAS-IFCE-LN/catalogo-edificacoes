@@ -115,6 +115,10 @@ class SecurityConfig(
                     "${AMBIENTES_VALIDACAO_PATH}/**",
                     Perfil.ROLE_VALIDADOR.name
                 )
+                auth.requestMatchers(
+                    HttpMethod.GET,
+                    "${USUARIOS_PATH}/me"
+                ).authenticated()
                 auth.customRequestMatchers(
                     listOf(HttpMethod.GET, HttpMethod.PATCH),
                     "${USUARIOS_PATH}/**",
