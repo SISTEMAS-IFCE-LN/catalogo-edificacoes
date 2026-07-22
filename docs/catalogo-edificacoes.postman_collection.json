@@ -1164,6 +1164,33 @@
           "response": []
         },
         {
+          "name": "obterUsuarioAtual",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "eyJhbGciOiJSUzI1NiJ9.eyJpc3MiOiJjYXRhbG9nby1lZGlmaWNhY29lcy1iYWNrZW5kIiwic3ViIjoiMSIsImV4cCI6MTc4NDc0OTkxMiwiaWF0IjoxNzg0NzQ5MDEyLCJqdGkiOiJiODU4MGQxOS00M2E4LTRlYWItOWM5MS03Y2Y1ZWUzNzVkY2YiLCJyb2xlcyI6WyJST0xFX0NPTEFCT1JBRE9SIiwiUk9MRV9BRE1JTklTVFJBRE9SIl19.C08lbhQlzzNb6YyaZTbupUFDY28cvr1oiuNHrxB70aY5jh6dhX6lhWzxeROnxddMczxGTTr7AcDd0bO5BzTzU1GK7tCkdYGKi2xayvD066QMMhGkTiON-062NYOTQaL_zx2xbq8KNPAs_EqiQncV7u5oXm4mqjZNF3bTRUQ6sPr1kYIByG5YVjEyr47YYfB7W0x623PFixeFY-ScNMLuNxK4jlT0uVUCx9KtcaHWbcRZSkj8QN0qp7vhST_NQWwH0pASfMHn0M5UYDO65lx_WT281-_oFQ5jwE_U69o0NPzZkm092zdk74U_AV05f5hjxwNK7B_r0JxtuF1uEf34zAUds0P-FzQ-JwPN0GiG7YYMPyxqGEuLHBRm8HFAOkndRnGPiho1z-EmUKQla8dmrs0B_OCQgGLNOkDk1EHTqkY0TXTfvA3Kmq-ypxCYvop5O2i46hlaNqKNJo6NQH91X9Xx7ryygosZ9Ua8Pb8Y8Eu9ep79MK55M1awEHY5FCCKwpDmlv1ZIa2XfuIW3gZH165FkdO1fSEaKQY8GKVD0hT1eewOKwgnqZVI93ZxbOOws-DJu8UnTCWCnW1dWa8dZ6c1q4q3U1A2WzWAaUL0rpXAj5HAl5bT9Ii8Ueielgq-HdRwH-Vx9tvM9sYspVKhs6UwIi1rmU6TFN7s1QynSYU",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}{{USERS_PATH}}/me",
+              "host": [
+                "{{BASE_URL}}{{USERS_PATH}}"
+              ],
+              "path": [
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
           "name": "obterUsuarioPorEmail",
           "request": {
             "auth": {
