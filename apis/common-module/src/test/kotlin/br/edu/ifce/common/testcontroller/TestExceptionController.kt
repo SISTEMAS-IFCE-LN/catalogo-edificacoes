@@ -1,12 +1,12 @@
-package br.edu.ifce.ambientes_internos.testcontroller
+package br.edu.ifce.common.testcontroller
 
 import jakarta.validation.Valid
 import jakarta.validation.constraints.NotBlank
-import org.springframework.security.access.AccessDeniedException
-import org.springframework.security.authorization.AuthorizationDeniedException
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.security.access.AccessDeniedException
+import org.springframework.security.authorization.AuthorizationDeniedException
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -28,12 +28,12 @@ class TestExceptionController {
 
     @GetMapping("/illegal-argument")
     fun illegalArgument() {
-        throw IllegalArgumentException("Já existe um ambiente com esse nome nessa localização")
+        throw IllegalArgumentException("Argumento inválido de teste")
     }
 
     @GetMapping("/no-such-element")
     fun noSuchElement() {
-        throw NoSuchElementException("Ambiente não encontrado")
+        throw NoSuchElementException("Recurso não encontrado")
     }
 
     @GetMapping("/response-status-404")

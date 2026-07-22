@@ -1,7 +1,7 @@
-package br.edu.ifce.ambientes_internos.integracao
+package br.edu.ifce.common.integracao
 
-import br.edu.ifce.ambientes_internos.TestApplication
-import br.edu.ifce.ambientes_internos.TestSecurityConfig
+import br.edu.ifce.common.TestApplication
+import br.edu.ifce.common.TestSecurityConfig
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -36,7 +36,7 @@ class GlobalExceptionHandlerIntegrationTest {
         mockMvc.perform(get("/test/excecoes/illegal-argument"))
             .andExpect(status().isBadRequest)
             .andExpect(jsonPath("$.status").value(400))
-            .andExpect(jsonPath("$.mensagem").value("Já existe um ambiente com esse nome nessa localização"))
+            .andExpect(jsonPath("$.mensagem").value("Argumento inválido de teste"))
             .andExpect(jsonPath("$.dataHora").isNotEmpty)
     }
 
@@ -47,7 +47,7 @@ class GlobalExceptionHandlerIntegrationTest {
         mockMvc.perform(get("/test/excecoes/no-such-element"))
             .andExpect(status().isNotFound)
             .andExpect(jsonPath("$.status").value(404))
-            .andExpect(jsonPath("$.mensagem").value("Ambiente não encontrado"))
+            .andExpect(jsonPath("$.mensagem").value("Recurso não encontrado"))
             .andExpect(jsonPath("$.dataHora").isNotEmpty)
     }
 
