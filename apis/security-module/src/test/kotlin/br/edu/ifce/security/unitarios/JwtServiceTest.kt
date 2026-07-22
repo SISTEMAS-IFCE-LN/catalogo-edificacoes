@@ -1,15 +1,22 @@
-package br.edu.ifce.security.model.application.service
+package br.edu.ifce.security.unitarios
 
 import br.edu.ifce.security.config.properties.JwtProperties
-import org.junit.jupiter.api.Assertions.*
+import br.edu.ifce.security.model.application.service.JwtService
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentCaptor
+import org.mockito.ArgumentMatchers
 import org.mockito.Mock
+import org.mockito.Mockito
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
-import org.springframework.security.oauth2.jwt.*
+import org.springframework.security.oauth2.jwt.Jwt
+import org.springframework.security.oauth2.jwt.JwtClaimsSet
+import org.springframework.security.oauth2.jwt.JwtEncoder
+import org.springframework.security.oauth2.jwt.JwtEncoderParameters
 
 @ExtendWith(MockitoExtension::class)
 class JwtServiceTest {
@@ -40,14 +47,14 @@ class JwtServiceTest {
 
     @Test
     fun `gerarAccessToken codifica claims com subject e roles`() {
-        `when`(jwtEncoder.encode(org.mockito.ArgumentMatchers.any(JwtEncoderParameters::class.java)))
+        `when`(jwtEncoder.encode(ArgumentMatchers.any(JwtEncoderParameters::class.java)))
             .thenReturn(jwtStub(tokenValue = "encoded"))
 
         val token = jwtService.gerarAccessToken(7L, listOf("ROLE_X", "ROLE_Y"))
 
         assertEquals("encoded", token)
         val captor = ArgumentCaptor.forClass(JwtEncoderParameters::class.java)
-        org.mockito.Mockito.verify(jwtEncoder).encode(captor.capture())
+        Mockito.verify(jwtEncoder).encode(captor.capture())
         val claims: JwtClaimsSet = captor.value.claims
         assertEquals("7", claims.subject)
         assertEquals(listOf("ROLE_X", "ROLE_Y"), claims.getClaim("roles"))

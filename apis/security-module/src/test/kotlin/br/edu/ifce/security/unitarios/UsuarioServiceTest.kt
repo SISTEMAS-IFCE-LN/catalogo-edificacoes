@@ -1,6 +1,7 @@
-package br.edu.ifce.security.model.application.service
+package br.edu.ifce.security.unitarios
 
 import br.edu.ifce.common.domain.UltimoAdminException
+import br.edu.ifce.security.model.application.service.UsuarioService
 import br.edu.ifce.security.model.domain.Perfil
 import br.edu.ifce.security.model.domain.Usuario
 import br.edu.ifce.security.model.repository.UsuarioRepository
@@ -11,6 +12,7 @@ import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
 import org.mockito.InjectMocks
 import org.mockito.Mock
+import org.mockito.Mockito
 import org.mockito.Mockito.`when`
 import org.mockito.junit.jupiter.MockitoExtension
 import org.springframework.data.domain.Page
@@ -160,7 +162,7 @@ class UsuarioServiceTest {
         service.listar(pageable)
 
         val captor = ArgumentCaptor.forClass(Pageable::class.java)
-        org.mockito.Mockito.verify(repository).findAll(captor.capture())
+        Mockito.verify(repository).findAll(captor.capture())
         assertEquals(100, captor.value.pageSize)
         assertEquals(0, captor.value.pageNumber)
     }

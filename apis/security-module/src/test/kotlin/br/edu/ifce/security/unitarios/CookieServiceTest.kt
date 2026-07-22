@@ -1,6 +1,7 @@
-package br.edu.ifce.security.model.application.service
+package br.edu.ifce.security.unitarios
 
 import br.edu.ifce.security.config.properties.JwtProperties
+import br.edu.ifce.security.model.application.service.CookieService
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith

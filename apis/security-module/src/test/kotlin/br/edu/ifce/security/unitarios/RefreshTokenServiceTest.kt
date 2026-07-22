@@ -1,6 +1,7 @@
-package br.edu.ifce.security.model.application.service
+package br.edu.ifce.security.unitarios
 
 import br.edu.ifce.security.config.properties.JwtProperties
+import br.edu.ifce.security.model.application.service.RefreshTokenService
 import br.edu.ifce.security.model.domain.RefreshToken
 import br.edu.ifce.security.model.domain.Usuario
 import br.edu.ifce.security.model.repository.RefreshTokenRepository
