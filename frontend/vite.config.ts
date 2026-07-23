@@ -3,12 +3,13 @@ import {defineConfig} from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import {fileURLToPath} from "node:url"
 import path from "node:path"
+import tailwindcss from "@tailwindcss/vite"
 
 // Aponta para o diretório raiz do projeto
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
-    plugins: [react()],
+    plugins: [react(), tailwindcss()],
     resolve: {
         alias: {
             // atribui ao diretório 'src' o alias '@', permitindo importar arquivos de forma mais simples
