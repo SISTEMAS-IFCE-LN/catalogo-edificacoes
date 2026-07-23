@@ -14,7 +14,7 @@ Este documento descreve a arquitetura do frontend do sistema Catálogo de Edific
 | Dados do `Usuario` | `GET /api/usuarios/me` (implementado no backend) | JWT não expõe `nome`/`ativo`/`criadoEm`; endpoint necessário para popular `User`. Frontend não decodifica o JWT — apenas o transporta em `Authorization` |
 | Renderização | **CSR puro (SPA)** | Adequado ao JWT entregue em fragmento de URL (`#token=...`, inacessível ao servidor) e aos UCs interativos (multistep, tabelas, debounce)                   |
 | Framework | **Vite + React Router v6** | Mínimo necessário para CSR; hot reload rápido; build estático simples; guarda de rotas via `<RequireAuth>`/`<RequireRole>`                                  |
-| Estilização | **Tailwind CSS 3 + shadcn/ui** | Sem lock-in, acessível (Radix), customizável, alinhado ao padrão declarativo de permissões                                                                  |
+| Estilização | **Tailwind CSS 4 + shadcn/ui** | Plugin Vite nativo (`@tailwindcss/vite`), tema via `@theme` em CSS, sem `tailwind.config.ts`/`postcss.config.js` obrigatórios; acessível (Radix), customizável, alinhado ao padrão declarativo de permissões |
 | Estado servidor/UI | TanStack Query v5 (server) + Zustand (UI leve) + Context (auth) | Separação clara; cache inteligente; auth isolado                                                                                                            |
 | HTTP Client | **Axios** com interceptores (auth, CSRF, refresh) | Tratamento central de 401, fila de refresh, anexação de `X-XSRF-TOKEN`                                                                                      |
 | Formulários | React Hook Form + Zod | Schemas compartilhados com backend; validação runtime + type inference                                                                                      |
@@ -156,7 +156,7 @@ Para popular `User` no `AuthContext`, o **backend implementa** `GET /api/usuario
 | Estado servidor | TanStack Query | 5+ | Cache, refetch inteligente, optimistic updates, paginação |
 | Estado UI | Zustand | 4+ | Drawer, filtros transitórios — sem boilerplate |
 | Auth state | React Context | — | Simples, integrado ao React, suficiente para escopo |
-| Estilização | Tailwind CSS | 3+ | Utility-first, tree-shaking, tokens em `globals.css` |
+| Estilização | Tailwind CSS | 4+ | Utility-first, plugin Vite nativo (`@tailwindcss/vite`), tema via `@theme` em `globals.css`, tree-shaking automático |
 | UI Components | shadcn/ui (inclui `Drawer`, `Sheet`, `Avatar`, `Dialog`, `DropdownMenu`, `Accordion`) | — | Acessível (Base UI/Radix embutidos), sem lock-in, copiado para o repo. `Drawer` substitui `vaul` (deprecated) |
 | Formulários | React Hook Form | 7+ | Performance, integração com Zod e shadcn |
 | Validação | Zod | 3+ | Type inference, validação runtime, schemas próximos do backend |
@@ -264,9 +264,7 @@ frontend/
 │   └── frontend.conf                 # config de referência (ver §10)
 ├── index.html
 ├── vite.config.ts
-├── tailwind.config.ts
 ├── tsconfig.json
-├── postcss.config.js
 └── package.json
 ```
 
@@ -1129,7 +1127,7 @@ A aplicação deve ser plenamente utilizável em desktops e celulares. Esta seç
   body { position: relative; }   /* exigido pelo Drawer (Base UI) em iOS Safari */
   ```
 
-- `tailwind.config.ts`: sem mudanças — defaults cobrem os breakpoints.
+- Tema Tailwind v4: configurado via `@theme { ... }` em `src/styles/globals.css`. Defaults cobrem os breakpoints (`sm 640`, `md 768`, `lg 1024`); sem `tailwind.config.ts`/`postcss.config.js`.
 - `shadcn` CLI: instalar `drawer`, `sheet`, `avatar`, `dropdown-menu`, `accordion` (todos parte do catálogo oficial).
 
 ### 15.3. Componentes `Drawer` / `Sheet` do shadcn
@@ -1366,7 +1364,7 @@ Cobertura mínima recomendada: `lib/permissions.ts` 100%, `lib/auth.ts` 100% (tr
 
 ## 18. Tarefas de implementação (enfileiramento sugerido)
 
-1. **Scaffold Vite + React + TS + Tailwind + shadcn/ui**; configurar `vite-tsconfig-paths` para alias `@/`. Instalar via shadcn CLI: `button input dialog dropdown-menu avatar sheet drawer accordion table badge card form sonner`.
+1. **Scaffold Vite + React + TS + Tailwind + shadcn/ui**; configurar `vite-tsconfig-paths` para alias `@/`. Tailwind v4 via plugin `@tailwindcss/vite` em `vite.config.ts` (não PostCSS); `@import "tailwindcss"` em `globals.css`. Instalar via shadcn CLI: `button input dialog dropdown-menu avatar sheet drawer accordion table badge card form sonner`.
 2. **Backend**: `GET /api/usuarios/me` em `UsuarioController` já implementado, retornando `UsuarioRes` a partir do `@AuthenticationPrincipal jwt: Jwt` (`jwt.subject` = `Usuario.id`). Authority: qualquer autenticado. O `SecurityConfig.apiFilterChain` abre `GET /api/usuarios/me` para `authenticated()` antes da regra `ROLE_ADMINISTRADOR` para `/api/usuarios/**`.
 3. **`lib/auth.ts` + `lib/api.ts`**: variável de módulo (apenas `set/get/clear` do token string), interceptores de request (auth + CSRF) e response (refresh 401).
 4. **`lib/csrf.ts`**: leitura de cookie XSRF-TOKEN + `ensureCsrfToken()`.
