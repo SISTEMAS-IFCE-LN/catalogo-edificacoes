@@ -551,7 +551,14 @@ let refreshPromise: Promise<string> | null = null
 export async function refreshAccessToken(): Promise<string> {
   if (refreshPromise) return refreshPromise
 
-  refreshPromise = axios.post(`${BACKEND_URL}/auth/refresh`, {}, { withCredentials: true })
+  // Garante que o cookie XSRF-TOKEN existe antes do POST /auth/refresh
+  // (exigido pelo authFilterChain do backend — ver seguranca.md §3)
+  await ensureCsrfToken()
+
+  refreshPromise = axios.post(`${BACKEND_URL}/auth/refresh`, {}, {
+    withCredentials: true,
+    headers: { 'X-XSRF-TOKEN': getCsrfToken() },
+  })
     .then(({ data }) => {
       const newToken: string = data.accessToken
       setMemToken(newToken)
@@ -586,7 +593,7 @@ api.interceptors.response.use(
   },
 )
 
-export function setAccessToken(token: string)  { /* não-exporta daqui; use lib/auth */ }
+export function setAccessToken(token: string | null)  { /* não-exporta daqui; use lib/auth */ }
 export function clearAccessToken()              { /* idem */ }
 ```
 
