@@ -13,7 +13,7 @@ Este documento descreve a arquitetura do frontend do sistema Catálogo de Edific
 | CSRF | Tratado em `/auth/**` via Double Submit Cookie (`XSRF-TOKEN` / `X-XSRF-TOKEN`) | Backend já implementa `CookieCsrfTokenRepository.withHttpOnlyFalse()` em `authFilterChain` (`@Order(2)`)                                                    |
 | Dados do `Usuario` | `GET /api/usuarios/me` (implementado no backend) | JWT não expõe `nome`/`ativo`/`criadoEm`; endpoint necessário para popular `User`. Frontend não decodifica o JWT — apenas o transporta em `Authorization` |
 | Renderização | **CSR puro (SPA)** | Adequado ao JWT entregue em fragmento de URL (`#token=...`, inacessível ao servidor) e aos UCs interativos (multistep, tabelas, debounce)                   |
-| Framework | **Vite + React Router v6** | Mínimo necessário para CSR; hot reload rápido; build estático simples; guarda de rotas via `<RequireAuth>`/`<RequireRole>`                                  |
+| Framework | **Vite + React Router v8** | Mínimo necessário para CSR; hot reload rápido; build estático simples; guarda de rotas via `<RequireAuth>`/`<RequireRole>`                                  |
 | Estilização | **Tailwind CSS 4 + shadcn/ui** | Plugin Vite nativo (`@tailwindcss/vite`), tema via `@theme` em CSS, sem `tailwind.config.ts`/`postcss.config.js` obrigatórios; acessível (Radix), customizável, alinhado ao padrão declarativo de permissões |
 | Estado servidor/UI | TanStack Query v5 (server) + Zustand (UI leve) + Context (auth) | Separação clara; cache inteligente; auth isolado                                                                                                            |
 | HTTP Client | **Axios** com interceptores (auth, CSRF, refresh) | Tratamento central de 401, fila de refresh, anexação de `X-XSRF-TOKEN`                                                                                      |
@@ -150,7 +150,7 @@ Para popular `User` no `AuthContext`, o **backend implementa** `GET /api/usuario
 |---|---|---|---|
 | Build/Dev | Vite | 5+ | Build estático otimizado, hot reload instantâneo, config TS-first |
 | Framework UI | React | 18+ | Ecossistema maduro, alinhado a shadcn/ui |
-| Roteamento | React Router | 6+ (data routers) | Guards via `<RequireAuth>`/`<RequireRole>`, loaders, safe navigation |
+| Roteamento | React Router | 8+ (data routers) | Guards via `<RequireAuth>`/`<RequireRole>`, loaders, safe navigation |
 | Linguagem | TypeScript | 5+ | Type safety para permissões, contracts com backend |
 | HTTP Client | Axios | 1+ | Interceptores (auth, CSRF, refresh 401), retry transparente |
 | Estado servidor | TanStack Query | 5+ | Cache, refetch inteligente, optimistic updates, paginação |
@@ -635,14 +635,14 @@ useEffect(() => {
 
 ---
 
-## 9. Roteamento e guards (React Router v6)
+## 9. Roteamento e guards (React Router v8)
 
 ### 9.1. Guards
 
 ```typescript
 // components/auth/RequireAuth.tsx
 
-import { Navigate, Outlet, useLocation } from 'react-router-dom'
+import { Navigate, Outlet, useLocation } from 'react-router'
 import { useAuth } from './AuthProvider'
 
 export function RequireAuth() {
@@ -660,7 +660,7 @@ export function RequireAuth() {
 ```typescript
 // components/auth/RequireRole.tsx
 
-import { Navigate, Outlet, useLocation } from 'react-router-dom'
+import { Navigate, Outlet, useLocation } from 'react-router'
 import { useAuth } from './AuthProvider'
 import { hasPermission } from '@/lib/permissions'
 import type { Role } from '@/types/user'
@@ -679,7 +679,7 @@ export function RequireRole({ roles }: { roles: Role[] }) {
 
 ```typescript
 // components/auth/PublicOnly.tsx — redireciona autenticados para /home
-import { Navigate, Outlet } from 'react-router-dom'
+import { Navigate, Outlet } from 'react-router'
 import { useAuth } from './AuthProvider'
 
 export function PublicOnly() {
@@ -695,7 +695,7 @@ export function PublicOnly() {
 ```typescript
 // router/index.tsx
 
-import { createBrowserRouter } from 'react-router-dom'
+import { createBrowserRouter } from 'react-router'
 import { RequireAuth } from '@/components/auth/RequireAuth'
 import { RequireRole } from '@/components/auth/RequireRole'
 import { PublicOnly } from '@/components/auth/PublicOnly'
@@ -865,7 +865,7 @@ export function PermissionButton({ requiredRoles, children, ...rest }: Props) {
 ```typescript
 // routes/_layout/protected-layout.tsx
 
-import { Outlet } from 'react-router-dom'
+import { Outlet } from 'react-router'
 import { Header } from '@/components/layout/Header'
 import { ProtectedNavigation } from '@/components/layout/ProtectedNavigation'
 import { Footer } from '@/components/layout/Footer'
@@ -1405,7 +1405,7 @@ Cobertura mínima recomendada: `lib/permissions.ts` 100%, `lib/auth.ts` 100% (tr
 ## 20. Referências
 
 - [Vite](https://vitejs.dev/)
-- [React Router v6](https://reactrouter.com/)
+- [React Router v8](https://reactrouter.com/)
 - [TanStack Query](https://tanstack.com/query/latest)
 - [Zustand](https://docs.pmnd.rs/zustand/getting-started/introduction)
 - [shadcn/ui](https://ui.shadcn.com/)
