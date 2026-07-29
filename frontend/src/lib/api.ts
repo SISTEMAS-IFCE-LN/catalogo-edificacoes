@@ -27,8 +27,7 @@ export function refreshAccessToken(): Promise<string> {
     if (refreshPromise) return refreshPromise
 
     refreshPromise = (async () => {
-        // Garante que o cookie XSRF-TOKEN existe antes do POST /auth/refresh
-        // (exigido pelo authFilterChain do backend — ver docs/seguranca.md §3)
+        // Garante que o token CSRF mascarado está em memória antes do POST /auth/refresh
         await ensureCsrfToken()
         const { data } = await axios.post(
             `${BACKEND_URL}/auth/refresh`,

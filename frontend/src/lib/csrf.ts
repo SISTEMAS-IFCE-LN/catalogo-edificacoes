@@ -2,16 +2,24 @@ import axios from 'axios'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? ''
 
+// Ver docs/seguranca.md §4.2 e docs/arquitetura-frontend.md §3.5.
+let maskedCsrfToken: string | null = null
+
 export function getCsrfToken(): string | null {
-    const match = document.cookie
-        .split('; ')
-        .find((cookie) => cookie.startsWith('XSRF-TOKEN='))
-    return match ? decodeURIComponent(match.split('=')[1]) : null
+    return maskedCsrfToken
 }
 
-// Garante que o token cookie XSRF-TOKEN esteja presente, requisitando-o ao backend
+// Garante que haja um token mascarado em memória. O raw no cookie persiste
+// entre F5 (cookie de sessão), mas o mascarado em memória se perde no reload
+// — por isso ensureCsrfToken() é chamado no boot do AuthProvider e antes de
+// cada POST /auth/*.
 export async function ensureCsrfToken(): Promise<void> {
-    if (!getCsrfToken()) {
-        await axios.get(`${BACKEND_URL}/auth/csrf-token`, { withCredentials: true })
-    }
+    if (maskedCsrfToken) return
+    const { data } = await axios.get(`${BACKEND_URL}/auth/csrf-token`, { withCredentials: true })
+    maskedCsrfToken = data.token
+}
+
+// Limpa o token em memória. Usar após logout para forçar nova aquisição.
+export function clearCsrfToken(): void {
+    maskedCsrfToken = null
 }

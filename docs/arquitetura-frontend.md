@@ -104,21 +104,24 @@ O refresh é orquestrado pelo **interceptor de resposta** do Axios (mais robusto
   2. `POST /auth/refresh` (cookie HttpOnly enviado automaticamente; header `X-XSRF-TOKEN` anexo por interceptor de request — ver §3.5).
   3. Em 200: atualiza accessToken em memória; refaz a requisição original uma única vez; libera o lock.
   4. Em 401/403/qualquer erro: limpa accessToken em memória e despacha evento `auth:logout` (window.dispatchEvent). O `AuthProvider` escuta esse evento e limpa o estado (User = null, isAuthenticated = false), fazendo com que os guards redirecionem para `/login`.
-- Endpoint `/auth/refresh` suporta CSRF: token `XSRF-TOKEN` deve estar disponível em cookie. O frontend obtém-no em `/auth/csrf-token` no callback de login, antes de qualquer POST `/auth/*`.
+- Endpoint `/auth/refresh` suporta CSRF: o frontend obtém o token **mascarado** via `GET /auth/csrf-token` (body) e o mantém em memória; o cookie `XSRF-TOKEN` (raw, `HttpOnly`) é enviado automaticamente pelo navegador, antes de qualquer POST `/auth/*`.
 
-### 3.5. CSRF (Double Submit Cookie)
+### 3.5. CSRF (Double Submit Cookie com mascaramento XOR)
 
 ```
 1. Após login bem-sucedido, frontend chama GET /auth/csrf-token
-   → Set-Cookie: XSRF-TOKEN=<valor> (HttpOnly=false, legível por JS)
-   → Body: { token: "<valor>" }
+   → Set-Cookie: XSRF-TOKEN=<raw> (HttpOnly=true)
+   → Body: { token: "<mascarado>" }
+   → frontend armazena <mascarado> em memória (não em storage)
 
 2. Em todo POST /auth/* (refresh, logout), interceptor Axios:
-   - lê cookie XSRF-TOKEN (document.cookie)
-   - anexa header X-XSRF-TOKEN: <valor>
+   - lê o mascarado de getCsrfToken() (memória)
+   - anexa header X-XSRF-TOKEN: <mascarado>
 ```
 
-O `XSRF-TOKEN` é **não-HttpOnly** deliberadamente (`CookieCsrfTokenRepository.withHttpOnlyFalse()`), para que o JS possa lê-lo. A proteção CSRF aplica-se **apenas** a `/auth/**`; a API (chain 3) continua stateless sem CSRF (JWT vai em `Authorization`, não enviado automaticamente pelo navegador).
+O Spring Security 6.1+ (`XorCsrfTokenRequestHandler`, default no Spring Boot 3.5) aplica mascaramento XOR ao token: o cookie `XSRF-TOKEN` guarda o **raw** e o body de `GET /auth/csrf-token` devolve o **mascarado** (máscara nova a cada chamada, mesmo raw subjacente). O header `X-XSRF-TOKEN` deve carregar o mascarado; o servidor desmascara e compara ao raw do cookie.
+
+O cookie é `HttpOnly=true` (construtor padrão de `CookieCsrfTokenRepository`) porque o JS não precisa lê-lo — o mascarado vem do body. `HttpOnly` elimina exfiltração do raw por XSS (defesa em profundidade, mesmo princípio do access token em memória, §3.1). O cookie é enviado automaticamente pelo navegador (`withCredentials`) e lido pelo servidor; `HttpOnly` não bloqueia nenhuma dessas operações. A proteção CSRF aplica-se **apenas** a `/auth/**`; a API (chain 3) continua stateless sem CSRF (JWT vai em `Authorization`, não enviado automaticamente pelo navegador).
 
 ### 3.6. Logout
 

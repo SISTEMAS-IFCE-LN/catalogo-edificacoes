@@ -9,12 +9,20 @@ const mockApiGet = vi.fn()
 const mockApiPost = vi.fn()
 const mockRefreshAccessToken = vi.fn()
 
+const mockEnsureCsrfToken = vi.fn()
+const mockClearCsrfToken = vi.fn()
+
 vi.mock('@/lib/api', () => ({
-  api: {
-    get: (...args: unknown[]) => mockApiGet(...args),
-    post: (...args: unknown[]) => mockApiPost(...args),
-  },
-  refreshAccessToken: (...args: unknown[]) => mockRefreshAccessToken(...args),
+    api: {
+        get: (...args: unknown[]) => mockApiGet(...args),
+        post: (...args: unknown[]) => mockApiPost(...args),
+    },
+    refreshAccessToken: (...args: unknown[]) => mockRefreshAccessToken(...args),
+}))
+
+vi.mock('@/lib/csrf', () => ({
+    ensureCsrfToken: (...args: unknown[]) => mockEnsureCsrfToken(...args),
+    clearCsrfToken: (...args: unknown[]) => mockClearCsrfToken(...args),
 }))
 
 const mockSetAccessToken = vi.fn()
@@ -45,13 +53,18 @@ async function renderWithFreshProvider(envFakeAuth: string) {
   vi.stubEnv('VITE_FAKE_AUTH', envFakeAuth)
 
   // Re-registra mocks após resetModules (vi.doMock não é hoisted)
-  vi.doMock('@/lib/api', () => ({
-    api: {
-      get: (...args: unknown[]) => mockApiGet(...args),
-      post: (...args: unknown[]) => mockApiPost(...args),
-    },
-    refreshAccessToken: (...args: unknown[]) => mockRefreshAccessToken(...args),
-  }))
+    vi.doMock('@/lib/api', () => ({
+        api: {
+            get: (...args: unknown[]) => mockApiGet(...args),
+            post: (...args: unknown[]) => mockApiPost(...args),
+        },
+        refreshAccessToken: (...args: unknown[]) => mockRefreshAccessToken(...args),
+    }))
+
+    vi.doMock('@/lib/csrf', () => ({
+        ensureCsrfToken: (...args: unknown[]) => mockEnsureCsrfToken(...args),
+        clearCsrfToken: (...args: unknown[]) => mockClearCsrfToken(...args),
+    }))
 
   vi.doMock('@/lib/auth', () => ({
     setAccessToken: (...args: unknown[]) => mockSetAccessToken(...args),

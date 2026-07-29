@@ -3,6 +3,7 @@ import axios from 'axios'
 import MockAdapter from 'axios-mock-adapter'
 import { api, refreshAccessToken } from './api'
 import { getAccessToken, setAccessToken, clearAccessToken } from './auth'
+import { ensureCsrfToken, clearCsrfToken } from './csrf'
 
 let mockApi: MockAdapter
 let mockAxios: MockAdapter
@@ -11,7 +12,7 @@ beforeEach(() => {
     mockApi = new MockAdapter(api, { onNoMatch: 'passthrough' })
     mockAxios = new MockAdapter(axios, { onNoMatch: 'passthrough' })
     clearAccessToken()
-    document.cookie = 'XSRF-TOKEN=; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+    clearCsrfToken()
 })
 
 afterEach(() => {
@@ -43,7 +44,9 @@ describe('interceptor de request', () => {
     })
 
     it('anexa X-XSRF-TOKEN em POST /auth/*', async () => {
-        document.cookie = 'XSRF-TOKEN=abc123'
+        mockAxios.onGet(/\/auth\/csrf-token/).reply(200, { token: 'abc123' })
+        await ensureCsrfToken()
+
         let captured: string | undefined
         mockApi.onPost('/auth/logout').reply((cfg) => {
             captured = cfg.headers?.['X-XSRF-TOKEN']
@@ -54,7 +57,6 @@ describe('interceptor de request', () => {
     })
 
     it('NÃO anexa X-XSRF-TOKEN em GET /api/*', async () => {
-        document.cookie = 'XSRF-TOKEN=abc123'
         let captured: string | undefined
         mockApi.onGet('/api/ambientes').reply((cfg) => {
             captured = cfg.headers?.['X-XSRF-TOKEN']
@@ -68,19 +70,15 @@ describe('interceptor de request', () => {
 describe('interceptor de response - refresh em 401', () => {
     it('em 401 (sem ser /auth/*), chama refresh e refaz original', async () => {
         setAccessToken('expired-jwt')
-        document.cookie = 'XSRF-TOKEN=test-csrf-token'
 
-        // Mock do GET /auth/csrf-token (chamado por ensureCsrfToken dentro de refreshAccessToken)
-        mockAxios.onGet('/auth/csrf-token').reply(200)
+        mockAxios.onGet(/\/auth\/csrf-token/).reply(200, { token: 'test-csrf-token' })
 
-        // 1ª chamada: 401. 2ª chamada (após refresh): 200.
         mockApi
             .onGet('/api/ambientes')
             .replyOnce(401, {})
             .onGet('/api/ambientes')
             .reply(200, { ok: 1 })
 
-        // refreshAccessToken usa axios.post (global), não api.post
         const refreshSpy = vi.spyOn(axios, 'post').mockResolvedValueOnce({
             data: { accessToken: 'new-jwt' },
         } as Awaited<ReturnType<typeof axios.post>>)
@@ -113,7 +111,7 @@ describe('interceptor de response - refresh em 401', () => {
     it('em falha de refresh, limpa token e despacha auth:logout', async () => {
         setAccessToken('expired-jwt')
         mockApi.onGet('/api/ambientes').reply(401, {})
-        mockAxios.onGet('/auth/csrf-token').reply(200)
+        mockAxios.onGet(/\/auth\/csrf-token/).reply(200, { token: 'any' })
         mockAxios.onPost('/auth/refresh').reply(500)
 
         const handler = vi.fn()
@@ -131,10 +129,8 @@ describe('interceptor de response - refresh em 401', () => {
 
 describe('refreshAccessToken - lock síncrono', () => {
     it('chamadas concorrentes resultam em UM único POST /auth/refresh', async () => {
-        document.cookie = 'XSRF-TOKEN=test-csrf-token'
-        mockAxios.onGet('/auth/csrf-token').reply(200)
+        mockAxios.onGet(/\/auth\/csrf-token/).reply(200, { token: 'test-csrf-token' })
 
-        // POST /auth/refresh com atraso para garantir concorrência real
         let postCount = 0
         vi.spyOn(axios, 'post').mockImplementation(async () => {
             postCount++
@@ -157,8 +153,7 @@ describe('refreshAccessToken - lock síncrono', () => {
     })
 
     it('após falha, libera o lock para nova tentativa', async () => {
-        document.cookie = 'XSRF-TOKEN=test-csrf-token'
-        mockAxios.onGet('/auth/csrf-token').reply(200)
+        mockAxios.onGet(/\/auth\/csrf-token/).reply(200, { token: 'test-csrf-token' })
 
         let callCount = 0
         vi.spyOn(axios, 'post').mockImplementation(async () => {

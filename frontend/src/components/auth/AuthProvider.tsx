@@ -12,6 +12,7 @@ import {
     getAccessToken,
     setAccessToken,
 } from '@/lib/auth'
+import {ensureCsrfToken, clearCsrfToken} from '@/lib/csrf'
 import { AuthContext } from './AuthContext'
 import type { AuthContextValue } from './AuthContext'
 
@@ -81,6 +82,7 @@ export function AuthProvider({children}: { children: ReactNode }) {
     useEffect(() => {
         const onLogout = () => {
             clearAccessToken()
+            clearCsrfToken()
             setState({
                 user: null,
                 isAuthenticated: false,
@@ -102,12 +104,14 @@ export function AuthProvider({children}: { children: ReactNode }) {
     const logout = useCallback(async () => {
         if (!FAKE_AUTH) {
             try {
-                await api.post('/auth/logout') // X-XSRF-TOKEN anexado pelo interceptor
+                await ensureCsrfToken()
+                await api.post('/auth/logout')
             } catch (e) {
                 console.warn('Logout backend falhou — limpando estado local', e)
             }
         }
         clearAccessToken()
+        clearCsrfToken()
         setState({
             user: null,
             isAuthenticated: false,

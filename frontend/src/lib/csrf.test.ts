@@ -1,22 +1,56 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { getCsrfToken } from './csrf'
+import { describe, it, expect, afterEach, vi } from 'vitest'
+import axios from 'axios'
+import { getCsrfToken, ensureCsrfToken, clearCsrfToken } from './csrf'
 
-beforeEach(() => {
-    document.cookie = 'XSRF-TOKEN=; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+afterEach(() => {
+    clearCsrfToken()
+    vi.restoreAllMocks()
 })
 
 describe('getCsrfToken', () => {
-    it('lê cookie XSRF-TOKEN quando presente', () => {
-        document.cookie = 'XSRF-TOKEN=abc123'
-        expect(getCsrfToken()).toBe('abc123')
-    })
-
-    it('retorna null quando cookie ausente', () => {
+    it('retorna null antes de ensureCsrfToken', () => {
         expect(getCsrfToken()).toBeNull()
     })
+})
 
-    it('decodifica URL-encoded', () => {
-        document.cookie = 'XSRF-TOKEN=hello%20world'
-        expect(getCsrfToken()).toBe('hello world')
+describe('ensureCsrfToken', () => {
+    it('faz GET /auth/csrf-token e armazena token mascarado do body', async () => {
+        const spy = vi.spyOn(axios, 'get').mockResolvedValueOnce({
+            data: { token: 'mascarado-abc' },
+        } as Awaited<ReturnType<typeof axios.get>>)
+
+        await ensureCsrfToken()
+
+        expect(spy).toHaveBeenCalledWith(
+            expect.stringContaining('/auth/csrf-token'),
+            { withCredentials: true },
+        )
+        expect(getCsrfToken()).toBe('mascarado-abc')
+    })
+
+    it('NÃO refaz GET se token já está em memória (idempotente)', async () => {
+        const spy = vi.spyOn(axios, 'get').mockResolvedValueOnce({
+            data: { token: 'mascarado-1' },
+        } as Awaited<ReturnType<typeof axios.get>>)
+
+        await ensureCsrfToken()
+        await ensureCsrfToken()
+
+        expect(spy).toHaveBeenCalledTimes(1)
+        expect(getCsrfToken()).toBe('mascarado-1')
+    })
+})
+
+describe('clearCsrfToken', () => {
+    it('limpa o token em memória', async () => {
+        vi.spyOn(axios, 'get').mockResolvedValueOnce({
+            data: { token: 'mascarado-x' },
+        } as Awaited<ReturnType<typeof axios.get>>)
+
+        await ensureCsrfToken()
+        expect(getCsrfToken()).toBe('mascarado-x')
+
+        clearCsrfToken()
+        expect(getCsrfToken()).toBeNull()
     })
 })
