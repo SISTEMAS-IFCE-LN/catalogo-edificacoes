@@ -85,9 +85,7 @@ class SecurityConfig(
     fun authFilterChain(http: HttpSecurity): SecurityFilterChain {
         http
             .securityMatcher(authMatcher)
-            .csrf { csrf ->
-                csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-            }
+            .csrf { csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository()) }
             .cors { it.configurationSource(corsConfigurationSource()) }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) }
             .authorizeHttpRequests { auth ->

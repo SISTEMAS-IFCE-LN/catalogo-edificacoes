@@ -46,9 +46,7 @@ class TestSecurityConfig {
     fun authFilterChain(http: HttpSecurity): SecurityFilterChain {
         http
             .securityMatcher("/auth/**")
-            .csrf { csrf ->
-                csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-            }
+            .csrf { csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository()) }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) }
             .authorizeHttpRequests { auth ->
                 auth.anyRequest().permitAll()
