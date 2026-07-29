@@ -1,4 +1,6 @@
-import axios from "axios"
+import axios from 'axios'
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? ''
 
 export function getCsrfToken(): string | null {
     const match = document.cookie
@@ -10,6 +12,6 @@ export function getCsrfToken(): string | null {
 // Garante que o token cookie XSRF-TOKEN esteja presente, requisitando-o ao backend
 export async function ensureCsrfToken(): Promise<void> {
     if (!getCsrfToken()) {
-        await axios.get('/auth/csrf-token', { withCredentials: true })
+        await axios.get(`${BACKEND_URL}/auth/csrf-token`, { withCredentials: true })
     }
 }

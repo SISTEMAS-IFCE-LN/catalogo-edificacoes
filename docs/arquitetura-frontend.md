@@ -103,7 +103,7 @@ O refresh é orquestrado pelo **interceptor de resposta** do Axios (mais robusto
   1. Adquire um lock (Promise compartilhada) para evitar refresh concorrente.
   2. `POST /auth/refresh` (cookie HttpOnly enviado automaticamente; header `X-XSRF-TOKEN` anexo por interceptor de request — ver §3.5).
   3. Em 200: atualiza accessToken em memória; refaz a requisição original uma única vez; libera o lock.
-  4. Em 401/403/qualquer erro: chama `auth.logout()`; redireciona `/login`.
+  4. Em 401/403/qualquer erro: limpa accessToken em memória e despacha evento `auth:logout` (window.dispatchEvent). O `AuthProvider` escuta esse evento e limpa o estado (User = null, isAuthenticated = false), fazendo com que os guards redirecionem para `/login`.
 - Endpoint `/auth/refresh` suporta CSRF: token `XSRF-TOKEN` deve estar disponível em cookie. O frontend obtém-no em `/auth/csrf-token` no callback de login, antes de qualquer POST `/auth/*`.
 
 ### 3.5. CSRF (Double Submit Cookie)
@@ -124,15 +124,14 @@ O `XSRF-TOKEN` é **não-HttpOnly** deliberadamente (`CookieCsrfTokenRepository.
 
 ```
 auth.logout():
-  1. POST /auth/logout (com X-XSRF-TOKEN) — invalida refresh token no backend
+  1. Se !FAKE_AUTH: POST /auth/logout (com X-XSRF-TOKEN) — invalida refresh token no backend
   2. Mesmo em falha, limpa estado local:
      - accessToken (memória) = null
-     - remove header Authorization do Axios
      - User = null, isAuthenticated = false
-  3. navigate('/login')
+  3. Guards (RequireAuth/PublicOnly) redirecionam para /login ou / conforme estado
 ```
 
-O fail-safe (limpeza local independente do resultado do backend) impede estado inconsistente.
+O fail-safe (limpeza local independente do resultado do backend) impede estado inconsistente. O redirecionamento é delegado aos guards (não há `navigate` explícito no `logout`).
 
 ### 3.7. Dependência de backend: `GET /api/usuarios/me`
 
@@ -183,9 +182,7 @@ frontend/
 │   ├── App.tsx                     # <RouterProvider router={router}/>
 │   │
 │   ├── router/
-│   │   ├── index.tsx               # createBrowserRouter(...)
-│   │   ├── guards.tsx               # <RequireAuth>, <RequireRole>, <PublicOnly>
-│   │   └── routes.ts                # const ROUTES = {...}
+│   │   └── index.tsx               # createBrowserRouter(...)
 │   │
 │   ├── routes/                     # 1 pasta por rota
 │   │   ├── login/
@@ -219,9 +216,11 @@ frontend/
 │   ├── components/
 │   │   ├── ui/                      # shadcn/ui (button, dialog, input, table, ...)
 │   │   ├── auth/
-│   │   │   ├── AuthProvider.tsx     # Context com user, login, logout, refreshUser
+│   │   │   ├── AuthContext.ts       # createContext(AuthContextValue)
+│   │   │   ├── AuthProvider.tsx     # Provider com user, login, logout, refreshUser
 │   │   │   ├── RequireAuth.tsx      # <Outlet> guard autenticação
 │   │   │   ├── RequireRole.tsx      # <Outlet> guard autorização
+│   │   │   ├── PublicOnly.tsx       # <Outlet> guard para rotas públicas (redireciona autenticados)
 │   │   │   └── PermissionButton.tsx # botão condicional por role
 │   │   ├── layout/
 │   │   │   ├── Header.tsx
@@ -414,32 +413,64 @@ export function matchRoute(pattern: string, pathname: string): boolean {
 ## 7. Provider de Autenticação
 
 ```typescript
-// components/auth/AuthProvider.tsx
+// components/auth/AuthContext.ts — contexto separado para evitar lint react-refresh
 
-import {
-  createContext, useContext, useEffect, useMemo, useState, useCallback,
-} from 'react'
-import type { ReactNode } from 'react'
-import type { AuthState, User } from '@/types/user'
-import { api, setAccessToken, clearAccessToken } from '@/lib/api'
-import { setAccessToken as setMemToken, clearAccessToken as clearMemToken, getAccessToken } from '@/lib/auth'
+import { createContext } from 'react'
+import type { AuthState } from '@/types/user'
 
-interface AuthContextValue extends AuthState {
+export interface AuthContextValue extends AuthState {
   login: (token: string) => Promise<void>
   logout: () => Promise<void>
   refreshUser: () => Promise<void>
 }
 
-const AuthContext = createContext<AuthContextValue | null>(null)
+export const AuthContext = createContext<AuthContextValue | null>(null)
+```
+
+```typescript
+// hooks/useAuth.ts — hook de autenticação (atalho para useContext)
+
+import { useContext } from 'react'
+import { AuthContext } from '@/components/auth/AuthContext'
+import type { AuthContextValue } from '@/components/auth/AuthContext'
+
+export function useAuth(): AuthContextValue {
+  const ctx = useContext(AuthContext)
+  if (!ctx) throw new Error('useAuth deve ser usado dentro de <AuthProvider>')
+  return ctx
+}
+```
+
+```typescript
+// components/auth/AuthProvider.tsx
+
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import type { ReactNode } from 'react'
+import type { AuthState, User } from '@/types/user'
+import { api, refreshAccessToken } from '@/lib/api'
+import { setAccessToken, clearAccessToken, getAccessToken } from '@/lib/auth'
+import { AuthContext } from './AuthContext'
+import type { AuthContextValue } from './AuthContext'
+
+const FAKE_AUTH = import.meta.env.VITE_FAKE_AUTH === 'true'
+
+const FAKE_USER: User = {
+  id: 1,
+  email: 'dev@ifce.edu.br',
+  nome: 'Dev FakeAuth',
+  ativo: true,
+  criadoEm: new Date().toISOString(),
+  perfis: ['ROLE_COLABORADOR', 'ROLE_VALIDADOR', 'ROLE_GESTOR_SISTEMA', 'ROLE_ADMINISTRADOR'] as User['perfis'],
+}
+
+// Lazy initializer: evita setState dentro de effect quando FakeAuth ativo
+const INITIAL_STATE: AuthState = FAKE_AUTH
+  ? { user: FAKE_USER, isAuthenticated: true, isLoading: false }
+  : { user: null, isAuthenticated: false, isLoading: true }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AuthState>({
-    user: null,
-    isAuthenticated: false,
-    isLoading: true,   // boot: tenta refresh silencioso
-  })
+  const [state, setState] = useState<AuthState>(INITIAL_STATE)
 
-  // Carrega Usuario via endpoint auth/me
   const loadUser = useCallback(async () => {
     const { data } = await api.get<User>('/api/usuarios/me')
     setState(s => ({ ...s, user: data, isAuthenticated: true, isLoading: false }))
@@ -447,35 +478,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Boot: tenta refresh silencioso (cookie HttpOnly enviado automaticamente)
   useEffect(() => {
-    (async () => {
+    if (FAKE_AUTH) {
+      console.warn('[FakeAuth] ATIVADO — não usar em produção!')
+      return
+    }
+    let cancelled = false
+    ;(async () => {
       try {
         await refreshAccessToken()      // POST /auth/refresh
         await loadUser()
       } catch {
-        clearMemToken()
         clearAccessToken()
-        setState(s => ({ ...s, isLoading: false, isAuthenticated: false }))
+        if (!cancelled) {
+          setState(s => ({ ...s, isLoading: false, isAuthenticated: false }))
+        }
       }
     })()
+    return () => { cancelled = true }
   }, [loadUser])
+
+  // Escuta evento auth:logout disparado pelo interceptor Axios em falha de refresh
+  useEffect(() => {
+    const onLogout = () => {
+      clearAccessToken()
+      setState({ user: null, isAuthenticated: false, isLoading: false })
+    }
+    window.addEventListener('auth:logout', onLogout)
+    return () => window.removeEventListener('auth:logout', onLogout)
+  }, [])
 
   // Após OAuth2 callback: recebe token diretamente
   const login = useCallback(async (token: string) => {
-    setMemToken(token)
     setAccessToken(token)
     await loadUser()
   }, [loadUser])
 
   const logout = useCallback(async () => {
-    try {
-      await api.post('/auth/logout')    // X-XSRF-TOKEN anexado por interceptor
-    } catch (e) {
-      console.warn('Logout backend falhou — limpando estado local mesmo assim', e)
-    } finally {
-      clearMemToken()
-      clearAccessToken()
-      setState({ user: null, isAuthenticated: false, isLoading: false })
+    if (!FAKE_AUTH) {
+      try {
+        await api.post('/auth/logout')    // X-XSRF-TOKEN anexado pelo interceptor
+      } catch (e) {
+        console.warn('Logout backend falhou — limpando estado local', e)
+      }
     }
+    clearAccessToken()
+    setState({ user: null, isAuthenticated: false, isLoading: false })
   }, [])
 
   const refreshUser = useCallback(async () => {
@@ -487,12 +534,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }), [state, login, logout, refreshUser])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-}
-
-export function useAuth(): AuthContextValue {
-  const ctx = useContext(AuthContext)
-  if (!ctx) throw new Error('useAuth deve ser usado dentro de <AuthProvider>')
-  return ctx
 }
 ```
 
@@ -516,9 +557,9 @@ export function clearAccessToken() { accessToken = null }
 ```typescript
 // lib/api.ts
 
-import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
-import { getAccessToken, setAccessToken as setMemToken, clearAccessToken } from '@/lib/auth'
-import { getCsrfToken } from '@/lib/csrf'
+import axios, { type AxiosError, type AxiosRequestConfig, type InternalAxiosRequestConfig } from 'axios'
+import { getAccessToken, setAccessToken, clearAccessToken } from '@/lib/auth'
+import { getCsrfToken, ensureCsrfToken } from '@/lib/csrf'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? ''
 
@@ -526,23 +567,6 @@ export const api = axios.create({
   baseURL: BACKEND_URL,
   withCredentials: true,   // envia cookies (refreshToken, XSRF-TOKEN)
   headers: { 'Content-Type': 'application/json' },
-})
-
-// Interceptor de request: injeta Authorization e X-XSRF-TOKEN em /auth/*
-api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
-  const token = getAccessToken()
-  if (token) config.headers.set('Authorization', `Bearer ${token}`)
-
-  // CSRF: apenas em POST/PUT/PATCH/DELETE para /auth/**
-  const isAuthMutation =
-    config.url?.startsWith('/auth/') &&
-    ['post', 'put', 'patch', 'delete'].includes(config.method ?? '')
-
-  if (isAuthMutation) {
-    const xsrf = getCsrfToken()
-    if (xsrf) config.headers.set('X-XSRF-TOKEN', xsrf)
-  }
-  return config
 })
 
 // Lock p/ evitar refresh concorrente em rajada de 401
@@ -561,7 +585,7 @@ export async function refreshAccessToken(): Promise<string> {
   })
     .then(({ data }) => {
       const newToken: string = data.accessToken
-      setMemToken(newToken)
+      setAccessToken(newToken)
       return newToken
     })
     .finally(() => { refreshPromise = null })
@@ -569,18 +593,38 @@ export async function refreshAccessToken(): Promise<string> {
   return refreshPromise
 }
 
+// Interceptor de request: injeta Authorization e X-XSRF-TOKEN em /auth/*
+api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+  const token = getAccessToken()
+  if (token) config.headers.set('Authorization', `Bearer ${token}`)
+
+  // CSRF: apenas em POST/PUT/PATCH/DELETE para /auth/**
+  const isAuthMutation =
+    config.url?.startsWith('/auth/') &&
+    ['post', 'put', 'patch', 'delete'].includes(config.method ?? '')
+
+  if (isAuthMutation) {
+    const xsrf = getCsrfToken()
+    if (xsrf) config.headers.set('X-XSRF-TOKEN', xsrf)
+  }
+  return config
+})
+
+// RetryConfig herda de AxiosRequestConfig e adiciona _retry
+type RetryConfig = AxiosRequestConfig & { _retry?: boolean }
+
 // Interceptor de response: em 401 (exceto /auth/*), tenta refresh uma vez
 api.interceptors.response.use(
-  (r) => r,
+  (response) => response,
   async (error: AxiosError) => {
-    const original = error.config as InternalAxiosRequestConfig & { _retry?: boolean }
+    const original = error.config as RetryConfig | undefined
     const isAuthEndpoint = original?.url?.startsWith('/auth/')
 
-    if (error.response?.status === 401 && !isAuthEndpoint && !original._retry) {
+    if (error.response?.status === 401 && !isAuthEndpoint && original && !original._retry) {
       original._retry = true
       try {
         const newToken = await refreshAccessToken()
-        original.headers.set('Authorization', `Bearer ${newToken}`)
+        original.headers = { ...original.headers, Authorization: `Bearer ${newToken}` }
         return api(original)
       } catch {
         // Refresh falhou → deslogar (o AuthProvider escuta e redireciona)
@@ -592,13 +636,14 @@ api.interceptors.response.use(
     return Promise.reject(error)
   },
 )
-
-export function setAccessToken(token: string | null)  { /* não-exporta daqui; use lib/auth */ }
-export function clearAccessToken()              { /* idem */ }
 ```
 
 ```typescript
 // lib/csrf.ts
+
+import axios from 'axios'
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? ''
 
 export function getCsrfToken(): string | null {
   const match = document.cookie
@@ -609,9 +654,7 @@ export function getCsrfToken(): string | null {
 
 export async function ensureCsrfToken(): Promise<void> {
   if (!getCsrfToken()) {
-    await axios.get(`${import.meta.env.VITE_BACKEND_URL ?? ''}/auth/csrf-token`, {
-      withCredentials: true,
-    })
+    await axios.get(`${BACKEND_URL}/auth/csrf-token`, { withCredentials: true })
   }
 }
 ```
@@ -643,7 +686,15 @@ useEffect(() => {
 // components/auth/RequireAuth.tsx
 
 import { Navigate, Outlet, useLocation } from 'react-router'
-import { useAuth } from './AuthProvider'
+import { useAuth } from '@/hooks/useAuth'
+
+function FullScreenLoader() {
+  return (
+    <div role="status" className="flex items-center justify-center min-h-screen">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+    </div>
+  )
+}
 
 export function RequireAuth() {
   const { isAuthenticated, isLoading } = useAuth()
@@ -661,7 +712,7 @@ export function RequireAuth() {
 // components/auth/RequireRole.tsx
 
 import { Navigate, Outlet, useLocation } from 'react-router'
-import { useAuth } from './AuthProvider'
+import { useAuth } from '@/hooks/useAuth'
 import { hasPermission } from '@/lib/permissions'
 import type { Role } from '@/types/user'
 
@@ -678,14 +729,14 @@ export function RequireRole({ roles }: { roles: Role[] }) {
 ```
 
 ```typescript
-// components/auth/PublicOnly.tsx — redireciona autenticados para /home
+// components/auth/PublicOnly.tsx — redireciona autenticados para /
 import { Navigate, Outlet } from 'react-router'
-import { useAuth } from './AuthProvider'
+import { useAuth } from '@/hooks/useAuth'
 
 export function PublicOnly() {
   const { isAuthenticated, isLoading } = useAuth()
   if (isLoading) return null
-  if (isAuthenticated) return <Navigate to="/home" replace />
+  if (isAuthenticated) return <Navigate to="/" replace />
   return <Outlet />
 }
 ```
@@ -802,7 +853,7 @@ const menuItems: MenuItem[] = [
 ```typescript
 // hooks/usePermission.ts
 
-import { useAuth } from '@/components/auth/AuthProvider'
+import { useAuth } from '@/hooks/useAuth'
 import { hasPermission, ROUTE_PERMISSIONS, ACTION_PERMISSIONS } from '@/lib/permissions'
 import { matchRoute } from '@/lib/permissions'
 import type { Role } from '@/types/user'
@@ -1088,6 +1139,7 @@ services:
 |---|---|---|
 | `VITE_BACKEND_URL` | `''` (mesma origem — proxy Nginx) | Usada pelo Axios. Em dev, `http://localhost:8080` para contornar o proxy |
 | `VITE_GOOGLE_OAUTH_ENTRY` | `/oauth2/authorization/google` | URL do botão "Entrar com Google" (relativa ou absoluta) |
+| `VITE_FAKE_AUTH` | `'false'` | Quando `'true'`, ativa FakeAuth (usuário mockado) para dev sem backend. **Nunca em produção** — o build de produção deve omiti-la ou setá-la `'false'` |
 
 Em dev local, `vite dev` (porta 5173) chama a API diretamente em `localhost:8080`. O `vite.config.ts` pode definir `server.proxy` para reproduzir o Nginx:
 
@@ -1167,7 +1219,7 @@ import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
-import { useAuth } from '@/components/auth/AuthProvider'
+import { useAuth } from '@/hooks/useAuth'
 import { RoleBadge } from '@/components/usuarios/RoleBadge'
 
 export function UserMenu() {

@@ -1,10 +1,11 @@
-import {HomePage} from "@/routes/home/page"
-import {Toaster} from "@/components/ui/sonner"
+import {RouterProvider} from 'react-router'
+import {Toaster} from '@/components/ui/sonner'
+import {router} from '@/router'
 
 export default function App() {
     return (
         <>
-            <HomePage/>
+            <RouterProvider router={router}/>
             <Toaster richColors position="top-right"/>
         </>
     )

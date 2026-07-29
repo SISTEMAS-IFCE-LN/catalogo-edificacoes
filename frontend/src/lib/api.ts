@@ -45,7 +45,7 @@ export async function refreshAccessToken(): Promise<string> {
     return refreshPromise
 }
 
-//Interceptador de requisições: injeta Authorization e X-XSRF-TOKEN
+// Interceptador de requisições: injeta Authorization e X-XSRF-TOKEN
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     const token = getAccessToken()
     if (token) {
@@ -53,7 +53,7 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     }
 
     const isAuthMutation =
-        config.url?.startsWith('/auth') &&
+        config.url?.startsWith('/auth/') &&
         ['post', 'put', 'patch', 'delete'].includes(config.method ?? '')
 
     if (isAuthMutation) {
@@ -74,7 +74,7 @@ api.interceptors.response.use(
     (response) => response,
     async (error: AxiosError) => {
         const original = error.config as RetryConfig | undefined
-        const isAuthEndpoint = original?.url?.startsWith('/auth')
+        const isAuthEndpoint = original?.url?.startsWith('/auth/')
         if (
             error.response?.status === 401 &&
             !isAuthEndpoint &&
