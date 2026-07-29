@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import axios from 'axios'
 import MockAdapter from 'axios-mock-adapter'
-import { api } from './api'
+import { api, refreshAccessToken } from './api'
 import { getAccessToken, setAccessToken, clearAccessToken } from './auth'
 
 let mockApi: MockAdapter
@@ -126,5 +126,59 @@ describe('interceptor de response - refresh em 401', () => {
         expect(handler).toHaveBeenCalledTimes(1)
 
         window.removeEventListener('auth:logout', handler)
+    })
+})
+
+describe('refreshAccessToken - lock síncrono', () => {
+    it('chamadas concorrentes resultam em UM único POST /auth/refresh', async () => {
+        document.cookie = 'XSRF-TOKEN=test-csrf-token'
+        mockAxios.onGet('/auth/csrf-token').reply(200)
+
+        // POST /auth/refresh com atraso para garantir concorrência real
+        let postCount = 0
+        vi.spyOn(axios, 'post').mockImplementation(async () => {
+            postCount++
+            await new Promise((resolve) => setTimeout(resolve, 50))
+            return { data: { accessToken: 'new-jwt' } } as Awaited<
+                ReturnType<typeof axios.post>
+            >
+        })
+
+        const [a, b, c] = await Promise.all([
+            refreshAccessToken(),
+            refreshAccessToken(),
+            refreshAccessToken(),
+        ])
+
+        expect(a).toBe('new-jwt')
+        expect(b).toBe('new-jwt')
+        expect(c).toBe('new-jwt')
+        expect(postCount).toBe(1)
+    })
+
+    it('após falha, libera o lock para nova tentativa', async () => {
+        document.cookie = 'XSRF-TOKEN=test-csrf-token'
+        mockAxios.onGet('/auth/csrf-token').reply(200)
+
+        let callCount = 0
+        vi.spyOn(axios, 'post').mockImplementation(async () => {
+            callCount++
+            if (callCount === 1) {
+                const error = new Error('Request failed with status code 500') as Error & {
+                    response?: { status: number; data: unknown }
+                }
+                error.response = { status: 500, data: { error: 'refresh failed' } }
+                throw error
+            }
+            return { data: { accessToken: 'new-jwt' } } as Awaited<
+                ReturnType<typeof axios.post>
+            >
+        })
+
+        await expect(refreshAccessToken()).rejects.toThrow()
+        const second = await refreshAccessToken()
+
+        expect(second).toBe('new-jwt')
+        expect(callCount).toBe(2)
     })
 })

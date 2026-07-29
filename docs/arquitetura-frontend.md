@@ -100,7 +100,7 @@ O frontend **não decodifica** o JWT — apenas o recebe em `#token=...` (login 
 O refresh é orquestrado pelo **interceptor de resposta** do Axios (mais robusto que `setTimeout` — acompanha rotação eventual do refresh token pelo backend; ver `seguranca.md` §3).
 
 - Ao receber `401` em rota que **não** seja `/auth/*`, o interceptor:
-  1. Adquire um lock (Promise compartilhada) para evitar refresh concorrente.
+  1. Adquire um lock síncrono (Promise compartilhada atribuída antes de qualquer `await`) para evitar refresh concorrente — chamadas concorrentes compartilham a mesma promise e geram um único POST `/auth/refresh`.
   2. `POST /auth/refresh` (cookie HttpOnly enviado automaticamente; header `X-XSRF-TOKEN` anexo por interceptor de request — ver §3.5).
   3. Em 200: atualiza accessToken em memória; refaz a requisição original uma única vez; libera o lock.
   4. Em 401/403/qualquer erro: limpa accessToken em memória e despacha evento `auth:logout` (window.dispatchEvent). O `AuthProvider` escuta esse evento e limpa o estado (User = null, isAuthenticated = false), fazendo com que os guards redirecionem para `/login`.
@@ -569,26 +569,29 @@ export const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
-// Lock p/ evitar refresh concorrente em rajada de 401
+// Lock p/ evitar refresh concorrente em rajada de 401.
+// O lock é adquirido SINCRONAMENTE: a IIFE async é invocada e atribuída
+// a refreshPromise na mesma instrução, ANTES de qualquer await. Assim,
+// chamadas concorrentes que cheguem durante o await ensureCsrfToken()
+// encontram refreshPromise não-null e compartilham a mesma promise,
+// evitando POSTs duplicados (ver §3.4 e Riscos §19).
 let refreshPromise: Promise<string> | null = null
 
-export async function refreshAccessToken(): Promise<string> {
+export function refreshAccessToken(): Promise<string> {
   if (refreshPromise) return refreshPromise
 
-  // Garante que o cookie XSRF-TOKEN existe antes do POST /auth/refresh
-  // (exigido pelo authFilterChain do backend — ver seguranca.md §3)
-  await ensureCsrfToken()
-
-  refreshPromise = axios.post(`${BACKEND_URL}/auth/refresh`, {}, {
-    withCredentials: true,
-    headers: { 'X-XSRF-TOKEN': getCsrfToken() },
-  })
-    .then(({ data }) => {
-      const newToken: string = data.accessToken
-      setAccessToken(newToken)
-      return newToken
+  refreshPromise = (async () => {
+    // Garante que o cookie XSRF-TOKEN existe antes do POST /auth/refresh
+    // (exigido pelo authFilterChain do backend — ver seguranca.md §3)
+    await ensureCsrfToken()
+    const { data } = await axios.post(`${BACKEND_URL}/auth/refresh`, {}, {
+      withCredentials: true,
+      headers: { 'X-XSRF-TOKEN': getCsrfToken() },
     })
-    .finally(() => { refreshPromise = null })
+    const newToken: string = data.accessToken
+    setAccessToken(newToken)
+    return newToken
+  })().finally(() => { refreshPromise = null })
 
   return refreshPromise
 }
@@ -1445,7 +1448,7 @@ Cobertura mínima recomendada: `lib/permissions.ts` 100%, `lib/auth.ts` 100% (tr
 | Backend não implementa `/api/usuarios/me` em tempo | Degradar: frontend mostra "Carregando..." e campos limitados (sem nome). Não é a arquitetura final — é gap. |
 | `SameSite=Lax` em redirect OAuth2 cross-site | Backend já configura `SameSite=Lax` para cookie de sessão (necessário no callback). Refresh cookie idem. Nginx mantém tudo na mesma origem em prod, eliminando cross-site. |
 | XSS injeta script | Token em memória → não há onde ler. CSP estrito (apenas `'self'`, `'unsafe-inline'` para styles, scripts none) restringe injeção. Em produção, habilitar Trusted Types se o navegador suportar. |
-| Token perdido depois de refresh concorrente | Lock via `refreshPromise` compartilhada em `lib/api.ts`; equipe de teste E2E cobre rajada de 401. |
+| Token perdido depois de refresh concorrente | Lock via `refreshPromise` adquirido síncronamente em `lib/api.ts` (IIFE async atribuída antes de qualquer `await`); chamadas concorrentes compartilham a mesma promise. Teste unitário cobre rajada de 401 (ver `api.test.ts`). |
 | Backend rotaciona refresh token (vida restante < accessExpiration) | Interceptor de response não chama `setRefreshToken` (cookie gerido por `Set-Cookie` do backend, navegador atualiza automaticamente). Comportamento alinhado a `seguranca.md` §3. |
 | Adição de novo perfil | Adicionar ao enum `Role`; atualizar `ROUTE_PERMISSIONS`/`ACTION_PERMISSIONS`; sem refactor estrutural |
 | Drawer em iOS Safari mais antigo | `body { position: relative; }` em `globals.css` resolve overlay; Base UI cobre iOS 12+. Se necessário, fallback para `Dialog` em viewport mínima. |

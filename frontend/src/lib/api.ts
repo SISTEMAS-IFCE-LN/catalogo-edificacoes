@@ -15,18 +15,22 @@ export const api = axios.create({
     headers: {'Content-Type': 'application/json'},
 })
 
-// Lock para evitar refresh concorrente após respostas 401 encadeadas
+// Lock para evitar refresh concorrente após respostas 401 encadeadas.
+// O lock é adquirido SINCRONAMENTE: a IIFE async é invocada e atribuída
+// a refreshPromise na mesma instrução, ANTES de qualquer await. Assim,
+// chamadas concorrentes que cheguem durante o await ensureCsrfToken()
+// encontram refreshPromise não-null e compartilham a mesma promise,
+// evitando POSTs duplicados (ver docs/arquitetura-frontend.md §3.4 e §19).
 let refreshPromise: Promise<string> | null = null
 
-export async function refreshAccessToken(): Promise<string> {
+export function refreshAccessToken(): Promise<string> {
     if (refreshPromise) return refreshPromise
 
-    // Garante que o cookie XSRF-TOKEN existe antes do POST /auth/refresh
-    // (exigido pelo authFilterChain do backend — ver docs/seguranca.md §3)
-    await ensureCsrfToken()
-
-    refreshPromise = axios
-        .post(
+    refreshPromise = (async () => {
+        // Garante que o cookie XSRF-TOKEN existe antes do POST /auth/refresh
+        // (exigido pelo authFilterChain do backend — ver docs/seguranca.md §3)
+        await ensureCsrfToken()
+        const { data } = await axios.post(
             `${BACKEND_URL}/auth/refresh`,
             {},
             {
@@ -34,14 +38,12 @@ export async function refreshAccessToken(): Promise<string> {
                 headers: { 'X-XSRF-TOKEN': getCsrfToken() },
             },
         )
-        .then(({data}) => {
-            const newToken: string = data.accessToken
-            setAccessToken(newToken)
-            return newToken
-        })
-        .finally(() => {
-            refreshPromise = null
-        })
+        const newToken: string = data.accessToken
+        setAccessToken(newToken)
+        return newToken
+    })().finally(() => {
+        refreshPromise = null
+    })
     return refreshPromise
 }
 
