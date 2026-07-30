@@ -6,20 +6,20 @@ Este documento descreve a arquitetura do frontend do sistema Catálogo de Edific
 
 ## 1. Sumário das decisões
 
-| Tema | Decisão | Motivação                                                                                                                                                   |
-|---|---|-------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Tema | Decisão | Motivação                                                                                                                                                 |
+|---|---|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Access token | **Em memória** (variável de módulo, não persiste em storage) | Mais seguro contra ataque XSS; alinhado ao design do backend, que entrega o refresh token em cookie `HttpOnly` exatamente para suportar bootstrap via refresh |
-| Refresh token | Cookie `HttpOnly + Secure + SameSite=Lax` gerido pelo backend | Frontend nunca o manipula; enviado automaticamente em `/auth/refresh`                                                                                       |
-| CSRF | Tratado em `/auth/**` via Double Submit Cookie (`XSRF-TOKEN` / `X-XSRF-TOKEN`) | Backend já implementa `CookieCsrfTokenRepository.withHttpOnlyFalse()` em `authFilterChain` (`@Order(2)`)                                                    |
+| Refresh token | Cookie `HttpOnly + Secure + SameSite=Lax` gerido pelo backend | Frontend nunca o manipula; enviado automaticamente em `/auth/refresh`                                                                                     |
+| CSRF | Tratado em `/auth/**` via Double Submit Cookie (`XSRF-TOKEN` / `X-XSRF-TOKEN`) | Backend já implementa `CookieCsrfTokenRepository.withHttpOnlyFalse()` em `authFilterChain` (`@Order(2)`)                                                  |
 | Dados do `Usuario` | `GET /api/usuarios/me` (implementado no backend) | JWT não expõe `nome`/`ativo`/`criadoEm`; endpoint necessário para popular `User`. Frontend não decodifica o JWT — apenas o transporta em `Authorization` |
-| Renderização | **CSR puro (SPA)** | Adequado ao JWT entregue em fragmento de URL (`#token=...`, inacessível ao servidor) e aos UCs interativos (multistep, tabelas, debounce)                   |
-| Framework | **Vite + React Router v8** | Mínimo necessário para CSR; hot reload rápido; build estático simples; guarda de rotas via `<RequireAuth>`/`<RequireRole>`                                  |
-| Estilização | **Tailwind CSS 4 + shadcn/ui** | Plugin Vite nativo (`@tailwindcss/vite`), tema via `@theme` em CSS, sem `tailwind.config.ts`/`postcss.config.js` obrigatórios; acessível (Radix), customizável, alinhado ao padrão declarativo de permissões |
-| Estado servidor/UI | TanStack Query v5 (server) + Zustand (UI leve) + Context (auth) | Separação clara; cache inteligente; auth isolado                                                                                                            |
-| HTTP Client | **Axios** com interceptores (auth, CSRF, refresh) | Tratamento central de 401, fila de refresh, anexação de `X-XSRF-TOKEN`                                                                                      |
-| Formulários | React Hook Form + Zod | Schemas compartilhados com backend; validação runtime + type inference                                                                                      |
-| Deploy | **Nginx** servindo `dist/` + reverse proxy para backend Spring | Reaproveita reverse proxy já exigido por `X-Forwarded-*` (ver [`operacao.md`](./operacao.md)); menor nº de peças operacionais                               |
-| Responsividade | **Mobile-first**, Tailwind + shadcn `Drawer`/`Sheet`/`Avatar` | App acessível em desktop e celular; tabelas viram cards, modais viram bottom-sheet em mobile (ver §15)                                                       |
+| Renderização | **CSR puro (SPA)** | Adequado ao JWT entregue em fragmento de URL (`#token=...`, inacessível ao servidor) e aos UCs interativos (multistep, tabelas, debounce)                 |
+| Framework | **Vite + React Router v8** | Mínimo necessário para CSR; hot reload rápido; build estático simples; guarda de rotas via `<RequireAuth>`/`<RequireRole>`                                |
+| Estilização | **Tailwind CSS 4 + shadcn/ui** | Plugin Vite nativo (`@tailwindcss/vite`), tema via `@theme` em CSS; acessível (Base UI), customizável, alinhado ao padrão declarativo de permissões |
+| Estado servidor/UI | TanStack Query v5 (server) + Zustand (UI leve) + Context (auth) | Separação clara; cache inteligente; auth isolado                                                                                                          |
+| HTTP Client | **Axios** com interceptores (auth, CSRF, refresh) | Tratamento central de 401, fila de refresh, anexação de `X-XSRF-TOKEN`                                                                                    |
+| Formulários | React Hook Form + Zod | Schemas compartilhados com backend; validação runtime + type inference                                                                                    |
+| Deploy | **Nginx** servindo `dist/` + reverse proxy para backend Spring | Reaproveita reverse proxy já exigido por `X-Forwarded-*` (ver [`operacao.md`](./operacao.md)); menor nº de peças operacionais                             |
+| Responsividade | **Mobile-first**, Tailwind + shadcn `Drawer`/`Sheet`/`Avatar` | App acessível em desktop e celular; tabelas viram cards, modais viram bottom-sheet em mobile (ver §15)                                                     |
 
 ---
 
@@ -90,7 +90,7 @@ O frontend **não decodifica** o JWT — apenas o recebe em `#token=...` (login 
      │             - accessToken (memória) = token
      │             - Authorization: Bearer <token> no Axios
      │             - GET /api/usuarios/me → User no Context
-     │             - navigate('/home') conforme perfis
+      │             - navigate(ROUTES.HOME) conforme perfis
      ▼
   App autenticado
 ```
@@ -159,7 +159,7 @@ Para popular `User` no `AuthContext`, o **backend implementa** `GET /api/usuario
 | Estado UI | Zustand | 4+ | Drawer, filtros transitórios — sem boilerplate |
 | Auth state | React Context | — | Simples, integrado ao React, suficiente para escopo |
 | Estilização | Tailwind CSS | 4+ | Utility-first, plugin Vite nativo (`@tailwindcss/vite`), tema via `@theme` em `globals.css`, tree-shaking automático |
-| UI Components | shadcn/ui (inclui `Drawer`, `Sheet`, `Avatar`, `Dialog`, `DropdownMenu`, `Accordion`) | — | Acessível (Base UI/Radix embutidos), sem lock-in, copiado para o repo. `Drawer` substitui `vaul` (deprecated) |
+| UI Components | shadcn/ui (inclui `Drawer`, `Sheet`, `Avatar`, `Dialog`, `DropdownMenu`, `Accordion`) | — | Acessível (Base UI embutido), sem lock-in, copiado para o repo. |
 | Formulários | React Hook Form | 7+ | Performance, integração com Zod e shadcn |
 | Validação | Zod | 3+ | Type inference, validação runtime, schemas próximos do backend |
 | Testes | Vitest + Testing Library | — | Coerente com Vite, mesma API do Jest |
@@ -488,7 +488,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let cancelled = false
     ;(async () => {
       try {
-        await refreshAccessToken()      // POST /auth/refresh
+        if (!getAccessToken()) {
+          await refreshAccessToken()      // POST /auth/refresh
+        }
         await loadUser()
       } catch {
         clearAccessToken()
@@ -677,7 +679,7 @@ useEffect(() => {
     if (!token) { navigate('/login'); return }
     await ensureCsrfToken()
     await login(token)
-    navigate('/home')
+    navigate(ROUTES.HOME)
   })()
 }, [])
 ```
@@ -1404,7 +1406,7 @@ Todas as peças usadas pertencem ao catálogo do shadcn: `avatar`, `sheet`, `dra
 | Hooks | `@testing-library/react` + `renderHook` | `usePermission`, `useAuth` |
 | Componentes | `@testing-library/react` | `<RequireRole>` redirect, `<PermissionButton>`, `<UserMenu>` mobile/desktop variants |
 | Interceptor Axios | `axios-mock-adapter`, Vitest | 401 → refresh → retry; falha de refresh → logout |
-| E2E | Playwright | fluxo login → callback → /home; UC01, UC06, UC22, UC25 |
+| E2E | Playwright | fluxo login → callback → /; UC01, UC06, UC22, UC25 |
 | E2E mobile | Playwright (viewports 375×667, 390×844, 768×1024) | smoke de fluxos críticos em mobile: login → publicados → detalhe; UC22 cards; UC06 multistep |
 | Regressão visual | Playwright `toHaveScreenshot` | `TabelaPadrao` cards; `DetalheAmbiente` mobile; `UserMenu` em ambos viewports |
 
@@ -1434,7 +1436,7 @@ Cobertura mínima recomendada: `lib/permissions.ts` 100%, `lib/auth.ts` 100% (tr
 3. **`lib/auth.ts` + `lib/api.ts`**: variável de módulo (apenas `set/get/clear` do token string), interceptores de request (auth + CSRF) e response (refresh 401).
 4. **`lib/csrf.ts`**: leitura de cookie XSRF-TOKEN + `ensureCsrfToken()`.
 5. **`AuthProvider` + `RequireAuth`/`RequireRole`/`PublicOnly`**.
-6. **`/login` + `/callback`**: fluxo OAuth2 → leitura de `#token` → `ensureCsrfToken` → `login` → `/home`.
+6. **`/login` + `/callback`**: fluxo OAuth2 → leitura de `#token` → `ensureCsrfToken` → `login` → `/`.
 7. **`/ambientes/publicados`** (lista pública, UC21-FE) e **`/ambientes/publicados/:id`** (UC19-FE).
 8. **`/usuarios`** (UC22–UC26-FE) — Administrador.
 9. **`/ambientes/validacao`** e **`/ambientes/nao-publicados`** com `FormAmbiente` multistep e modais UC07–UC18.

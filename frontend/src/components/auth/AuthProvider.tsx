@@ -59,7 +59,9 @@ export function AuthProvider({children}: { children: ReactNode }) {
         let cancelled = false
         ;(async () => {
             try {
-                await refreshAccessToken()
+                if (!getAccessToken()) {
+                    await refreshAccessToken()
+                }
                 await loadUser()
             } catch {
                 clearAccessToken()
