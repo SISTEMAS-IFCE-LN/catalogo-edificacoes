@@ -830,8 +830,8 @@ export const router = createBrowserRouter([
     ],
   },
 
-  { path: '/', element: <Navigate to="/ambientes/publicados" replace /> },
-  { path: '*', element: <Navigate to="/unauthorized" replace /> },
+  { path: '/', element: <HomePage /> },
+  { path: '*', element: <UnauthorizedPage /> },
 ])
 ```
 

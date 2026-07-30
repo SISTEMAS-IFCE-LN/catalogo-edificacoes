@@ -22,6 +22,12 @@ export function CallbackPage() {
             const params = new URLSearchParams(hash)
             const token = params.get('token')
 
+            // Limpa o fragmento da URL imediatamente após ler o token,
+            // evitando que o JWT fique visível na barra de endereço.
+            if (window.location.hash) {
+                window.history.replaceState(null, '', window.location.pathname)
+            }
+
             if (!token) {
                 toast.error('Token não recebido. Tente novamente.')
                 navigate(ROUTES.LOGIN, {replace: true})
@@ -32,8 +38,8 @@ export function CallbackPage() {
                 await ensureCsrfToken()
                 await login(token)
                 navigate(ROUTES.HOME, {replace: true})
-            } catch (e) {
-                console.error(e)
+            } catch {
+                console.error('Falha no callback OAuth2')
                 toast.error('Falha ao autenticar. Tente novamente.')
                 navigate(ROUTES.LOGIN, {replace: true})
             }
@@ -42,7 +48,9 @@ export function CallbackPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center">
-            <p className="text-muted-foreground">Autenticando…</p>
+            <p className="text-muted-foreground" role="status" aria-live="polite">
+                Autenticando…
+            </p>
         </div>
     )
 }
