@@ -1,5 +1,5 @@
 import {describe, it, expect} from 'vitest'
-import {hasPermission, matchRoute} from './permissions'
+import {hasPermission, matchRoute, getRequiredRoles} from './permissions'
 import {Role} from '@/types/user'
 
 describe('hasPermission', () => {
@@ -20,5 +20,26 @@ describe('matchRoute', () => {
     it('match exato sem parâmetros', () => {
         expect(matchRoute('/usuarios', '/usuarios')).toBe(true)
         expect(matchRoute('/usuarios', '/usuarios/1')).toBe(false)
+    })
+})
+
+describe('getRequiredRoles', () => {
+    it('retorna roles para rota estática', () => {
+        expect(getRequiredRoles('/usuarios')).toEqual([Role.ADMINISTRADOR])
+    })
+    it('retorna null para rota pública', () => {
+        expect(getRequiredRoles('/ambientes/publicados')).toBeNull()
+    })
+    it('match com parâmetro dinâmico', () => {
+        expect(getRequiredRoles('/ambientes/publicados/123')).toEqual([Role.COLABORADOR])
+    })
+    it('match com rota esquadrias', () => {
+        expect(getRequiredRoles('/ambientes/publicados/esquadrias')).toEqual([Role.COLABORADOR])
+    })
+    it('retorna roles para rota validacao', () => {
+        expect(getRequiredRoles('/ambientes/validacao')).toEqual([Role.VALIDADOR])
+    })
+    it('retorna roles para rota nao-publicados', () => {
+        expect(getRequiredRoles('/ambientes/nao-publicados')).toEqual([Role.GESTOR_SISTEMA])
     })
 })
