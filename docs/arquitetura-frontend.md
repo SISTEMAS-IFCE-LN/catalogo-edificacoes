@@ -245,7 +245,7 @@ frontend/
 │   │
 │   ├── hooks/
 │   │   ├── useAuth.ts                # atalho para useContext(AuthContext)
-│   │   ├── usePermission.ts          # can(action), canAccess(route), hasRole(roles)
+│   │   ├── usePermission.ts          # canDo(action), canAccess(route), hasRole(roles)
 │   │   └── useDebounce.ts
 │   │
 │   ├── stores/
@@ -869,11 +869,10 @@ import type { Role } from '@/types/user'
 export function usePermission() {
   const { user } = useAuth()
 
-  function can(action: string): boolean {
+  function canDo(action: string): boolean {
     if (!user) return false
     const required = ACTION_PERMISSIONS[action]
     if (!required) {
-      console.warn(`Ação "${action}" não definida em ACTION_PERMISSIONS`)
       return false
     }
     return hasPermission(user.perfis, required)
@@ -893,7 +892,7 @@ export function usePermission() {
     return hasPermission(user.perfis, roles)
   }
 
-  return { can, canAccess, hasRole }
+  return { canDo, canAccess, hasRole }
 }
 ```
 

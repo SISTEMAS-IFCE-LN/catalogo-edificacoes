@@ -14,7 +14,6 @@ export function usePermission() {
         if (!user) return false
         const required = ACTION_PERMISSIONS[action]
         if (!required) {
-            console.warn(`Ação "${action}" não definida em ACTION_PERMISSIONS`)
             return false
         }
         return hasPermission(user.perfis, required)

@@ -22,7 +22,7 @@ export function ProtectedNavigation() {
     const visibleItems = menuItens.filter((item) => {
         if (!user) return false
         if (item.roles === null) return true
-        return user.perfis.some((r) => item.roles!.includes(r))
+        return item.roles.some((r) => user.perfis.includes(r))
     })
 
     return (
