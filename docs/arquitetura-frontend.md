@@ -1002,28 +1002,37 @@ export default function NovoAmbientePage() {
 
 import { z } from 'zod'
 
+// Espelha GeometriaAmbienteReq do backend
 export const geometriaSchema = z.object({
   tipo: z.enum(['RETANGULAR', 'CIRCULAR', 'TRAPEZOIDAL']),
-  repeticao: z.number().int().positive(),
-  // dimensões conforme tipo — refinado
+  base: z.number().positive(),
+  altura: z.number().positive(),
+  repeticao: z.number().int().positive().default(1),
 })
 
+// Espelha GeometriaEsquadriaReq do backend
+export const geometriaEsquadriaSchema = z.object({
+  base: z.number().positive(),
+  altura: z.number().positive(),
+  repeticao: z.number().int().positive().default(1),
+})
+
+// Espelha EsquadriaReq do backend
 export const esquadriaSchema = z.object({
   tipo: z.enum(['PORTA', 'JANELA']),
-  largura: z.number().positive(),
-  altura: z.number().positive(),
+  geometria: geometriaEsquadriaSchema,
   material: z.string().min(1),
-  repeticao: z.number().int().positive(),
-  peitoril: z.number().optional(),
-  infoAdicional: z.string().max(500).optional(),
+  alturaPeitoril: z.number().min(0).default(0),
+  informacaoAdicional: z.string().max(255).optional().default(''),
 })
 
+// Espelha AmbienteReq do backend
 export const ambienteSchema = z.object({
-  nome: z.string().min(1).max(100),
+  nome: z.string().min(1).max(50),
   localizacao: z.object({
     bloco: z.string().min(1),
     unidade: z.string().min(1),
-    andar: z.string().min(1),
+    andar: z.number().int(),
   }),
   tipo: z.enum(['SALA_AULA', 'LABORATORIO', /* ... espelha backend */]),
   capacidade: z.number().int().positive(),
@@ -1031,14 +1040,14 @@ export const ambienteSchema = z.object({
   pesDireitos: z.array(z.number().positive()).min(1, 'Pelo menos um pé-direito'),
   esquadrias: z.array(esquadriaSchema)
     .refine(arr => arr.some(e => e.tipo === 'PORTA'),
-            'Ao menos uma porta é obrigatória'),
-  infoAdicional: z.string().max(1000).optional(),
+            'Pelo menos uma porta é obrigatória'),
+  informacaoAdicional: z.string().max(255).optional().default(''),
 })
 
 export type AmbienteInput = z.infer<typeof ambienteSchema>
 ```
 
-> Schemas espelham `RN-1.x` do subdomínio ambientes (multiparte/não multiparte conforme `tipo`); refinadas em schemas por etapa do wizard.
+> Schemas espelham os DTOs de request do backend (`AmbienteReq`, `GeometriaAmbienteReq`, `EsquadriaReq`). O campo `pesDireitos` é um array de números (não objetos), conforme o backend.
 
 ---
 

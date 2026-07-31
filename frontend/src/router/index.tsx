@@ -9,6 +9,7 @@ import {CallbackPage} from '@/routes/callback/page'
 import {UnauthorizedPage} from '@/routes/unauthorized/page'
 import {ProtectedLayout} from '@/routes/_layout/protected-layout'
 import {ROUTES} from '@/constants/routes'
+import {PublicadosPage} from '@/routes/ambientes/publicados/page'
 
 export const router = createBrowserRouter([
     {
@@ -18,7 +19,7 @@ export const router = createBrowserRouter([
     {path: '/callback', element: <CallbackPage/>},
     {path: '/unauthorized', element: <UnauthorizedPage/>},
     // Publica (UC21-FE)
-    {path: '/ambientes/publicados', element: <HomePage/>},
+    {path: '/ambientes/publicados', element: <PublicadosPage/>},
     // Autenticadas
     {
         element: <RequireAuth/>,
