@@ -62,3 +62,27 @@ export const UrlFiltrosSchema = z.object({
 })
 
 export type UrlFiltros = z.infer<typeof UrlFiltrosSchema>
+
+// Validações alinhadas ao backend (BaseController.kt)
+export const NomeFiltroSchema = z.string()
+  .min(1, 'Nome é obrigatório')
+  .max(50, 'Máximo 50 caracteres')
+
+export const TipoFiltroSchema = z.string()
+  .min(1, 'Tipo é obrigatório')
+  .max(50, 'Máximo 50 caracteres')
+
+export const BlocoFiltroSchema = z.string()
+  .max(50, 'Máximo 50 caracteres')
+  .optional()
+  .or(z.literal(''))
+
+export const UnidadeFiltroSchema = z.string()
+  .max(50, 'Máximo 50 caracteres')
+  .optional()
+  .or(z.literal(''))
+
+export const AndarFiltroSchema = z.number()
+  .int()
+  .min(0, 'Andar deve ser maior ou igual a 0')
+  .nullable()
