@@ -38,7 +38,7 @@ export function PublicadosPage() {
   }
 
   const { data, isLoading, error, refetch } = useQuery({
-    queryKey: ['publicados', query],
+    queryKey: ['ambientes', 'publicados', query],
     queryFn: ({ signal }) => fetchPublicados(query, signal),
   })
 
