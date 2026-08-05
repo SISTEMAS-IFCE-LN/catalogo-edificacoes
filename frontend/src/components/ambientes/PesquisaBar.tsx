@@ -1,8 +1,8 @@
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useState } from 'react'
-import { type Filtros, FILTROS_VAZIOS } from '@/types/ambiente'
-import { TipoAmbiente, Bloco, Unidade, TipoFiltro } from '@/types/filtros'
+import { type Filtros, FILTROS_VAZIOS } from '@/types/ambientes/filtros'
+import { TipoAmbiente, Bloco, Unidade, TipoFiltro } from '@/types/ambientes/enums'
 import {
   Select,
   SelectContent,

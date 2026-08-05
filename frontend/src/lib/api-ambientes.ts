@@ -1,5 +1,5 @@
 import { api } from '@/lib/api'
-import { AmbientesBasicosPaginadosSchema, type AmbientesBasicosPaginados } from '@/types/ambiente'
+import { AmbientesBasicosPaginadosSchema, type AmbientesBasicosPaginados } from '@/types/ambientes/ambiente'
 import { ROUTES } from '@/constants/routes'
 
 export interface PublicadosQuery {

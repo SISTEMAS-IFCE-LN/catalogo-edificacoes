@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'react-router'
-import { type Filtros, UrlFiltrosSchema, FILTROS_VAZIOS } from '@/types/ambiente'
+import { type Filtros, UrlFiltrosSchema, FILTROS_VAZIOS } from '@/types/ambientes/filtros'
 
 export interface AmbientesSearchParams {
   page: number

@@ -1,7 +1,7 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import { PesquisaBar } from './PesquisaBar'
-import { FILTROS_VAZIOS } from '@/types/ambiente'
+import { FILTROS_VAZIOS } from '@/types/ambientes/filtros'
 
 describe('PesquisaBar', () => {
   const mockOnChange = vi.fn()

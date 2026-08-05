@@ -139,4 +139,76 @@ describe('useAmbientesSearchParams', () => {
     expect(result.current.hookResult.filtros.nome).toBe('new')
     expect(result.current.hookResult.filtrosLocal.nome).toBe('new')
   })
+
+  it('rejeita nome com mais de 50 caracteres e usa fallback', () => {
+    const longName = 'a'.repeat(51)
+    const { result } = renderHook(() => useAmbientesSearchParams(), {
+      wrapper: createWrapper([`/?nome=${longName}`]),
+    })
+
+    // Deve usar fallback (filtros vazios) quando validação falha
+    expect(result.current.filtros.nome).toBe('')
+  })
+
+  it('aceita nome com exatamente 50 caracteres', () => {
+    const exactName = 'a'.repeat(50)
+    const { result } = renderHook(() => useAmbientesSearchParams(), {
+      wrapper: createWrapper([`/?nome=${exactName}`]),
+    })
+
+    expect(result.current.filtros.nome).toBe(exactName)
+  })
+
+  it('rejeita andar negativo e usa fallback', () => {
+    const { result } = renderHook(() => useAmbientesSearchParams(), {
+      wrapper: createWrapper(['/?andar=-5']),
+    })
+
+    // Deve usar fallback (null) quando validação falha
+    expect(result.current.filtros.andar).toBeNull()
+  })
+
+  it('aceita andar igual a 0', () => {
+    const { result } = renderHook(() => useAmbientesSearchParams(), {
+      wrapper: createWrapper(['/?andar=0']),
+    })
+
+    expect(result.current.filtros.andar).toBe(0)
+  })
+
+  it('rejeita bloco com mais de 50 caracteres e usa fallback', () => {
+    const longBloco = 'b'.repeat(51)
+    const { result } = renderHook(() => useAmbientesSearchParams(), {
+      wrapper: createWrapper([`/?bloco=${longBloco}`]),
+    })
+
+    expect(result.current.filtros.bloco).toBe('')
+  })
+
+  it('aceita bloco com exatamente 50 caracteres', () => {
+    const exactBloco = 'b'.repeat(50)
+    const { result } = renderHook(() => useAmbientesSearchParams(), {
+      wrapper: createWrapper([`/?bloco=${exactBloco}`]),
+    })
+
+    expect(result.current.filtros.bloco).toBe(exactBloco)
+  })
+
+  it('rejeita tipo com mais de 50 caracteres e usa fallback', () => {
+    const longTipo = 't'.repeat(51)
+    const { result } = renderHook(() => useAmbientesSearchParams(), {
+      wrapper: createWrapper([`/?tipo=${longTipo}`]),
+    })
+
+    expect(result.current.filtros.tipo).toBe('')
+  })
+
+  it('rejeita unidade com mais de 50 caracteres e usa fallback', () => {
+    const longUnidade = 'u'.repeat(51)
+    const { result } = renderHook(() => useAmbientesSearchParams(), {
+      wrapper: createWrapper([`/?unidade=${longUnidade}`]),
+    })
+
+    expect(result.current.filtros.unidade).toBe('')
+  })
 })

@@ -6,7 +6,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table'
-import type {AmbienteBasico} from '@/types/ambiente'
+import type {AmbienteBasico} from '@/types/ambientes/ambiente'
 import {Link} from 'react-router'
 
 export function TabelaPadrao({itens}: { itens: AmbienteBasico[] }) {
