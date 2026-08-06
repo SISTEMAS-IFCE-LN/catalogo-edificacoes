@@ -12,7 +12,7 @@ const mockRefreshAccessToken = vi.fn()
 const mockEnsureCsrfToken = vi.fn()
 const mockClearCsrfToken = vi.fn()
 
-vi.mock('@/lib/api', () => ({
+vi.mock('@/lib/api/api', () => ({
     api: {
         get: (...args: unknown[]) => mockApiGet(...args),
         post: (...args: unknown[]) => mockApiPost(...args),
@@ -20,7 +20,7 @@ vi.mock('@/lib/api', () => ({
     refreshAccessToken: (...args: unknown[]) => mockRefreshAccessToken(...args),
 }))
 
-vi.mock('@/lib/csrf', () => ({
+vi.mock('@/lib/security/csrf', () => ({
     ensureCsrfToken: (...args: unknown[]) => mockEnsureCsrfToken(...args),
     clearCsrfToken: (...args: unknown[]) => mockClearCsrfToken(...args),
 }))
@@ -29,7 +29,7 @@ const mockSetAccessToken = vi.fn()
 const mockGetAccessToken = vi.fn()
 const mockClearAccessToken = vi.fn()
 
-vi.mock('@/lib/auth', () => ({
+vi.mock('@/lib/security/auth', () => ({
   setAccessToken: (...args: unknown[]) => mockSetAccessToken(...args),
   getAccessToken: (...args: unknown[]) => mockGetAccessToken(...args),
   clearAccessToken: (...args: unknown[]) => mockClearAccessToken(...args),

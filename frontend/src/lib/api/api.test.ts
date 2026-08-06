@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import axios from 'axios'
 import MockAdapter from 'axios-mock-adapter'
 import { api, refreshAccessToken } from './api'
-import { getAccessToken, setAccessToken, clearAccessToken } from './auth'
-import { ensureCsrfToken, clearCsrfToken } from './csrf'
+import { getAccessToken, setAccessToken, clearAccessToken } from '../security/auth'
+import { ensureCsrfToken, clearCsrfToken } from '../security/csrf'
 
 let mockApi: MockAdapter
 let mockAxios: MockAdapter

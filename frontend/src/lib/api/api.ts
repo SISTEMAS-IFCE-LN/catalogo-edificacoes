@@ -3,8 +3,8 @@ import axios, {
     type AxiosRequestConfig,
     type InternalAxiosRequestConfig,
 } from 'axios'
-import {getAccessToken, setAccessToken, clearAccessToken} from '@/lib/auth'
-import {getCsrfToken, ensureCsrfToken} from '@/lib/csrf'
+import {getAccessToken, setAccessToken, clearAccessToken} from '@/lib/security/auth'
+import {getCsrfToken, ensureCsrfToken} from '@/lib/security/csrf'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? ''
 

@@ -6,13 +6,13 @@ import {
 } from 'react'
 import type {ReactNode} from 'react'
 import type {AuthState, User} from '@/types/user'
-import {api, refreshAccessToken} from '@/lib/api'
+import {api, refreshAccessToken} from '@/lib/api/api'
 import {
     clearAccessToken,
     getAccessToken,
     setAccessToken,
-} from '@/lib/auth'
-import {ensureCsrfToken, clearCsrfToken} from '@/lib/csrf'
+} from '@/lib/security/auth'
+import {ensureCsrfToken, clearCsrfToken} from '@/lib/security/csrf'
 import { AuthContext } from './AuthContext'
 import type { AuthContextValue } from './AuthContext'
 

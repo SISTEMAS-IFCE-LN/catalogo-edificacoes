@@ -1,8 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { fetchPublicados } from './api-ambientes'
-import { api } from '@/lib/api'
+import { fetchAmbientes } from './api-ambientes'
+import { api } from '@/lib/api/api'
 
-vi.mock('@/lib/api', () => ({
+vi.mock('@/lib/api/api', () => ({
   api: { get: vi.fn() },
 }))
 
@@ -26,7 +26,7 @@ describe('fetchPublicados', () => {
         },
       },
     })
-    await fetchPublicados({ page: 1, size: 20, nome: 'sala' })
+    await fetchAmbientes({ page: 1, size: 20, nome: 'sala' })
     expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados', expect.objectContaining({
       params: expect.objectContaining({ page: 1, size: 20, nome: 'sala' }),
     }))
@@ -47,7 +47,7 @@ describe('fetchPublicados', () => {
         },
       },
     })
-    await fetchPublicados({ page: 0, size: 20 })
+    await fetchAmbientes({ page: 0, size: 20 })
     expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados', expect.objectContaining({
       params: expect.objectContaining({ page: 0, size: 20 }),
     }))
@@ -74,7 +74,7 @@ describe('fetchPublicados', () => {
         },
       },
     })
-    await fetchPublicados({ page: 0, size: 20, andar: 2 })
+    await fetchAmbientes({ page: 0, size: 20, andar: 2 })
     expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados', expect.objectContaining({
       params: expect.objectContaining({ page: 0, size: 20, andar: 2 }),
     }))
@@ -96,7 +96,7 @@ describe('fetchPublicados', () => {
         },
       },
     })
-    await fetchPublicados({ page: 0, size: 20 }, controller.signal)
+    await fetchAmbientes({ page: 0, size: 20 }, controller.signal)
     expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados', expect.objectContaining({
       signal: controller.signal,
     }))
@@ -117,7 +117,7 @@ describe('fetchPublicados', () => {
         },
       },
     })
-    const result = await fetchPublicados({ page: 0, size: 20 })
+    const result = await fetchAmbientes({ page: 0, size: 20 })
     expect(result).toHaveProperty('ambientes')
     expect(result).toHaveProperty('areaTotal')
     expect(result).toHaveProperty('dadosPaginacao')
@@ -138,6 +138,6 @@ describe('fetchPublicados', () => {
         },
       },
     })
-    await expect(fetchPublicados({ page: 0, size: 20 })).rejects.toThrow()
+    await expect(fetchAmbientes({ page: 0, size: 20 })).rejects.toThrow()
   })
 })

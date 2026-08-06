@@ -4,7 +4,7 @@ import {
     ROUTE_PERMISSIONS,
     hasPermission,
     matchRoute,
-} from '@/lib/permissions'
+} from '@/lib/security/permissions'
 import type {Role} from '@/types/user'
 
 export function usePermission() {

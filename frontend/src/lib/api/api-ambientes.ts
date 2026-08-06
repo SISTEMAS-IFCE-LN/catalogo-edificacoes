@@ -1,4 +1,4 @@
-import { api } from '@/lib/api'
+import { api } from '@/lib/api/api'
 import { AmbientesBasicosPaginadosSchema, type AmbientesBasicosPaginados } from '@/types/ambientes/ambiente'
 import { ROUTES } from '@/constants/routes'
 

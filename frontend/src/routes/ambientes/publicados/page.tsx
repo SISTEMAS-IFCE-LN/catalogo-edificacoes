@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useEffect } from 'react'
-import { fetchPublicados, type PublicadosQuery } from '@/lib/api-ambientes'
+import { fetchPublicados, type PublicadosQuery } from '@/lib/api/api-ambientes'
 import { PesquisaBar } from '@/components/ambientes/PesquisaBar'
 import { TabelaPadrao } from '@/components/ambientes/TabelaPadrao'
 import { Button } from '@/components/ui/button'

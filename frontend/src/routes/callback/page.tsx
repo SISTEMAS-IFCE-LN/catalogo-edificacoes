@@ -1,6 +1,6 @@
 import {useEffect} from 'react'
 import {useNavigate} from 'react-router'
-import {ensureCsrfToken} from '@/lib/csrf'
+import {ensureCsrfToken} from '@/lib/security/csrf'
 import {ROUTES} from '@/constants/routes'
 import {toast} from 'sonner'
 import {useAuth} from "@/hooks/useAuth"

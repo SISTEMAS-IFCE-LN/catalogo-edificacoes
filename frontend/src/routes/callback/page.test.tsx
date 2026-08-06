@@ -12,7 +12,7 @@ vi.mock('@/hooks/useAuth', () => ({
     useAuth: () => ({login: mockLogin}),
 }))
 
-vi.mock('@/lib/csrf', () => ({
+vi.mock('@/lib/security/csrf', () => ({
     ensureCsrfToken: vi.fn().mockResolvedValue(undefined),
 }))
 
