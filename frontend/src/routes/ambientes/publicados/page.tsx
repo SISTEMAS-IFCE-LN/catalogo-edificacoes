@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useEffect } from 'react'
-import { fetchPublicados, type PublicadosQuery } from '@/lib/api/api-ambientes'
+import { fetchAmbientes } from '@/lib/api/api-ambientes'
+import type { AmbientesQuery } from '@/types/ambientes/ambiente'
 import { PesquisaBar } from '@/components/ambientes/PesquisaBar'
 import { TabelaPadrao } from '@/components/ambientes/TabelaPadrao'
 import { Button } from '@/components/ui/button'
@@ -27,7 +28,7 @@ export function PublicadosPage() {
     handleSizeChange,
   } = useAmbientesSearchParams()
 
-  const query: PublicadosQuery = {
+  const query: AmbientesQuery = {
     page,
     size,
     nome: filtros.nome || undefined,
@@ -39,7 +40,7 @@ export function PublicadosPage() {
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['ambientes', 'publicados', query],
-    queryFn: ({ signal }) => fetchPublicados(query, signal),
+    queryFn: ({ signal }) => fetchAmbientes(query, signal),
   })
 
   useEffect(() => {

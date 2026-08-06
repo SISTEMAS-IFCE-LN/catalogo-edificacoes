@@ -1,19 +1,16 @@
 import { api } from '@/lib/api/api'
-import { AmbientesBasicosPaginadosSchema, type AmbientesBasicosPaginados } from '@/types/ambientes/ambiente'
+import {
+  AmbientesBasicosPaginadosSchema,
+  EsquadriasResponseSchema,
+  type AmbientesBasicosPaginados,
+  type AmbientesQuery,
+  type EsquadriasResponse,
+  type EsquadriasQuery, AmbienteDetalhe
+} from '@/types/ambientes/ambiente'
 import { ROUTES } from '@/constants/routes'
 
-export interface PublicadosQuery {
-  page?: number
-  size?: number
-  nome?: string
-  bloco?: string
-  unidade?: string
-  andar?: number
-  tipo?: string
-}
-
-export async function fetchPublicados(
-  query: PublicadosQuery,
+export async function fetchAmbientes(
+  query: AmbientesQuery,
   signal?: AbortSignal
 ): Promise<AmbientesBasicosPaginados> {
   const { data } = await api.get(`/api${ROUTES.PUBLICADOS}`, {
@@ -29,4 +26,22 @@ export async function fetchPublicados(
     signal,
   })
   return AmbientesBasicosPaginadosSchema.parse(data)
+}
+
+export async function fetchDetalheAmbiente(id: number): Promise<AmbienteDetalhe> {
+  const { data } = await api.get<AmbienteDetalhe>(`/api${ROUTES.PUBLICADOS}/${id}`)
+  return data
+}
+
+export async function fetchEsquadrias(query: EsquadriasQuery): Promise<EsquadriasResponse> {
+  const { data } = await api.get<EsquadriasResponse>(`/api${ROUTES.PUBLICADOS}/esquadrias`, {
+    params: {
+      ids: query.ids.join(','),
+      page: query.page ?? 0,
+      size: query.size ?? 100,
+      ...(query.tipo && { tipo: query.tipo }),
+      ...(query.material && { material: query.material }),
+    },
+  })
+  return EsquadriasResponseSchema.parse(data)
 }
