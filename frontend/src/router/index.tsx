@@ -13,6 +13,8 @@ import {
     UnauthorizedPage,
     ProtectedLayout,
     PublicadosPage,
+    PublicadoDetalhePage,
+    EsquadriasPage,
 } from './lazy-pages'
 
 export const router = createBrowserRouter([
@@ -34,12 +36,12 @@ export const router = createBrowserRouter([
                     {
                         path: '/ambientes/publicados/:id',
                         element: <RequireRole roles={[Role.COLABORADOR]}/>,
-                        children: [{index: true, element: <Suspense fallback={<Loading/>}><HomePage/></Suspense>}],
+                        children: [{index: true, element: <Suspense fallback={<Loading/>}><PublicadoDetalhePage/></Suspense>}],
                     },
                     {
                         path: '/ambientes/publicados/esquadrias',
                         element: <RequireRole roles={[Role.COLABORADOR]}/>,
-                        children: [{index: true, element: <Suspense fallback={<Loading/>}><HomePage/></Suspense>}],
+                        children: [{index: true, element: <Suspense fallback={<Loading/>}><EsquadriasPage/></Suspense>}],
                     },
                     // Validador (UC01-UC03-FE)
                     {
