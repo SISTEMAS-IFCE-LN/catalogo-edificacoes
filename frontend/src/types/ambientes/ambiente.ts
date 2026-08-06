@@ -142,6 +142,4 @@ export interface EsquadriasQuery {
     ids: number[]
     page?: number
     size?: number
-    tipo?: TipoEsquadria
-    material?: MaterialEsquadria
 }

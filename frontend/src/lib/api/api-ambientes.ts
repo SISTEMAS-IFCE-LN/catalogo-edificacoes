@@ -39,8 +39,6 @@ export async function fetchEsquadrias(query: EsquadriasQuery): Promise<Esquadria
       ids: query.ids.join(','),
       page: query.page ?? 0,
       size: query.size ?? 100,
-      ...(query.tipo && { tipo: query.tipo }),
-      ...(query.material && { material: query.material }),
     },
   })
   return EsquadriasResponseSchema.parse(data)
