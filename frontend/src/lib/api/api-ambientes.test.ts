@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { fetchAmbientes } from './api-ambientes'
+import { fetchAmbientes, fetchDetalheAmbiente, fetchEsquadrias } from './api-ambientes'
 import { api } from '@/lib/api/api'
 
 vi.mock('@/lib/api/api', () => ({
@@ -139,5 +139,62 @@ describe('fetchPublicados', () => {
       },
     })
     await expect(fetchAmbientes({ page: 0, size: 20 })).rejects.toThrow()
+  })
+})
+
+describe('fetchDetalheAmbiente', () => {
+  beforeEach(() => {
+    vi.mocked(api.get).mockClear()
+  })
+
+  it('chama /api/ambientes/publicados/{id}', async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({
+      data: {
+        id: 1,
+        nome: 'Sala 1',
+        localizacao: { id: 1, bloco: 'Bloco 1', unidade: 'Sede', andar: 1 },
+        tipo: 'Sala de Aula',
+        capacidade: 30,
+        area: 50,
+        geometrias: [{ id: 1, tipo: 'Retangular', base: 5, altura: 10, repeticao: 1, area: 50 }],
+        areaAmbiente: 50,
+        pesDireitos: [3.5, 2.8],
+        esquadriasDetalhes: {
+          esquadrias: [],
+          esquadriasTipoMaterial: [],
+        },
+        informacaoAdicional: '',
+        status: 'Publicado',
+      },
+    })
+    await fetchDetalheAmbiente(1)
+    expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados/1')
+  })
+})
+
+describe('fetchEsquadrias', () => {
+  beforeEach(() => {
+    vi.mocked(api.get).mockClear()
+  })
+
+  it('chama /api/ambientes/publicados/esquadrias com ids', async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({
+      data: {
+        ambientes: [],
+        totalTipoMaterial: [],
+        dadosPaginacao: {
+          totalElements: 0,
+          totalPages: 0,
+          currentPage: 0,
+          pageSize: 100,
+          hasNext: false,
+          hasPrevious: false,
+        },
+      },
+    })
+    await fetchEsquadrias({ ids: [1, 2, 3], page: 0, size: 100 })
+    expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados/esquadrias', expect.objectContaining({
+      params: expect.objectContaining({ ids: '1,2,3', page: 0, size: 100 }),
+    }))
   })
 })
