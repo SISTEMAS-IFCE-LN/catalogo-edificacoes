@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dialog'
 import {Button} from '@/components/ui/button'
 import {useState} from 'react'
+import {toast} from 'sonner'
 
 interface Props {
     open: boolean
@@ -35,6 +36,9 @@ export function ModalConfirmacao({
         try {
             await onConfirm()
             onOpenChange(false)
+        } catch (error) {
+            toast.error('Erro ao executar ação. Tente novamente.')
+            console.error('Erro ao confirmar:', error)
         } finally {
             setExecutando(false)
         }

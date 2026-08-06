@@ -1,7 +1,7 @@
 import { useSearchParams } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import { fetchEsquadrias } from '@/lib/api/api-ambientes'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 
@@ -21,6 +21,10 @@ export function EsquadriasPage() {
     enabled: ids.length > 0,
   })
 
+  useEffect(() => {
+    if (error) toast.error('Erro ao carregar esquadrias.')
+  }, [error])
+
   if (ids.length === 0) {
     return <p>Nenhum ambiente selecionado.</p>
   }
@@ -28,7 +32,6 @@ export function EsquadriasPage() {
   if (isLoading) return <p>Carregando…</p>
 
   if (error) {
-    toast.error('Erro ao carregar esquadrias.')
     return <p>Erro ao carregar dados.</p>
   }
 
@@ -64,8 +67,8 @@ export function EsquadriasPage() {
             <div className="text-sm">
               <strong>Resumo:</strong>
               <ul className="list-disc pl-6">
-                {amb.detalhesEsquadrias.esquadriasTipoMaterial.map((r, i) => (
-                  <li key={i}>{r.tipo} / {r.material}: {r.area.toFixed(2)} m²</li>
+                {amb.detalhesEsquadrias.esquadriasTipoMaterial.map((r) => (
+                  <li key={`${r.tipo}-${r.material}`}>{r.tipo} / {r.material}: {r.area.toFixed(2)} m²</li>
                 ))}
               </ul>
             </div>
@@ -78,8 +81,8 @@ export function EsquadriasPage() {
         <div className="border-t pt-4 space-y-2">
           <h2 className="text-lg font-semibold">Resumo Global</h2>
           <ul className="text-sm list-disc pl-6">
-            {data.totalTipoMaterial.map((r, i) => (
-              <li key={i}>{r.tipo} / {r.material}: {r.area.toFixed(2)} m²</li>
+            {data.totalTipoMaterial.map((r) => (
+              <li key={`${r.tipo}-${r.material}`}>{r.tipo} / {r.material}: {r.area.toFixed(2)} m²</li>
             ))}
           </ul>
         </div>

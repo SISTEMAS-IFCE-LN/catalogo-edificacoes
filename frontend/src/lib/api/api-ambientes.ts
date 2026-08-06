@@ -2,10 +2,12 @@ import { api } from '@/lib/api/api'
 import {
   AmbientesBasicosPaginadosSchema,
   EsquadriasResponseSchema,
+  AmbienteDetalheSchema,
   type AmbientesBasicosPaginados,
   type AmbientesQuery,
   type EsquadriasResponse,
-  type EsquadriasQuery, AmbienteDetalhe
+  type EsquadriasQuery,
+  type AmbienteDetalhe,
 } from '@/types/ambientes/ambiente'
 import { ROUTES } from '@/constants/routes'
 
@@ -29,8 +31,8 @@ export async function fetchAmbientes(
 }
 
 export async function fetchDetalheAmbiente(id: number): Promise<AmbienteDetalhe> {
-  const { data } = await api.get<AmbienteDetalhe>(`/api${ROUTES.PUBLICADOS}/${id}`)
-  return data
+  const { data } = await api.get(`/api${ROUTES.PUBLICADOS}/${id}`)
+  return AmbienteDetalheSchema.parse(data)
 }
 
 export async function fetchEsquadrias(query: EsquadriasQuery): Promise<EsquadriasResponse> {

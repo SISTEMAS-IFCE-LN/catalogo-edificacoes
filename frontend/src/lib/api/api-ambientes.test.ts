@@ -170,6 +170,56 @@ describe('fetchDetalheAmbiente', () => {
     await fetchDetalheAmbiente(1)
     expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados/1')
   })
+
+  it('valida resposta com Zod', async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({
+      data: {
+        id: 1,
+        nome: 'Sala 1',
+        localizacao: { id: 1, bloco: 'Bloco 1', unidade: 'Sede', andar: 1 },
+        tipo: 'Sala de Aula',
+        capacidade: 30,
+        area: 50,
+        geometrias: [{ id: 1, tipo: 'Retangular', base: 5, altura: 10, repeticao: 1, area: 50 }],
+        areaAmbiente: 50,
+        pesDireitos: [3.5, 2.8],
+        esquadriasDetalhes: {
+          esquadrias: [],
+          esquadriasTipoMaterial: [],
+        },
+        informacaoAdicional: '',
+        status: 'Publicado',
+      },
+    })
+    const result = await fetchDetalheAmbiente(1)
+    expect(result).toHaveProperty('id')
+    expect(result).toHaveProperty('nome')
+    expect(result).toHaveProperty('geometrias')
+    expect(result).toHaveProperty('esquadriasDetalhes')
+  })
+
+  it('lança erro Zod quando resposta é inválida', async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({
+      data: {
+        id: 'invalid', // deveria ser number
+        nome: 'Sala 1',
+        localizacao: { id: 1, bloco: 'Bloco 1', unidade: 'Sede', andar: 1 },
+        tipo: 'Sala de Aula',
+        capacidade: 30,
+        area: 50,
+        geometrias: [],
+        areaAmbiente: 50,
+        pesDireitos: [],
+        esquadriasDetalhes: {
+          esquadrias: [],
+          esquadriasTipoMaterial: [],
+        },
+        informacaoAdicional: '',
+        status: 'Publicado',
+      },
+    })
+    await expect(fetchDetalheAmbiente(1)).rejects.toThrow()
+  })
 })
 
 describe('fetchEsquadrias', () => {
@@ -196,5 +246,44 @@ describe('fetchEsquadrias', () => {
     expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados/esquadrias', expect.objectContaining({
       params: expect.objectContaining({ ids: '1,2,3', page: 0, size: 100 }),
     }))
+  })
+
+  it('valida resposta com Zod', async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({
+      data: {
+        ambientes: [],
+        totalTipoMaterial: [],
+        dadosPaginacao: {
+          totalElements: 0,
+          totalPages: 0,
+          currentPage: 0,
+          pageSize: 100,
+          hasNext: false,
+          hasPrevious: false,
+        },
+      },
+    })
+    const result = await fetchEsquadrias({ ids: [1], page: 0, size: 100 })
+    expect(result).toHaveProperty('ambientes')
+    expect(result).toHaveProperty('totalTipoMaterial')
+    expect(result).toHaveProperty('dadosPaginacao')
+  })
+
+  it('lança erro Zod quando resposta é inválida', async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({
+      data: {
+        ambientes: 'invalid', // deveria ser array
+        totalTipoMaterial: [],
+        dadosPaginacao: {
+          totalElements: 0,
+          totalPages: 0,
+          currentPage: 0,
+          pageSize: 100,
+          hasNext: false,
+          hasPrevious: false,
+        },
+      },
+    })
+    await expect(fetchEsquadrias({ ids: [1], page: 0, size: 100 })).rejects.toThrow()
   })
 })

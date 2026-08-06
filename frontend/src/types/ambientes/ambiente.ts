@@ -85,8 +85,7 @@ const EsquadriasDetalhesSchema = z.object({
 })
 
 // Ambiente detalhado (AmbienteRes)
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- será usado na parte 08 para validar resposta da API
-const AmbienteDetalheSchema = AmbienteBasicoSchema.extend({
+export const AmbienteDetalheSchema = AmbienteBasicoSchema.extend({
     geometrias: z.array(GeometriaAmbienteSchema),
     areaAmbiente: z.number(),
     pesDireitos: z.array(z.number()),
