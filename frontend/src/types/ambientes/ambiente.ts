@@ -26,6 +26,65 @@ const AmbienteBasicoSchema = z.object({
 
 export type AmbienteBasico = z.infer<typeof AmbienteBasicoSchema>
 
+// O DTO de detalhe do backend (AmbienteRes) não retorna `area`.
+// A área calculada do ambiente é representada por `areaAmbiente` no detalhe.
+const AmbienteDetalheBaseSchema = AmbienteBasicoSchema.omit({area: true})
+
+// Os DTOs de detalhe retornam os nomes dos enums Kotlin (por exemplo,
+// `RETANGULAR`), enquanto a lista retorna os rótulos (`Retangular`).
+// Normalizamos ambos para os valores exibidos pelo frontend.
+const TipoGeometriaResponseSchema = z.union([
+    z.enum(TipoGeometria),
+    z.enum(['RETANGULAR', 'TRIANGULAR']),
+]).transform((value) => (
+    value in TipoGeometria
+        ? TipoGeometria[value as keyof typeof TipoGeometria]
+        : value
+))
+
+const TipoEsquadriaResponseSchema = z.union([
+    z.enum(TipoEsquadria),
+    z.enum(['PORTA', 'JANELA', 'COBOGO', 'VAO_ABERTO', 'ESQUADRIA_OUTRO_AMBIENTE']),
+]).transform((value) => (
+    value in TipoEsquadria
+        ? TipoEsquadria[value as keyof typeof TipoEsquadria]
+        : value
+))
+
+const MaterialEsquadriaResponseSchema = z.union([
+    z.enum(MaterialEsquadria),
+    z.enum([
+        'ALUMINIO',
+        'ALUMINIO_VIDRO',
+        'ALUMINIO_PVC',
+        'FERRO',
+        'FERRO_VIDRO',
+        'VIDRO',
+        'PVC',
+        'MADEIRA_MACICA',
+        'MADEIRA_VIDRO',
+        'MADEIRA_VENEZIANA',
+        'MADEIRA_FICHA',
+        'MADEIRA_PARANA',
+        'PRE_MOLDADO',
+        'NAO_SE_APLICA',
+        'OUTRO',
+    ]),
+]).transform((value) => (
+    value in MaterialEsquadria
+        ? MaterialEsquadria[value as keyof typeof MaterialEsquadria]
+        : value
+))
+
+const StatusAmbienteResponseSchema = z.union([
+    z.enum(StatusAmbiente),
+    z.enum(['PUBLICADO', 'NAO_PUBLICADO', 'AGUARDANDO_VALIDACAO']),
+]).transform((value) => (
+    value in StatusAmbiente
+        ? StatusAmbiente[value as keyof typeof StatusAmbiente]
+        : value
+))
+
 export const AmbientesBasicosPaginadosSchema = z.object({
     ambientes: z.array(AmbienteBasicoSchema),
     areaTotal: z.number(),
@@ -44,7 +103,7 @@ export type AmbientesBasicosPaginados = z.infer<typeof AmbientesBasicosPaginados
 // Geometria do ambiente (GeometriaAmbienteRes)
 const GeometriaAmbienteSchema = z.object({
     id: z.number(),
-    tipo: z.enum(TipoGeometria),
+    tipo: TipoGeometriaResponseSchema,
     base: z.number(),
     altura: z.number(),
     repeticao: z.int(),
@@ -63,18 +122,18 @@ const GeometriaEsquadriaSchema = z.object({
 // Esquadria (EsquadriaRes)
 const EsquadriaSchema = z.object({
     id: z.number(),
-    tipo: z.enum(TipoEsquadria),
+    tipo: TipoEsquadriaResponseSchema,
     geometria: GeometriaEsquadriaSchema,
     alturaPeitoril: z.number(),
     area: z.number(),
-    material: z.enum(MaterialEsquadria),
+    material: MaterialEsquadriaResponseSchema,
     informacaoAdicional: z.string(),
 })
 
 // Resumo por tipo/material (EsquadriaTipoMaterialRes)
 const EsquadriaTipoMaterialSchema = z.object({
-    tipo: z.enum(TipoEsquadria),
-    material: z.enum(MaterialEsquadria),
+    tipo: TipoEsquadriaResponseSchema,
+    material: MaterialEsquadriaResponseSchema,
     area: z.number(),
 })
 
@@ -85,13 +144,13 @@ const EsquadriasDetalhesSchema = z.object({
 })
 
 // Ambiente detalhado (AmbienteRes)
-export const AmbienteDetalheSchema = AmbienteBasicoSchema.extend({
+export const AmbienteDetalheSchema = AmbienteDetalheBaseSchema.extend({
     geometrias: z.array(GeometriaAmbienteSchema),
     areaAmbiente: z.number(),
     pesDireitos: z.array(z.number()),
     esquadriasDetalhes: EsquadriasDetalhesSchema,
     informacaoAdicional: z.string(),
-    status: z.enum(StatusAmbiente),
+    status: StatusAmbienteResponseSchema,
 })
 
 export type AmbienteDetalhe = z.infer<typeof AmbienteDetalheSchema>

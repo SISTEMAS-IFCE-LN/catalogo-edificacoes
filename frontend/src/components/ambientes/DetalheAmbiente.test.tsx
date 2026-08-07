@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
 import { DetalheAmbiente } from './DetalheAmbiente'
 import type { AmbienteDetalhe } from '@/types/ambientes/ambiente'
@@ -23,7 +23,6 @@ const mockAmbiente: AmbienteDetalhe = {
     andar: 1,
   },
   capacidade: 30,
-  area: 50,
   geometrias: [
     {
       id: 1,
@@ -76,7 +75,7 @@ describe('DetalheAmbiente', () => {
     render(<DetalheAmbiente ambiente={mockAmbiente} />)
     expect(screen.getByText(/Bloco 1/)).toBeInTheDocument()
     expect(screen.getByText(/Sede/)).toBeInTheDocument()
-    expect(screen.getByText(/Andar 1/)).toBeInTheDocument()
+    expect(screen.getByText(/1º Andar/)).toBeInTheDocument()
   })
 
   it('renderiza tipo, capacidade e área', () => {
@@ -97,11 +96,23 @@ describe('DetalheAmbiente', () => {
     expect(screen.queryByText('Sala com ar-condicionado')).not.toBeInTheDocument()
   })
 
-  it('renderiza geometrias', () => {
+  it('renderiza o andar térreo', () => {
+    const ambienteTerreo = {
+      ...mockAmbiente,
+      localizacao: { ...mockAmbiente.localizacao, andar: 0 },
+    }
+    render(<DetalheAmbiente ambiente={ambienteTerreo} />)
+    expect(screen.getByText(/Térreo/)).toBeInTheDocument()
+  })
+
+  it('renderiza geometrias em tabela com dimensões ordenadas e total', () => {
     render(<DetalheAmbiente ambiente={mockAmbiente} />)
-    expect(screen.getByText(/Retangular/)).toBeInTheDocument()
-    expect(screen.getByText(/5x10m/)).toBeInTheDocument()
-    expect(screen.getByText(/área 50.00 m²/)).toBeInTheDocument()
+    const tabela = screen.getByRole('table', { name: 'Dimensões' })
+    expect(within(tabela).getByText('10.00')).toBeInTheDocument()
+    expect(within(tabela).getByText('5.00')).toBeInTheDocument()
+    expect(within(tabela).getByText('Retangular')).toBeInTheDocument()
+    expect(within(tabela).getByText('Área total do ambiente')).toBeInTheDocument()
+    expect(within(tabela).getAllByText('50.00')).toHaveLength(2)
   })
 
   it('renderiza pés-direitos', () => {
@@ -109,12 +120,17 @@ describe('DetalheAmbiente', () => {
     expect(screen.getByText('3.5m, 2.8m')).toBeInTheDocument()
   })
 
-  it('renderiza esquadrias', () => {
+  it('renderiza esquadrias em tabela com dimensões ordenadas e total', () => {
     render(<DetalheAmbiente ambiente={mockAmbiente} />)
-    expect(screen.getByText(/Janela 1.5x1.2m/)).toBeInTheDocument()
-    expect(screen.getByText(/Alumínio/)).toBeInTheDocument()
-    expect(screen.getByText(/peitoril: 0.9m/)).toBeInTheDocument()
-    expect(screen.getByText(/Com veneziana/)).toBeInTheDocument()
+    const tabela = screen.getByRole('table', { name: 'Esquadrias' })
+    expect(within(tabela).getByText('1.50')).toBeInTheDocument()
+    expect(within(tabela).getByText('1.20')).toBeInTheDocument()
+    expect(within(tabela).getByText('0.90')).toBeInTheDocument()
+    expect(within(tabela).getByText('Janela')).toBeInTheDocument()
+    expect(within(tabela).getByText('Alumínio')).toBeInTheDocument()
+    expect(within(tabela).getByText('Com veneziana')).toBeInTheDocument()
+    expect(within(tabela).getByText('Área total das esquadrias')).toBeInTheDocument()
+    expect(within(tabela).getAllByText('3.60')).toHaveLength(2)
   })
 
   it('não renderiza peitoril quando altura é 0', () => {

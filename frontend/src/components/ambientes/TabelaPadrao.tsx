@@ -10,6 +10,10 @@ import type {AmbienteBasico} from '@/types/ambientes/ambiente'
 import {Link} from 'react-router'
 
 export function TabelaPadrao({itens}: { itens: AmbienteBasico[] }) {
+    function formatarAndar(andar: number): string {
+        return andar === 0 ? 'Térreo' : `${andar}º`
+    }
+
     return (
         <Table>
             <TableHeader>
@@ -33,7 +37,7 @@ export function TabelaPadrao({itens}: { itens: AmbienteBasico[] }) {
                         </TableCell>
                         <TableCell>{a.localizacao.bloco}</TableCell>
                         <TableCell>{a.localizacao.unidade}</TableCell>
-                        <TableCell>{a.localizacao.andar}</TableCell>
+                        <TableCell>{formatarAndar(a.localizacao.andar)}</TableCell>
                         <TableCell>{a.tipo}</TableCell>
                         <TableCell>{a.capacidade}</TableCell>
                         <TableCell>{a.area.toFixed(2)}</TableCell>

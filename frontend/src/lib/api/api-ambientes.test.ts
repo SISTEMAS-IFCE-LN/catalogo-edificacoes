@@ -155,8 +155,7 @@ describe('fetchDetalheAmbiente', () => {
         localizacao: { id: 1, bloco: 'Bloco 1', unidade: 'Sede', andar: 1 },
         tipo: 'Sala de Aula',
         capacidade: 30,
-        area: 50,
-        geometrias: [{ id: 1, tipo: 'Retangular', base: 5, altura: 10, repeticao: 1, area: 50 }],
+        geometrias: [{ id: 1, tipo: 'RETANGULAR', base: 5, altura: 10, repeticao: 1, area: 50 }],
         areaAmbiente: 50,
         pesDireitos: [3.5, 2.8],
         esquadriasDetalhes: {
@@ -164,7 +163,7 @@ describe('fetchDetalheAmbiente', () => {
           esquadriasTipoMaterial: [],
         },
         informacaoAdicional: '',
-        status: 'Publicado',
+        status: 'PUBLICADO',
       },
     })
     await fetchDetalheAmbiente(1)
@@ -179,8 +178,7 @@ describe('fetchDetalheAmbiente', () => {
         localizacao: { id: 1, bloco: 'Bloco 1', unidade: 'Sede', andar: 1 },
         tipo: 'Sala de Aula',
         capacidade: 30,
-        area: 50,
-        geometrias: [{ id: 1, tipo: 'Retangular', base: 5, altura: 10, repeticao: 1, area: 50 }],
+        geometrias: [{ id: 1, tipo: 'RETANGULAR', base: 5, altura: 10, repeticao: 1, area: 50 }],
         areaAmbiente: 50,
         pesDireitos: [3.5, 2.8],
         esquadriasDetalhes: {
@@ -188,7 +186,7 @@ describe('fetchDetalheAmbiente', () => {
           esquadriasTipoMaterial: [],
         },
         informacaoAdicional: '',
-        status: 'Publicado',
+        status: 'PUBLICADO',
       },
     })
     const result = await fetchDetalheAmbiente(1)
@@ -196,6 +194,10 @@ describe('fetchDetalheAmbiente', () => {
     expect(result).toHaveProperty('nome')
     expect(result).toHaveProperty('geometrias')
     expect(result).toHaveProperty('esquadriasDetalhes')
+    expect(result).toHaveProperty('areaAmbiente', 50)
+    expect(result).not.toHaveProperty('area')
+    expect(result.geometrias[0].tipo).toBe('Retangular')
+    expect(result.status).toBe('Publicado')
   })
 
   it('lança erro Zod quando resposta é inválida', async () => {
