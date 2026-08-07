@@ -1,4 +1,4 @@
-import {useEffect} from 'react'
+import {useEffect, useRef} from 'react'
 import {useNavigate} from 'react-router'
 import {ensureCsrfToken} from '@/lib/security/csrf'
 import {ROUTES} from '@/constants/routes'
@@ -10,8 +10,12 @@ const FAKE_AUTH = import.meta.env.VITE_FAKE_AUTH === 'true'
 export function CallbackPage() {
     const navigate = useNavigate()
     const {login} = useAuth()
+    const isProcessing = useRef(false)
 
     useEffect(() => {
+        if (isProcessing.current) return
+        isProcessing.current = true
+
         ;(async () => {
             if (FAKE_AUTH) {
                 navigate(ROUTES.HOME, {replace: true})

@@ -1,4 +1,5 @@
 import {render, screen, waitFor} from '@testing-library/react'
+import {StrictMode} from 'react'
 import {MemoryRouter, Routes, Route} from 'react-router'
 import {describe, it, expect, vi, beforeEach} from 'vitest'
 import {CallbackPage} from './page'
@@ -79,6 +80,27 @@ describe('CallbackPage', () => {
         await waitFor(() => {
             expect(mockNavigate).toHaveBeenCalledWith('/', {replace: true})
         })
+    })
+
+    it('processa o callback uma única vez no StrictMode', async () => {
+        window.location.hash = '#token=abc123'
+
+        render(
+            <StrictMode>
+                <MemoryRouter initialEntries={['/callback']}>
+                    <Routes>
+                        <Route path="/callback" element={<CallbackPage/>}/>
+                        <Route path="/login" element={<div>Login</div>}/>
+                    </Routes>
+                </MemoryRouter>
+            </StrictMode>,
+        )
+
+        await waitFor(() => {
+            expect(mockLogin).toHaveBeenCalledWith('abc123')
+        })
+        expect(mockLogin).toHaveBeenCalledTimes(1)
+        expect(mockNavigate).toHaveBeenCalledTimes(1)
     })
 
     it('navega para LOGIN quando login falha', async () => {
