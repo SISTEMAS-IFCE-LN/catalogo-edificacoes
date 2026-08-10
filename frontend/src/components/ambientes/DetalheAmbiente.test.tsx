@@ -82,7 +82,8 @@ describe('DetalheAmbiente', () => {
     render(<DetalheAmbiente ambiente={mockAmbiente} />)
     expect(screen.getByText(/Tipo: Sala de Aula/)).toBeInTheDocument()
     expect(screen.getByText(/Capacidade: 30/)).toBeInTheDocument()
-    expect(screen.getByText(/Área: 50.00 m²/)).toBeInTheDocument()
+    // A área do ambiente é exibida na tabela de Dimensões (linha "Área Total do Ambiente")
+    expect(screen.getAllByText('50.00')).toHaveLength(2)
   })
 
   it('renderiza informação adicional quando presente', () => {
@@ -111,7 +112,7 @@ describe('DetalheAmbiente', () => {
     expect(within(tabela).getByText('10.00')).toBeInTheDocument()
     expect(within(tabela).getByText('5.00')).toBeInTheDocument()
     expect(within(tabela).getByText('Retangular')).toBeInTheDocument()
-    expect(within(tabela).getByText('Área total do ambiente')).toBeInTheDocument()
+    expect(within(tabela).getByText('Área Total do Ambiente')).toBeInTheDocument()
     expect(within(tabela).getAllByText('50.00')).toHaveLength(2)
   })
 
@@ -129,7 +130,7 @@ describe('DetalheAmbiente', () => {
     expect(within(tabela).getByText('Janela')).toBeInTheDocument()
     expect(within(tabela).getByText('Alumínio')).toBeInTheDocument()
     expect(within(tabela).getByText('Com veneziana')).toBeInTheDocument()
-    expect(within(tabela).getByText('Área total das esquadrias')).toBeInTheDocument()
+    expect(within(tabela).getByText('Área Total das Esquadrias')).toBeInTheDocument()
     expect(within(tabela).getAllByText('3.60')).toHaveLength(2)
   })
 

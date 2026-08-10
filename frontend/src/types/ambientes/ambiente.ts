@@ -130,12 +130,16 @@ const EsquadriaSchema = z.object({
     informacaoAdicional: z.string(),
 })
 
+export type Esquadria = z.infer<typeof EsquadriaSchema>
+
 // Resumo por tipo/material (EsquadriaTipoMaterialRes)
 const EsquadriaTipoMaterialSchema = z.object({
     tipo: TipoEsquadriaResponseSchema,
     material: MaterialEsquadriaResponseSchema,
     area: z.number(),
 })
+
+export type EsquadriaTipoMaterial = z.infer<typeof EsquadriaTipoMaterialSchema>
 
 // Detalhes de esquadrias (EsquadriasDetalhesRes)
 const EsquadriasDetalhesSchema = z.object({
@@ -167,6 +171,8 @@ const AmbienteEsquadriasSchema = z.object({
     dadosAmbiente: AmbienteNomeLocalizacaoSchema,
     detalhesEsquadrias: EsquadriasDetalhesSchema,
 })
+
+export type AmbienteEsquadrias = z.infer<typeof AmbienteEsquadriasSchema>
 
 // Resposta de esquadrias (para UC20-FE)
 export const EsquadriasResponseSchema = z.object({

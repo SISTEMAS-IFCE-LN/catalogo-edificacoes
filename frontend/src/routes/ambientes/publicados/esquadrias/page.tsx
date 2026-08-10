@@ -1,113 +1,216 @@
 import { useSearchParams } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import { fetchEsquadrias } from '@/lib/api/api-ambientes'
-import { useState, useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select'
 import { toast } from 'sonner'
+import { DetalheEsquadrias } from '@/components/ambientes/DetalheEsquadrias'
+import {
+    filtrarEsquadrias,
+    obterIdsInvalidos,
+    temEsquadriasVisiveis,
+    type FiltroEsquadrias,
+} from '@/lib/ambientes/esquadrias'
+import { MaterialEsquadria, TipoEsquadria } from '@/types/ambientes/enums'
+
+const OPCAO_TODOS = 'TODOS'
+
+function parseIds(idsParam: string | null): number[] {
+    if (!idsParam) return []
+    return idsParam
+        .split(',')
+        .map((s) => Number(s.trim()))
+        .filter((n) => !Number.isNaN(n) && n > 0)
+}
+
+function atualizarSearchParams(
+    setSearchParams: ReturnType<typeof useSearchParams>[1],
+    updates: Record<string, string | null>,
+) {
+    setSearchParams((params) => {
+        for (const [key, value] of Object.entries(updates)) {
+            if (value === null || value === '' || value === OPCAO_TODOS) {
+                params.delete(key)
+            } else {
+                params.set(key, value)
+            }
+        }
+        return params
+    })
+}
 
 export function EsquadriasPage() {
-  const [searchParams] = useSearchParams()
-  const ids = searchParams.get('ids')?.split(',').map(Number).filter(Boolean) ?? []
+    const [searchParams, setSearchParams] = useSearchParams()
+    const ids = useMemo(() => parseIds(searchParams.get('ids')), [searchParams])
 
-  const [page, setPage] = useState(0)
+    const filtroTipo = searchParams.get('tipo') ?? ''
+    const filtroMaterial = searchParams.get('material') ?? ''
+    const filtro: FiltroEsquadrias = useMemo(
+        () => ({ tipo: filtroTipo, material: filtroMaterial }),
+        [filtroTipo, filtroMaterial],
+    )
 
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['esquadrias', ids, page],
-    queryFn: () => fetchEsquadrias({
-      ids,
-      page,
-      size: 100,
-    }),
-    enabled: ids.length > 0,
-  })
+    const [page, setPage] = useState(0)
 
-  useEffect(() => {
-    if (error) toast.error('Erro ao carregar esquadrias.')
-  }, [error])
+    const { data, isLoading, error } = useQuery({
+        queryKey: ['esquadrias', ids, page],
+        queryFn: () => fetchEsquadrias({
+            ids,
+            page,
+            size: 100,
+        }),
+        enabled: ids.length > 0,
+    })
 
-  if (ids.length === 0) {
-    return <p>Nenhum ambiente selecionado.</p>
-  }
+    useEffect(() => {
+        if (error) toast.error('Erro ao carregar esquadrias.')
+    }, [error])
 
-  if (isLoading) return <p>Carregando…</p>
+    const idsInvalidos = useMemo(
+        () => (data ? obterIdsInvalidos(ids, data) : []),
+        [data, ids],
+    )
 
-  if (error) {
-    return <p>Erro ao carregar dados.</p>
-  }
+    const responseFiltrada = useMemo(
+        () => (data ? filtrarEsquadrias(data, filtro) : null),
+        [data, filtro],
+    )
 
-  if (!data || data.ambientes.length === 0) {
-    return <p>Nenhuma esquadria encontrada.</p>
-  }
+    function handleFiltroTipo(value: string | null) {
+        atualizarSearchParams(setSearchParams, {
+            tipo: value === OPCAO_TODOS || value === null ? null : value,
+        })
+    }
 
-  return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Detalhes de Esquadrias</h1>
+    function handleFiltroMaterial(value: string | null) {
+        atualizarSearchParams(setSearchParams, {
+            material: value === OPCAO_TODOS || value === null ? null : value,
+        })
+    }
 
-      {/* Lista por ambiente */}
-      {data.ambientes.map((amb) => (
-        <div key={amb.dadosAmbiente.id} className="border rounded-lg p-4 space-y-3">
-          <h2 className="text-lg font-semibold">{amb.dadosAmbiente.nome}</h2>
-          <p className="text-sm text-muted-foreground">
-            Bloco {amb.dadosAmbiente.localizacao.bloco} • Unidade {amb.dadosAmbiente.localizacao.unidade} • Andar {amb.dadosAmbiente.localizacao.andar}
-          </p>
+    function handleRemoverInvalidos() {
+        const idsValidos = ids.filter((id) => !idsInvalidos.includes(id))
+        atualizarSearchParams(setSearchParams, { ids: idsValidos.join(',') || null })
+    }
 
-          <ul className="text-sm list-disc pl-6">
-            {amb.detalhesEsquadrias.esquadrias.map((e) => (
-              <li key={e.id}>
-                {e.tipo} {e.geometria.base}x{e.geometria.altura}m — {e.material}
-                {(e.alturaPeitoril > 0) && <span> peitoril: {e.alturaPeitoril}m</span>}
-                {e.informacaoAdicional && <span> — {e.informacaoAdicional}</span>}
-                {' '}— área {e.area.toFixed(2)} m²
-              </li>
-            ))}
-          </ul>
+    if (ids.length === 0) {
+        return <p>Nenhum ambiente selecionado.</p>
+    }
 
-          {/* Resumo por tipo/material */}
-          {amb.detalhesEsquadrias.esquadriasTipoMaterial.length > 0 && (
-            <div className="text-sm">
-              <strong>Resumo:</strong>
-              <ul className="list-disc pl-6">
-                {amb.detalhesEsquadrias.esquadriasTipoMaterial.map((r) => (
-                  <li key={`${r.tipo}-${r.material}`}>{r.tipo} / {r.material}: {r.area.toFixed(2)} m²</li>
-                ))}
-              </ul>
+    if (isLoading) return <p>Carregando…</p>
+
+    if (error) {
+        return (
+            <div className="space-y-4">
+                <p>Erro ao carregar dados.</p>
+                <Button variant="outline" onClick={() => window.location.reload()}>
+                    Tentar novamente
+                </Button>
             </div>
-          )}
-        </div>
-      ))}
+        )
+    }
 
-      {/* Resumo global */}
-      {data.totalTipoMaterial.length > 0 && (
-        <div className="border-t pt-4 space-y-2">
-          <h2 className="text-lg font-semibold">Resumo Global</h2>
-          <ul className="text-sm list-disc pl-6">
-            {data.totalTipoMaterial.map((r) => (
-              <li key={`${r.tipo}-${r.material}`}>{r.tipo} / {r.material}: {r.area.toFixed(2)} m²</li>
-            ))}
-          </ul>
-        </div>
-      )}
+    if (!data || data.ambientes.length === 0) {
+        return <p>Nenhuma esquadria encontrada.</p>
+    }
 
-      {/* Paginação */}
-      <div className="flex gap-2 items-center">
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={!data.dadosPaginacao.hasPrevious}
-          onClick={() => setPage((p) => p - 1)}
-        >
-          Anterior
-        </Button>
-        <span>Página {data.dadosPaginacao.currentPage + 1} de {data.dadosPaginacao.totalPages}</span>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={!data.dadosPaginacao.hasNext}
-          onClick={() => setPage((p) => p + 1)}
-        >
-          Próximo
-        </Button>
-      </div>
-    </div>
-  )
+    return (
+        <div className="space-y-6">
+            {/* Filtros client-side por tipo e material (UC20-FE) */}
+            <div className="flex flex-wrap items-end gap-3">
+                <div className="space-y-1">
+                    <label htmlFor="filtro-tipo" className="text-sm font-medium">
+                        Tipo
+                    </label>
+                    <Select value={filtroTipo || OPCAO_TODOS} onValueChange={handleFiltroTipo}>
+                        <SelectTrigger id="filtro-tipo" className="w-[180px]" aria-label="Filtrar por tipo">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value={OPCAO_TODOS}>Todos</SelectItem>
+                            {Object.values(TipoEsquadria).map((t) => (
+                                <SelectItem key={t} value={t}>{t}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                <div className="space-y-1">
+                    <label htmlFor="filtro-material" className="text-sm font-medium">
+                        Material
+                    </label>
+                    <Select value={filtroMaterial || OPCAO_TODOS} onValueChange={handleFiltroMaterial}>
+                        <SelectTrigger id="filtro-material" className="w-[200px]" aria-label="Filtrar por material">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value={OPCAO_TODOS}>Todos</SelectItem>
+                            {Object.values(MaterialEsquadria).map((m) => (
+                                <SelectItem key={m} value={m}>{m}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+            </div>
+
+            {/* Aviso de IDs inválidos (UC20-FE) */}
+            {idsInvalidos.length > 0 && (
+                <div role="alert" className="border border-destructive rounded-lg p-4 space-y-2">
+                    <p className="text-destructive font-medium">
+                        IDs inválidos: {idsInvalidos.join(', ')}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                        Alguns ambientes solicitados não foram encontrados ou não possuem esquadrias publicadas.
+                    </p>
+                    <Button variant="outline" size="sm" onClick={handleRemoverInvalidos}>
+                        Remover inválidos e tentar novamente
+                    </Button>
+                </div>
+            )}
+
+            {/* Callout de vazio pós-filtro (UC20-FE) */}
+            {responseFiltrada && !temEsquadriasVisiveis(responseFiltrada.ambientes) ? (
+                <div className="border rounded-lg p-4">
+                    <p className="text-muted-foreground">
+                        Nenhuma esquadria encontrada para os filtros aplicados. Tente remover ou ajustar os filtros.
+                    </p>
+                </div>
+            ) : responseFiltrada ? (
+                <DetalheEsquadrias response={responseFiltrada} />
+            ) : null}
+
+            {/* Paginação */}
+            {responseFiltrada && (
+                <div className="flex gap-2 items-center">
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={!responseFiltrada.dadosPaginacao.hasPrevious}
+                        onClick={() => setPage((p) => p - 1)}
+                    >
+                        Anterior
+                    </Button>
+                    <span>
+                        Página {responseFiltrada.dadosPaginacao.currentPage + 1} de{' '}
+                        {responseFiltrada.dadosPaginacao.totalPages}
+                    </span>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={!responseFiltrada.dadosPaginacao.hasNext}
+                        onClick={() => setPage((p) => p + 1)}
+                    >
+                        Próximo
+                    </Button>
+                </div>
+            )}
+        </div>
+    )
 }
