@@ -24,14 +24,16 @@ export const router = createBrowserRouter([
     },
     {path: '/callback', element: <Suspense fallback={<Loading/>}><CallbackPage/></Suspense>},
     {path: '/unauthorized', element: <Suspense fallback={<Loading/>}><UnauthorizedPage/></Suspense>},
-    // Publica (UC21-FE)
-    {path: '/ambientes/publicados', element: <Suspense fallback={<Loading/>}><PublicadosPage/></Suspense>},
-    // Autenticadas
+    // Layout comum (Header auth-aware + Footer) para público e autenticado
     {
-        element: <RequireAuth/>,
+        element: <Suspense fallback={<Loading/>}><ProtectedLayout/></Suspense>,
         children: [
+            // Pública (UC21-FE) — sem RequireAuth, mas com Header
+            {path: '/ambientes/publicados', element: <Suspense fallback={<Loading/>}><PublicadosPage/></Suspense>},
+            // Autenticadas
             {
-                element: <Suspense fallback={<Loading/>}><ProtectedLayout/></Suspense>, children: [
+                element: <RequireAuth/>,
+                children: [
                     // Colaborador (UC19-FE, UC20-FE)
                     {
                         path: '/ambientes/publicados/:id',
@@ -61,7 +63,7 @@ export const router = createBrowserRouter([
                         element: <RequireRole roles={[Role.ADMINISTRADOR]}/>,
                         children: [{index: true, element: <Suspense fallback={<Loading/>}><HomePage/></Suspense>}],
                     },
-                ]
+                ],
             },
         ],
     },
