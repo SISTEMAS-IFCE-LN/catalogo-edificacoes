@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { fetchAmbientes } from '@/lib/api/api-ambientes'
 import type { AmbientesQuery } from '@/types/ambientes/ambiente'
 import { PesquisaBar } from '@/components/ambientes/PesquisaBar'
 import { TabelaPadrao } from '@/components/ambientes/TabelaPadrao'
+import { AcoesLote } from '@/components/ambientes/AcoesLote'
 import { Button } from '@/components/ui/button'
 import {
   Select,
@@ -14,10 +15,14 @@ import {
 } from '@/components/ui/select'
 import { toast } from 'sonner'
 import { useAmbientesSearchParams } from '@/hooks/useAmbientesSearchParams'
+import { useAuth } from '@/hooks/useAuth'
 
 const TAMANHOS_PAGINA = [10, 20, 50, 100]
 
 export function PublicadosPage() {
+  const { user } = useAuth()
+  const autenticado = user !== null
+
   const {
     page,
     size,
@@ -43,6 +48,52 @@ export function PublicadosPage() {
     queryFn: ({ signal }) => fetchAmbientes(query, signal),
   })
 
+  // Seleção múltipla (só para usuários autenticados — UC20-FE).
+  // Seleção é por página visível: trocar de página/filtros limpa a seleção
+  // nos próprios handlers que disparam a mudança (sem useEffect/refs).
+  const [selectedIds, setSelectedIds] = useState<number[]>([])
+
+  function limparSelecao() {
+    setSelectedIds([])
+  }
+
+  function handlePageChangeComLimpeza(newPage: number) {
+    limparSelecao()
+    handlePageChange(newPage)
+  }
+
+  function handleSizeChangeComLimpeza(newSize: string | null) {
+    limparSelecao()
+    handleSizeChange(newSize)
+  }
+
+  function handleFiltrosChangeComLimpeza(novosFiltros: typeof filtros) {
+    limparSelecao()
+    handleFiltrosChange(novosFiltros)
+  }
+
+  const idsDaPagina = useMemo(
+    () => (data ? data.ambientes.map((a) => a.id) : []),
+    [data],
+  )
+
+  const allSelected = autenticado && idsDaPagina.length > 0 && idsDaPagina.every((id) => selectedIds.includes(id))
+  const someSelected = autenticado && selectedIds.length > 0 && !allSelected
+
+  function toggleSelect(id: number) {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    )
+  }
+
+  function toggleSelectAll() {
+    if (allSelected) {
+      setSelectedIds([])
+    } else {
+      setSelectedIds(idsDaPagina)
+    }
+  }
+
   useEffect(() => {
     if (error) {
       toast.error('Erro ao carregar ambientes. Tente novamente.')
@@ -66,16 +117,24 @@ export function PublicadosPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Ambientes Publicados</h1>
-      <PesquisaBar initial={filtrosLocal} onChange={handleFiltrosChange} />
+      <PesquisaBar initial={filtrosLocal} onChange={handleFiltrosChangeComLimpeza} />
       {isLoading ? (
         <p>Carregando…</p>
       ) : data && data.ambientes.length > 0 ? (
         <>
-          <TabelaPadrao itens={data.ambientes} />
+          {autenticado && <AcoesLote selectedIds={selectedIds} onClear={limparSelecao} />}
+          <TabelaPadrao
+            itens={data.ambientes}
+            selectedIds={autenticado ? selectedIds : undefined}
+            onToggleSelect={autenticado ? toggleSelect : undefined}
+            onToggleSelectAll={autenticado ? toggleSelectAll : undefined}
+            allSelected={autenticado ? allSelected : undefined}
+            someSelected={autenticado ? someSelected : undefined}
+          />
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">Itens por página:</span>
-              <Select value={String(size)} onValueChange={handleSizeChange}>
+              <Select value={String(size)} onValueChange={handleSizeChangeComLimpeza}>
                 <SelectTrigger className="w-[70px]" aria-label="Itens por página">
                   <SelectValue />
                 </SelectTrigger>
@@ -93,7 +152,7 @@ export function PublicadosPage() {
                 variant="outline"
                 size="sm"
                 disabled={!data.dadosPaginacao.hasPrevious}
-                onClick={() => handlePageChange(page - 1)}
+                onClick={() => handlePageChangeComLimpeza(page - 1)}
               >
                 Anterior
               </Button>
@@ -104,7 +163,7 @@ export function PublicadosPage() {
                 variant="outline"
                 size="sm"
                 disabled={!data.dadosPaginacao.hasNext}
-                onClick={() => handlePageChange(page + 1)}
+                onClick={() => handlePageChangeComLimpeza(page + 1)}
               >
                 Próximo
               </Button>
