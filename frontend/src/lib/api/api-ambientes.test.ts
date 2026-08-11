@@ -178,9 +178,9 @@ describe('fetchPublicados', () => {
         },
       },
     })
-    await fetchAmbientes({ page: 0, size: 20, tipo: 'Sala de Aula', tipoFiltro: TipoFiltro.TIPO })
+    await fetchAmbientes({ page: 0, size: 20, tipo: 'SALA_AULA', tipoFiltro: TipoFiltro.TIPO })
     expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados/tipo', expect.objectContaining({
-      params: expect.objectContaining({ page: 0, size: 20, tipo: 'Sala de Aula' }),
+      params: expect.objectContaining({ page: 0, size: 20, tipo: 'SALA_AULA' }),
     }))
   })
 

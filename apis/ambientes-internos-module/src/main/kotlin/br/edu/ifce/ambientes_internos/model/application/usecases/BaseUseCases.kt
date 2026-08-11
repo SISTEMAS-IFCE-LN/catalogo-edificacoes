@@ -4,6 +4,7 @@ import br.edu.ifce.ambientes_internos.model.application.interfaces.IAmbienteUseC
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Ambiente
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Bloco
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.StatusAmbiente
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.TipoAmbiente
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Unidade
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbienteRes
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbientesBasicosPaginadosRes
@@ -48,6 +49,14 @@ abstract class BaseUseCases(
         }.toSet()
     }
 
+    protected fun resolverTipos(filtro: String?): Set<TipoAmbiente>? {
+        val textoNormalizado = filtro?.trim()?.takeIf { it.isNotBlank() }?.normalizarTexto() ?: return null
+        return TipoAmbiente.entries.filter { tipo ->
+            tipo.name.normalizarTexto().contains(textoNormalizado) ||
+                    tipo.nome.normalizarTexto().contains(textoNormalizado)
+        }.toSet()
+    }
+
     protected fun paginaVazia(pageable: Pageable): Page<Ambiente> = Page.empty(pageable)
 
     private fun String.normalizarTexto(): String {
@@ -77,9 +86,16 @@ abstract class BaseUseCases(
         tipo: String,
         pageable: Pageable
     ): AmbientesBasicosPaginadosRes {
-        val tipoNormalizado = tipo.trim()
+        val tipos = resolverTipos(tipo)
+        if (tipos == null) {
+            // Tipo em branco: sem filtro (equivale ao LIKE '%' anterior)
+            return listarAmbientes(pageable)
+        }
+        if (tipos.isEmpty()) {
+            return AmbientesBasicosPaginadosRes.from(paginaVazia(limitarPageable(pageable)))
+        }
         val pageableLimitado = limitarPageable(pageable)
-        val page = repoAmb.findByTipoAndStatus(tipoNormalizado, status, pageableLimitado)
+        val page = repoAmb.findByTiposAndStatus(tipos, status, pageableLimitado)
         return AmbientesBasicosPaginadosRes.from(page)
     }
 

@@ -231,7 +231,7 @@ describe('useAmbientesSearchParams', () => {
 
   it('deriva tipoFiltro como TIPO quando tipo está presente', () => {
     const { result } = renderHook(() => useAmbientesSearchParams(), {
-      wrapper: createWrapper(['/?tipo=Sala%20de%20Aula']),
+      wrapper: createWrapper(['/?tipo=SALA_AULA']),
     })
 
     expect(result.current.tipoFiltro).toBe(TipoFiltro.TIPO)

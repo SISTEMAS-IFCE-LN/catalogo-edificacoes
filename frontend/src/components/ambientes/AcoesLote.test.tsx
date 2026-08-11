@@ -53,12 +53,12 @@ describe('AcoesLote', () => {
         expect(screen.getByText('NENHUMA')).toBeInTheDocument()
     })
 
-    it('renderiza ação "Detalhes Esquadrias" ao abrir o seletor', () => {
+    it('renderiza ação "Detalhar Esquadrias" ao abrir o seletor', () => {
         renderWithRouter({ selectedIds: [1], onClear: vi.fn() })
         // Abrir o select
         fireEvent.click(screen.getByLabelText('Selecionar ação em lote'))
-        // A opção "Detalhes Esquadrias" deve aparecer no popup
-        expect(screen.getByRole('option', { name: 'Detalhes Esquadrias' })).toBeInTheDocument()
+        // A opção "Detalhar Esquadrias" deve aparecer no popup
+        expect(screen.getByRole('option', { name: 'Detalhar Esquadrias' })).toBeInTheDocument()
     })
 
     it('botão Executar está desabilitado quando nenhuma ação selecionada', () => {
@@ -76,9 +76,9 @@ describe('AcoesLote', () => {
     it('navega para esquadrias com ids ao selecionar ação e clicar em Executar', async () => {
         const user = userEvent.setup()
         renderWithRouter({ selectedIds: [1, 2, 3], onClear: vi.fn() })
-        // Abrir o select e escolher "Detalhes Esquadrias"
+        // Abrir o select e escolher "Detalhar Esquadrias"
         await user.click(screen.getByLabelText('Selecionar ação em lote'))
-        await user.click(screen.getByRole('option', { name: 'Detalhes Esquadrias' }))
+        await user.click(screen.getByRole('option', { name: 'Detalhar Esquadrias' }))
         // Botão Executar deve habilitar
         const executar = screen.getByText('Executar')
         expect(executar).not.toBeDisabled()

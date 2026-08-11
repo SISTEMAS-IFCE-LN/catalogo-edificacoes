@@ -5,7 +5,7 @@ import { MemoryRouter } from 'react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { PublicadosPage } from './page'
 import type { AmbientesBasicosPaginados } from '@/types/ambientes/ambiente'
-import { Bloco, TipoAmbiente, Unidade } from '@/types/ambientes/enums'
+import { Bloco, TipoAmbiente, TipoFiltro, Unidade } from '@/types/ambientes/enums'
 import type { User } from '@/types/user'
 import { Role } from '@/types/user'
 
@@ -204,13 +204,38 @@ describe('PublicadosPage', () => {
                 expect(screen.getByLabelText('Selecionar ação em lote')).toBeInTheDocument()
             })
             await user.click(screen.getByLabelText('Selecionar ação em lote'))
-            await user.click(screen.getByRole('option', { name: 'Detalhes Esquadrias' }))
+            await user.click(screen.getByRole('option', { name: 'Detalhar Esquadrias' }))
             // Executar
             await user.click(screen.getByText('Executar'))
             // useNavigate deve ser chamado com a rota de esquadrias e ids
             await waitFor(() => {
                 expect(mockNavigate).toHaveBeenCalledWith(
                     '/ambientes/publicados/esquadrias?ids=1,2',
+                )
+            })
+        })
+
+        it('aplica filtro por tipo enviando o nome do enum', async () => {
+            const user = userEvent.setup()
+            mockAuthAutenticado()
+            vi.mocked(fetchAmbientes).mockResolvedValue(mockData)
+            renderPage()
+            await waitFor(() => {
+                expect(screen.getByLabelText('Selecionar todos da página')).toBeInTheDocument()
+            })
+            // Selecionar tipo de filtro "Tipo"
+            await user.click(screen.getByLabelText('Tipo de filtro'))
+            await user.click(screen.getByRole('option', { name: 'Tipo' }))
+            // Selecionar "Sala de Aula" no select de tipo
+            await user.click(screen.getByLabelText('Filtrar por tipo'))
+            await user.click(screen.getByRole('option', { name: 'Sala de Aula' }))
+            // Aplicar
+            await user.click(screen.getByText('Aplicar'))
+            // fetchAmbientes deve ser chamado com tipoFiltro=TIPO e tipo=SALA_AULA
+            await waitFor(() => {
+                expect(fetchAmbientes).toHaveBeenCalledWith(
+                    expect.objectContaining({ tipoFiltro: TipoFiltro.TIPO, tipo: 'SALA_AULA' }),
+                    expect.anything(),
                 )
             })
         })

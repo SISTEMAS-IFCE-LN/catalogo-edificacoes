@@ -1,4 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi } from 'vitest'
 import { PesquisaBar } from './PesquisaBar'
 import { FILTROS_VAZIOS } from '@/types/ambientes/filtros'
@@ -126,5 +127,34 @@ describe('PesquisaBar', () => {
     
     // O input de nome não deve estar visível
     expect(screen.queryByLabelText('Filtrar por nome')).not.toBeInTheDocument()
+  })
+
+  it('envia o nome do enum como valor ao filtrar por tipo', async () => {
+    const user = userEvent.setup()
+    render(<PesquisaBar initial={FILTROS_VAZIOS} onChange={mockOnChange} />)
+
+    // Selecionar tipo de filtro "Tipo"
+    await user.click(screen.getByLabelText('Tipo de filtro'))
+    await user.click(screen.getByRole('option', { name: 'Tipo' }))
+
+    // Selecionar "Sala de Aula" no select de tipo
+    await user.click(screen.getByLabelText('Filtrar por tipo'))
+    await user.click(screen.getByRole('option', { name: 'Sala de Aula' }))
+
+    // Aplicar
+    await user.click(screen.getByText('Aplicar'))
+
+    expect(mockOnChange).toHaveBeenCalledWith({
+      ...FILTROS_VAZIOS,
+      tipo: 'SALA_AULA',
+    })
+  })
+
+  it('exibe o rótulo do tipo no select quando initial tem nome do enum', () => {
+    render(<PesquisaBar initial={{ ...FILTROS_VAZIOS, tipo: 'SALA_AULA' }} onChange={mockOnChange} />)
+
+    expect(screen.getByLabelText('Filtrar por tipo')).toBeInTheDocument()
+    // O select deve exibir o rótulo "Sala de Aula" para o valor SALA_AULA
+    expect(screen.getByText('Sala de Aula')).toBeInTheDocument()
   })
 })

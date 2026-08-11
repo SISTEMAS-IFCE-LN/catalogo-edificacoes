@@ -11,6 +11,11 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 
+// Converte o nome do enum (ex.: "SALA_AULA") no rótulo exibido (ex.: "Sala de Aula")
+function rotuloTipo(tipo: string): string {
+  return TipoAmbiente[tipo as keyof typeof TipoAmbiente] ?? tipo
+}
+
 export function PesquisaBar({
   initial,
   onChange,
@@ -116,11 +121,13 @@ export function PesquisaBar({
             onValueChange={(value) => setLocal({ ...local, tipo: value ?? '' })}
           >
             <SelectTrigger aria-label="Filtrar por tipo">
-              <SelectValue placeholder="Selecione o tipo" />
+              <SelectValue placeholder="Selecione o tipo">
+                {local.tipo ? rotuloTipo(local.tipo) : undefined}
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               {Object.entries(TipoAmbiente).map(([key, value]) => (
-                <SelectItem key={key} value={value}>
+                <SelectItem key={key} value={key}>
                   {value}
                 </SelectItem>
               ))}

@@ -3,6 +3,7 @@ package br.edu.ifce.ambientes_internos.model.repository
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Ambiente
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Bloco
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.StatusAmbiente
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.TipoAmbiente
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Unidade
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
@@ -89,11 +90,11 @@ interface AmbienteRepository : JpaRepository<Ambiente, Long> {
         """
             select a from Ambiente a
             where a.status = :status
-            and upper(a.tipo) like concat('%', upper(:tipo), '%')
+            and a.tipo in :tipos
         """
     )
-    fun findByTipoAndStatus(
-        @Param("tipo") tipo: String,
+    fun findByTiposAndStatus(
+        @Param("tipos") tipos: Set<TipoAmbiente>,
         @Param("status") status: StatusAmbiente,
         pageable: Pageable
     ): Page<Ambiente>
