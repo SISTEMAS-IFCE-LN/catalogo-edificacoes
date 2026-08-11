@@ -789,14 +789,17 @@ export const router = createBrowserRouter([
   { path: '/callback', element: <CallbackPage /> },     // host do #token
   { path: '/unauthorized', element: <UnauthorizedPage /> },
 
-  // Pública (lista de publicados) — UC21-FE
-  { path: '/ambientes/publicados', element: <PublicadosPage /> },
-
-  // Autenticadas
+  // Layout comum (Header auth-aware + Footer) — público e autenticado
   {
-    element: <RequireAuth />,
+    element: <ProtectedLayout />,
     children: [
-      { element: <ProtectedLayout />, children: [
+      // Pública (lista de publicados) — UC21-FE, sem RequireAuth, mas com Header
+      { path: '/ambientes/publicados', element: <PublicadosPage /> },
+
+      // Autenticadas
+      {
+        element: <RequireAuth />,
+        children: [
 
         // Colaborador (mínimo universal)
         { path: '/ambientes/publicados/:id',
@@ -826,8 +829,8 @@ export const router = createBrowserRouter([
         { path: '/usuarios',
           element: <RequireRole roles={[Role.ADMINISTRADOR]} />,
           children: [{ index: true, element: <UsuariosPage /> }] },
-      ]},
-    ],
+      ],
+    },
   },
 
   { path: '/', element: <HomePage /> },
@@ -852,7 +855,7 @@ const menuItems: MenuItem[] = [
 ]
 ```
 
-> Sempre que `roles === null`, o item é mostrado a todo autenticado. O item **Publicados** aparece para todos (e também seria acessível anonimamente, mas o cabeçalho em si só aparece em `_layout` autenticado — para anônimos, a página `/ambientes/publicados` é servida **sem** Header).
+> Sempre que `roles === null`, o item é mostrado a todo autenticado. O item **Publicados** aparece para todos. A lista pública (`/ambientes/publicados`) é servida **dentro** do layout comum: o `Header` é **auth-aware** — para anônimos exibe logo + botão "Login"; para autenticados, navegação + nome/email + "Sair". O `ProtectedNavigation` só é renderizado com usuário logado.
 
 ---
 
@@ -925,14 +928,12 @@ export function PermissionButton({ requiredRoles, children, ...rest }: Props) {
 
 import { Outlet } from 'react-router'
 import { Header } from '@/components/layout/Header'
-import { ProtectedNavigation } from '@/components/layout/ProtectedNavigation'
 import { Footer } from '@/components/layout/Footer'
 
 export function ProtectedLayout() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <ProtectedNavigation />
       <main className="flex-1 container mx-auto px-4 py-8">
         <Outlet />
       </main>
@@ -942,7 +943,12 @@ export function ProtectedLayout() {
 }
 ```
 
-O `ProtectedNavigation` filtra itens por `user.perfis.some(r => item.roles?.includes(r) ?? true)` e destaca o ativo via `useLocation()`. O botão **Sair** chama `logout()` e em `Promise.finally` navega para `/login`.
+O `Header` é **auth-aware** e renderiza internamente o `ProtectedNavigation` (que filtra itens por `user.perfis.some(r => item.roles?.includes(r) ?? true)` e destaca o ativo via `useLocation()`):
+
+- Anônimo: logo + botão "Login" (`ROUTES.LOGIN`), sem `ProtectedNavigation`.
+- Autenticado: logo + `ProtectedNavigation` + nome/email + botão "Sair" (`logout()` com navegação para `/login`).
+
+Como o layout envolve também a rota pública `/ambientes/publicados` (§9.2), o `ProtectedLayout` não é exclusivo de rotas autenticadas — o `Header` decide o que exibir conforme o estado de autenticação.
 
 ---
 
