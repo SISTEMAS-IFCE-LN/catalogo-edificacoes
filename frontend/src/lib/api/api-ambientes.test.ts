@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { fetchAmbientes, fetchDetalheAmbiente, fetchEsquadrias } from './api-ambientes'
 import { api } from '@/lib/api/api'
+import { TipoFiltro } from '@/types/ambientes/enums'
 
 vi.mock('@/lib/api/api', () => ({
   api: { get: vi.fn() },
@@ -26,9 +27,9 @@ describe('fetchPublicados', () => {
         },
       },
     })
-    await fetchAmbientes({ page: 1, size: 20, nome: 'sala' })
+    await fetchAmbientes({ page: 1, size: 20, tipoFiltro: TipoFiltro.NENHUM })
     expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados', expect.objectContaining({
-      params: expect.objectContaining({ page: 1, size: 20, nome: 'sala' }),
+      params: expect.objectContaining({ page: 1, size: 20 }),
     }))
   })
 
@@ -47,7 +48,7 @@ describe('fetchPublicados', () => {
         },
       },
     })
-    await fetchAmbientes({ page: 0, size: 20 })
+    await fetchAmbientes({ page: 0, size: 20, tipoFiltro: TipoFiltro.NENHUM })
     expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados', expect.objectContaining({
       params: expect.objectContaining({ page: 0, size: 20 }),
     }))
@@ -74,8 +75,8 @@ describe('fetchPublicados', () => {
         },
       },
     })
-    await fetchAmbientes({ page: 0, size: 20, andar: 2 })
-    expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados', expect.objectContaining({
+    await fetchAmbientes({ page: 0, size: 20, andar: 2, tipoFiltro: TipoFiltro.LOCALIZACAO })
+    expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados/localizacao', expect.objectContaining({
       params: expect.objectContaining({ page: 0, size: 20, andar: 2 }),
     }))
   })
@@ -96,7 +97,7 @@ describe('fetchPublicados', () => {
         },
       },
     })
-    await fetchAmbientes({ page: 0, size: 20 }, controller.signal)
+    await fetchAmbientes({ page: 0, size: 20, tipoFiltro: TipoFiltro.NENHUM }, controller.signal)
     expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados', expect.objectContaining({
       signal: controller.signal,
     }))
@@ -117,7 +118,7 @@ describe('fetchPublicados', () => {
         },
       },
     })
-    const result = await fetchAmbientes({ page: 0, size: 20 })
+    const result = await fetchAmbientes({ page: 0, size: 20, tipoFiltro: TipoFiltro.NENHUM })
     expect(result).toHaveProperty('ambientes')
     expect(result).toHaveProperty('areaTotal')
     expect(result).toHaveProperty('dadosPaginacao')
@@ -138,7 +139,70 @@ describe('fetchPublicados', () => {
         },
       },
     })
-    await expect(fetchAmbientes({ page: 0, size: 20 })).rejects.toThrow()
+    await expect(fetchAmbientes({ page: 0, size: 20, tipoFiltro: TipoFiltro.NENHUM })).rejects.toThrow()
+  })
+
+  it('chama /api/ambientes/publicados/nome quando tipoFiltro é NOME', async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({
+      data: {
+        ambientes: [],
+        areaTotal: 0,
+        dadosPaginacao: {
+          totalElements: 0,
+          totalPages: 0,
+          currentPage: 0,
+          pageSize: 20,
+          hasNext: false,
+          hasPrevious: false,
+        },
+      },
+    })
+    await fetchAmbientes({ page: 0, size: 20, nome: 'sala', tipoFiltro: TipoFiltro.NOME })
+    expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados/nome', expect.objectContaining({
+      params: expect.objectContaining({ page: 0, size: 20, nome: 'sala' }),
+    }))
+  })
+
+  it('chama /api/ambientes/publicados/tipo quando tipoFiltro é TIPO', async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({
+      data: {
+        ambientes: [],
+        areaTotal: 0,
+        dadosPaginacao: {
+          totalElements: 0,
+          totalPages: 0,
+          currentPage: 0,
+          pageSize: 20,
+          hasNext: false,
+          hasPrevious: false,
+        },
+      },
+    })
+    await fetchAmbientes({ page: 0, size: 20, tipo: 'Sala de Aula', tipoFiltro: TipoFiltro.TIPO })
+    expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados/tipo', expect.objectContaining({
+      params: expect.objectContaining({ page: 0, size: 20, tipo: 'Sala de Aula' }),
+    }))
+  })
+
+  it('chama /api/ambientes/publicados/localizacao quando tipoFiltro é LOCALIZACAO', async () => {
+    vi.mocked(api.get).mockResolvedValueOnce({
+      data: {
+        ambientes: [],
+        areaTotal: 0,
+        dadosPaginacao: {
+          totalElements: 0,
+          totalPages: 0,
+          currentPage: 0,
+          pageSize: 20,
+          hasNext: false,
+          hasPrevious: false,
+        },
+      },
+    })
+    await fetchAmbientes({ page: 0, size: 20, bloco: 'Bloco 1', unidade: 'Sede', andar: 2, tipoFiltro: TipoFiltro.LOCALIZACAO })
+    expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados/localizacao', expect.objectContaining({
+      params: expect.objectContaining({ page: 0, size: 20, bloco: 'Bloco 1', unidade: 'Sede', andar: 2 }),
+    }))
   })
 })
 

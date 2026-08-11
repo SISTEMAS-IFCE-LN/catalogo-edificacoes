@@ -5,6 +5,7 @@ import {
     StatusAmbiente,
     TipoAmbiente,
     TipoEsquadria,
+    TipoFiltro,
     TipoGeometria, Unidade
 } from '@/types/ambientes/enums'
 
@@ -199,6 +200,7 @@ export interface AmbientesQuery {
     unidade?: string
     andar?: number
     tipo?: string
+    tipoFiltro: TipoFiltro
 }
 
 // Query parameters para UC20-FE

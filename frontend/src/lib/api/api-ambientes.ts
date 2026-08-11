@@ -10,21 +10,42 @@ import {
   type AmbienteDetalhe,
 } from '@/types/ambientes/ambiente'
 import { ROUTES } from '@/constants/routes'
+import { TipoFiltro } from '@/types/ambientes/enums'
 
 export async function fetchAmbientes(
   query: AmbientesQuery,
   signal?: AbortSignal
 ): Promise<AmbientesBasicosPaginados> {
-  const { data } = await api.get(`/api${ROUTES.PUBLICADOS}`, {
-    params: {
-      page: query.page ?? 0,
-      size: query.size ?? 20,
-      ...(query.nome && { nome: query.nome }),
-      ...(query.bloco && { bloco: query.bloco }),
-      ...(query.unidade && { unidade: query.unidade }),
-      ...(query.andar != null && { andar: query.andar }),
-      ...(query.tipo && { tipo: query.tipo }),
-    },
+  let url: string
+  let params: Record<string, string | number | null | undefined>
+
+  switch (query.tipoFiltro) {
+    case TipoFiltro.NOME:
+      url = `/api${ROUTES.PUBLICADOS}/nome`
+      params = { page: query.page ?? 0, size: query.size ?? 20, nome: query.nome }
+      break
+    case TipoFiltro.TIPO:
+      url = `/api${ROUTES.PUBLICADOS}/tipo`
+      params = { page: query.page ?? 0, size: query.size ?? 20, tipo: query.tipo }
+      break
+    case TipoFiltro.LOCALIZACAO:
+      url = `/api${ROUTES.PUBLICADOS}/localizacao`
+      params = {
+        page: query.page ?? 0,
+        size: query.size ?? 20,
+        bloco: query.bloco,
+        unidade: query.unidade,
+        andar: query.andar,
+      }
+      break
+    default:
+      url = `/api${ROUTES.PUBLICADOS}`
+      params = { page: query.page ?? 0, size: query.size ?? 20 }
+      break
+  }
+
+  const { data } = await api.get(url, {
+    params,
     signal,
   })
   return AmbientesBasicosPaginadosSchema.parse(data)

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'react-router'
 import { type Filtros, UrlFiltrosSchema, FILTROS_VAZIOS } from '@/types/ambientes/filtros'
+import { TipoFiltro } from '@/types/ambientes/enums'
 
 export interface AmbientesSearchParams {
   page: number
@@ -11,6 +12,7 @@ export interface AmbientesSearchParams {
   handleFiltrosChange: (f: Filtros) => void
   handlePageChange: (page: number) => void
   handleSizeChange: (size: string | null) => void
+  tipoFiltro: TipoFiltro
 }
 
 export function useAmbientesSearchParams(): AmbientesSearchParams {
@@ -92,6 +94,14 @@ export function useAmbientesSearchParams(): AmbientesSearchParams {
     }
   }
 
+  // Derivar tipoFiltro a partir dos filtros ativos
+  const tipoFiltro = useMemo<TipoFiltro>(() => {
+    if (filtros.nome) return TipoFiltro.NOME
+    if (filtros.tipo) return TipoFiltro.TIPO
+    if (filtros.bloco || filtros.unidade || filtros.andar !== null) return TipoFiltro.LOCALIZACAO
+    return TipoFiltro.NENHUM
+  }, [filtros])
+
   return {
     page,
     size,
@@ -101,5 +111,6 @@ export function useAmbientesSearchParams(): AmbientesSearchParams {
     handleFiltrosChange,
     handlePageChange,
     handleSizeChange,
+    tipoFiltro,
   }
 }

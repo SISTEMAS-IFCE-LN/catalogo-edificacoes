@@ -3,6 +3,7 @@ import { renderHook, act } from '@testing-library/react'
 import { useAmbientesSearchParams } from './useAmbientesSearchParams'
 import { MemoryRouter, useSearchParams } from 'react-router'
 import { type ReactNode } from 'react'
+import { TipoFiltro } from '@/types/ambientes/enums'
 
 // Wrapper para fornecer contexto do router
 function createWrapper(initialEntries: string[] = ['/']) {
@@ -210,5 +211,53 @@ describe('useAmbientesSearchParams', () => {
     })
 
     expect(result.current.filtros.unidade).toBe('')
+  })
+
+  it('deriva tipoFiltro como NENHUM quando filtros estão vazios', () => {
+    const { result } = renderHook(() => useAmbientesSearchParams(), {
+      wrapper: createWrapper(['/']),
+    })
+
+    expect(result.current.tipoFiltro).toBe(TipoFiltro.NENHUM)
+  })
+
+  it('deriva tipoFiltro como NOME quando nome está presente', () => {
+    const { result } = renderHook(() => useAmbientesSearchParams(), {
+      wrapper: createWrapper(['/?nome=sala']),
+    })
+
+    expect(result.current.tipoFiltro).toBe(TipoFiltro.NOME)
+  })
+
+  it('deriva tipoFiltro como TIPO quando tipo está presente', () => {
+    const { result } = renderHook(() => useAmbientesSearchParams(), {
+      wrapper: createWrapper(['/?tipo=Sala%20de%20Aula']),
+    })
+
+    expect(result.current.tipoFiltro).toBe(TipoFiltro.TIPO)
+  })
+
+  it('deriva tipoFiltro como LOCALIZACAO quando bloco está presente', () => {
+    const { result } = renderHook(() => useAmbientesSearchParams(), {
+      wrapper: createWrapper(['/?bloco=Bloco%201']),
+    })
+
+    expect(result.current.tipoFiltro).toBe(TipoFiltro.LOCALIZACAO)
+  })
+
+  it('deriva tipoFiltro como LOCALIZACAO quando unidade está presente', () => {
+    const { result } = renderHook(() => useAmbientesSearchParams(), {
+      wrapper: createWrapper(['/?unidade=Sede']),
+    })
+
+    expect(result.current.tipoFiltro).toBe(TipoFiltro.LOCALIZACAO)
+  })
+
+  it('deriva tipoFiltro como LOCALIZACAO quando andar está presente', () => {
+    const { result } = renderHook(() => useAmbientesSearchParams(), {
+      wrapper: createWrapper(['/?andar=0']),
+    })
+
+    expect(result.current.tipoFiltro).toBe(TipoFiltro.LOCALIZACAO)
   })
 })

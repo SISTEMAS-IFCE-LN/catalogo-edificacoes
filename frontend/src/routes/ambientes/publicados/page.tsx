@@ -31,6 +31,7 @@ export function PublicadosPage() {
     handleFiltrosChange,
     handlePageChange,
     handleSizeChange,
+    tipoFiltro,
   } = useAmbientesSearchParams()
 
   const query: AmbientesQuery = {
@@ -41,6 +42,7 @@ export function PublicadosPage() {
     unidade: filtros.unidade || undefined,
     andar: filtros.andar ?? undefined,
     tipo: filtros.tipo || undefined,
+    tipoFiltro,
   }
 
   const { data, isLoading, error, refetch } = useQuery({
