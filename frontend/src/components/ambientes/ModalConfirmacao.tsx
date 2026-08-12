@@ -38,7 +38,10 @@ export function ModalConfirmacao({
             onOpenChange(false)
         } catch (error) {
             toast.error('Erro ao executar ação. Tente novamente.')
-            console.error('Erro ao confirmar:', error)
+            console.error(
+                'Erro ao confirmar:',
+                error instanceof Error ? error.message : String(error),
+            )
         } finally {
             setExecutando(false)
         }

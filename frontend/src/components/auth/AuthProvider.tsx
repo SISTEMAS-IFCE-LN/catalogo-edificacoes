@@ -109,7 +109,10 @@ export function AuthProvider({children}: { children: ReactNode }) {
                 await ensureCsrfToken()
                 await api.post('/auth/logout')
             } catch (e) {
-                console.warn('Logout backend falhou — limpando estado local', e)
+                console.warn(
+                    'Logout backend falhou — limpando estado local',
+                    e instanceof Error ? e.message : String(e),
+                )
             }
         }
         clearAccessToken()

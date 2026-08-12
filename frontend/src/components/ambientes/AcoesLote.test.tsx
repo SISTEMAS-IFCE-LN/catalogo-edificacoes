@@ -53,12 +53,13 @@ describe('AcoesLote', () => {
         expect(screen.getByText('NENHUMA')).toBeInTheDocument()
     })
 
-    it('renderiza ação "Detalhar Esquadrias" ao abrir o seletor', () => {
+    it('renderiza ação "Detalhar Esquadrias" ao abrir o seletor', async () => {
+        const user = userEvent.setup()
         renderWithRouter({ selectedIds: [1], onClear: vi.fn() })
         // Abrir o select
-        fireEvent.click(screen.getByLabelText('Selecionar ação em lote'))
+        await user.click(screen.getByLabelText('Selecionar ação em lote'))
         // A opção "Detalhar Esquadrias" deve aparecer no popup
-        expect(screen.getByRole('option', { name: 'Detalhar Esquadrias' })).toBeInTheDocument()
+        expect(await screen.findByRole('option', { name: 'Detalhar Esquadrias' })).toBeInTheDocument()
     })
 
     it('botão Executar está desabilitado quando nenhuma ação selecionada', () => {
@@ -78,7 +79,7 @@ describe('AcoesLote', () => {
         renderWithRouter({ selectedIds: [1, 2, 3], onClear: vi.fn() })
         // Abrir o select e escolher "Detalhar Esquadrias"
         await user.click(screen.getByLabelText('Selecionar ação em lote'))
-        await user.click(screen.getByRole('option', { name: 'Detalhar Esquadrias' }))
+        await user.click(await screen.findByRole('option', { name: 'Detalhar Esquadrias' }))
         // Botão Executar deve habilitar
         const executar = screen.getByText('Executar')
         expect(executar).not.toBeDisabled()
@@ -88,13 +89,14 @@ describe('AcoesLote', () => {
         )
     })
 
-    it('renderiza ações customizadas via prop acoes', () => {
+    it('renderiza ações customizadas via prop acoes', async () => {
+        const user = userEvent.setup()
         const acoes = [
             { value: 'Enviar p/ Validação', onRun: vi.fn() },
         ]
         renderWithRouter({ selectedIds: [1], onClear: vi.fn(), acoes })
-        fireEvent.click(screen.getByLabelText('Selecionar ação em lote'))
-        expect(screen.getByRole('option', { name: 'Enviar p/ Validação' })).toBeInTheDocument()
+        await user.click(screen.getByLabelText('Selecionar ação em lote'))
+        expect(await screen.findByRole('option', { name: 'Enviar p/ Validação' })).toBeInTheDocument()
     })
 
     it('possui região acessível "Ações em lote"', () => {
