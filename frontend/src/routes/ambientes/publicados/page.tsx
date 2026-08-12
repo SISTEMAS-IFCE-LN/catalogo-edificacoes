@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
 import { fetchAmbientes } from '@/lib/api/api-ambientes'
 import type { AmbientesQuery } from '@/types/ambientes/ambiente'
-import { PesquisaBar } from '@/components/ambientes/PesquisaBar'
+import { PesquisaBarAmbientes } from '@/components/ambientes/PesquisaBarAmbientes'
 import { TabelaPadrao } from '@/components/ambientes/TabelaPadrao'
 import { AcoesLote } from '@/components/ambientes/AcoesLote'
 import { Button } from '@/components/ui/button'
@@ -119,7 +119,7 @@ export function PublicadosPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-bold">Ambientes Publicados</h1>
-      <PesquisaBar initial={filtrosLocal} onChange={handleFiltrosChangeComLimpeza} />
+      <PesquisaBarAmbientes initial={filtrosLocal} onChange={handleFiltrosChangeComLimpeza} />
       {isLoading ? (
         <p>Carregando…</p>
       ) : data && data.ambientes.length > 0 ? (

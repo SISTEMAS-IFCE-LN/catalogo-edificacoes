@@ -168,7 +168,7 @@ Para popular `User` no `AuthContext`, o **backend implementa** `GET /api/usuario
 A decisão pelo **CSR puro** decorre de:
 
 1. **Token em fragmento** (`#token=...`): o servidor nunca enxerga o fragmento; SSR de rotas autenticadas não teria como enviar o token para o renderizador server-side.
-2. **UCs interativos**: multistep `FormAmbiente` (UC06-FE), tabelas com paginação + filtros aplicados via botão (padrão `PesquisaBar`) + seleção múltipla (UC01-FE, UC04-FE, UC22-FE) — trabalho essencialmente client-side.
+2. **UCs interativos**: multistep `FormAmbiente` (UC06-FE), tabelas com paginação + filtros aplicados via botão (padrão `PesquisaBarAmbientes`) + seleção múltipla (UC01-FE, UC04-FE, UC22-FE) — trabalho essencialmente client-side.
 3. **Refresh transparente**: estado de sessão no cliente; SSR exigiria vazar o token para o servidor, quebrando o modelo de segurança.
 4. **SEO não é requisito**: a única rota pública indexável é `/ambientes/publicados` (lista). O modelo de negócio não exige indexação de nenhum dado.
 5. **Custo operacional**: SSR universal exigiria processo Node em produção (PM2/container), a mais uma peça para operar. Com CSR, o deploy é estático atrás de Nginx.
@@ -229,7 +229,7 @@ frontend/
 │   │   │   ├── ProtectedNavigation.tsx  # menu adaptativo por role (desktop + mobile drawer)
 │   │   │   ├── UserMenu.tsx           # avatar → Sheet (mobile) / DropdownMenu (desktop)
 │   │   │   └── Footer.tsx
-│   │   ├── ambientes/                # TabelaPadrao, DetalheAmbiente, FormAmbiente, PesquisaBar,
+│   │   ├── ambientes/                # TabelaPadrao, DetalheAmbiente, FormAmbiente, PesquisaBarAmbientes,
 │   │   │                              # ModalConfirmacao, AcoesLote, modais UC07–UC18
 │   │   ├── usuarios/                 # TabelaUsuarios, ModalEditarPerfis, ModalConfirmacaoDesativar
 │   │   └── common/
@@ -252,6 +252,7 @@ frontend/
 │   │
 │   ├── hooks/
 │   │   ├── useAuth.ts                # atalho para useContext(AuthContext)
+│   │   ├── useFiltroLocal.ts         # rascunho local sincronizado com a URL (PesquisaBarAmbientes/Usuarios)
 │   │   ├── usePermission.ts          # canDo(action), canAccess(route), hasRole(roles)
 │   │   └── useUsuariosSearchParams.ts # nome/page na URL (parte 09)
 │   │
@@ -1392,7 +1393,7 @@ Padrão oficial documentado em https://ui.shadcn.com/docs/components/drawer#resp
 - Modais UC07–UC13 (inclusão/edição de geometrias, pés-direitos, esquadrias, informação adicional): usam `<ResponsiveModal>` — são listas editáveis que em mobile se beneficiam do bottom-sheet tactile.
 - Em listas longas dentro de `Drawer`, configurar `snapPoints` para limitar altura e permitir drag-to-expand.
 
-### 15.10. `PesquisaBar`
+### 15.10. `PesquisaBarAmbientes`
 
 - Layout `grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3` — empilha em mobile, organiza em colunas a partir de `sm`.
 - Botão "Limpar filtros": ícone `X` em mobile, ícone + texto em desktop.

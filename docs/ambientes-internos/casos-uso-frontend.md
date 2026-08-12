@@ -8,7 +8,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - Objetivo: mapear cada caso de uso do backend para telas, componentes e interações no frontend.
 - Regras gerais de UI:
   - Paginação padrão: 100 itens por página (conforme backend), com opções de navegação e busca por texto.
-  - Filtros e buscas aplicam-se client-side quando possível; senão, por chamadas à API acionadas por botão (padrão `PesquisaBar`) — sem debounce.
+  - Filtros e buscas aplicam-se client-side quando possível; senão, por chamadas à API acionadas por botão (padrão `PesquisaBarAmbientes`) — sem debounce.
   - Todos os formulários mostram erros inline e mensagens de sucesso via snackbar/toast.
   - Acessibilidade: formulários navegáveis por teclado, rótulos (`label`) para campos e contrastes adequados.
 
@@ -20,7 +20,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - AguadandoValidacao - tela específica para listar ambientes aguardando validação.
 - NaoPublicados - tela específica para listar ambientes não publicados.
 - Publicados - tela específica para listar ambientes publicados.
-- PesquisaBar — inputs para filtrar ambientes por `nome`, `localizacao`, `tipo` e botão para limpar filtros.
+- PesquisaBarAmbientes — inputs para filtrar ambientes por `nome`, `localizacao`, `tipo` e botão para limpar filtros.
 - DetalheAmbiente — visão detalhada com geometrias, pés-direitos, lista de esquadrias (portas/janelas) e áreas.
 - FormAmbiente (multistep) — criação/atualização de ambiente: dados básicos, geometrias, pés-direitos, esquadrias, informação adicional.
 - ModalConfirmacao — confirmações para deletar, publicar/privar, duplicar.
@@ -56,7 +56,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - Pré-condições: Usuário logado com role `validador`.
 - Fluxo principal (UI):
   1. O usuário acessa a rota `/ambientes/validacao`, é exibido o componente `TabelaPadrao` com os ambientes cujo `status = AGUARDANDO_VALIDACAO` (chamada GET `/api/ambientes/validacao`).
-  2. Uma barra de pesquisa (`PesquisaBar`) também é exibida para filtrar os ambientes por `nome`, `localizacao` e `tipo`. Cada filtro utiliza endpoints específicos do backend: `/api/ambientes/validacao/nome?nome={nome}`, `/api/ambientes/validacao/localizacao?bloco={bloco}&unidade={unidade}&andar={andar}` e `/api/ambientes/validacao/tipo?tipo={tipo}` — filtro aplicado via botão "Aplicar", sem debounce, estado na URL.
+  2. Uma barra de pesquisa (`PesquisaBarAmbientes`) também é exibida para filtrar os ambientes por `nome`, `localizacao` e `tipo`. Cada filtro utiliza endpoints específicos do backend: `/api/ambientes/validacao/nome?nome={nome}`, `/api/ambientes/validacao/localizacao?bloco={bloco}&unidade={unidade}&andar={andar}` e `/api/ambientes/validacao/tipo?tipo={tipo}` — filtro aplicado via botão "Aplicar", sem debounce, estado na URL.
   3. Um botão de seleção também está disponível para execução de ações em lote (`AcoesLote`).
   4. A Tabela exibida possui paginação e o usuário pode definir quantos registros serão exibidos até o máximo de 100. 
   5. O usuário também pode ordenar os resultados por qualquer uma das colunas da tabela.

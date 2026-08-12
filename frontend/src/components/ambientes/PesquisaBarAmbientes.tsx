@@ -10,22 +10,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { useFiltroLocal } from '@/hooks/useFiltroLocal'
 
 // Converte o nome do enum (ex.: "SALA_AULA") no rótulo exibido (ex.: "Sala de Aula")
 function rotuloTipo(tipo: string): string {
   return TipoAmbiente[tipo as keyof typeof TipoAmbiente] ?? tipo
 }
 
-export function PesquisaBar({
+export function PesquisaBarAmbientes({
   initial,
   onChange,
 }: {
   initial: Filtros
   onChange: (f: Filtros) => void
 }) {
-  const [local, setLocal] = useState<Filtros>(initial)
-  const [lastInitial, setLastInitial] = useState<Filtros>(initial)
-  
   // Detectar tipo de filtro inicial baseado nos valores iniciais
   const [tipoFiltro, setTipoFiltro] = useState<TipoFiltro>(() => {
     if (initial.nome) return TipoFiltro.NOME
@@ -34,23 +32,13 @@ export function PesquisaBar({
     return TipoFiltro.NENHUM
   })
 
-  // Sincronizar local quando initial mudar externamente (back/forward)
-  // Padrão React: "adjusting state during rendering"
-  if (
-    lastInitial.nome !== initial.nome ||
-    lastInitial.bloco !== initial.bloco ||
-    lastInitial.unidade !== initial.unidade ||
-    lastInitial.andar !== initial.andar ||
-    lastInitial.tipo !== initial.tipo
-  ) {
-    setLastInitial(initial)
-    setLocal(initial)
-    // Detectar tipo de filtro baseado nos valores iniciais
+  const { local, setLocal } = useFiltroLocal<Filtros>(initial, () => {
+    // Re-derivar tipo de filtro quando initial muda externamente (back/forward)
     if (initial.nome) setTipoFiltro(TipoFiltro.NOME)
     else if (initial.tipo) setTipoFiltro(TipoFiltro.TIPO)
     else if (initial.bloco || initial.unidade || initial.andar !== null) setTipoFiltro(TipoFiltro.LOCALIZACAO)
     else setTipoFiltro(TipoFiltro.NENHUM)
-  }
+  })
 
   function handleTipoFiltroChange(value: string | null) {
     setTipoFiltro((value ?? '') as TipoFiltro)
