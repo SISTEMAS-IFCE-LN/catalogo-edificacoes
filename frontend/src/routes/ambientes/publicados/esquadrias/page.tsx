@@ -1,4 +1,4 @@
-import { useSearchParams } from 'react-router'
+import { useSearchParams, useNavigate } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import { fetchEsquadrias } from '@/lib/api/api-ambientes'
 import { useEffect, useMemo, useState } from 'react'
@@ -48,6 +48,7 @@ function atualizarSearchParams(
 
 export function EsquadriasPage() {
     const [searchParams, setSearchParams] = useSearchParams()
+    const navigate = useNavigate()
     const ids = useMemo(() => parseIds(searchParams.get('ids')), [searchParams])
 
     const filtroTipo = searchParams.get('tipo') ?? ''
@@ -123,6 +124,9 @@ export function EsquadriasPage() {
 
     return (
         <div className="space-y-6">
+            <Button variant="outline" onClick={() => navigate('/ambientes/publicados')}>
+                Voltar
+            </Button>
             {/* Filtros client-side por tipo e material (UC20-FE) */}
             <div className="flex flex-wrap items-end gap-3">
                 <div className="space-y-1">
