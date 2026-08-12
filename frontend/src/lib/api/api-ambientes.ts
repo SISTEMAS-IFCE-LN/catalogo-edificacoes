@@ -51,18 +51,25 @@ export async function fetchAmbientes(
   return AmbientesBasicosPaginadosSchema.parse(data)
 }
 
-export async function fetchDetalheAmbiente(id: number): Promise<AmbienteDetalhe> {
-  const { data } = await api.get(`/api${ROUTES.PUBLICADOS}/${id}`)
+export async function fetchDetalheAmbiente(
+  id: number,
+  signal?: AbortSignal
+): Promise<AmbienteDetalhe> {
+  const { data } = await api.get(`/api${ROUTES.PUBLICADOS}/${id}`, { signal })
   return AmbienteDetalheSchema.parse(data)
 }
 
-export async function fetchEsquadrias(query: EsquadriasQuery): Promise<EsquadriasResponse> {
+export async function fetchEsquadrias(
+  query: EsquadriasQuery,
+  signal?: AbortSignal
+): Promise<EsquadriasResponse> {
   const { data } = await api.get<EsquadriasResponse>(`/api${ROUTES.PUBLICADOS}/esquadrias`, {
     params: {
       ids: query.ids.join(','),
       page: query.page ?? 0,
       size: query.size ?? 100,
     },
+    signal,
   })
   return EsquadriasResponseSchema.parse(data)
 }

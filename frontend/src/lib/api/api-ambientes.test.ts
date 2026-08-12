@@ -231,7 +231,33 @@ describe('fetchDetalheAmbiente', () => {
       },
     })
     await fetchDetalheAmbiente(1)
-    expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados/1')
+    expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados/1', expect.any(Object))
+  })
+
+  it('repassa signal ao axios', async () => {
+    const controller = new AbortController()
+    vi.mocked(api.get).mockResolvedValueOnce({
+      data: {
+        id: 1,
+        nome: 'Sala 1',
+        localizacao: { id: 1, bloco: 'Bloco 1', unidade: 'Sede', andar: 1 },
+        tipo: 'Sala de Aula',
+        capacidade: 30,
+        geometrias: [],
+        areaAmbiente: 50,
+        pesDireitos: [],
+        esquadriasDetalhes: {
+          esquadrias: [],
+          esquadriasTipoMaterial: [],
+        },
+        informacaoAdicional: '',
+        status: 'PUBLICADO',
+      },
+    })
+    await fetchDetalheAmbiente(1, controller.signal)
+    expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados/1', expect.objectContaining({
+      signal: controller.signal,
+    }))
   })
 
   it('valida resposta com Zod', async () => {
@@ -311,6 +337,29 @@ describe('fetchEsquadrias', () => {
     await fetchEsquadrias({ ids: [1, 2, 3], page: 0, size: 100 })
     expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados/esquadrias', expect.objectContaining({
       params: expect.objectContaining({ ids: '1,2,3', page: 0, size: 100 }),
+    }))
+  })
+
+  it('repassa signal ao axios', async () => {
+    const controller = new AbortController()
+    vi.mocked(api.get).mockResolvedValueOnce({
+      data: {
+        ambientes: [],
+        totalTipoMaterial: [],
+        dadosPaginacao: {
+          totalElements: 0,
+          totalPages: 0,
+          currentPage: 0,
+          pageSize: 100,
+          hasNext: false,
+          hasPrevious: false,
+        },
+      },
+    })
+    await fetchEsquadrias({ ids: [1], page: 0, size: 100 }, controller.signal)
+    expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados/esquadrias', expect.objectContaining({
+      params: expect.objectContaining({ ids: '1', page: 0, size: 100 }),
+      signal: controller.signal,
     }))
   })
 

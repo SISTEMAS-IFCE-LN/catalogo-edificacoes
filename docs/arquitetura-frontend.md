@@ -15,7 +15,7 @@ Este documento descreve a arquitetura do frontend do sistema Catálogo de Edific
 | Renderização | **CSR puro (SPA)** | Adequado ao JWT entregue em fragmento de URL (`#token=...`, inacessível ao servidor) e aos UCs interativos (multistep, tabelas, debounce)                 |
 | Framework | **Vite + React Router v8** | Mínimo necessário para CSR; hot reload rápido; build estático simples; guarda de rotas via `<RequireAuth>`/`<RequireRole>`                                |
 | Estilização | **Tailwind CSS 4 + shadcn/ui** | Plugin Vite nativo (`@tailwindcss/vite`), tema via `@theme` em CSS; acessível (Base UI), customizável, alinhado ao padrão declarativo de permissões |
-| Estado servidor/UI | TanStack Query v5 (server) + Zustand (UI leve) + Context (auth) | Separação clara; cache inteligente; auth isolado                                                                                                          |
+| Estado servidor/UI | TanStack Query v5 (server) + Context (auth) | Separação clara; cache inteligente; auth isolado                                                                                                          |
 | HTTP Client | **Axios** com interceptores (auth, CSRF, refresh) | Tratamento central de 401, fila de refresh, anexação de `X-XSRF-TOKEN`                                                                                    |
 | Formulários | React Hook Form + Zod | Schemas compartilhados com backend; validação runtime + type inference                                                                                    |
 | Deploy | **Nginx** servindo `dist/` + reverse proxy para backend Spring | Reaproveita reverse proxy já exigido por `X-Forwarded-*` (ver [`operacao.md`](./operacao.md)); menor nº de peças operacionais                             |
@@ -90,7 +90,7 @@ O frontend **não decodifica** o JWT — apenas o recebe em `#token=...` (login 
      │             - accessToken (memória) = token
      │             - Authorization: Bearer <token> no Axios
      │             - GET /api/usuarios/me → User no Context
-      │             - navigate(ROUTES.HOME) conforme perfis
+     │             - navigate(ROUTES.HOME) conforme perfis
      ▼
   App autenticado
 ```
@@ -156,7 +156,6 @@ Para popular `User` no `AuthContext`, o **backend implementa** `GET /api/usuario
 | Linguagem | TypeScript | 5+ | Type safety para permissões, contracts com backend |
 | HTTP Client | Axios | 1+ | Interceptores (auth, CSRF, refresh 401), retry transparente |
 | Estado servidor | TanStack Query | 5+ | Cache, refetch inteligente, optimistic updates, paginação |
-| Estado UI | Zustand | 4+ | Drawer, filtros transitórios — sem boilerplate |
 | Auth state | React Context | — | Simples, integrado ao React, suficiente para escopo |
 | Estilização | Tailwind CSS | 4+ | Utility-first, plugin Vite nativo (`@tailwindcss/vite`), tema via `@theme` em `globals.css`, tree-shaking automático |
 | UI Components | shadcn/ui (inclui `Drawer`, `Sheet`, `Avatar`, `Dialog`, `DropdownMenu`, `Accordion`) | — | Acessível (Base UI embutido), sem lock-in, copiado para o repo. |
@@ -237,10 +236,15 @@ frontend/
 │   │       └── ResponsiveModal.tsx   # wrapper: Dialog (desktop) | Drawer (mobile)
 │   │
 │   ├── lib/
-│   │   ├── api.ts                    # instância Axios + interceptores (auth, CSRF, refresh 401)
-│   │   ├── auth.ts                   # variável de módulo + accessors (set/get/clear do token)
-│   │   ├── permissions.ts            # ROUTE_PERMISSIONS, ACTION_PERMISSIONS, hasPermission, getRequiredRoles
-│   │   ├── csrf.ts                   # getCsrfToken() lê cookie XSRF-TOKEN
+│   │   ├── security/
+│   │   │   ├── auth.ts               # variável de módulo + accessors (set/get/clear do token)
+│   │   │   ├── csrf.ts               # getCsrfToken() — token CSRF mascarado em memória
+│   │   │   └── permissions.ts        # ROUTE_PERMISSIONS, ACTION_PERMISSIONS, hasPermission, getRequiredRoles
+│   │   ├── api/
+│   │   │   ├── api.ts                # instância Axios + interceptores (auth, CSRF, refresh 401)
+│   │   │   └── api-ambientes.ts      # fetchAmbientes, fetchDetalheAmbiente, fetchEsquadrias
+│   │   ├── ambientes/
+│   │   │   └── esquadrias.ts         # filtro/resumo de esquadrias (lógica pura)
 │   │   └── utils.ts                  # cn(), formatadores, helpers
 │   │
 │   ├── hooks/
@@ -248,13 +252,12 @@ frontend/
 │   │   ├── usePermission.ts          # canDo(action), canAccess(route), hasRole(roles)
 │   │   └── useDebounce.ts
 │   │
-│   ├── stores/
-│   │   └── ui-store.ts               # Zustand: sidebar aberta, filtros transitórios
-│   │
 │   ├── types/
 │   │   ├── user.ts                   # Role, User, AuthState
-│   │   ├── ambiente.ts               # Ambiente, Geometria, PesDireito, Esquadria, etc.
-│   │   └── api.ts                    # tipos de resposta/paginação
+│   │   └── ambientes/
+│   │       ├── ambiente.ts           # schemas/tipos de resposta (AmbienteBasico, AmbienteDetalhe, EsquadriasResponse…)
+│   │       ├── filtros.ts            # Filtros, FILTROS_VAZIOS, UrlFiltrosSchema
+│   │       └── enums.ts              # enums espelhados do backend (TipoAmbiente, Bloco, Unidade, TipoFiltro…)
 │   │
 │   └── constants/
 │       ├── roles.ts                  # enum Role sincronizado com backend
@@ -274,9 +277,8 @@ frontend/
 
 - **`routes/`** aloca cada tela em uma pasta; `page.tsx` é o default. Subrotas dinâmicas usam `[id]/` (mantém convenção Next-like para familiaridade).
 - **`components/ui/`** são os componentes base do shadcn/ui (gerados por CLI, copiados não dependidos).
-- **`lib/`** é infraestrutura (Axios, auth em memória, permissions, csrf).
+- **`lib/`** é infraestrutura (Axios, auth em memória, permissions, csrf), agrupada por domínio (`security/`, `api/`, `ambientes/`).
 - **`hooks/`** contém lógica reutilizável enxuta.
-- **`stores/`** só tem Zustand para UI efêmera; nunca para estado de servidor (uso TanStack Query).
 
 ---
 
@@ -1160,8 +1162,9 @@ services:
 | Env var | Default | Descrição |
 |---|---|---|
 | `VITE_BACKEND_URL` | `''` (mesma origem — proxy Nginx) | Usada pelo Axios. Em dev, `http://localhost:8080` para contornar o proxy |
-| `VITE_GOOGLE_OAUTH_ENTRY` | `/oauth2/authorization/google` | URL do botão "Entrar com Google" (relativa ou absoluta) |
 | `VITE_FAKE_AUTH` | `'false'` | Quando `'true'`, ativa FakeAuth (usuário mockado) para dev sem backend. **Nunca em produção** — o build de produção deve omiti-la ou setá-la `'false'` |
+
+> O entry do OAuth2 (`/oauth2/authorization/google`) é uma **constante** (`ROUTES.GOOGLE_OAUTH_ENTRY` em `constants/routes.ts`); não é env var porque nunca varia entre ambientes.
 
 Em dev local, `vite dev` (porta 5173) chama a API diretamente em `localhost:8080`. O `vite.config.ts` pode definir `server.proxy` para reproduzir o Nginx:
 
@@ -1170,10 +1173,10 @@ Em dev local, `vite dev` (porta 5173) chama a API diretamente em `localhost:8080
 export default defineConfig({
   server: {
     proxy: {
-      '/api':       'http://localhost:8080',
-      '/auth':      'http://localhost:8080',
-      '/oauth2':    'http://localhost:8080',
-      '/login':     'http://localhost:8080',
+      '/api':          'http://localhost:8080',
+      '/auth':         'http://localhost:8080',
+      '/oauth2':       'http://localhost:8080',
+      '/login/oauth2': 'http://localhost:8080', // entry OAuth2; `/login` puro é rota do SPA
     },
   },
 })
@@ -1481,7 +1484,6 @@ Cobertura mínima recomendada: `lib/permissions.ts` 100%, `lib/auth.ts` 100% (tr
 - [Vite](https://vitejs.dev/)
 - [React Router v8](https://reactrouter.com/)
 - [TanStack Query](https://tanstack.com/query/latest)
-- [Zustand](https://docs.pmnd.rs/zustand/getting-started/introduction)
 - [shadcn/ui](https://ui.shadcn.com/)
 - [Tailwind CSS](https://tailwindcss.com/)
 - [Axios](https://axios-http.com/)

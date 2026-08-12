@@ -134,7 +134,7 @@ describe('EsquadriasPage', () => {
                 ids: [1, 2, 3],
                 page: 0,
                 size: 100,
-            })
+            }, expect.anything())
         })
     })
 
@@ -144,6 +144,7 @@ describe('EsquadriasPage', () => {
         await waitFor(() => {
             expect(fetchEsquadrias).toHaveBeenCalledWith(
                 expect.objectContaining({ ids: [1, 2] }),
+                expect.anything(),
             )
         })
     })

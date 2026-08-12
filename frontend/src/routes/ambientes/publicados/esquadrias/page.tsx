@@ -62,11 +62,11 @@ export function EsquadriasPage() {
 
     const { data, isLoading, error } = useQuery({
         queryKey: ['esquadrias', ids, page],
-        queryFn: () => fetchEsquadrias({
+        queryFn: ({ signal }) => fetchEsquadrias({
             ids,
             page,
             size: 100,
-        }),
+        }, signal),
         enabled: ids.length > 0,
     })
 

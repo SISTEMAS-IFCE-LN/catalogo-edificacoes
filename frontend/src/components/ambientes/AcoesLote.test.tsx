@@ -88,6 +88,15 @@ describe('AcoesLote', () => {
         )
     })
 
+    it('renderiza ações customizadas via prop acoes', () => {
+        const acoes = [
+            { value: 'Enviar p/ Validação', onRun: vi.fn() },
+        ]
+        renderWithRouter({ selectedIds: [1], onClear: vi.fn(), acoes })
+        fireEvent.click(screen.getByLabelText('Selecionar ação em lote'))
+        expect(screen.getByRole('option', { name: 'Enviar p/ Validação' })).toBeInTheDocument()
+    })
+
     it('possui região acessível "Ações em lote"', () => {
         renderWithRouter({ selectedIds: [1], onClear: vi.fn() })
         expect(screen.getByRole('region', { name: 'Ações em lote' })).toBeInTheDocument()

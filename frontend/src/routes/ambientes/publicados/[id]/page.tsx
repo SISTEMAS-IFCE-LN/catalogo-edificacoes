@@ -10,7 +10,7 @@ export function PublicadoDetalhePage() {
 
   const { data: ambiente, isLoading, error } = useQuery({
     queryKey: ['publicados', 'detalhe', id],
-    queryFn: () => fetchDetalheAmbiente(Number(id)),
+    queryFn: ({ signal }) => fetchDetalheAmbiente(Number(id), signal),
     enabled: !!id,
   })
 

@@ -13,7 +13,7 @@ import { ROUTES } from '@/constants/routes'
 
 const OPCAO_NENHUMA = 'NENHUMA'
 
-interface AcaoLote {
+export interface AcaoLote {
     value: string
     onRun: (selectedIds: number[]) => void
 }
@@ -21,6 +21,8 @@ interface AcaoLote {
 interface AcoesLoteProps {
     selectedIds: number[]
     onClear: () => void
+    /** Ações disponíveis; default é "Detalhar Esquadrias" (UC20-FE). */
+    acoes?: AcaoLote[]
 }
 
 /**
@@ -31,14 +33,14 @@ interface AcoesLoteProps {
  * Ações disponíveis (extensível para partes 09/10):
  * - "Detalhes Esquadrias" (UC20-FE): navega para /ambientes/publicados/esquadrias?ids=...
  */
-export function AcoesLote({ selectedIds, onClear }: AcoesLoteProps) {
+export function AcoesLote({ selectedIds, onClear, acoes: acoesCustomizadas }: AcoesLoteProps) {
     const navigate = useNavigate()
     const isMobile = useIsMobile()
     const [acao, setAcao] = useState<string>(OPCAO_NENHUMA)
 
     if (selectedIds.length === 0) return null
 
-    const acoes: AcaoLote[] = [
+    const acoes: AcaoLote[] = acoesCustomizadas ?? [
         {
             value: 'Detalhar Esquadrias',
             onRun: (ids) => {
