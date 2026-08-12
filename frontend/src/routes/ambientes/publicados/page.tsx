@@ -134,6 +134,9 @@ export function PublicadosPage() {
             someSelected={autenticado ? someSelected : undefined}
           />
           <div className="flex items-center justify-between gap-4">
+            <span className="text-sm text-muted-foreground">
+              Área Total: {data.areaTotal.toFixed(2)} m²
+            </span>
             <div className="flex items-center gap-2">
               <span className="text-sm text-muted-foreground">Itens por página:</span>
               <Select value={String(size)} onValueChange={handleSizeChangeComLimpeza}>

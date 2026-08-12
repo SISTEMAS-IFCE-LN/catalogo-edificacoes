@@ -118,6 +118,7 @@ describe('PublicadosPage', () => {
             expect(screen.queryByLabelText('Selecionar todos da página')).not.toBeInTheDocument()
             expect(screen.queryByLabelText('Selecionar Sala 101')).not.toBeInTheDocument()
             expect(screen.queryByRole('region', { name: 'Ações em lote' })).not.toBeInTheDocument()
+            expect(screen.getByText('Área Total: 90.00 m²')).toBeInTheDocument()
         })
     })
 
@@ -143,6 +144,7 @@ describe('PublicadosPage', () => {
             })
             // AcoesLote não aparece sem seleção
             expect(screen.queryByRole('region', { name: 'Ações em lote' })).not.toBeInTheDocument()
+            expect(screen.getByText('Área Total: 90.00 m²')).toBeInTheDocument()
         })
 
         it('selecionar um item exibe AcoesLote com contador', async () => {
