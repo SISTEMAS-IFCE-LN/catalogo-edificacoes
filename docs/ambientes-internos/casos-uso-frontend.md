@@ -8,7 +8,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - Objetivo: mapear cada caso de uso do backend para telas, componentes e interações no frontend.
 - Regras gerais de UI:
   - Paginação padrão: 100 itens por página (conforme backend), com opções de navegação e busca por texto.
-  - Filtros e buscas aplicam-se client-side quando possível, senão por chamadas à API com debounce de 300ms.
+  - Filtros e buscas aplicam-se client-side quando possível; senão, por chamadas à API acionadas por botão (padrão `PesquisaBar`) — sem debounce.
   - Todos os formulários mostram erros inline e mensagens de sucesso via snackbar/toast.
   - Acessibilidade: formulários navegáveis por teclado, rótulos (`label`) para campos e contrastes adequados.
 
@@ -56,7 +56,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - Pré-condições: Usuário logado com role `validador`.
 - Fluxo principal (UI):
   1. O usuário acessa a rota `/ambientes/validacao`, é exibido o componente `TabelaPadrao` com os ambientes cujo `status = AGUARDANDO_VALIDACAO` (chamada GET `/api/ambientes/validacao`).
-  2. Uma barra de pesquisa (`PesquisaBar`) também é exibida para filtrar os ambientes por `nome`, `localizacao` e `tipo`. Cada filtro utiliza endpoints específicos do backend: `/api/ambientes/validacao/nome?nome={nome}`, `/api/ambientes/validacao/localizacao?bloco={bloco}&unidade={unidade}&andar={andar}` e `/api/ambientes/validacao/tipo?tipo={tipo}` (debounce 300ms).
+  2. Uma barra de pesquisa (`PesquisaBar`) também é exibida para filtrar os ambientes por `nome`, `localizacao` e `tipo`. Cada filtro utiliza endpoints específicos do backend: `/api/ambientes/validacao/nome?nome={nome}`, `/api/ambientes/validacao/localizacao?bloco={bloco}&unidade={unidade}&andar={andar}` e `/api/ambientes/validacao/tipo?tipo={tipo}` — filtro aplicado via botão "Aplicar", sem debounce, estado na URL.
   3. Um botão de seleção também está disponível para execução de ações em lote (`AcoesLote`).
   4. A Tabela exibida possui paginação e o usuário pode definir quantos registros serão exibidos até o máximo de 100. 
   5. O usuário também pode ordenar os resultados por qualquer uma das colunas da tabela.
@@ -66,7 +66,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
   - Em erro de rede, show toast com opção `Tentar novamente`.
 - Critérios de aceitação:
   - Filtros retornam apenas itens com `status = AGUARDANDO_VALIDACAO`.
-  - O debounce de 300ms é aplicado corretamente nos filtros.
+  - Os filtros são aplicados via botão "Aplicar" (sem debounce) e o estado (filtro/página) fica na URL.
   - Paginação funciona e mantém filtros no estado da URL (query params).
 
 ### UC02-FE: Detalhes de um Ambiente Aguardando Validação
@@ -393,7 +393,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - Pré-condições: Usuário logado com role `administrador`.
 - Fluxo principal (UI):
   1. O usuário acessa a rota `/usuarios`, é exibido o componente `TabelaUsuarios` com a lista de usuários do sistema (chamada GET `/api/usuarios`).
-  2. Uma barra de pesquisa (`PesquisaBarUsuarios`) é exibida para filtrar usuários por `nome` (endpoint `/api/usuarios/nomes/{nome}` com debounce 300ms).
+  2. Uma barra de pesquisa (`PesquisaBarUsuarios`) é exibida para filtrar usuários por `nome` (endpoint `/api/usuarios/nomes/{nome}`; filtro aplicado via botão "Buscar", sem debounce; filtro e página compartilháveis pela URL).
   3. A tabela possui paginação (máximo 100 registros por página) e exibe as colunas: ID, Email, Nome, Ativo, CriadoEm, Perfis.
   4. Cada linha possui botões de ação individual: `Editar Perfis`, `Desativar`/`Ativar`.
 - Estados e erros:
@@ -428,7 +428,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - Estados e erros:
   - Se nenhum usuário encontrado, mostrar callout informativo.
 - Critérios de aceitação:
-  - Busca por nome funciona com debounce de 300ms.
+  - Busca por nome é aplicada via botão "Buscar" (Enter também) — sem debounce; filtro e página ficam na URL.
   - Resultados são paginados corretamente.
 
 ### UC25-FE: Atualizar Perfis de um Usuário

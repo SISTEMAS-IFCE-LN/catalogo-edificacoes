@@ -12,7 +12,7 @@ Este documento descreve a arquitetura do frontend do sistema Catálogo de Edific
 | Refresh token | Cookie `HttpOnly + Secure + SameSite=Lax` gerido pelo backend | Frontend nunca o manipula; enviado automaticamente em `/auth/refresh`                                                                                     |
 | CSRF | Tratado em `/auth/**` via Double Submit Cookie (`XSRF-TOKEN` / `X-XSRF-TOKEN`) | Backend já implementa `CookieCsrfTokenRepository.withHttpOnlyFalse()` em `authFilterChain` (`@Order(2)`)                                                  |
 | Dados do `Usuario` | `GET /api/usuarios/me` (implementado no backend) | JWT não expõe `nome`/`ativo`/`criadoEm`; endpoint necessário para popular `User`. Frontend não decodifica o JWT — apenas o transporta em `Authorization` |
-| Renderização | **CSR puro (SPA)** | Adequado ao JWT entregue em fragmento de URL (`#token=...`, inacessível ao servidor) e aos UCs interativos (multistep, tabelas, debounce)                 |
+| Renderização | **CSR puro (SPA)** | Adequado ao JWT entregue em fragmento de URL (`#token=...`, inacessível ao servidor) e aos UCs interativos (multistep, tabelas, seleção múltipla)                 |
 | Framework | **Vite + React Router v8** | Mínimo necessário para CSR; hot reload rápido; build estático simples; guarda de rotas via `<RequireAuth>`/`<RequireRole>`                                |
 | Estilização | **Tailwind CSS 4 + shadcn/ui** | Plugin Vite nativo (`@tailwindcss/vite`), tema via `@theme` em CSS; acessível (Base UI), customizável, alinhado ao padrão declarativo de permissões |
 | Estado servidor/UI | TanStack Query v5 (server) + Context (auth) | Separação clara; cache inteligente; auth isolado                                                                                                          |
@@ -168,7 +168,7 @@ Para popular `User` no `AuthContext`, o **backend implementa** `GET /api/usuario
 A decisão pelo **CSR puro** decorre de:
 
 1. **Token em fragmento** (`#token=...`): o servidor nunca enxerga o fragmento; SSR de rotas autenticadas não teria como enviar o token para o renderizador server-side.
-2. **UCs interativos**: multistep `FormAmbiente` (UC06-FE), tabelas com paginação 100 + debounce 300ms + seleção múltipla (UC01-FE, UC04-FE, UC22-FE) — trabalho essencialmente client-side.
+2. **UCs interativos**: multistep `FormAmbiente` (UC06-FE), tabelas com paginação + filtros aplicados via botão (padrão `PesquisaBar`) + seleção múltipla (UC01-FE, UC04-FE, UC22-FE) — trabalho essencialmente client-side.
 3. **Refresh transparente**: estado de sessão no cliente; SSR exigiria vazar o token para o servidor, quebrando o modelo de segurança.
 4. **SEO não é requisito**: a única rota pública indexável é `/ambientes/publicados` (lista). O modelo de negócio não exige indexação de nenhum dado.
 5. **Custo operacional**: SSR universal exigiria processo Node em produção (PM2/container), a mais uma peça para operar. Com CSR, o deploy é estático atrás de Nginx.
@@ -253,7 +253,7 @@ frontend/
 │   ├── hooks/
 │   │   ├── useAuth.ts                # atalho para useContext(AuthContext)
 │   │   ├── usePermission.ts          # canDo(action), canAccess(route), hasRole(roles)
-│   │   └── useDebounce.ts
+│   │   └── useUsuariosSearchParams.ts # nome/page na URL (parte 09)
 │   │
 │   ├── types/
 │   │   ├── user.ts                   # Role, User, AuthState
