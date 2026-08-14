@@ -30,7 +30,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - TabelaUsuarios — exibe ID, Email, Nome, Ativo, CriadoEm, Perfis; suporte a paginação e ações individuais.
 - PesquisaBarUsuarios — input para filtrar usuários por `nome`.
 - ModalEditarPerfis — modal com checkboxes para selecionar roles (COLABORADOR, VALIDADOR, GESTOR_SISTEMA, ADMINISTRADOR).
-- ModalConfirmacaoDesativar — confirmação para desativar/ativar usuário.
+- ModalConfirmacaoStatusUsuario — confirmação para desativar/ativar usuário.
 
 ---
 
@@ -457,7 +457,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - Pré-condições: Usuário logado com role `administrador`.
 - Fluxo principal (UI):
   1. O usuário clica em `Desativar` (para usuário ativo) ou `Ativar` (para usuário inativo) na linha do usuário desejado.
-  2. Um `ModalConfirmacaoDesativar` é aberto para confirmação.
+  2. Um `ModalConfirmacaoStatusUsuario` é aberto para confirmação.
   3. Ao confirmar:
      - Para desativar: requisição PATCH para `/api/usuarios/{id}/desativar`.
      - Para ativar: requisição PATCH para `/api/usuarios/{id}/ativar`.

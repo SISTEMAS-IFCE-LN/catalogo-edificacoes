@@ -231,7 +231,7 @@ frontend/
 │   │   │   └── Footer.tsx
 │   │   ├── ambientes/                # TabelaPadrao, DetalheAmbiente, FormAmbiente, PesquisaBarAmbientes,
 │   │   │                              # ModalConfirmacao, AcoesLote, modais UC07–UC18
-│   │   ├── usuarios/                 # TabelaUsuarios, ModalEditarPerfis, ModalConfirmacaoDesativar
+│   │   ├── usuarios/                 # TabelaUsuarios, ModalEditarPerfis, ModalConfirmacaoStatusUsuario
 │   │   └── common/
 │   │       └── ResponsiveModal.tsx   # wrapper: Dialog (desktop) | Drawer (mobile)
 │   │
@@ -1391,7 +1391,7 @@ export function ResponsiveModal({ title, description, children, footer, ...rest 
 Padrão oficial documentado em https://ui.shadcn.com/docs/components/drawer#responsive.
 
 **Aplicação**:
-- `ModalConfirmacao`, `ModalEditarPerfis`, `ModalConfirmacaoDesativar`: mantêm `Dialog` em todos viewports — curtos, sem listas editáveis.
+- `ModalConfirmacao`, `ModalEditarPerfis`, `ModalConfirmacaoStatusUsuario`: mantêm `Dialog` em todos viewports — curtos, sem listas editáveis.
 - Modais UC07–UC13 (inclusão/edição de geometrias, pés-direitos, esquadrias, informação adicional): usam `<ResponsiveModal>` — são listas editáveis que em mobile se beneficiam do bottom-sheet tactile.
 - Em listas longas dentro de `Drawer`, configurar `snapPoints` para limitar altura e permitir drag-to-expand.
 
