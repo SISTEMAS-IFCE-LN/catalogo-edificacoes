@@ -394,7 +394,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - Fluxo principal (UI):
   1. O usuário acessa a rota `/usuarios`, é exibido o componente `TabelaUsuarios` com a lista de usuários do sistema (chamada GET `/api/usuarios`).
   2. Uma barra de pesquisa (`PesquisaBarUsuarios`) é exibida para filtrar usuários por `nome` (endpoint `/api/usuarios/nomes/{nome}`; filtro aplicado via botão "Buscar", sem debounce; filtro e página compartilháveis pela URL).
-  3. A tabela possui paginação (máximo 100 registros por página) e exibe as colunas: ID, Email, Nome, Ativo, CriadoEm, Perfis.
+  3. A tabela possui paginação com seletor de tamanho de página (10/20/50/100 registros, default 20) e exibe as colunas: ID, Email, Nome, Ativo, CriadoEm, Perfis.
   4. Cada linha possui botões de ação individual: `Editar Perfis`, `Desativar`/`Ativar`.
 - Estados e erros:
   - Se não houver usuários, mostrar callout informativo.

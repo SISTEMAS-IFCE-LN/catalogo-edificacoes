@@ -252,9 +252,11 @@ frontend/
 │   │
 │   ├── hooks/
 │   │   ├── useAuth.ts                # atalho para useContext(AuthContext)
-│   │   ├── useFiltroLocal.ts         # rascunho local sincronizado com a URL (PesquisaBarAmbientes/Usuarios)
+│   │   ├── useFiltroLocal.ts         # rascunho local sincronizado com a URL (PesquisaBarAmbientes/Usuarios + hooks de search params)
+│   │   ├── usePaginationParams.ts    # núcleo genérico: page/size + handlePageChange/handleSizeChange/updateSearchParams (parte 07/09)
+│   │   ├── useAmbientesSearchParams.ts # adaptador fino: usePaginationParams + Zod (filtros) + tipoFiltro (parte 07)
 │   │   ├── usePermission.ts          # canDo(action), canAccess(route), hasRole(roles)
-│   │   └── useUsuariosSearchParams.ts # nome/page na URL (parte 09)
+│   │   └── useUsuariosSearchParams.ts # adaptador fino: usePaginationParams + nome (parte 09)
 │   │
 │   ├── types/
 │   │   ├── user.ts                   # Role, User, AuthState
