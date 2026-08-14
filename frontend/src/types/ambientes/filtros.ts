@@ -46,3 +46,7 @@ export const UrlFiltrosSchema = z.object({
     unidade: z.preprocess((val) => val === null ? undefined : val, UnidadeFiltroSchema.default('')),
     andar: z.preprocess((val) => val === null ? undefined : val, AndarFiltroSchema.default(null)),
 })
+
+// Subconjunto para os hooks de search params: apenas os campos de filtro.
+// `page`/`size` passaram a ser responsabilidade de `usePaginationParams`.
+export const FiltrosUrlSchema = UrlFiltrosSchema.omit({ page: true, size: true })
