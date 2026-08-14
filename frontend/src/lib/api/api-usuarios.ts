@@ -30,7 +30,7 @@ export async function fetchUsuarioPorNome(nome: string, page = 0, size = 20): Pr
 }
 
 export async function fetchUsuarioPorEmail(email: string): Promise<User> {
-    const {data} = await api.get<User>(`/api${ROUTES.USUARIOS}/emails/${encodeURIComponent(email)}`)
+    const {data} = await api.get<User>(`/api${ROUTES.USUARIOS}/email/${encodeURIComponent(email)}`)
     return data
 }
 
