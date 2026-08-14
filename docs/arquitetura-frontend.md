@@ -266,7 +266,7 @@ frontend/
 │   │       └── enums.ts              # enums espelhados do backend (TipoAmbiente, Bloco, Unidade, TipoFiltro…)
 │   │
 │   └── constants/
-│       ├── roles.ts                  # enum Role sincronizado com backend
+│       ├── roles.ts                  # ROLE_LABELS (rótulos de perfis); Role vive em types/user.ts
 │       └── routes.ts                 # ROTAS = { LOGIN: '/login', ... }
 │
 ├── public/
