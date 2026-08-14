@@ -21,7 +21,7 @@ vi.mock('@/hooks/useAuth', () => ({
     useAuth: vi.fn(),
 }))
 
-vi.mock('@/hooks/use-mobile', () => ({
+vi.mock('@/hooks/useIsMobile', () => ({
     useIsMobile: () => false,
 }))
 

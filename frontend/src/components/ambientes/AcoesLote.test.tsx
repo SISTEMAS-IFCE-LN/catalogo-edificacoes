@@ -14,7 +14,7 @@ vi.mock('react-router', async (importOriginal) => {
     }
 })
 
-vi.mock('@/hooks/use-mobile', () => ({
+vi.mock('@/hooks/useIsMobile', () => ({
     useIsMobile: () => false,
 }))
 

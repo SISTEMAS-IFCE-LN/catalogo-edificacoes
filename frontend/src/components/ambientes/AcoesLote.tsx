@@ -8,7 +8,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select'
-import { useIsMobile } from '@/hooks/use-mobile'
+import { useIsMobile } from '@/hooks/useIsMobile'
 import { ROUTES } from '@/constants/routes'
 
 const OPCAO_NENHUMA = 'NENHUMA'
