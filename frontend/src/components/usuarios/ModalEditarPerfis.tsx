@@ -6,9 +6,8 @@ import {Button} from '@/components/ui/button'
 import {Checkbox} from '@/components/ui/checkbox'
 import {Label} from '@/components/ui/label'
 import {Role, User} from '@/types/user'
-import {toast} from 'sonner'
-import axios from 'axios'
 import {ROLE_LABELS} from '@/constants/roles'
+import {useAsyncAction} from '@/hooks/useAsyncAction'
 
 interface Props {
     open: boolean
@@ -28,7 +27,10 @@ const roleLabels = Object.entries(ROLE_LABELS).map(([role, label]) => {
 
 export function ModalEditarPerfis({open, usuario, onOpenChange, onSalvar}: Props) {
     const [selecionados, setSelecionados] = useState<Set<Role>>(new Set())
-    const [salvando, setSalvando] = useState(false)
+    const {executando, executar} = useAsyncAction({
+        onClose: () => onOpenChange(false),
+        mensagemPadrao: 'Erro ao atualizar perfis.',
+    })
 
     if (open && usuario && selecionados.size === 0) setSelecionados(new Set(usuario.perfis))
 
@@ -42,23 +44,10 @@ export function ModalEditarPerfis({open, usuario, onOpenChange, onSalvar}: Props
         })
     }
 
-    async function salvar() {
+    function salvar() {
         if (!usuario) return
         const perfis = Array.from(new Set([...selecionados, Role.COLABORADOR]))
-        setSalvando(true)
-        try {
-            await onSalvar(usuario.id, perfis)
-            onOpenChange(false)
-        } catch (e) {
-            const status = axios.isAxiosError(e) ? e.response?.status : undefined
-            if (status === 409) {
-                toast.error('Não é possível remover o último administrador do sistema.')
-            } else {
-                toast.error('Erro ao atualizar perfis.')
-            }
-        } finally {
-            setSalvando(false)
-        }
+        void executar(() => onSalvar(usuario.id, perfis))
     }
 
     return (
@@ -82,8 +71,8 @@ export function ModalEditarPerfis({open, usuario, onOpenChange, onSalvar}: Props
                 </div>
                 <DialogFooter>
                     <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-                    <Button onClick={salvar} disabled={salvando}>
-                        {salvando ? 'Salvando…' : 'Salvar'}
+                    <Button onClick={salvar} disabled={executando}>
+                        {executando ? 'Salvando…' : 'Salvar'}
                     </Button>
                 </DialogFooter>
             </DialogContent>

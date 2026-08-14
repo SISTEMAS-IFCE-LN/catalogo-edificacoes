@@ -251,6 +251,7 @@ frontend/
 │   │   └── utils.ts                  # cn(), formatadores, helpers
 │   │
 │   ├── hooks/
+│   │   ├── useAsyncAction.ts         # executar ação async (loading + fechar no sucesso + toast de erro) — parte 09
 │   │   ├── useAuth.ts                # atalho para useContext(AuthContext)
 │   │   ├── useFiltroLocal.ts         # rascunho local sincronizado com a URL (PesquisaBarAmbientes/Usuarios + hooks de search params)
 │   │   ├── usePaginationParams.ts    # núcleo genérico: page/size + handlePageChange/handleSizeChange/updateSearchParams (parte 07/09)
