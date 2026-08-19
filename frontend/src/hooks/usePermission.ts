@@ -5,7 +5,7 @@ import {
     hasPermission,
     matchRoute,
 } from '@/lib/security/permissions'
-import type {Role} from '@/types/user'
+import type {Role} from '@/types/usuarios/user'
 
 export function usePermission() {
     const {user} = useAuth()

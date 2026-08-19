@@ -1,4 +1,4 @@
-import {Role} from "@/types/user";
+import {Role} from "@/types/usuarios/user";
 
 export const ROUTE_PERMISSIONS: Record<string, Role[]> = {
     '/ambientes/validacao': [Role.VALIDADOR],

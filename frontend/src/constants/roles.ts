@@ -1,4 +1,4 @@
-import {Role} from '@/types/user'
+import {Role} from '@/types/usuarios/user'
 
  export const ROLE_LABELS: Record<Role, string> = {
     [Role.COLABORADOR]: 'Colaborador',

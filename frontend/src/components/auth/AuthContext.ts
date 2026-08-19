@@ -1,5 +1,5 @@
 import { createContext } from 'react'
-import type { AuthState } from '@/types/user'
+import type { AuthState } from '@/types/usuarios/user'
 
 export interface AuthContextValue extends AuthState {
   login: (token: string) => Promise<void>

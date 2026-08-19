@@ -5,7 +5,7 @@ import {
     useState,
 } from 'react'
 import type {ReactNode} from 'react'
-import type {AuthState, User} from '@/types/user'
+import type {AuthState, User} from '@/types/usuarios/user'
 import {api, refreshAccessToken} from '@/lib/api/api'
 import {
     clearAccessToken,

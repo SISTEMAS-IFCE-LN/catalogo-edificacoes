@@ -1,7 +1,7 @@
 import {NavLink} from 'react-router'
 import {useAuth} from '@/hooks/useAuth'
 import {cn} from '@/lib/utils'
-import {Role} from '@/types/user'
+import {Role} from '@/types/usuarios/user'
 
 interface MenuItem {
     href: string

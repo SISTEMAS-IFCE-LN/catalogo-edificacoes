@@ -6,8 +6,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { PublicadosPage } from './page'
 import type { AmbientesBasicosPaginados } from '@/types/ambientes/ambiente'
 import { Bloco, TipoAmbiente, TipoFiltro, Unidade } from '@/types/ambientes/enums'
-import type { User } from '@/types/user'
-import { Role } from '@/types/user'
+import type { User } from '@/types/usuarios/user'
+import { Role } from '@/types/usuarios/user'
 
 vi.mock('@/lib/api/api-ambientes', () => ({
     fetchAmbientes: vi.fn(),

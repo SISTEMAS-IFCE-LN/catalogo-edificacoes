@@ -1,7 +1,7 @@
 import {render, screen} from '@testing-library/react'
 import {describe, it, expect, vi, beforeEach} from 'vitest'
 import {PermissionButton} from './PermissionButton'
-import {Role} from '@/types/user'
+import {Role} from '@/types/usuarios/user'
 
 const mockUseAuth = vi.fn()
 

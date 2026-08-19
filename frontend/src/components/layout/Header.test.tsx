@@ -2,7 +2,7 @@ import {render, screen, fireEvent} from '@testing-library/react'
 import {MemoryRouter} from 'react-router'
 import {describe, it, expect, vi, beforeEach} from 'vitest'
 import {Header} from './Header'
-import {Role} from '@/types/user'
+import {Role} from '@/types/usuarios/user'
 
 const mockUseAuth = vi.fn()
 

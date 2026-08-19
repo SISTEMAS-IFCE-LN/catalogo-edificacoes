@@ -1,5 +1,5 @@
 import {api} from '@/lib/api/api'
-import type {Role, User} from '@/types/user'
+import type {Role, User} from '@/types/usuarios/user'
 import {ROUTES} from '@/constants/routes'
 
 export interface UsuariosPaginados {

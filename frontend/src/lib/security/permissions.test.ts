@@ -1,6 +1,6 @@
 import {describe, it, expect} from 'vitest'
 import {hasPermission, matchRoute, getRequiredRoles} from './permissions'
-import {Role} from '@/types/user'
+import {Role} from '@/types/usuarios/user'
 
 describe('hasPermission', () => {
     it('true quando interseção de roles não é vazia', () => {

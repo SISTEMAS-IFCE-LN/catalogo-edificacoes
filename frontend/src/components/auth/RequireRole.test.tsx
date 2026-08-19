@@ -2,8 +2,8 @@ import { render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { RequireRole } from './RequireRole'
-import { Role } from '@/types/user'
-import type { User } from '@/types/user'
+import { Role } from '@/types/usuarios/user'
+import type { User } from '@/types/usuarios/user'
 
 const mockUseAuth = vi.fn()
 

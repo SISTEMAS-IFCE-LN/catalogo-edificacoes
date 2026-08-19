@@ -1,7 +1,7 @@
 import { render, screen, act, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import type { User } from '@/types/user'
-import { Role } from '@/types/user'
+import type { User } from '@/types/usuarios/user'
+import { Role } from '@/types/usuarios/user'
 
 // --- Mocks de módulo (hoisted) ---
 
