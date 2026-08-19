@@ -5,17 +5,16 @@ import {Badge} from '@/components/ui/badge'
 import {Button} from '@/components/ui/button'
 import {DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger} from '@/components/ui/dropdown-menu'
 import {MoreHorizontal} from 'lucide-react'
-import type {User} from '@/types/user'
+import type {User, StatusAcao} from '@/types/usuarios/user'
 import {RoleBadge} from '@/components/usuarios/RoleBadge'
 
 interface Props {
     itens: User[]
     onEditarPerfis: (u: User) => void
-    onDesativar: (u: User) => void
-    onAtivar: (u: User) => void
+    onAlterarStatus: (u: User, acao: StatusAcao) => void
 }
 
-export function TabelaUsuarios({itens, onEditarPerfis, onDesativar, onAtivar}: Props) {
+export function TabelaUsuarios({itens, onEditarPerfis, onAlterarStatus}: Props) {
     return (
         <Table>
             <TableHeader>
@@ -58,9 +57,9 @@ export function TabelaUsuarios({itens, onEditarPerfis, onDesativar, onAtivar}: P
                                         Editar Perfis
                                     </DropdownMenuItem>
                                     {u.ativo ? (
-                                        <DropdownMenuItem onClick={() => onDesativar(u)}>Desativar</DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => onAlterarStatus(u, 'desativar')}>Desativar</DropdownMenuItem>
                                     ) : (
-                                        <DropdownMenuItem onClick={() => onAtivar(u)}>Ativar</DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => onAlterarStatus(u, 'ativar')}>Ativar</DropdownMenuItem>
                                     )}
                                 </DropdownMenuContent>
                             </DropdownMenu>

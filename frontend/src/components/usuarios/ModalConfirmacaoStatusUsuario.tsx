@@ -2,13 +2,13 @@ import {
     Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog'
 import {Button} from '@/components/ui/button'
-import type {User} from '@/types/user'
+import type {User, StatusAcao} from '@/types/usuarios/user'
 import {useAsyncAction} from '@/hooks/useAsyncAction'
 
 interface Props {
     open: boolean
     usuario: User | null
-    acao: 'desativar' | 'ativar'
+    acao: StatusAcao
     onConfirmar: () => Promise<void>
     onOpenChange: (open: boolean) => void
 }

@@ -19,3 +19,5 @@ export interface AuthState {
     isAuthenticated: boolean
     isLoading: boolean
 }
+
+export type StatusAcao = 'desativar' | 'ativar'
