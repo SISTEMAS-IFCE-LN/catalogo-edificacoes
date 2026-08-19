@@ -9,3 +9,4 @@ export const ProtectedLayout = lazy(() => import('@/routes/_layout/protected-lay
 export const PublicadosPage = lazy(() => import('@/routes/ambientes/publicados/page').then(m => ({default: m.PublicadosPage})))
 export const PublicadoDetalhePage = lazy(() => import('@/routes/ambientes/publicados/[id]/page').then(m => ({default: m.PublicadoDetalhePage})))
 export const EsquadriasPage = lazy(() => import('@/routes/ambientes/publicados/esquadrias/page').then(m => ({default: m.EsquadriasPage})))
+export const UsuariosPage = lazy(() => import('@/routes/usuarios/page').then(m => ({default: m.UsuariosPage})))

@@ -3,7 +3,7 @@ import {createBrowserRouter} from 'react-router'
 import {PublicOnly} from '@/components/auth/PublicOnly'
 import {RequireAuth} from '@/components/auth/RequireAuth'
 import {RequireRole} from '@/components/auth/RequireRole'
-import {Role} from '@/types/user'
+import {Role} from '@/types/usuarios/user'
 import {Loading} from '@/components/ui/Loading'
 import {ROUTES} from '@/constants/routes'
 import {
@@ -15,6 +15,7 @@ import {
     PublicadosPage,
     PublicadoDetalhePage,
     EsquadriasPage,
+    UsuariosPage,
 } from './lazy-pages'
 
 export const router = createBrowserRouter([
@@ -61,7 +62,7 @@ export const router = createBrowserRouter([
                     {
                         path: '/usuarios',
                         element: <RequireRole roles={[Role.ADMINISTRADOR]}/>,
-                        children: [{index: true, element: <Suspense fallback={<Loading/>}><HomePage/></Suspense>}],
+                        children: [{index: true, element: <Suspense fallback={<Loading/>}><UsuariosPage/></Suspense>}],
                     },
                 ],
             },
