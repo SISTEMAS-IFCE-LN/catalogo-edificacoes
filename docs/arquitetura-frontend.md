@@ -251,23 +251,25 @@ frontend/
 │   │   └── utils.ts                  # cn(), formatadores, helpers
 │   │
 │   ├── hooks/
-│   │   ├── useAsyncAction.ts         # executar ação async (loading + fechar no sucesso + toast de erro) — parte 09
+│   │   ├── useAsyncAction.ts         # executar ação async (loading + fechar no sucesso + toast de erro)
 │   │   ├── useAuth.ts                # atalho para useContext(AuthContext)
 │   │   ├── useFiltroLocal.ts         # rascunho local sincronizado com a URL (PesquisaBarAmbientes/Usuarios + hooks de search params)
-│   │   ├── usePaginationParams.ts    # núcleo genérico: page/size + handlePageChange/handleSizeChange/updateSearchParams (parte 07/09)
-│   │   ├── useAmbientesSearchParams.ts # adaptador fino: usePaginationParams + Zod (filtros) + tipoFiltro (parte 07)
+│   │   ├── usePaginationParams.ts    # núcleo genérico: page/size + handlePageChange/handleSizeChange/updateSearchParams
+│   │   ├── useAmbientesSearchParams.ts # adaptador fino: usePaginationParams + Zod (filtros) + tipoFiltro
 │   │   ├── usePermission.ts          # canDo(action), canAccess(route), hasRole(roles)
-│   │   └── useUsuariosSearchParams.ts # adaptador fino: usePaginationParams + nome (parte 09)
+│   │   └── useUsuariosSearchParams.ts # adaptador fino: usePaginationParams + nome/email + tipoFiltro
 │   │
 │   ├── types/
-│   │   ├── user.ts                   # Role, User, AuthState
+│   │   ├── usuarios/
+│   │   │   ├── user.ts               # Role, User, AuthState, StatusAcao
+│   │   │   └── filtros.ts            # TipoFiltroUsuarios, FiltrosUsuarios, FILTROS_USUARIOS_VAZIOS
 │   │   └── ambientes/
 │   │       ├── ambiente.ts           # schemas/tipos de resposta (AmbienteBasico, AmbienteDetalhe, EsquadriasResponse…)
 │   │       ├── filtros.ts            # Filtros, FILTROS_VAZIOS, UrlFiltrosSchema
 │   │       └── enums.ts              # enums espelhados do backend (TipoAmbiente, Bloco, Unidade, TipoFiltro…)
 │   │
 │   └── constants/
-│       ├── roles.ts                  # ROLE_LABELS (rótulos de perfis); Role vive em types/user.ts
+│       ├── roles.ts                  # ROLE_LABELS (rótulos de perfis); Role vive em types/usuarios/user.ts
 │       └── routes.ts                 # ROTAS = { LOGIN: '/login', ... }
 │
 ├── public/
@@ -294,7 +296,7 @@ frontend/
 ### 6.1. Tipos
 
 ```typescript
-// types/user.ts
+// types/usuarios/user.ts
 
 /**
  * Enum de roles. Sincronizado com br.edu.ifce.security.model.domain.Perfil.
@@ -339,7 +341,7 @@ export interface AuthState {
 ```typescript
 // lib/permissions.ts
 
-import { Role } from '@/types/user'
+import { Role } from '@/types/usuarios/user'
 
 /**
  * Permissões por rota. Espelha exatamente as authorities exigidas
@@ -428,7 +430,7 @@ export function matchRoute(pattern: string, pathname: string): boolean {
 // components/auth/AuthContext.ts — contexto separado para evitar lint react-refresh
 
 import { createContext } from 'react'
-import type { AuthState } from '@/types/user'
+import type { AuthState } from '@/types/usuarios/user'
 
 export interface AuthContextValue extends AuthState {
   login: (token: string) => Promise<void>
@@ -458,7 +460,7 @@ export function useAuth(): AuthContextValue {
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import type { AuthState, User } from '@/types/user'
+import type { AuthState, User } from '@/types/usuarios/user'
 import { api, refreshAccessToken } from '@/lib/api'
 import { setAccessToken, clearAccessToken, getAccessToken } from '@/lib/auth'
 import { AuthContext } from './AuthContext'
@@ -731,7 +733,7 @@ export function RequireAuth() {
 import { Navigate, Outlet, useLocation } from 'react-router'
 import { useAuth } from '@/hooks/useAuth'
 import { hasPermission } from '@/lib/permissions'
-import type { Role } from '@/types/user'
+import type { Role } from '@/types/usuarios/user'
 
 export function RequireRole({ roles }: { roles: Role[] }) {
   const { user } = useAuth()
@@ -767,7 +769,7 @@ import { createBrowserRouter } from 'react-router'
 import { RequireAuth } from '@/components/auth/RequireAuth'
 import { RequireRole } from '@/components/auth/RequireRole'
 import { PublicOnly } from '@/components/auth/PublicOnly'
-import { Role } from '@/types/user'
+import { Role } from '@/types/usuarios/user'
 import { ProtectedLayout } from '@/routes/_layout/protected-layout'
 
 import LoginPage from '@/routes/login/page'
@@ -876,7 +878,7 @@ const menuItems: MenuItem[] = [
 import { useAuth } from '@/hooks/useAuth'
 import { hasPermission, ROUTE_PERMISSIONS, ACTION_PERMISSIONS } from '@/lib/permissions'
 import { matchRoute } from '@/lib/permissions'
-import type { Role } from '@/types/user'
+import type { Role } from '@/types/usuarios/user'
 
 export function usePermission() {
   const { user } = useAuth()
@@ -914,7 +916,7 @@ export function usePermission() {
 import type { ButtonProps } from '@/components/ui/button'
 import { Button } from '@/components/ui/button'
 import { usePermission } from '@/hooks/usePermission'
-import type { Role } from '@/types/user'
+import type { Role } from '@/types/usuarios/user'
 
 interface Props extends ButtonProps {
   requiredRoles: Role[]
