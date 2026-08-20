@@ -16,14 +16,7 @@ interface Props {
     onSalvar: (usuarioId: number, perfis: Role[]) => Promise<void>
 }
 
-interface RoleLabel {
-    role: Role
-    label: string
-}
-
-const roleLabels = Object.entries(ROLE_LABELS).map(([role, label]) => {
-    return {role, label} as RoleLabel
-})
+const roleLabels = (Object.entries(ROLE_LABELS) as [Role, string][]).map(([role, label]) => ({role, label}))
 
 export function ModalEditarPerfis({open, usuario, onOpenChange, onSalvar}: Props) {
     const [selecionados, setSelecionados] = useState<Set<Role>>(

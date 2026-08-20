@@ -1,5 +1,6 @@
 import {useState} from 'react'
 import {useQuery, useQueryClient} from '@tanstack/react-query'
+import axios from 'axios'
 import {
     fetchUsuarios,
     fetchUsuarioPorNome,
@@ -56,13 +57,17 @@ export function UsuariosPage() {
     const {
         data: usuarioPorEmail,
         isLoading: carregandoEmail,
-        isError: emailNaoEncontrado,
+        isError,
+        error,
     } = useQuery({
         queryKey: ['usuarios', 'email', filtros.email],
         queryFn: ({signal}) => fetchUsuarioPorEmail(filtros.email, signal),
         enabled: tipoFiltro === TipoFiltroUsuarios.EMAIL,
         staleTime: 30_000,
     })
+
+    // 404 = usuário não encontrado; demais falhas não devem ser mascaradas como "não encontrado".
+    const emailNaoEncontrado = isError && axios.isAxiosError(error) && error.response?.status === 404
 
     function abrirEditarPerfis(usuario: User) {
         setUsuarioSelecionado(usuario)
@@ -78,7 +83,7 @@ export function UsuariosPage() {
     async function salvarPerfis(usuarioId: number, perfis: Role[]) {
         await atualizarPerfis(usuarioId, perfis)
         toast.success('Perfis atualizados com sucesso!')
-        await qc.invalidateQueries({queryKey: ['usuarios']})
+        void qc.invalidateQueries({queryKey: ['usuarios']}).catch(() => {})
     }
 
     async function alterarStatus() {
@@ -86,7 +91,7 @@ export function UsuariosPage() {
         if (acaoStatus === 'desativar') await desativarUsuario(usuarioSelecionado.id)
         else await ativarUsuario(usuarioSelecionado.id)
         toast.success('Status alterado com sucesso!')
-        await qc.invalidateQueries({queryKey: ['usuarios']})
+        void qc.invalidateQueries({queryKey: ['usuarios']}).catch(() => {})
     }
 
     return (
@@ -107,7 +112,11 @@ export function UsuariosPage() {
                     />
                 ) : (
                     <p className="text-muted-foreground">
-                        {emailNaoEncontrado ? 'Nenhum usuário encontrado com este email.' : 'Nenhum usuário encontrado.'}
+                        {emailNaoEncontrado
+                            ? 'Nenhum usuário encontrado com este email.'
+                            : isError
+                                ? 'Erro ao buscar usuário.'
+                                : 'Nenhum usuário encontrado.'}
                     </p>
                 )
             ) : isLoading ? (

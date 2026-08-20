@@ -108,4 +108,31 @@ describe('UsuariosPage', () => {
             expect(screen.getByText('Nenhum usuário encontrado.')).toBeInTheDocument()
         })
     })
+
+    it('busca por email inexistente exibe "não encontrado" (404)', async () => {
+        vi.mocked(fetchUsuarioPorEmail).mockRejectedValueOnce({
+            isAxiosError: true,
+            response: {status: 404, data: {mensagem: 'Usuário não encontrado'}},
+        })
+        renderPage(['/usuarios?email=nao%40existe.com'])
+
+        await waitFor(() => {
+            expect(screen.getByText('Nenhum usuário encontrado com este email.')).toBeInTheDocument()
+        })
+        // Não deve mascarar como erro genérico.
+        expect(screen.queryByText('Erro ao buscar usuário.')).not.toBeInTheDocument()
+    })
+
+    it('busca por email com erro de servidor exibe mensagem de erro (não 404)', async () => {
+        vi.mocked(fetchUsuarioPorEmail).mockRejectedValueOnce({
+            isAxiosError: true,
+            response: {status: 500, data: {mensagem: 'Erro interno'}},
+        })
+        renderPage(['/usuarios?email=erro%40ifce.edu.br'])
+
+        await waitFor(() => {
+            expect(screen.getByText('Erro ao buscar usuário.')).toBeInTheDocument()
+        })
+        expect(screen.queryByText('Nenhum usuário encontrado com este email.')).not.toBeInTheDocument()
+    })
 })
