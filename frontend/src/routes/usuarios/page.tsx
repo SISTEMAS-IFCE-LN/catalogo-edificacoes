@@ -45,10 +45,11 @@ export function UsuariosPage() {
     // Lista paginada (por nome ou sem filtro) — desabilitada na busca por email
     const {data, isLoading} = useQuery({
         queryKey: ['usuarios', filtros.nome, page, size],
-        queryFn: () => filtros.nome
-            ? fetchUsuarioPorNome(filtros.nome, page, size)
-            : fetchUsuarios(page, size),
+        queryFn: ({signal}) => filtros.nome
+            ? fetchUsuarioPorNome(filtros.nome, page, size, signal)
+            : fetchUsuarios(page, size, signal),
         enabled: tipoFiltro !== TipoFiltroUsuarios.EMAIL,
+        staleTime: 30_000,
     })
 
     // Busca direta por email (UC23-FE) — retorna um único usuário
@@ -57,9 +58,10 @@ export function UsuariosPage() {
         isLoading: carregandoEmail,
         isError: emailNaoEncontrado,
     } = useQuery({
-        queryKey: ['usuario-email', filtros.email],
-        queryFn: () => fetchUsuarioPorEmail(filtros.email),
+        queryKey: ['usuarios', 'email', filtros.email],
+        queryFn: ({signal}) => fetchUsuarioPorEmail(filtros.email, signal),
         enabled: tipoFiltro === TipoFiltroUsuarios.EMAIL,
+        staleTime: 30_000,
     })
 
     function abrirEditarPerfis(usuario: User) {

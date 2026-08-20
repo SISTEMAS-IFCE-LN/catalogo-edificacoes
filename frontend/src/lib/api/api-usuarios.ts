@@ -14,23 +14,24 @@ export interface UsuariosPaginados {
     }
 }
 
-export async function fetchUsuarios(page = 0, size = 20): Promise<UsuariosPaginados> {
-    const {data} = await api.get<UsuariosPaginados>(`/api${ROUTES.USUARIOS}`, {params: {page, size}})
+export async function fetchUsuarios(page = 0, size = 20, signal?: AbortSignal): Promise<UsuariosPaginados> {
+    const {data} = await api.get<UsuariosPaginados>(`/api${ROUTES.USUARIOS}`, {params: {page, size}, signal})
     return data
 }
 
-export async function fetchUsuarioPorNome(nome: string, page = 0, size = 20): Promise<UsuariosPaginados> {
+export async function fetchUsuarioPorNome(nome: string, page = 0, size = 20, signal?: AbortSignal): Promise<UsuariosPaginados> {
     const {data} = await api.get<UsuariosPaginados>(`/api${ROUTES.USUARIOS}/nomes/${encodeURIComponent(nome)}`, {
         params: {
             page,
             size
-        }
+        },
+        signal,
     })
     return data
 }
 
-export async function fetchUsuarioPorEmail(email: string): Promise<User> {
-    const {data} = await api.get<User>(`/api${ROUTES.USUARIOS}/email/${encodeURIComponent(email)}`)
+export async function fetchUsuarioPorEmail(email: string, signal?: AbortSignal): Promise<User> {
+    const {data} = await api.get<User>(`/api${ROUTES.USUARIOS}/email/${encodeURIComponent(email)}`, {signal})
     return data
 }
 

@@ -26,13 +26,23 @@ const roleLabels = Object.entries(ROLE_LABELS).map(([role, label]) => {
 })
 
 export function ModalEditarPerfis({open, usuario, onOpenChange, onSalvar}: Props) {
-    const [selecionados, setSelecionados] = useState<Set<Role>>(new Set())
+    const [selecionados, setSelecionados] = useState<Set<Role>>(
+        () => (open && usuario ? new Set(usuario.perfis) : new Set()),
+    )
+    const [sincronizado, setSincronizado] = useState(() => ({open, usuarioId: usuario?.id ?? null}))
     const {executando, executar} = useAsyncAction({
         onClose: () => onOpenChange(false),
         mensagemPadrao: 'Erro ao atualizar perfis.',
     })
 
-    if (open && usuario && selecionados.size === 0) setSelecionados(new Set(usuario.perfis))
+    // Ajusta o estado durante o render quando `open`/`usuario` mudam
+    // (padrão recomendado pelo React em vez de setState em useEffect).
+    // Evita vazamento de perfis entre usuários distintos ao reabrir o modal.
+    const usuarioId = usuario?.id ?? null
+    if (sincronizado.open !== open || sincronizado.usuarioId !== usuarioId) {
+        setSincronizado({open, usuarioId})
+        setSelecionados(open && usuario ? new Set(usuario.perfis) : new Set())
+    }
 
     function toggle(role: Role) {
         if (role === Role.COLABORADOR) return
