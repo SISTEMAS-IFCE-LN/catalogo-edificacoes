@@ -206,7 +206,7 @@ describe('PublicadosPage', () => {
                 expect(screen.getByLabelText('Selecionar ação em lote')).toBeInTheDocument()
             })
             await user.click(screen.getByLabelText('Selecionar ação em lote'))
-            await user.click(screen.getByRole('option', { name: 'Detalhar Esquadrias' }))
+            await user.click(await screen.findByRole('option', { name: 'Detalhar Esquadrias' }))
             // Executar
             await user.click(screen.getByText('Executar'))
             // useNavigate deve ser chamado com a rota de esquadrias e ids
@@ -227,10 +227,10 @@ describe('PublicadosPage', () => {
             })
             // Selecionar tipo de filtro "Tipo"
             await user.click(screen.getByLabelText('Tipo de filtro'))
-            await user.click(screen.getByRole('option', { name: 'Tipo' }))
+            await user.click(await screen.findByRole('option', { name: 'Tipo' }))
             // Selecionar "Sala de Aula" no select de tipo
             await user.click(screen.getByLabelText('Filtrar por tipo'))
-            await user.click(screen.getByRole('option', { name: 'Sala de Aula' }))
+            await user.click(await screen.findByRole('option', { name: 'Sala de Aula' }))
             // Aplicar
             await user.click(screen.getByText('Aplicar'))
             // fetchAmbientes deve ser chamado com tipoFiltro=TIPO e tipo=SALA_AULA
