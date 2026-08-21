@@ -42,4 +42,13 @@ describe('getRequiredRoles', () => {
     it('retorna roles para rota nao-publicados', () => {
         expect(getRequiredRoles('/ambientes/nao-publicados')).toEqual([Role.GESTOR_SISTEMA])
     })
+    it('retorna roles para rota validacao com id', () => {
+        expect(getRequiredRoles('/ambientes/validacao/123')).toEqual([Role.VALIDADOR])
+    })
+    it('retorna roles para rota nao-publicados com id', () => {
+        expect(getRequiredRoles('/ambientes/nao-publicados/123')).toEqual([Role.GESTOR_SISTEMA])
+    })
+    it('retorna roles para rota nao-publicados novo', () => {
+        expect(getRequiredRoles('/ambientes/nao-publicados/novo')).toEqual([Role.GESTOR_SISTEMA])
+    })
 })

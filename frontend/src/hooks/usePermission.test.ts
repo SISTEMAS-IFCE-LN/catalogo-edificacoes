@@ -113,6 +113,32 @@ describe('usePermission', () => {
             const {result} = renderHook(() => usePermission())
             expect(result.current.canAccess('/ambientes/publicados/123')).toBe(true)
         })
+
+        it('retorna true para /ambientes/validacao/:id quando usuário é validador', () => {
+            mockUseAuth.mockReturnValue({
+                user: {
+                    id: 1, email: 'a@b.com', nome: 'A', ativo: true, criadoEm: '',
+                    perfis: [Role.COLABORADOR, Role.VALIDADOR],
+                },
+                isAuthenticated: true,
+                isLoading: false,
+            })
+            const {result} = renderHook(() => usePermission())
+            expect(result.current.canAccess('/ambientes/validacao/123')).toBe(true)
+        })
+
+        it('retorna false para /ambientes/validacao/:id quando usuário não é validador', () => {
+            mockUseAuth.mockReturnValue({
+                user: {
+                    id: 1, email: 'a@b.com', nome: 'A', ativo: true, criadoEm: '',
+                    perfis: [Role.COLABORADOR],
+                },
+                isAuthenticated: true,
+                isLoading: false,
+            })
+            const {result} = renderHook(() => usePermission())
+            expect(result.current.canAccess('/ambientes/validacao/123')).toBe(false)
+        })
     })
 
     describe('hasRole', () => {

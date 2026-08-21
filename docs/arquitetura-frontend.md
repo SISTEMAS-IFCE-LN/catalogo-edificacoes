@@ -356,9 +356,12 @@ import { Role } from '@/types/usuarios/user'
 export const ROUTE_PERMISSIONS: Record<string, Role[]> = {
   // Validador
   '/ambientes/validacao':         [Role.VALIDADOR],
+  '/ambientes/validacao/:id':     [Role.VALIDADOR],
 
   // Gestor
   '/ambientes/nao-publicados':    [Role.GESTOR_SISTEMA],
+  '/ambientes/nao-publicados/novo': [Role.GESTOR_SISTEMA],
+  '/ambientes/nao-publicados/:id': [Role.GESTOR_SISTEMA],
 
   // Colaborador (mínimo universal — todo autenticado tem este perfil)
   '/ambientes/publicados/:id':    [Role.COLABORADOR],

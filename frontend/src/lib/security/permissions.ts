@@ -2,7 +2,10 @@ import {Role} from "@/types/usuarios/user";
 
 export const ROUTE_PERMISSIONS: Record<string, Role[]> = {
     '/ambientes/validacao': [Role.VALIDADOR],
+    '/ambientes/validacao/:id': [Role.VALIDADOR],
     '/ambientes/nao-publicados': [Role.GESTOR_SISTEMA],
+    '/ambientes/nao-publicados/novo': [Role.GESTOR_SISTEMA],
+    '/ambientes/nao-publicados/:id': [Role.GESTOR_SISTEMA],
     '/ambientes/publicados/:id': [Role.COLABORADOR],
     '/ambientes/publicados/esquadrias': [Role.COLABORADOR],
     '/usuarios': [Role.ADMINISTRADOR],
