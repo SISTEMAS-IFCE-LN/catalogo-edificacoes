@@ -245,7 +245,7 @@ frontend/
 │   │   │   └── permissions.ts        # ROUTE_PERMISSIONS, ACTION_PERMISSIONS, hasPermission, getRequiredRoles
 │   │   ├── api/
 │   │   │   ├── api.ts                # instância Axios + interceptores (auth, CSRF, refresh 401)
-│   │   │   ├── api-ambientes.ts      # fetchAmbientes, fetchDetalheAmbiente, fetchEsquadrias
+│   │   │   ├── api-publicados.ts      # fetchAmbientes, fetchDetalheAmbiente, fetchEsquadrias
 │   │   │   ├── api-usuarios.ts       # UC22–UC26-FE
 │   │   │   ├── api-validacao.ts      # UC01–UC03-FE
 │   │   │   └── api-naopublicados.ts  # UC05–UC18-FE

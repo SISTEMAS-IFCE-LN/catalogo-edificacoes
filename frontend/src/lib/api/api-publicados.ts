@@ -12,7 +12,7 @@ import {
 import { ROUTES } from '@/constants/routes'
 import { TipoFiltro } from '@/types/ambientes/enums'
 
-export async function fetchAmbientes(
+export async function fetchPublicados(
   query: AmbientesQuery,
   signal?: AbortSignal
 ): Promise<AmbientesBasicosPaginados> {
@@ -51,7 +51,7 @@ export async function fetchAmbientes(
   return AmbientesBasicosPaginadosSchema.parse(data)
 }
 
-export async function fetchDetalheAmbiente(
+export async function fetchDetalhePublicados(
   id: number,
   signal?: AbortSignal
 ): Promise<AmbienteDetalhe> {
@@ -59,7 +59,7 @@ export async function fetchDetalheAmbiente(
   return AmbienteDetalheSchema.parse(data)
 }
 
-export async function fetchEsquadrias(
+export async function fetchEsquadriasPublicados(
   query: EsquadriasQuery,
   signal?: AbortSignal
 ): Promise<EsquadriasResponse> {

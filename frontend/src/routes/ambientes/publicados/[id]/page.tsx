@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
-import { fetchDetalheAmbiente } from '@/lib/api/api-ambientes'
+import { fetchDetalhePublicados } from '@/lib/api/api-publicados'
 import { DetalheAmbiente } from '@/components/ambientes/DetalheAmbiente'
 import { Button } from '@/components/ui/button'
 
@@ -10,7 +10,7 @@ export function PublicadoDetalhePage() {
 
   const { data: ambiente, isLoading, error } = useQuery({
     queryKey: ['publicados', 'detalhe', id],
-    queryFn: ({ signal }) => fetchDetalheAmbiente(Number(id), signal),
+    queryFn: ({ signal }) => fetchDetalhePublicados(Number(id), signal),
     enabled: !!id,
   })
 

@@ -1,6 +1,6 @@
 import { useSearchParams, useNavigate } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
-import { fetchEsquadrias } from '@/lib/api/api-ambientes'
+import { fetchEsquadriasPublicados } from '@/lib/api/api-publicados'
 import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
@@ -62,7 +62,7 @@ export function EsquadriasPage() {
 
     const { data, isLoading, error } = useQuery({
         queryKey: ['esquadrias', ids, page],
-        queryFn: ({ signal }) => fetchEsquadrias({
+        queryFn: ({ signal }) => fetchEsquadriasPublicados({
             ids,
             page,
             size: 100,

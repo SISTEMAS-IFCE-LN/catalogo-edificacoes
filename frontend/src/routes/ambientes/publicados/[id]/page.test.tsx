@@ -16,7 +16,7 @@ vi.mock('@/lib/api/api-ambientes', () => ({
   fetchDetalheAmbiente: vi.fn(),
 }))
 
-import { fetchDetalheAmbiente } from '@/lib/api/api-ambientes'
+import { fetchDetalhePublicados } from '@/lib/api/api-publicados'
 
 const mockAmbiente: AmbienteDetalhe = {
   id: 1,
@@ -76,21 +76,21 @@ describe('PublicadoDetalhePage', () => {
   })
 
   it('exibe loading enquanto carrega', async () => {
-    vi.mocked(fetchDetalheAmbiente).mockReturnValueOnce(new Promise(() => {}))
+    vi.mocked(fetchDetalhePublicados).mockReturnValueOnce(new Promise(() => {}))
     renderPage()
     expect(await screen.findByText('Carregando…')).toBeInTheDocument()
   })
 
   it('busca o ambiente com o id da URL', async () => {
-    vi.mocked(fetchDetalheAmbiente).mockResolvedValueOnce(mockAmbiente)
+    vi.mocked(fetchDetalhePublicados).mockResolvedValueOnce(mockAmbiente)
     renderPage(['/ambientes/publicados/42'])
     await waitFor(() => {
-      expect(fetchDetalheAmbiente).toHaveBeenCalledWith(42, expect.anything())
+      expect(fetchDetalhePublicados).toHaveBeenCalledWith(42, expect.anything())
     })
   })
 
   it('renderiza o detalhe do ambiente após carregar', async () => {
-    vi.mocked(fetchDetalheAmbiente).mockResolvedValueOnce(mockAmbiente)
+    vi.mocked(fetchDetalhePublicados).mockResolvedValueOnce(mockAmbiente)
     renderPage()
     await waitFor(() => {
       expect(screen.getByText('Sala 101')).toBeInTheDocument()
@@ -99,7 +99,7 @@ describe('PublicadoDetalhePage', () => {
   })
 
   it('exibe "Ambiente não encontrado" quando a busca falha', async () => {
-    vi.mocked(fetchDetalheAmbiente).mockRejectedValueOnce(new Error('rede'))
+    vi.mocked(fetchDetalhePublicados).mockRejectedValueOnce(new Error('rede'))
     renderPage()
     await waitFor(() => {
       expect(screen.getByText('Ambiente não encontrado.')).toBeInTheDocument()
@@ -108,7 +108,7 @@ describe('PublicadoDetalhePage', () => {
   })
 
   it('navega de volta para a lista ao clicar em Voltar', async () => {
-    vi.mocked(fetchDetalheAmbiente).mockResolvedValueOnce(mockAmbiente)
+    vi.mocked(fetchDetalhePublicados).mockResolvedValueOnce(mockAmbiente)
     renderPage()
     await waitFor(() => {
       expect(screen.getByText('Voltar')).toBeInTheDocument()

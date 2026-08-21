@@ -16,7 +16,7 @@ vi.mock('sonner', () => ({
     toast: { error: vi.fn() },
 }))
 
-import { fetchEsquadrias } from '@/lib/api/api-ambientes'
+import { fetchEsquadriasPublicados } from '@/lib/api/api-publicados'
 
 const mockResponse: EsquadriasResponse = {
     ambientes: [
@@ -107,17 +107,17 @@ describe('EsquadriasPage', () => {
     it('exibe "Nenhum ambiente selecionado" quando ids está vazio', () => {
         renderPage(['/ambientes/publicados/esquadrias'])
         expect(screen.getByText('Nenhum ambiente selecionado.')).toBeInTheDocument()
-        expect(fetchEsquadrias).not.toHaveBeenCalled()
+        expect(fetchEsquadriasPublicados).not.toHaveBeenCalled()
     })
 
     it('exibe loading enquanto carrega', async () => {
-        vi.mocked(fetchEsquadrias).mockReturnValueOnce(new Promise(() => {}))
+        vi.mocked(fetchEsquadriasPublicados).mockReturnValueOnce(new Promise(() => {}))
         renderPage(['/ambientes/publicados/esquadrias?ids=1,2'])
         expect(await screen.findByText('Carregando…')).toBeInTheDocument()
     })
 
     it('renderiza detalhes das esquadrias após carregar', async () => {
-        vi.mocked(fetchEsquadrias).mockResolvedValueOnce(mockResponse)
+        vi.mocked(fetchEsquadriasPublicados).mockResolvedValueOnce(mockResponse)
         renderPage(['/ambientes/publicados/esquadrias?ids=1,2'])
         await waitFor(() => {
             expect(screen.getByText('Detalhes de Esquadrias')).toBeInTheDocument()
@@ -127,10 +127,10 @@ describe('EsquadriasPage', () => {
     })
 
     it('chama fetchEsquadrias com ids e paginação', async () => {
-        vi.mocked(fetchEsquadrias).mockResolvedValueOnce(mockResponse)
+        vi.mocked(fetchEsquadriasPublicados).mockResolvedValueOnce(mockResponse)
         renderPage(['/ambientes/publicados/esquadrias?ids=1,2,3'])
         await waitFor(() => {
-            expect(fetchEsquadrias).toHaveBeenCalledWith({
+            expect(fetchEsquadriasPublicados).toHaveBeenCalledWith({
                 ids: [1, 2, 3],
                 page: 0,
                 size: 100,
@@ -139,10 +139,10 @@ describe('EsquadriasPage', () => {
     })
 
     it('filtra ids inválidos (NaN, <= 0)', async () => {
-        vi.mocked(fetchEsquadrias).mockResolvedValueOnce(mockResponse)
+        vi.mocked(fetchEsquadriasPublicados).mockResolvedValueOnce(mockResponse)
         renderPage(['/ambientes/publicados/esquadrias?ids=1,abc,0,-5,2'])
         await waitFor(() => {
-            expect(fetchEsquadrias).toHaveBeenCalledWith(
+            expect(fetchEsquadriasPublicados).toHaveBeenCalledWith(
                 expect.objectContaining({ ids: [1, 2] }),
                 expect.anything(),
             )
@@ -150,7 +150,7 @@ describe('EsquadriasPage', () => {
     })
 
     it('exibe toast de erro quando fetch falha', async () => {
-        vi.mocked(fetchEsquadrias).mockRejectedValueOnce(new Error('rede'))
+        vi.mocked(fetchEsquadriasPublicados).mockRejectedValueOnce(new Error('rede'))
         renderPage(['/ambientes/publicados/esquadrias?ids=1'])
         await waitFor(() => {
             expect(toast.error).toHaveBeenCalledWith('Erro ao carregar esquadrias.')
@@ -158,7 +158,7 @@ describe('EsquadriasPage', () => {
     })
 
     it('exibe estado de erro com botão Tentar novamente', async () => {
-        vi.mocked(fetchEsquadrias).mockRejectedValueOnce(new Error('rede'))
+        vi.mocked(fetchEsquadriasPublicados).mockRejectedValueOnce(new Error('rede'))
         renderPage(['/ambientes/publicados/esquadrias?ids=1'])
         await waitFor(() => {
             expect(screen.getByText('Erro ao carregar dados.')).toBeInTheDocument()
@@ -179,7 +179,7 @@ describe('EsquadriasPage', () => {
                 hasPrevious: false,
             },
         }
-        vi.mocked(fetchEsquadrias).mockResolvedValueOnce(vazia)
+        vi.mocked(fetchEsquadriasPublicados).mockResolvedValueOnce(vazia)
         renderPage(['/ambientes/publicados/esquadrias?ids=1,2'])
         await waitFor(() => {
             expect(screen.getByText('Nenhuma esquadria encontrada.')).toBeInTheDocument()
@@ -187,7 +187,7 @@ describe('EsquadriasPage', () => {
     })
 
     it('exibe aviso de IDs inválidos quando solicitados não retornam', async () => {
-        vi.mocked(fetchEsquadrias).mockResolvedValueOnce(mockResponse)
+        vi.mocked(fetchEsquadriasPublicados).mockResolvedValueOnce(mockResponse)
         renderPage(['/ambientes/publicados/esquadrias?ids=1,2,99'])
         await waitFor(() => {
             expect(screen.getByText(/IDs inválidos: 99/)).toBeInTheDocument()
@@ -195,7 +195,7 @@ describe('EsquadriasPage', () => {
     })
 
     it('remove IDs inválidos ao clicar no botão e re-busca apenas válidos', async () => {
-        vi.mocked(fetchEsquadrias).mockResolvedValue(mockResponse)
+        vi.mocked(fetchEsquadriasPublicados).mockResolvedValue(mockResponse)
         renderPage(['/ambientes/publicados/esquadrias?ids=1,2,99'])
         await waitFor(() => {
             expect(screen.getByText(/IDs inválidos: 99/)).toBeInTheDocument()
@@ -207,13 +207,13 @@ describe('EsquadriasPage', () => {
         })
         // A busca seguinte deve usar apenas ids [1,2]
         await waitFor(() => {
-            const ultimaChamada = vi.mocked(fetchEsquadrias).mock.calls.at(-1)
+            const ultimaChamada = vi.mocked(fetchEsquadriasPublicados).mock.calls.at(-1)
             expect(ultimaChamada?.[0].ids).toEqual([1, 2])
         })
     })
 
     it('renderiza filtros de tipo e material', async () => {
-        vi.mocked(fetchEsquadrias).mockResolvedValueOnce(mockResponse)
+        vi.mocked(fetchEsquadriasPublicados).mockResolvedValueOnce(mockResponse)
         renderPage(['/ambientes/publicados/esquadrias?ids=1'])
         await waitFor(() => {
             expect(screen.getByLabelText('Filtrar por tipo')).toBeInTheDocument()
@@ -233,7 +233,7 @@ describe('EsquadriasPage', () => {
                 hasPrevious: false,
             },
         }
-        vi.mocked(fetchEsquadrias).mockResolvedValueOnce(paginada)
+        vi.mocked(fetchEsquadriasPublicados).mockResolvedValueOnce(paginada)
         renderPage(['/ambientes/publicados/esquadrias?ids=1'])
         await waitFor(() => {
             expect(screen.getByText('Anterior')).toBeInTheDocument()
@@ -243,7 +243,7 @@ describe('EsquadriasPage', () => {
     })
 
     it('exibe callout de vazio pós-filtro quando nenhuma esquadria corresponde', async () => {
-        vi.mocked(fetchEsquadrias).mockResolvedValueOnce(mockResponse)
+        vi.mocked(fetchEsquadriasPublicados).mockResolvedValueOnce(mockResponse)
         renderPage(['/ambientes/publicados/esquadrias?ids=1,2&tipo=Cobogó'])
         await waitFor(() => {
             expect(

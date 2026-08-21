@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useState } from 'react'
-import { fetchAmbientes } from '@/lib/api/api-ambientes'
+import { fetchPublicados } from '@/lib/api/api-publicados'
 import type { AmbientesQuery } from '@/types/ambientes/ambiente'
 import { PesquisaBarAmbientes } from '@/components/ambientes/PesquisaBarAmbientes'
 import { TabelaPadrao } from '@/components/ambientes/TabelaPadrao'
@@ -47,7 +47,7 @@ export function PublicadosPage() {
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['ambientes', 'publicados', query],
-    queryFn: ({ signal }) => fetchAmbientes(query, signal),
+    queryFn: ({ signal }) => fetchPublicados(query, signal),
   })
 
   // Seleção múltipla (só para usuários autenticados — UC20-FE).

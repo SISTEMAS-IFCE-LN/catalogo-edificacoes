@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { fetchAmbientes, fetchDetalheAmbiente, fetchEsquadrias } from './api-ambientes'
+import { fetchPublicados, fetchDetalhePublicados, fetchEsquadriasPublicados } from './api-publicados'
 import { api } from '@/lib/api/api'
 import { TipoFiltro } from '@/types/ambientes/enums'
 
@@ -27,7 +27,7 @@ describe('fetchPublicados', () => {
         },
       },
     })
-    await fetchAmbientes({ page: 1, size: 20, tipoFiltro: TipoFiltro.NENHUM })
+    await fetchPublicados({ page: 1, size: 20, tipoFiltro: TipoFiltro.NENHUM })
     expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados', expect.objectContaining({
       params: expect.objectContaining({ page: 1, size: 20 }),
     }))
@@ -48,7 +48,7 @@ describe('fetchPublicados', () => {
         },
       },
     })
-    await fetchAmbientes({ page: 0, size: 20, tipoFiltro: TipoFiltro.NENHUM })
+    await fetchPublicados({ page: 0, size: 20, tipoFiltro: TipoFiltro.NENHUM })
     expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados', expect.objectContaining({
       params: expect.objectContaining({ page: 0, size: 20 }),
     }))
@@ -75,7 +75,7 @@ describe('fetchPublicados', () => {
         },
       },
     })
-    await fetchAmbientes({ page: 0, size: 20, andar: 2, tipoFiltro: TipoFiltro.LOCALIZACAO })
+    await fetchPublicados({ page: 0, size: 20, andar: 2, tipoFiltro: TipoFiltro.LOCALIZACAO })
     expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados/localizacao', expect.objectContaining({
       params: expect.objectContaining({ page: 0, size: 20, andar: 2 }),
     }))
@@ -97,7 +97,7 @@ describe('fetchPublicados', () => {
         },
       },
     })
-    await fetchAmbientes({ page: 0, size: 20, tipoFiltro: TipoFiltro.NENHUM }, controller.signal)
+    await fetchPublicados({ page: 0, size: 20, tipoFiltro: TipoFiltro.NENHUM }, controller.signal)
     expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados', expect.objectContaining({
       signal: controller.signal,
     }))
@@ -118,7 +118,7 @@ describe('fetchPublicados', () => {
         },
       },
     })
-    const result = await fetchAmbientes({ page: 0, size: 20, tipoFiltro: TipoFiltro.NENHUM })
+    const result = await fetchPublicados({ page: 0, size: 20, tipoFiltro: TipoFiltro.NENHUM })
     expect(result).toHaveProperty('ambientes')
     expect(result).toHaveProperty('areaTotal')
     expect(result).toHaveProperty('dadosPaginacao')
@@ -139,7 +139,7 @@ describe('fetchPublicados', () => {
         },
       },
     })
-    await expect(fetchAmbientes({ page: 0, size: 20, tipoFiltro: TipoFiltro.NENHUM })).rejects.toThrow()
+    await expect(fetchPublicados({ page: 0, size: 20, tipoFiltro: TipoFiltro.NENHUM })).rejects.toThrow()
   })
 
   it('chama /api/ambientes/publicados/nome quando tipoFiltro é NOME', async () => {
@@ -157,7 +157,7 @@ describe('fetchPublicados', () => {
         },
       },
     })
-    await fetchAmbientes({ page: 0, size: 20, nome: 'sala', tipoFiltro: TipoFiltro.NOME })
+    await fetchPublicados({ page: 0, size: 20, nome: 'sala', tipoFiltro: TipoFiltro.NOME })
     expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados/nome', expect.objectContaining({
       params: expect.objectContaining({ page: 0, size: 20, nome: 'sala' }),
     }))
@@ -178,7 +178,7 @@ describe('fetchPublicados', () => {
         },
       },
     })
-    await fetchAmbientes({ page: 0, size: 20, tipo: 'SALA_AULA', tipoFiltro: TipoFiltro.TIPO })
+    await fetchPublicados({ page: 0, size: 20, tipo: 'SALA_AULA', tipoFiltro: TipoFiltro.TIPO })
     expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados/tipo', expect.objectContaining({
       params: expect.objectContaining({ page: 0, size: 20, tipo: 'SALA_AULA' }),
     }))
@@ -199,7 +199,7 @@ describe('fetchPublicados', () => {
         },
       },
     })
-    await fetchAmbientes({ page: 0, size: 20, bloco: 'Bloco 1', unidade: 'Sede', andar: 2, tipoFiltro: TipoFiltro.LOCALIZACAO })
+    await fetchPublicados({ page: 0, size: 20, bloco: 'Bloco 1', unidade: 'Sede', andar: 2, tipoFiltro: TipoFiltro.LOCALIZACAO })
     expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados/localizacao', expect.objectContaining({
       params: expect.objectContaining({ page: 0, size: 20, bloco: 'Bloco 1', unidade: 'Sede', andar: 2 }),
     }))
@@ -230,7 +230,7 @@ describe('fetchDetalheAmbiente', () => {
         status: 'PUBLICADO',
       },
     })
-    await fetchDetalheAmbiente(1)
+    await fetchDetalhePublicados(1)
     expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados/1', expect.any(Object))
   })
 
@@ -254,7 +254,7 @@ describe('fetchDetalheAmbiente', () => {
         status: 'PUBLICADO',
       },
     })
-    await fetchDetalheAmbiente(1, controller.signal)
+    await fetchDetalhePublicados(1, controller.signal)
     expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados/1', expect.objectContaining({
       signal: controller.signal,
     }))
@@ -279,7 +279,7 @@ describe('fetchDetalheAmbiente', () => {
         status: 'PUBLICADO',
       },
     })
-    const result = await fetchDetalheAmbiente(1)
+    const result = await fetchDetalhePublicados(1)
     expect(result).toHaveProperty('id')
     expect(result).toHaveProperty('nome')
     expect(result).toHaveProperty('geometrias')
@@ -310,7 +310,7 @@ describe('fetchDetalheAmbiente', () => {
         status: 'Publicado',
       },
     })
-    await expect(fetchDetalheAmbiente(1)).rejects.toThrow()
+    await expect(fetchDetalhePublicados(1)).rejects.toThrow()
   })
 })
 
@@ -334,7 +334,7 @@ describe('fetchEsquadrias', () => {
         },
       },
     })
-    await fetchEsquadrias({ ids: [1, 2, 3], page: 0, size: 100 })
+    await fetchEsquadriasPublicados({ ids: [1, 2, 3], page: 0, size: 100 })
     expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados/esquadrias', expect.objectContaining({
       params: expect.objectContaining({ ids: '1,2,3', page: 0, size: 100 }),
     }))
@@ -356,7 +356,7 @@ describe('fetchEsquadrias', () => {
         },
       },
     })
-    await fetchEsquadrias({ ids: [1], page: 0, size: 100 }, controller.signal)
+    await fetchEsquadriasPublicados({ ids: [1], page: 0, size: 100 }, controller.signal)
     expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados/esquadrias', expect.objectContaining({
       params: expect.objectContaining({ ids: '1', page: 0, size: 100 }),
       signal: controller.signal,
@@ -378,7 +378,7 @@ describe('fetchEsquadrias', () => {
         },
       },
     })
-    const result = await fetchEsquadrias({ ids: [1], page: 0, size: 100 })
+    const result = await fetchEsquadriasPublicados({ ids: [1], page: 0, size: 100 })
     expect(result).toHaveProperty('ambientes')
     expect(result).toHaveProperty('totalTipoMaterial')
     expect(result).toHaveProperty('dadosPaginacao')
@@ -399,6 +399,6 @@ describe('fetchEsquadrias', () => {
         },
       },
     })
-    await expect(fetchEsquadrias({ ids: [1], page: 0, size: 100 })).rejects.toThrow()
+    await expect(fetchEsquadriasPublicados({ ids: [1], page: 0, size: 100 })).rejects.toThrow()
   })
 })

@@ -34,7 +34,7 @@ vi.mock('react-router', async (importOriginal) => {
     }
 })
 
-import { fetchAmbientes } from '@/lib/api/api-ambientes'
+import { fetchPublicados } from '@/lib/api/api-publicados'
 import { useAuth } from '@/hooks/useAuth'
 
 const mockData: AmbientesBasicosPaginados = {
@@ -110,7 +110,7 @@ describe('PublicadosPage', () => {
                 logout: vi.fn(),
                 refreshUser: vi.fn(),
             })
-            vi.mocked(fetchAmbientes).mockResolvedValueOnce(mockData)
+            vi.mocked(fetchPublicados).mockResolvedValueOnce(mockData)
             renderPage()
             await waitFor(() => {
                 expect(screen.getByText('Sala 101')).toBeInTheDocument()
@@ -136,7 +136,7 @@ describe('PublicadosPage', () => {
 
         it('renderiza checkbox e AcoesLote', async () => {
             mockAuthAutenticado()
-            vi.mocked(fetchAmbientes).mockResolvedValueOnce(mockData)
+            vi.mocked(fetchPublicados).mockResolvedValueOnce(mockData)
             renderPage()
             await waitFor(() => {
                 expect(screen.getByLabelText('Selecionar todos da página')).toBeInTheDocument()
@@ -149,7 +149,7 @@ describe('PublicadosPage', () => {
 
         it('selecionar um item exibe AcoesLote com contador', async () => {
             mockAuthAutenticado()
-            vi.mocked(fetchAmbientes).mockResolvedValueOnce(mockData)
+            vi.mocked(fetchPublicados).mockResolvedValueOnce(mockData)
             renderPage()
             await waitFor(() => {
                 expect(screen.getByLabelText('Selecionar Sala 101')).toBeInTheDocument()
@@ -163,7 +163,7 @@ describe('PublicadosPage', () => {
 
         it('selecionar todos marca todas as linhas', async () => {
             mockAuthAutenticado()
-            vi.mocked(fetchAmbientes).mockResolvedValueOnce(mockData)
+            vi.mocked(fetchPublicados).mockResolvedValueOnce(mockData)
             renderPage()
             await waitFor(() => {
                 expect(screen.getByLabelText('Selecionar todos da página')).toBeInTheDocument()
@@ -176,7 +176,7 @@ describe('PublicadosPage', () => {
 
         it('Limpar desmarca a seleção', async () => {
             mockAuthAutenticado()
-            vi.mocked(fetchAmbientes).mockResolvedValueOnce(mockData)
+            vi.mocked(fetchPublicados).mockResolvedValueOnce(mockData)
             renderPage()
             await waitFor(() => {
                 expect(screen.getByLabelText('Selecionar Sala 101')).toBeInTheDocument()
@@ -194,7 +194,7 @@ describe('PublicadosPage', () => {
         it('navega para esquadrias ao executar ação Detalhes Esquadrias', async () => {
             const user = userEvent.setup()
             mockAuthAutenticado()
-            vi.mocked(fetchAmbientes).mockResolvedValueOnce(mockData)
+            vi.mocked(fetchPublicados).mockResolvedValueOnce(mockData)
             renderPage()
             await waitFor(() => {
                 expect(screen.getByLabelText('Selecionar todos da página')).toBeInTheDocument()
@@ -220,7 +220,7 @@ describe('PublicadosPage', () => {
         it('aplica filtro por tipo enviando o nome do enum', async () => {
             const user = userEvent.setup()
             mockAuthAutenticado()
-            vi.mocked(fetchAmbientes).mockResolvedValue(mockData)
+            vi.mocked(fetchPublicados).mockResolvedValue(mockData)
             renderPage()
             await waitFor(() => {
                 expect(screen.getByLabelText('Selecionar todos da página')).toBeInTheDocument()
@@ -235,7 +235,7 @@ describe('PublicadosPage', () => {
             await user.click(screen.getByText('Aplicar'))
             // fetchAmbientes deve ser chamado com tipoFiltro=TIPO e tipo=SALA_AULA
             await waitFor(() => {
-                expect(fetchAmbientes).toHaveBeenCalledWith(
+                expect(fetchPublicados).toHaveBeenCalledWith(
                     expect.objectContaining({ tipoFiltro: TipoFiltro.TIPO, tipo: 'SALA_AULA' }),
                     expect.anything(),
                 )
