@@ -8,8 +8,8 @@ import { MaterialEsquadria, TipoEsquadria } from '@/types/ambientes/enums'
 import { Bloco, Unidade } from '@/types/ambientes/enums'
 import { toast } from 'sonner'
 
-vi.mock('@/lib/api/api-ambientes', () => ({
-    fetchEsquadrias: vi.fn(),
+vi.mock('@/lib/api/api-publicados', () => ({
+    fetchEsquadriasPublicados: vi.fn(),
 }))
 
 vi.mock('sonner', () => ({

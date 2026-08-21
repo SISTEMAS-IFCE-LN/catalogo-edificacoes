@@ -12,8 +12,8 @@ import {
   StatusAmbiente,
 } from '@/types/ambientes/enums'
 
-vi.mock('@/lib/api/api-ambientes', () => ({
-  fetchDetalheAmbiente: vi.fn(),
+vi.mock('@/lib/api/api-publicados', () => ({
+  fetchDetalhePublicados: vi.fn(),
 }))
 
 import { fetchDetalhePublicados } from '@/lib/api/api-publicados'

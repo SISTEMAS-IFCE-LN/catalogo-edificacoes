@@ -1,9 +1,9 @@
 import {
     type AmbienteDetalhe,
     AmbienteDetalheSchema,
-    AmbientesBasicosPaginados,
+    type AmbientesBasicosPaginados,
     AmbientesBasicosPaginadosSchema,
-    AmbientesQuery,
+    type AmbientesQuery,
     type EsquadriasQuery,
     type EsquadriasResponse,
     EsquadriasResponseSchema
@@ -63,7 +63,7 @@ export async function fetchAmbientes(
     return AmbientesBasicosPaginadosSchema.parse(data)
 }
 
-export async function fetchDetalheAmbientes(
+export async function fetchDetalheAmbiente(
     id: number,
     route: string,
     signal?: AbortSignal

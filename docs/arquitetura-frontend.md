@@ -245,9 +245,10 @@ frontend/
 │   │   │   └── permissions.ts        # ROUTE_PERMISSIONS, ACTION_PERMISSIONS, hasPermission, getRequiredRoles
 │   │   ├── api/
 │   │   │   ├── api.ts                # instância Axios + interceptores (auth, CSRF, refresh 401)
-│   │   │   ├── api-publicados.ts      # fetchAmbientes, fetchDetalheAmbiente, fetchEsquadrias
+│   │   │   ├── api-ambientes.ts      # compartilhado: fetchAmbientes, fetchDetalheAmbiente, fetchEsquadriasAmbientes
+│   │   │   ├── api-publicados.ts     # wrappers UC21-FE → api-ambientes (fetchPublicados, fetchDetalhePublicados, fetchEsquadriasPublicados)
 │   │   │   ├── api-usuarios.ts       # UC22–UC26-FE
-│   │   │   ├── api-validacao.ts      # UC01–UC03-FE
+│   │   │   ├── api-validacao.ts      # UC01–UC03-FE (fetchValidacao, fetchDetalheValidacao, fetchEsquadriasValidacao, publicarAmbiente, privarAmbiente)
 │   │   │   └── api-naopublicados.ts  # UC05–UC18-FE
 │   │   ├── ambientes/
 │   │   │   └── esquadrias.ts         # filtro/resumo de esquadrias (lógica pura)

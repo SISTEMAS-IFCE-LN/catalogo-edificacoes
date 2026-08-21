@@ -6,7 +6,7 @@ import {
     type EsquadriasResponse,
 } from '@/types/ambientes/ambiente'
 import {ROUTES} from '@/constants/routes'
-import {fetchAmbientes, fetchDetalheAmbientes, fetchEsquadriasAmbientes} from '@/lib/api/api-ambientes'
+import {fetchAmbientes, fetchDetalheAmbiente, fetchEsquadriasAmbientes} from '@/lib/api/api-ambientes'
 
 export function fetchPublicados(
     query: AmbientesQuery,
@@ -19,7 +19,7 @@ export function fetchDetalhePublicados(
     id: number,
     signal?: AbortSignal
 ): Promise<AmbienteDetalhe> {
-    return fetchDetalheAmbientes(id, ROUTES.PUBLICADOS, signal)
+    return fetchDetalheAmbiente(id, ROUTES.PUBLICADOS, signal)
 }
 
 export function fetchEsquadriasPublicados(

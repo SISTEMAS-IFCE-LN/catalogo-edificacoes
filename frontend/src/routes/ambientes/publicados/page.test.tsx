@@ -9,8 +9,8 @@ import { Bloco, TipoAmbiente, TipoFiltro, Unidade } from '@/types/ambientes/enum
 import type { User } from '@/types/usuarios/user'
 import { Role } from '@/types/usuarios/user'
 
-vi.mock('@/lib/api/api-ambientes', () => ({
-    fetchAmbientes: vi.fn(),
+vi.mock('@/lib/api/api-publicados', () => ({
+    fetchPublicados: vi.fn(),
 }))
 
 vi.mock('sonner', () => ({
