@@ -3,7 +3,7 @@ import {ProtectedNavigation} from '@/components/layout/ProtectedNavigation'
 import {useAuth} from '@/hooks/useAuth'
 import {Button, buttonVariants} from '@/components/ui/button'
 import {ROUTES} from '@/constants/routes'
-import {cn} from '@/lib/utils'
+import {cn} from '@/lib/utils/shadcn-helper'
 
 export function Header() {
     const {user, logout} = useAuth()

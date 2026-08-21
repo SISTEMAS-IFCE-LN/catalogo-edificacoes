@@ -1,6 +1,6 @@
 import {NavLink} from 'react-router'
 import {useAuth} from '@/hooks/useAuth'
-import {cn} from '@/lib/utils'
+import {cn} from '@/lib/utils/shadcn-helper'
 import {Role} from '@/types/usuarios/user'
 
 interface MenuItem {

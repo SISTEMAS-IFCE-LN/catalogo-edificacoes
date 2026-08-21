@@ -251,7 +251,7 @@ frontend/
 │   │   │   └── api-naopublicados.ts  # UC05–UC18-FE
 │   │   ├── ambientes/
 │   │   │   └── esquadrias.ts         # filtro/resumo de esquadrias (lógica pura)
-│   │   └── utils.ts                  # cn(), formatadores, helpers
+│   │   └── shadcn-helper.ts                  # cn(), formatadores, helpers
 │   │
 │   ├── hooks/
 │   │   ├── useAsyncAction.ts         # executar ação async (loading + fechar no sucesso + toast de erro)
