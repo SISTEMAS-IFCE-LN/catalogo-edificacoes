@@ -52,7 +52,7 @@ A arquitetura frontend é determinada, em grande parte, pelo contrato estabeleci
 
 ### 3.1. Guarda do access token
 
-A estratégia adotada é **em memória**: o access token é mantido em uma **variável de módulo** (closure em `lib/auth.ts`), nunca em `localStorage`/`sessionStorage`. Isso elimina o vetor de exfiltração por XSS (não há onde o script injetado ler o token persistente).
+A estratégia adotada é **em memória**: o access token é mantido em uma **variável de módulo** (closure em `lib/security/auth.ts`), nunca em `localStorage`/`sessionStorage`. Isso elimina o vetor de exfiltração por XSS (não há onde o script injetado ler o token persistente).
 
 Implicações:
 
@@ -127,10 +127,13 @@ O cookie é `HttpOnly=true` (construtor padrão de `CookieCsrfTokenRepository`) 
 
 ```
 auth.logout():
-  1. Se !FAKE_AUTH: POST /auth/logout (com X-XSRF-TOKEN) — invalida refresh token no backend
+  1. Se !FAKE_AUTH:
+     - ensureCsrfToken() — garante o token CSRF mascarado em memória antes do POST
+     - POST /auth/logout (com X-XSRF-TOKEN) — invalida refresh token no backend
   2. Mesmo em falha, limpa estado local:
      - accessToken (memória) = null
-     - User = null, isAuthenticated = false
+     - CSRF token (memória) = null
+     - User = null, isAuthenticated = false, isLoading = false
   3. Guards (RequireAuth/PublicOnly) redirecionam para /login ou / conforme estado
 ```
 
@@ -334,12 +337,12 @@ export interface AuthState {
 }
 ```
 
-> Obs.: `accessToken` **não** faz parte de `AuthState` exposto a componentes — quem precisa dele é somente `lib/api.ts` (interceptor). Isto evita acoplamento e re-renders desnecessários.
+> Obs.: `accessToken` **não** faz parte de `AuthState` exposto a componentes — quem precisa dele é somente `lib/api/api.ts` (interceptor). Isto evita acoplamento e re-renders desnecessários.
 
 ### 6.2. Mapeamento central de permissões
 
 ```typescript
-// lib/permissions.ts
+// lib/security/permissions.ts
 
 import { Role } from '@/types/usuarios/user'
 
@@ -402,12 +405,14 @@ export function hasPermission(userRoles: Role[], requiredRoles: Role[]): boolean
 }
 
 /**
- * ordenado por especificidade (rota mais longa primeiro).
- * Ex.: '/ambientes/publicados/123/esquadrias' match com '/ambientes/publicados/esquadrias'.
+ * Resolve a menor authority exigida para um pathname, casando por
+ * especificidade (rota mais longa vence): rotas dinâmicas (:id) casam via
+ * matchRoute e rotas estáticas via startsWith.
+ * Ex.: '/ambientes/validacao/123' casa com '/ambientes/validacao/:id'.
  */
 export function getRequiredRoles(pathname: string): Role[] | null {
   const matchedRoute = Object.keys(ROUTE_PERMISSIONS)
-    .filter(route => pathname.startsWith(route))
+    .filter(route => matchRoute(route, pathname) || pathname.startsWith(route))
     .sort((a, b) => b.length - a.length)[0]
 
   return matchedRoute ? ROUTE_PERMISSIONS[matchedRoute] : null
@@ -415,7 +420,7 @@ export function getRequiredRoles(pathname: string): Role[] | null {
 
 /**
  * Substitui parâmetros dinâmicos para comparação.
- * Ex.: pattern '/ambientes/publicados/:id' none pathname real /ambientes/publicados/123.
+ * Ex.: pattern '/ambientes/publicados/:id' no pathname real /ambientes/publicados/123.
  */
 export function matchRoute(pattern: string, pathname: string): boolean {
   const re = new RegExp('^' + pattern.replace(/:[^/]+/g, '[^/]+') + '$')
@@ -464,8 +469,9 @@ export function useAuth(): AuthContextValue {
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import type { AuthState, User } from '@/types/usuarios/user'
-import { api, refreshAccessToken } from '@/lib/api'
-import { setAccessToken, clearAccessToken, getAccessToken } from '@/lib/auth'
+import { api, refreshAccessToken } from '@/lib/api/api'
+import { setAccessToken, clearAccessToken, getAccessToken } from '@/lib/security/auth'
+import { ensureCsrfToken, clearCsrfToken } from '@/lib/security/csrf'
 import { AuthContext } from './AuthContext'
 import type { AuthContextValue } from './AuthContext'
 
@@ -520,6 +526,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const onLogout = () => {
       clearAccessToken()
+      clearCsrfToken()
       setState({ user: null, isAuthenticated: false, isLoading: false })
     }
     window.addEventListener('auth:logout', onLogout)
@@ -535,12 +542,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     if (!FAKE_AUTH) {
       try {
+        await ensureCsrfToken()           // garante cookie XSRF-TOKEN antes do POST
         await api.post('/auth/logout')    // X-XSRF-TOKEN anexado pelo interceptor
       } catch (e) {
-        console.warn('Logout backend falhou — limpando estado local', e)
+        console.warn('Logout backend falhou — limpando estado local', e instanceof Error ? e.message : String(e))
       }
     }
     clearAccessToken()
+    clearCsrfToken()
     setState({ user: null, isAuthenticated: false, isLoading: false })
   }, [])
 
@@ -557,7 +566,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 ```
 
 ```typescript
-// lib/auth.ts — variável de módulo (em memória)
+// lib/security/auth.ts — variável de módulo (em memória)
 // O frontend NÃO decodifica o JWT (ver §3.2). Token é apenas uma string
 // opaca transportada em Authorization: Bearer. Dados do Usuario vêm de
 // /api/usuarios/me; refresh é reativo (interceptor Axios trata 401).
@@ -574,11 +583,11 @@ export function clearAccessToken() { accessToken = null }
 ## 8. HTTP Client (Axios)
 
 ```typescript
-// lib/api.ts
+// lib/api/api.ts
 
 import axios, { type AxiosError, type AxiosRequestConfig, type InternalAxiosRequestConfig } from 'axios'
-import { getAccessToken, setAccessToken, clearAccessToken } from '@/lib/auth'
-import { getCsrfToken, ensureCsrfToken } from '@/lib/csrf'
+import { getAccessToken, setAccessToken, clearAccessToken } from '@/lib/security/auth'
+import { getCsrfToken, ensureCsrfToken } from '@/lib/security/csrf'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? ''
 
@@ -661,23 +670,32 @@ api.interceptors.response.use(
 ```
 
 ```typescript
-// lib/csrf.ts
+// lib/security/csrf.ts
 
 import axios from 'axios'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? ''
 
+// Token CSRF mascarado em memória (ver §3.5). O raw fica no cookie HttpOnly
+// e NÃO é legível via JS; o mascarado vem do body de GET /auth/csrf-token.
+let maskedCsrfToken: string | null = null
+
 export function getCsrfToken(): string | null {
-  const match = document.cookie
-    .split('; ')
-    .find(c => c.startsWith('XSRF-TOKEN='))
-  return match ? decodeURIComponent(match.split('=')[1]) : null
+  return maskedCsrfToken
 }
 
+// Garante token mascarado em memória. O raw (cookie) persiste entre F5, mas o
+// mascarado se perde no reload — por isso ensureCsrfToken() é chamado no boot
+// do AuthProvider e antes de cada POST /auth/*.
 export async function ensureCsrfToken(): Promise<void> {
-  if (!getCsrfToken()) {
-    await axios.get(`${BACKEND_URL}/auth/csrf-token`, { withCredentials: true })
-  }
+  if (maskedCsrfToken) return
+  const { data } = await axios.get(`${BACKEND_URL}/auth/csrf-token`, { withCredentials: true })
+  maskedCsrfToken = data.token
+}
+
+// Limpa o token em memória (força nova aquisição após logout).
+export function clearCsrfToken(): void {
+  maskedCsrfToken = null
 }
 ```
 
@@ -735,7 +753,7 @@ export function RequireAuth() {
 
 import { Navigate, Outlet, useLocation } from 'react-router'
 import { useAuth } from '@/hooks/useAuth'
-import { hasPermission } from '@/lib/permissions'
+import { hasPermission } from '@/lib/security/permissions'
 import type { Role } from '@/types/usuarios/user'
 
 export function RequireRole({ roles }: { roles: Role[] }) {
@@ -879,8 +897,8 @@ const menuItems: MenuItem[] = [
 // hooks/usePermission.ts
 
 import { useAuth } from '@/hooks/useAuth'
-import { hasPermission, ROUTE_PERMISSIONS, ACTION_PERMISSIONS } from '@/lib/permissions'
-import { matchRoute } from '@/lib/permissions'
+import { hasPermission, ROUTE_PERMISSIONS, ACTION_PERMISSIONS } from '@/lib/security/permissions'
+import { matchRoute } from '@/lib/security/permissions'
 import type { Role } from '@/types/usuarios/user'
 
 export function usePermission() {
@@ -972,7 +990,7 @@ Como o layout envolve também a rota pública `/ambientes/publicados` (§9.2), o
 // routes/ambientes/validacao/page.tsx
 
 import { useQuery } from '@tanstack/react-query'
-import { api } from '@/lib/api'
+import { api } from '@/lib/api/api'
 
 export default function ValidacaoPage() {
   const { data, isLoading, error } = useQuery({
@@ -1439,7 +1457,7 @@ Todas as peças usadas pertencem ao catálogo do shadcn: `avatar`, `sheet`, `dra
 | E2E mobile | Playwright (viewports 375×667, 390×844, 768×1024) | smoke de fluxos críticos em mobile: login → publicados → detalhe; UC22 cards; UC06 multistep |
 | Regressão visual | Playwright `toHaveScreenshot` | `TabelaPadrao` cards; `DetalheAmbiente` mobile; `UserMenu` em ambos viewports |
 
-Cobertura mínima recomendada: `lib/permissions.ts` 100%, `lib/auth.ts` 100% (trivial após remoção de `decodeJwt`), guards 100%.
+Cobertura mínima recomendada: `lib/security/permissions.ts` 100%, `lib/security/auth.ts` 100% (trivial após remoção de `decodeJwt`), guards 100%.
 
 ---
 
@@ -1462,8 +1480,8 @@ Cobertura mínima recomendada: `lib/permissions.ts` 100%, `lib/auth.ts` 100% (tr
 
 1. **Scaffold Vite + React + TS + Tailwind + shadcn/ui**; configurar `vite-tsconfig-paths` para alias `@/`. Tailwind v4 via plugin `@tailwindcss/vite` em `vite.config.ts` (não PostCSS); `@import "tailwindcss"` em `globals.css`. Instalar via shadcn CLI: `button input dialog dropdown-menu avatar sheet drawer accordion table badge card form sonner`.
 2. **Backend**: `GET /api/usuarios/me` em `UsuarioController` já implementado, retornando `UsuarioRes` a partir do `@AuthenticationPrincipal jwt: Jwt` (`jwt.subject` = `Usuario.id`). Authority: qualquer autenticado. O `SecurityConfig.apiFilterChain` abre `GET /api/usuarios/me` para `authenticated()` antes da regra `ROLE_ADMINISTRADOR` para `/api/usuarios/**`.
-3. **`lib/auth.ts` + `lib/api.ts`**: variável de módulo (apenas `set/get/clear` do token string), interceptores de request (auth + CSRF) e response (refresh 401).
-4. **`lib/csrf.ts`**: leitura de cookie XSRF-TOKEN + `ensureCsrfToken()`.
+3. **`lib/security/auth.ts` + `lib/api/api.ts`**: variável de módulo (apenas `set/get/clear` do token string), interceptores de request (auth + CSRF) e response (refresh 401).
+4. **`lib/security/csrf.ts`**: token CSRF mascarado em memória + `ensureCsrfToken()` + `clearCsrfToken()`.
 5. **`AuthProvider` + `RequireAuth`/`RequireRole`/`PublicOnly`**.
 6. **`/login` + `/callback`**: fluxo OAuth2 → leitura de `#token` → `ensureCsrfToken` → `login` → `/`.
 7. **`/ambientes/publicados`** (lista pública, UC21-FE) e **`/ambientes/publicados/:id`** (UC19-FE).
@@ -1482,7 +1500,7 @@ Cobertura mínima recomendada: `lib/permissions.ts` 100%, `lib/auth.ts` 100% (tr
 | Backend não implementa `/api/usuarios/me` em tempo | Degradar: frontend mostra "Carregando..." e campos limitados (sem nome). Não é a arquitetura final — é gap. |
 | `SameSite=Lax` em redirect OAuth2 cross-site | Backend já configura `SameSite=Lax` para cookie de sessão (necessário no callback). Refresh cookie idem. Nginx mantém tudo na mesma origem em prod, eliminando cross-site. |
 | XSS injeta script | Token em memória → não há onde ler. CSP estrito (apenas `'self'`, `'unsafe-inline'` para styles, scripts none) restringe injeção. Em produção, habilitar Trusted Types se o navegador suportar. |
-| Token perdido depois de refresh concorrente | Lock via `refreshPromise` adquirido síncronamente em `lib/api.ts` (IIFE async atribuída antes de qualquer `await`); chamadas concorrentes compartilham a mesma promise. Teste unitário cobre rajada de 401 (ver `api.test.ts`). |
+| Token perdido depois de refresh concorrente | Lock via `refreshPromise` adquirido síncronamente em `lib/api/api.ts` (IIFE async atribuída antes de qualquer `await`); chamadas concorrentes compartilham a mesma promise. Teste unitário cobre rajada de 401 (ver `api.test.ts`). |
 | Backend rotaciona refresh token (vida restante < accessExpiration) | Interceptor de response não chama `setRefreshToken` (cookie gerido por `Set-Cookie` do backend, navegador atualiza automaticamente). Comportamento alinhado a `seguranca.md` §3. |
 | Adição de novo perfil | Adicionar ao enum `Role`; atualizar `ROUTE_PERMISSIONS`/`ACTION_PERMISSIONS`; sem refactor estrutural |
 | Drawer em iOS Safari mais antigo | `body { position: relative; }` em `globals.css` resolve overlay; Base UI cobre iOS 12+. Se necessário, fallback para `Dialog` em viewport mínima. |
