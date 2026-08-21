@@ -53,7 +53,7 @@ async function renderWithFreshProvider(envFakeAuth: string) {
   vi.stubEnv('VITE_FAKE_AUTH', envFakeAuth)
 
   // Re-registra mocks após resetModules (vi.doMock não é hoisted)
-    vi.doMock('@/lib/api', () => ({
+    vi.doMock('@/lib/api/api', () => ({
         api: {
             get: (...args: unknown[]) => mockApiGet(...args),
             post: (...args: unknown[]) => mockApiPost(...args),
@@ -61,12 +61,12 @@ async function renderWithFreshProvider(envFakeAuth: string) {
         refreshAccessToken: (...args: unknown[]) => mockRefreshAccessToken(...args),
     }))
 
-    vi.doMock('@/lib/csrf', () => ({
+    vi.doMock('@/lib/security/csrf', () => ({
         ensureCsrfToken: (...args: unknown[]) => mockEnsureCsrfToken(...args),
         clearCsrfToken: (...args: unknown[]) => mockClearCsrfToken(...args),
     }))
 
-  vi.doMock('@/lib/auth', () => ({
+  vi.doMock('@/lib/security/auth', () => ({
     setAccessToken: (...args: unknown[]) => mockSetAccessToken(...args),
     getAccessToken: (...args: unknown[]) => mockGetAccessToken(...args),
     clearAccessToken: (...args: unknown[]) => mockClearAccessToken(...args),
