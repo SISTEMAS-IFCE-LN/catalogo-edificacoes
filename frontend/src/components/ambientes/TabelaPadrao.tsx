@@ -12,6 +12,8 @@ import { Link } from 'react-router'
 
 interface TabelaPadraoProps {
     itens: AmbienteBasico[]
+    /** Base da rota de detalhe. Default: '/ambientes/publicados' (lista pública). */
+    detalheBasePath?: string
     /** Quando ausente, a tabela não exibe checkboxes (modo público/anônimo). */
     selectedIds?: number[]
     onToggleSelect?: (id: number) => void
@@ -26,6 +28,7 @@ function formatarAndar(andar: number): string {
 
 export function TabelaPadrao({
     itens,
+    detalheBasePath = '/ambientes/publicados',
     selectedIds,
     onToggleSelect,
     onToggleSelectAll,
@@ -73,7 +76,7 @@ export function TabelaPadrao({
                                 </TableCell>
                             )}
                             <TableCell>
-                                <Link to={`/ambientes/publicados/${a.id}`} className="text-primary hover:underline">
+                                <Link to={`${detalheBasePath}/${a.id}`} className="text-primary hover:underline">
                                     {a.nome}
                                 </Link>
                             </TableCell>
