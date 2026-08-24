@@ -15,6 +15,7 @@ import {
     PublicadosPage,
     PublicadoDetalhePage,
     EsquadriasPage,
+    ValidacaoPage,
     UsuariosPage,
 } from './lazy-pages'
 
@@ -44,13 +45,16 @@ export const router = createBrowserRouter([
                     {
                         path: '/ambientes/publicados/esquadrias',
                         element: <RequireRole roles={[Role.COLABORADOR]}/>,
-                        children: [{index: true, element: <Suspense fallback={<Loading/>}><EsquadriasPage/></Suspense>}],
+                        children: [{index: true, element: <Suspense fallback={<Loading/>}><EsquadriasPage contexto="publicados"/></Suspense>}],
                     },
                     // Validador (UC01-UC03-FE)
                     {
                         path: '/ambientes/validacao',
                         element: <RequireRole roles={[Role.VALIDADOR]}/>,
-                        children: [{index: true, element: <Suspense fallback={<Loading/>}><HomePage/></Suspense>}],
+                        children: [
+                            {index: true, element: <Suspense fallback={<Loading/>}><ValidacaoPage/></Suspense>},
+                            {path: 'esquadrias', element: <Suspense fallback={<Loading/>}><EsquadriasPage contexto="validacao"/></Suspense>},
+                        ],
                     },
                     // Gestor (UC04-UC18-FE)
                     {

@@ -2,7 +2,7 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { MemoryRouter } from 'react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { EsquadriasPage } from './page'
+import { EsquadriasPage, type ContextoEsquadrias } from './page'
 import type { EsquadriasResponse } from '@/types/ambientes/ambiente'
 import { MaterialEsquadria, TipoEsquadria } from '@/types/ambientes/enums'
 import { Bloco, Unidade } from '@/types/ambientes/enums'
@@ -12,11 +12,25 @@ vi.mock('@/lib/api/api-publicados', () => ({
     fetchEsquadriasPublicados: vi.fn(),
 }))
 
+vi.mock('@/lib/api/api-validacao', () => ({
+    fetchEsquadriasValidacao: vi.fn(),
+}))
+
 vi.mock('sonner', () => ({
     toast: { error: vi.fn() },
 }))
 
+const mockNavigate = vi.fn()
+vi.mock('react-router', async (importOriginal) => {
+    const actual = await importOriginal<typeof import('react-router')>()
+    return {
+        ...actual,
+        useNavigate: () => mockNavigate,
+    }
+})
+
 import { fetchEsquadriasPublicados } from '@/lib/api/api-publicados'
+import { fetchEsquadriasValidacao } from '@/lib/api/api-validacao'
 
 const mockResponse: EsquadriasResponse = {
     ambientes: [
@@ -89,11 +103,14 @@ function createQueryClient() {
     })
 }
 
-function renderPage(initialEntries: string[] = ['/']) {
+function renderPage(
+    initialEntries: string[] = ['/'],
+    contexto: ContextoEsquadrias = 'publicados',
+) {
     return render(
         <QueryClientProvider client={createQueryClient()}>
             <MemoryRouter initialEntries={initialEntries}>
-                <EsquadriasPage />
+                <EsquadriasPage contexto={contexto} />
             </MemoryRouter>
         </QueryClientProvider>,
     )
@@ -102,6 +119,7 @@ function renderPage(initialEntries: string[] = ['/']) {
 describe('EsquadriasPage', () => {
     beforeEach(() => {
         vi.clearAllMocks()
+        mockNavigate.mockClear()
     })
 
     it('exibe "Nenhum ambiente selecionado" quando ids está vazio', () => {
@@ -250,5 +268,35 @@ describe('EsquadriasPage', () => {
                 screen.getByText(/Nenhuma esquadria encontrada para os filtros aplicados/),
             ).toBeInTheDocument()
         })
+    })
+})
+
+describe('EsquadriasPage — contexto "validacao" (UC01-FE)', () => {
+    beforeEach(() => {
+        vi.clearAllMocks()
+        mockNavigate.mockClear()
+    })
+
+    it('chama fetchEsquadriasValidacao (não fetchEsquadriasPublicados)', async () => {
+        vi.mocked(fetchEsquadriasValidacao).mockResolvedValueOnce(mockResponse)
+        renderPage(['/ambientes/validacao/esquadrias?ids=1,2'], 'validacao')
+        await waitFor(() => {
+            expect(screen.getByText('Detalhes de Esquadrias')).toBeInTheDocument()
+        })
+        expect(fetchEsquadriasValidacao).toHaveBeenCalledWith(
+            { ids: [1, 2], page: 0, size: 100 },
+            expect.anything(),
+        )
+        expect(fetchEsquadriasPublicados).not.toHaveBeenCalled()
+    })
+
+    it('Voltar navega para /ambientes/validacao', async () => {
+        vi.mocked(fetchEsquadriasValidacao).mockResolvedValueOnce(mockResponse)
+        renderPage(['/ambientes/validacao/esquadrias?ids=1,2'], 'validacao')
+        await waitFor(() => {
+            expect(screen.getByText('Detalhes de Esquadrias')).toBeInTheDocument()
+        })
+        fireEvent.click(screen.getByText('Voltar'))
+        expect(mockNavigate).toHaveBeenCalledWith('/ambientes/validacao')
     })
 })
