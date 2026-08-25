@@ -233,7 +233,7 @@ frontend/
 │   │   │   ├── UserMenu.tsx           # avatar → Sheet (mobile) / DropdownMenu (desktop)
 │   │   │   └── Footer.tsx
 │   │   ├── ambientes/                # TabelaPadrao, DetalheAmbiente, FormAmbiente, PesquisaBarAmbientes,
-│   │   │                              # ModalConfirmacao, AcoesLote, modais UC07–UC18
+│   │   │                              # ModalConfirmacao, AcoesLote, PaginacaoFooter, ErrorLista, modais UC07–UC18
 │   │   ├── usuarios/                 # TabelaUsuarios, ModalEditarPerfis, ModalConfirmacaoStatusUsuario
 │   │   └── common/
 │   │       └── ResponsiveModal.tsx   # wrapper: Dialog (desktop) | Drawer (mobile)
@@ -260,6 +260,7 @@ frontend/
 │   │   ├── useFiltroLocal.ts         # rascunho local sincronizado com a URL (PesquisaBarAmbientes/Usuarios + hooks de search params)
 │   │   ├── usePaginationParams.ts    # núcleo genérico: page/size + handlePageChange/handleSizeChange/updateSearchParams
 │   │   ├── useAmbientesSearchParams.ts # adaptador fino: usePaginationParams + Zod (filtros) + tipoFiltro
+│   │   ├── useSelecaoAmbientes.ts    # seleção múltipla por página das listas de ambientes (publicados/validacao/nao-publicados)
 │   │   ├── usePermission.ts          # canDo(action), canAccess(route), hasRole(roles)
 │   │   └── useUsuariosSearchParams.ts # adaptador fino: usePaginationParams + nome/email + tipoFiltro
 │   │
