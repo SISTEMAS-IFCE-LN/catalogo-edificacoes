@@ -39,6 +39,9 @@ describe('getRequiredRoles', () => {
     it('retorna roles para rota validacao', () => {
         expect(getRequiredRoles('/ambientes/validacao')).toEqual([Role.VALIDADOR])
     })
+    it('retorna roles para rota validacao esquadrias', () => {
+        expect(getRequiredRoles('/ambientes/validacao/esquadrias')).toEqual([Role.VALIDADOR])
+    })
     it('retorna roles para rota nao-publicados', () => {
         expect(getRequiredRoles('/ambientes/nao-publicados')).toEqual([Role.GESTOR_SISTEMA])
     })

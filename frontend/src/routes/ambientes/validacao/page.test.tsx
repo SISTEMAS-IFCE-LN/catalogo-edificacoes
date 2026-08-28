@@ -213,10 +213,18 @@ describe('ValidacaoPage (UC01-FE)', () => {
 
     it('aplica filtro por tipo enviando o nome do enum', async () => {
         const user = userEvent.setup()
-        vi.mocked(fetchValidacao).mockResolvedValueOnce(mockData)
+        vi.mocked(fetchValidacao).mockResolvedValue(mockData)
         renderPage()
         await waitFor(() => {
             expect(screen.getByLabelText('Tipo de filtro')).toBeInTheDocument()
+        })
+        // Selecionar um item para verificar que aplicar filtro limpa a seleção
+        await waitFor(() => {
+            expect(screen.getByLabelText('Selecionar Sala 101')).toBeInTheDocument()
+        })
+        fireEvent.click(screen.getByLabelText('Selecionar Sala 101'))
+        await waitFor(() => {
+            expect(screen.getByRole('region', { name: 'Ações em lote' })).toBeInTheDocument()
         })
         // Selecionar tipo de filtro "Tipo"
         await user.click(screen.getByLabelText('Tipo de filtro'))
@@ -232,6 +240,10 @@ describe('ValidacaoPage (UC01-FE)', () => {
                 expect.objectContaining({ tipoFiltro: TipoFiltro.TIPO, tipo: 'SALA_AULA' }),
                 expect.anything(),
             )
+        })
+        // O filtro deve limpar a seleção (AcoesLote some)
+        await waitFor(() => {
+            expect(screen.queryByRole('region', { name: 'Ações em lote' })).not.toBeInTheDocument()
         })
     })
 })
