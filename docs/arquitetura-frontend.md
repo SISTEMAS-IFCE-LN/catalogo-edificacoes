@@ -789,87 +789,95 @@ export function PublicOnly() {
 ```typescript
 // router/index.tsx
 
+import { Suspense } from 'react'
 import { createBrowserRouter } from 'react-router'
 import { RequireAuth } from '@/components/auth/RequireAuth'
 import { RequireRole } from '@/components/auth/RequireRole'
 import { PublicOnly } from '@/components/auth/PublicOnly'
 import { Role } from '@/types/usuarios/user'
-import { ProtectedLayout } from '@/routes/_layout/protected-layout'
-
-import LoginPage from '@/routes/login/page'
-import CallbackPage from '@/routes/callback/page'
-import UnauthorizedPage from '@/routes/unauthorized/page'
-
-import PublicadosPage from '@/routes/ambientes/publicados/page'
-import PublicadoDetalhePage from '@/routes/ambientes/publicados/[id]/page'
-import EsquadriasPage from '@/routes/ambientes/publicados/esquadrias/page'
-
-import ValidacaoPage from '@/routes/ambientes/validacao/page'
-import ValidacaoDetalhePage from '@/routes/ambientes/validacao/[id]/page'
-
-import NaoPublicadosPage from '@/routes/ambientes/nao-publicados/page'
-import NovoAmbientePage from '@/routes/ambientes/nao-publicados/novo/page'
-import NaoPublicadoDetalhePage from '@/routes/ambientes/nao-publicados/[id]/page'
-
-import UsuariosPage from '@/routes/usuarios/page'
+import { Loading } from '@/components/ui/Loading'
+import { ROUTES } from '@/constants/routes'
+import {
+  HomePage,
+  LoginPage,
+  CallbackPage,
+  UnauthorizedPage,
+  ProtectedLayout,
+  PublicadosPage,
+  PublicadoDetalhePage,
+  EsquadriasPage,
+  ValidacaoPage,
+  ValidacaoDetalhePage,
+  UsuariosPage,
+} from '@/router/lazy-pages'
 
 export const router = createBrowserRouter([
   // Públicas (não autenticadas)
   {
     element: <PublicOnly />,
     children: [
-      { path: '/login', element: <LoginPage /> },
+      { path: ROUTES.LOGIN, element: <Suspense fallback={<Loading />}><LoginPage /></Suspense> },
     ],
   },
-  { path: '/callback', element: <CallbackPage /> },     // host do #token
-  { path: '/unauthorized', element: <UnauthorizedPage /> },
+  { path: '/callback', element: <Suspense fallback={<Loading />}><CallbackPage /></Suspense> },     // host do #token
+  { path: '/unauthorized', element: <Suspense fallback={<Loading />}><UnauthorizedPage /></Suspense> },
 
   // Layout comum (Header auth-aware + Footer) — público e autenticado
   {
-    element: <ProtectedLayout />,
+    element: <Suspense fallback={<Loading />}><ProtectedLayout /></Suspense>,
     children: [
       // Pública (lista de publicados) — UC21-FE, sem RequireAuth, mas com Header
-      { path: '/ambientes/publicados', element: <PublicadosPage /> },
+      { path: '/ambientes/publicados', element: <Suspense fallback={<Loading />}><PublicadosPage /></Suspense> },
 
       // Autenticadas
       {
         element: <RequireAuth />,
         children: [
+          // Colaborador (mínimo universal — UC19-FE, UC20-FE)
+          {
+            path: '/ambientes/publicados/:id',
+            element: <RequireRole roles={[Role.COLABORADOR]} />,
+            children: [{ index: true, element: <Suspense fallback={<Loading />}><PublicadoDetalhePage /></Suspense> }],
+          },
+          {
+            path: '/ambientes/publicados/esquadrias',
+            element: <RequireRole roles={[Role.COLABORADOR]} />,
+            children: [{ index: true, element: <Suspense fallback={<Loading />}><EsquadriasPage contexto="publicados" /></Suspense> }],
+          },
 
-        // Colaborador (mínimo universal)
-        { path: '/ambientes/publicados/:id',
-          element: <RequireRole roles={[Role.COLABORADOR]} />,
-          children: [{ index: true, element: <PublicadoDetalhePage /> }] },
-        { path: '/ambientes/publicados/esquadrias',
-          element: <RequireRole roles={[Role.COLABORADOR]} />,
-          children: [{ index: true, element: <EsquadriasPage /> }] },
+          // Validador (UC01-UC03-FE)
+          {
+            path: '/ambientes/validacao',
+            element: <RequireRole roles={[Role.VALIDADOR]} />,
+            children: [
+              { index: true, element: <Suspense fallback={<Loading />}><ValidacaoPage /></Suspense> },
+              { path: 'esquadrias', element: <Suspense fallback={<Loading />}><EsquadriasPage contexto="validacao" /></Suspense> },
+              { path: ':id', element: <Suspense fallback={<Loading />}><ValidacaoDetalhePage /></Suspense> },
+            ],
+          },
 
-        // Validador
-        { path: '/ambientes/validacao',
-          element: <RequireRole roles={[Role.VALIDADOR]} />,
-          children: [
-            { index: true, element: <ValidacaoPage /> },
-            { path: ':id', element: <ValidacaoDetalhePage /> },
-          ] },
-        // Gestor
-        { path: '/ambientes/nao-publicados',
-          element: <RequireRole roles={[Role.GESTOR_SISTEMA]} />,
-          children: [
-            { index: true, element: <NaoPublicadosPage /> },
-            { path: 'novo', element: <NovoAmbientePage /> },
-            { path: ':id', element: <NaoPublicadoDetalhePage /> },
-          ] },
+          // Gestor (UC04-UC18-FE) — Parte 11: a implementar.
+          // Estado atual: placeholder <HomePage/>. As rotas 'novo' e ':id'
+          // serão adicionadas pela parte 11 (plano 11-pagina-naopublicados-formambiente.md).
+          {
+            path: '/ambientes/nao-publicados',
+            element: <RequireRole roles={[Role.GESTOR_SISTEMA]} />,
+            children: [{ index: true, element: <Suspense fallback={<Loading />}><HomePage /></Suspense> }],
+          },
 
-        // Administrador
-        { path: '/usuarios',
-          element: <RequireRole roles={[Role.ADMINISTRADOR]} />,
-          children: [{ index: true, element: <UsuariosPage /> }] },
-      ],
-    },
+          // Administrador (UC22-UC26-FE)
+          {
+            path: '/usuarios',
+            element: <RequireRole roles={[Role.ADMINISTRADOR]} />,
+            children: [{ index: true, element: <Suspense fallback={<Loading />}><UsuariosPage /></Suspense> }],
+          },
+        ],
+      },
+    ],
   },
 
-  { path: '/', element: <HomePage /> },
-  { path: '*', element: <UnauthorizedPage /> },
+  { path: '/', element: <Suspense fallback={<Loading />}><HomePage /></Suspense> },
+  { path: '*', element: <Suspense fallback={<Loading />}><UnauthorizedPage /></Suspense> },
 ])
 ```
 
