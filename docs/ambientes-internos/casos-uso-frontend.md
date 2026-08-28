@@ -57,10 +57,9 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - Fluxo principal (UI):
   1. O usuário acessa a rota `/ambientes/validacao`, é exibido o componente `TabelaPadrao` com os ambientes cujo `status = AGUARDANDO_VALIDACAO` (chamada GET `/api/ambientes/validacao`).
   2. Uma barra de pesquisa (`PesquisaBarAmbientes`) também é exibida para filtrar os ambientes por `nome`, `localizacao` e `tipo`. Cada filtro utiliza endpoints específicos do backend: `/api/ambientes/validacao/nome?nome={nome}`, `/api/ambientes/validacao/localizacao?bloco={bloco}&unidade={unidade}&andar={andar}` e `/api/ambientes/validacao/tipo?tipo={tipo}` — filtro aplicado via botão "Aplicar", sem debounce, estado na URL.
-  3. Um botão de seleção também está disponível para execução de ações em lote (`AcoesLote`).
-  4. A Tabela exibida possui paginação e o usuário pode definir quantos registros serão exibidos até o máximo de 100. 
-  5. O usuário também pode ordenar os resultados por qualquer uma das colunas da tabela.
-  6. Cada item tem um botão para visualizar seus detalhes (`DetalheAmbiente`) e checkboxes para seleção múltipla.
+  3. A Tabela exibida possui paginação e o usuário pode definir quantos registros serão exibidos até o máximo de 100. 
+  4. O usuário também pode ordenar os resultados por qualquer uma das colunas da tabela.
+  5. Cada item tem um botão para visualizar seus detalhes (`DetalheAmbiente`).
 - Estados e erros:
   - Se não houver itens, mostrar callout informativo.
   - Em erro de rede, show toast com opção `Tentar novamente`.
@@ -107,6 +106,8 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - Tela: `Ambientes > NãoPublicados` (rota `/ambientes/nao-publicados`) (semelhante ao UC01-FE). Filtragem, paginação e seleção múltipla.
 - Pré-condições: Usuário logado com role `gestor`.
 - Fluxo principal (UI): Similar ao UC01-FE, mas chamando GET `/api/ambientes/nao-publicados` e possuindo um botão `Criar Novo` para criação de novos ambientes. Os filtros utilizam endpoints específicos: `/api/ambientes/nao-publicados/nome?nome={nome}`, `/api/ambientes/nao-publicados/localizacao?bloco={bloco}&unidade={unidade}&andar={andar}` e `/api/ambientes/nao-publicados/tipo?tipo={tipo}`.
+  1. Cada item tem um checkbox para seleção múltipla, além do botão para visualizar seus detalhes (`DetalheAmbiente`).
+  2. Um botão de seleção também está disponível para execução de ações em lote (`AcoesLote`): `Deletar` (UC15-FE) e `Enviar p/ Validação` (UC18-FE).
 - Estados e erros: Os mesmos do UC01-FE.
 - Critérios de aceitação: Os mesmos do UC01-FE, mas para `status = NAO_PUBLICADO`.
 
@@ -377,7 +378,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 
 ### UC21-FE: Listar Ambientes Publicados
 
-- Tela: `Ambientes > Publicados` (semelhante ao UC01-FE). Filtragem, paginação e seleção múltipla.
+- Tela: `Ambientes > Publicados` (semelhante ao UC01-FE). Filtragem e paginação.
 - Pré-condições: Acesso público (não autenticado).
 - Fluxo principal (UI): Similar ao UC01-FE, mas chamando GET `/api/ambientes/publicados` e não possuindo botões de ação ou seleção. Os filtros utilizam endpoints específicos: `/api/ambientes/publicados/nome?nome={nome}`, `/api/ambientes/publicados/localizacao?bloco={bloco}&unidade={unidade}&andar={andar}` e `/api/ambientes/publicados/tipo?tipo={tipo}`.
 - Estados e erros: Os mesmos do UC01-FE.

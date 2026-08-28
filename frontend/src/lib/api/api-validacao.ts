@@ -2,11 +2,9 @@ import {
     type AmbienteDetalhe,
     type AmbientesBasicosPaginados,
     type AmbientesQuery,
-    type EsquadriasQuery,
-    type EsquadriasResponse,
 } from '@/types/ambientes/ambiente'
 import {ROUTES} from '@/constants/routes'
-import {fetchAmbientes, fetchDetalheAmbiente, fetchEsquadriasAmbientes} from '@/lib/api/api-ambientes'
+import {fetchAmbientes, fetchDetalheAmbiente} from '@/lib/api/api-ambientes'
 import {api} from '@/lib/api/api'
 
 export function fetchValidacao(
@@ -21,13 +19,6 @@ export function fetchDetalheValidacao(
     signal?: AbortSignal
 ): Promise<AmbienteDetalhe> {
     return fetchDetalheAmbiente(id, ROUTES.VALIDACAO, signal)
-}
-
-export function fetchEsquadriasValidacao(
-    query: EsquadriasQuery,
-    signal?: AbortSignal
-): Promise<EsquadriasResponse> {
-    return fetchEsquadriasAmbientes(query, ROUTES.VALIDACAO, signal)
 }
 
 export async function publicarAmbiente(id: number): Promise<void> {

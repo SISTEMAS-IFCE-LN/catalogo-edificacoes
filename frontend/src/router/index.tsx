@@ -46,7 +46,7 @@ export const router = createBrowserRouter([
                     {
                         path: '/ambientes/publicados/esquadrias',
                         element: <RequireRole roles={[Role.COLABORADOR]}/>,
-                        children: [{index: true, element: <Suspense fallback={<Loading/>}><EsquadriasPage contexto="publicados"/></Suspense>}],
+                        children: [{index: true, element: <Suspense fallback={<Loading/>}><EsquadriasPage/></Suspense>}],
                     },
                     // Validador (UC01-UC03-FE)
                     {
@@ -54,7 +54,6 @@ export const router = createBrowserRouter([
                         element: <RequireRole roles={[Role.VALIDADOR]}/>,
                         children: [
                             {index: true, element: <Suspense fallback={<Loading/>}><ValidacaoPage/></Suspense>},
-                            {path: 'esquadrias', element: <Suspense fallback={<Loading/>}><EsquadriasPage contexto="validacao"/></Suspense>},
                             {path: ':id', element: <Suspense fallback={<Loading/>}><ValidacaoDetalhePage/></Suspense>},
                         ],
                     },

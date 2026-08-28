@@ -1,7 +1,6 @@
 import { useSearchParams, useNavigate } from 'react-router'
 import { useQuery } from '@tanstack/react-query'
 import { fetchEsquadriasPublicados } from '@/lib/api/api-publicados'
-import { fetchEsquadriasValidacao } from '@/lib/api/api-validacao'
 import { useEffect, useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import {
@@ -23,12 +22,6 @@ import { MaterialEsquadria, TipoEsquadria } from '@/types/ambientes/enums'
 import { ROUTES } from '@/constants/routes'
 
 const OPCAO_TODOS = 'TODOS'
-
-export type ContextoEsquadrias = 'publicados' | 'validacao'
-
-interface EsquadriasPageProps {
-    contexto: ContextoEsquadrias
-}
 
 function parseIds(idsParam: string | null): number[] {
     if (!idsParam) return []
@@ -54,15 +47,10 @@ function atualizarSearchParams(
     })
 }
 
-export function EsquadriasPage({ contexto }: EsquadriasPageProps) {
+export function EsquadriasPage() {
     const [searchParams, setSearchParams] = useSearchParams()
     const navigate = useNavigate()
     const ids = useMemo(() => parseIds(searchParams.get('ids')), [searchParams])
-
-    // Pontos contextuais (antes hardcoded para publicados):
-    const fetchEsquadrias =
-        contexto === 'publicados' ? fetchEsquadriasPublicados : fetchEsquadriasValidacao
-    const rotaVoltar = contexto === 'publicados' ? ROUTES.PUBLICADOS : ROUTES.VALIDACAO
 
     const filtroTipo = searchParams.get('tipo') ?? ''
     const filtroMaterial = searchParams.get('material') ?? ''
@@ -74,9 +62,8 @@ export function EsquadriasPage({ contexto }: EsquadriasPageProps) {
     const [page, setPage] = useState(0)
 
     const { data, isLoading, error } = useQuery({
-        // Namespaced por contexto: evita colisão de cache publicados × validação
-        queryKey: ['esquadrias', contexto, ids, page],
-        queryFn: ({ signal }) => fetchEsquadrias({
+        queryKey: ['esquadrias', ids, page],
+        queryFn: ({ signal }) => fetchEsquadriasPublicados({
             ids,
             page,
             size: 100,
@@ -138,7 +125,7 @@ export function EsquadriasPage({ contexto }: EsquadriasPageProps) {
 
     return (
         <div className="space-y-6">
-            <Button variant="outline" onClick={() => navigate(rotaVoltar)}>
+            <Button variant="outline" onClick={() => navigate(ROUTES.PUBLICADOS)}>
                 Voltar
             </Button>
             {/* Filtros client-side por tipo e material (UC20-FE) */}

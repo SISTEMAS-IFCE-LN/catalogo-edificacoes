@@ -20,15 +20,6 @@ vi.mock('@/hooks/useIsMobile', () => ({
     useIsMobile: () => false,
 }))
 
-const mockNavigate = vi.fn()
-vi.mock('react-router', async (importOriginal) => {
-    const actual = await importOriginal<typeof import('react-router')>()
-    return {
-        ...actual,
-        useNavigate: () => mockNavigate,
-    }
-})
-
 import { fetchValidacao } from '@/lib/api/api-validacao'
 
 const mockData: AmbientesBasicosPaginados = {
@@ -82,7 +73,6 @@ function renderPage(initialEntries: string[] = ['/ambientes/validacao']) {
 describe('ValidacaoPage (UC01-FE)', () => {
     beforeEach(() => {
         vi.clearAllMocks()
-        mockNavigate.mockClear()
     })
 
     it('renderiza a lista com link para /ambientes/validacao/{id}', async () => {
@@ -97,79 +87,11 @@ describe('ValidacaoPage (UC01-FE)', () => {
         )
     })
 
-    it('renderiza checkboxes e Área Total; AcoesLote ausente sem seleção', async () => {
+    it('renderiza Área Total', async () => {
         vi.mocked(fetchValidacao).mockResolvedValueOnce(mockData)
         renderPage()
         await waitFor(() => {
-            expect(screen.getByLabelText('Selecionar todos da página')).toBeInTheDocument()
-            expect(screen.getByLabelText('Selecionar Sala 101')).toBeInTheDocument()
-        })
-        expect(screen.queryByRole('region', { name: 'Ações em lote' })).not.toBeInTheDocument()
-        expect(screen.getByText('Área Total: 90.00 m²')).toBeInTheDocument()
-    })
-
-    it('selecionar um item exibe AcoesLote com contador', async () => {
-        vi.mocked(fetchValidacao).mockResolvedValueOnce(mockData)
-        renderPage()
-        await waitFor(() => {
-            expect(screen.getByLabelText('Selecionar Sala 101')).toBeInTheDocument()
-        })
-        fireEvent.click(screen.getByLabelText('Selecionar Sala 101'))
-        await waitFor(() => {
-            expect(screen.getByRole('region', { name: 'Ações em lote' })).toBeInTheDocument()
-            expect(screen.getByText('1 selecionado')).toBeInTheDocument()
-        })
-    })
-
-    it('selecionar todos marca todas as linhas', async () => {
-        vi.mocked(fetchValidacao).mockResolvedValueOnce(mockData)
-        renderPage()
-        await waitFor(() => {
-            expect(screen.getByLabelText('Selecionar todos da página')).toBeInTheDocument()
-        })
-        fireEvent.click(screen.getByLabelText('Selecionar todos da página'))
-        await waitFor(() => {
-            expect(screen.getByText('2 selecionados')).toBeInTheDocument()
-        })
-    })
-
-    it('Limpar desmarca a seleção', async () => {
-        vi.mocked(fetchValidacao).mockResolvedValueOnce(mockData)
-        renderPage()
-        await waitFor(() => {
-            expect(screen.getByLabelText('Selecionar Sala 101')).toBeInTheDocument()
-        })
-        fireEvent.click(screen.getByLabelText('Selecionar Sala 101'))
-        await waitFor(() => {
-            expect(screen.getByText('Limpar')).toBeInTheDocument()
-        })
-        fireEvent.click(screen.getByText('Limpar'))
-        await waitFor(() => {
-            expect(screen.queryByRole('region', { name: 'Ações em lote' })).not.toBeInTheDocument()
-        })
-    })
-
-    it('executar Detalhar Esquadrias navega para /ambientes/validacao/esquadrias?ids=1,2', async () => {
-        const user = userEvent.setup()
-        vi.mocked(fetchValidacao).mockResolvedValueOnce(mockData)
-        renderPage()
-        await waitFor(() => {
-            expect(screen.getByLabelText('Selecionar todos da página')).toBeInTheDocument()
-        })
-        // Selecionar todos
-        await user.click(screen.getByLabelText('Selecionar todos da página'))
-        // Abrir seletor de ação
-        await waitFor(() => {
-            expect(screen.getByLabelText('Selecionar ação em lote')).toBeInTheDocument()
-        })
-        await user.click(screen.getByLabelText('Selecionar ação em lote'))
-        await user.click(await screen.findByRole('option', { name: 'Detalhar Esquadrias' }))
-        // Executar
-        await user.click(screen.getByText('Executar'))
-        await waitFor(() => {
-            expect(mockNavigate).toHaveBeenCalledWith(
-                '/ambientes/validacao/esquadrias?ids=1,2',
-            )
+            expect(screen.getByText('Área Total: 90.00 m²')).toBeInTheDocument()
         })
     })
 
@@ -184,7 +106,7 @@ describe('ValidacaoPage (UC01-FE)', () => {
         )
     })
 
-    it('limpa a seleção ao mudar de página', async () => {
+    it('muda de página ao clicar em Próximo', async () => {
         const paginada: AmbientesBasicosPaginados = {
             ...mockData,
             dadosPaginacao: {
@@ -199,15 +121,14 @@ describe('ValidacaoPage (UC01-FE)', () => {
         vi.mocked(fetchValidacao).mockResolvedValue(paginada)
         renderPage()
         await waitFor(() => {
-            expect(screen.getByLabelText('Selecionar Sala 101')).toBeInTheDocument()
-        })
-        fireEvent.click(screen.getByLabelText('Selecionar Sala 101'))
-        await waitFor(() => {
-            expect(screen.getByRole('region', { name: 'Ações em lote' })).toBeInTheDocument()
+            expect(screen.getByText('Sala 101')).toBeInTheDocument()
         })
         fireEvent.click(screen.getByText('Próximo'))
         await waitFor(() => {
-            expect(screen.queryByRole('region', { name: 'Ações em lote' })).not.toBeInTheDocument()
+            expect(fetchValidacao).toHaveBeenLastCalledWith(
+                expect.objectContaining({ page: 1 }),
+                expect.anything(),
+            )
         })
     })
 
@@ -217,14 +138,6 @@ describe('ValidacaoPage (UC01-FE)', () => {
         renderPage()
         await waitFor(() => {
             expect(screen.getByLabelText('Tipo de filtro')).toBeInTheDocument()
-        })
-        // Selecionar um item para verificar que aplicar filtro limpa a seleção
-        await waitFor(() => {
-            expect(screen.getByLabelText('Selecionar Sala 101')).toBeInTheDocument()
-        })
-        fireEvent.click(screen.getByLabelText('Selecionar Sala 101'))
-        await waitFor(() => {
-            expect(screen.getByRole('region', { name: 'Ações em lote' })).toBeInTheDocument()
         })
         // Selecionar tipo de filtro "Tipo"
         await user.click(screen.getByLabelText('Tipo de filtro'))
@@ -240,10 +153,6 @@ describe('ValidacaoPage (UC01-FE)', () => {
                 expect.objectContaining({ tipoFiltro: TipoFiltro.TIPO, tipo: 'SALA_AULA' }),
                 expect.anything(),
             )
-        })
-        // O filtro deve limpar a seleção (AcoesLote some)
-        await waitFor(() => {
-            expect(screen.queryByRole('region', { name: 'Ações em lote' })).not.toBeInTheDocument()
         })
     })
 })

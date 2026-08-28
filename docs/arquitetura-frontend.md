@@ -248,7 +248,7 @@ frontend/
 │   │   │   ├── api-ambientes.ts      # compartilhado: fetchAmbientes, fetchDetalheAmbiente, fetchEsquadriasAmbientes
 │   │   │   ├── api-publicados.ts     # wrappers UC21-FE → api-ambientes (fetchPublicados, fetchDetalhePublicados, fetchEsquadriasPublicados)
 │   │   │   ├── api-usuarios.ts       # UC22–UC26-FE
-│   │   │   ├── api-validacao.ts      # UC01–UC03-FE (fetchValidacao, fetchDetalheValidacao, fetchEsquadriasValidacao, publicarAmbiente, privarAmbiente)
+│   │   │   ├── api-validacao.ts      # UC01–UC03-FE (fetchValidacao, fetchDetalheValidacao, publicarAmbiente, privarAmbiente)
 │   │   │   └── api-naopublicados.ts  # UC05–UC18-FE
 │   │   ├── ambientes/
 │   │   │   └── esquadrias.ts         # filtro/resumo de esquadrias (lógica pura)
@@ -260,7 +260,7 @@ frontend/
 │   │   ├── useFiltroLocal.ts         # rascunho local sincronizado com a URL (PesquisaBarAmbientes/Usuarios + hooks de search params)
 │   │   ├── usePaginationParams.ts    # núcleo genérico: page/size + handlePageChange/handleSizeChange/updateSearchParams
 │   │   ├── useAmbientesSearchParams.ts # adaptador fino: usePaginationParams + Zod (filtros) + tipoFiltro
-│   │   ├── useSelecaoAmbientes.ts    # seleção múltipla por página das listas de ambientes (publicados/validacao/nao-publicados)
+│   │   ├── useSelecaoAmbientes.ts    # seleção múltipla por página das listas de ambientes (publicados/nao-publicados)
 │   │   ├── usePermission.ts          # canDo(action), canAccess(route), hasRole(roles)
 │   │   └── useUsuariosSearchParams.ts # adaptador fino: usePaginationParams + nome/email + tipoFiltro
 │   │
@@ -362,7 +362,6 @@ export const ROUTE_PERMISSIONS: Record<string, Role[]> = {
   // Validador
   '/ambientes/validacao':         [Role.VALIDADOR],
   '/ambientes/validacao/:id':     [Role.VALIDADOR],
-  '/ambientes/validacao/esquadrias': [Role.VALIDADOR],
 
   // Gestor
   '/ambientes/nao-publicados':    [Role.GESTOR_SISTEMA],
@@ -842,7 +841,7 @@ export const router = createBrowserRouter([
           {
             path: '/ambientes/publicados/esquadrias',
             element: <RequireRole roles={[Role.COLABORADOR]} />,
-            children: [{ index: true, element: <Suspense fallback={<Loading />}><EsquadriasPage contexto="publicados" /></Suspense> }],
+            children: [{ index: true, element: <Suspense fallback={<Loading />}><EsquadriasPage /></Suspense> }],
           },
 
           // Validador (UC01-UC03-FE)
@@ -851,7 +850,6 @@ export const router = createBrowserRouter([
             element: <RequireRole roles={[Role.VALIDADOR]} />,
             children: [
               { index: true, element: <Suspense fallback={<Loading />}><ValidacaoPage /></Suspense> },
-              { path: 'esquadrias', element: <Suspense fallback={<Loading />}><EsquadriasPage contexto="validacao" /></Suspense> },
               { path: ':id', element: <Suspense fallback={<Loading />}><ValidacaoDetalhePage /></Suspense> },
             ],
           },

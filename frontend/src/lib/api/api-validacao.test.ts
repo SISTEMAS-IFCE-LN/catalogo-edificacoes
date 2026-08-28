@@ -2,7 +2,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import {
   fetchValidacao,
   fetchDetalheValidacao,
-  fetchEsquadriasValidacao,
   publicarAmbiente,
   privarAmbiente,
 } from './api-validacao'
@@ -21,19 +20,6 @@ const paginadoVazio = {
     totalPages: 0,
     currentPage: 0,
     pageSize: 20,
-    hasNext: false,
-    hasPrevious: false,
-  },
-}
-
-const esquadriasVazio = {
-  ambientes: [],
-  totalTipoMaterial: [],
-  dadosPaginacao: {
-    totalElements: 0,
-    totalPages: 0,
-    currentPage: 0,
-    pageSize: 100,
     hasNext: false,
     hasPrevious: false,
   },
@@ -120,20 +106,6 @@ describe('fetchDetalheValidacao', () => {
     })
     const result = await fetchDetalheValidacao(1)
     expect(result.status).toBe('Aguardando Validação')
-  })
-})
-
-describe('fetchEsquadriasValidacao', () => {
-  beforeEach(() => {
-    vi.mocked(api.get).mockClear()
-  })
-
-  it('chama /api/ambientes/validacao/esquadrias com ids', async () => {
-    vi.mocked(api.get).mockResolvedValueOnce({ data: esquadriasVazio })
-    await fetchEsquadriasValidacao({ ids: [1, 2, 3], page: 0, size: 100 })
-    expect(api.get).toHaveBeenCalledWith('/api/ambientes/validacao/esquadrias', expect.objectContaining({
-      params: expect.objectContaining({ ids: '1,2,3', page: 0, size: 100 }),
-    }))
   })
 })
 
