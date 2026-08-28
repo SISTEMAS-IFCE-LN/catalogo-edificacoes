@@ -19,7 +19,13 @@ export function ValidacaoDetalhePage() {
 
     const {data: ambiente, isLoading, error} = useQuery({
         queryKey: ['ambientes', 'validacao', 'detalhe', id],
-        queryFn: ({signal}) => fetchDetalheValidacao(Number(id), signal),
+        queryFn: ({signal}) => {
+            const idNumero = Number(id)
+            if (!Number.isInteger(idNumero) || idNumero <= 0) {
+                throw new Error(`ID de ambiente inválido: ${id}`)
+            }
+            return fetchDetalheValidacao(idNumero, signal)
+        },
         enabled: !!id,
     })
 

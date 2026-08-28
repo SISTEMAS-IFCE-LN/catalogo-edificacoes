@@ -139,6 +139,15 @@ describe('ValidacaoDetalhePage', () => {
     expect(screen.getByText('Voltar à lista')).toBeInTheDocument()
   })
 
+  it('não chama a API e exibe "Ambiente não encontrado" quando o id da URL é inválido', async () => {
+    renderPage(['/ambientes/validacao/abc'])
+    await waitFor(() => {
+      expect(screen.getByText('Ambiente não encontrado.')).toBeInTheDocument()
+    })
+    expect(screen.getByText('Voltar à lista')).toBeInTheDocument()
+    expect(fetchDetalheValidacao).not.toHaveBeenCalled()
+  })
+
   it('navega de volta para a lista ao clicar em Voltar', async () => {
     vi.mocked(fetchDetalheValidacao).mockResolvedValueOnce(makeAmbiente(StatusAmbiente.AGUARDANDO_VALIDACAO))
     renderPage()

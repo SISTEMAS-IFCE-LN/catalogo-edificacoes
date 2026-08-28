@@ -362,6 +362,7 @@ export const ROUTE_PERMISSIONS: Record<string, Role[]> = {
   // Validador
   '/ambientes/validacao':         [Role.VALIDADOR],
   '/ambientes/validacao/:id':     [Role.VALIDADOR],
+  '/ambientes/validacao/esquadrias': [Role.VALIDADOR],
 
   // Gestor
   '/ambientes/nao-publicados':    [Role.GESTOR_SISTEMA],

@@ -20,7 +20,13 @@ export function PublicadoDetalhePage() {
 
     const {data: ambiente, isLoading, error} = useQuery({
         queryKey: ['ambientes', 'publicados', 'detalhe', id],
-        queryFn: ({signal}) => fetchDetalhePublicados(Number(id), signal),
+        queryFn: ({signal}) => {
+            const idNumero = Number(id)
+            if (!Number.isInteger(idNumero) || idNumero <= 0) {
+                throw new Error(`ID de ambiente inválido: ${id}`)
+            }
+            return fetchDetalhePublicados(idNumero, signal)
+        },
         enabled: !!id,
     })
 
