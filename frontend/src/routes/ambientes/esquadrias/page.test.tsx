@@ -156,9 +156,9 @@ describe('EsquadriasPage', () => {
         })
     })
 
-    it('filtra ids inválidos (NaN, <= 0)', async () => {
+    it('filtra ids inválidos (não numéricos, não inteiros, <= 0)', async () => {
         vi.mocked(fetchEsquadriasPublicados).mockResolvedValueOnce(mockResponse)
-        renderPage(['/ambientes/publicados/esquadrias?ids=1,abc,0,-5,2'])
+        renderPage(['/ambientes/publicados/esquadrias?ids=1,abc,0,-5,1.5,2'])
         await waitFor(() => {
             expect(fetchEsquadriasPublicados).toHaveBeenCalledWith(
                 expect.objectContaining({ ids: [1, 2] }),

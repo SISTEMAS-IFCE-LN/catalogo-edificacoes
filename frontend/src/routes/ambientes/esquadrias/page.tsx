@@ -35,7 +35,7 @@ function parseIds(idsParam: string | null): number[] {
     return idsParam
         .split(',')
         .map((s) => Number(s.trim()))
-        .filter((n) => !Number.isNaN(n) && n > 0)
+        .filter((n) => Number.isInteger(n) && n > 0)
 }
 
 function atualizarSearchParams(
