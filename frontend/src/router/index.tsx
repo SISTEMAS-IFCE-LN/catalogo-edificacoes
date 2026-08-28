@@ -16,6 +16,7 @@ import {
     PublicadoDetalhePage,
     EsquadriasPage,
     ValidacaoPage,
+    ValidacaoDetalhePage,
     UsuariosPage,
 } from './lazy-pages'
 
@@ -54,6 +55,7 @@ export const router = createBrowserRouter([
                         children: [
                             {index: true, element: <Suspense fallback={<Loading/>}><ValidacaoPage/></Suspense>},
                             {path: 'esquadrias', element: <Suspense fallback={<Loading/>}><EsquadriasPage contexto="validacao"/></Suspense>},
+                            {path: ':id', element: <Suspense fallback={<Loading/>}><ValidacaoDetalhePage/></Suspense>},
                         ],
                     },
                     // Gestor (UC04-UC18-FE)
