@@ -224,6 +224,42 @@ describe('EsquadriasPage', () => {
         })
     })
 
+    it('reseta a página ao remover IDs inválidos', async () => {
+        vi.mocked(fetchEsquadriasPublicados).mockImplementation(({page}) => {
+            const paginaAtual = page ?? 0
+            const paginada: EsquadriasResponse = {
+                ...mockResponse,
+                dadosPaginacao: {
+                    totalElements: 200,
+                    totalPages: 2,
+                    currentPage: paginaAtual,
+                    pageSize: 100,
+                    hasNext: paginaAtual === 0,
+                    hasPrevious: paginaAtual === 1,
+                },
+            }
+            return Promise.resolve(paginada)
+        })
+        renderPage(['/ambientes/publicados/esquadrias?ids=1,2,99'])
+        await waitFor(() => {
+            expect(screen.getByText(/IDs inválidos: 99/)).toBeInTheDocument()
+        })
+        // Navega para a página 2
+        fireEvent.click(screen.getByText('Próximo'))
+        await waitFor(() => {
+            expect(screen.getByText(/Página 2 de 2/)).toBeInTheDocument()
+        })
+        // Remove inválidos: a busca deve voltar à página 1
+        fireEvent.click(screen.getByText('Remover inválidos e tentar novamente'))
+        await waitFor(() => {
+            const ultimaChamada = vi.mocked(fetchEsquadriasPublicados).mock.calls.at(-1)
+            expect(ultimaChamada?.[0]).toEqual({ ids: [1, 2], page: 0, size: 100 })
+        })
+        await waitFor(() => {
+            expect(screen.getByText(/Página 1 de 2/)).toBeInTheDocument()
+        })
+    })
+
     it('renderiza filtros de tipo e material', async () => {
         vi.mocked(fetchEsquadriasPublicados).mockResolvedValueOnce(mockResponse)
         renderPage(['/ambientes/publicados/esquadrias?ids=1'])

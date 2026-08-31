@@ -100,6 +100,8 @@ export function EsquadriasPage() {
     function handleRemoverInvalidos() {
         const idsValidos = ids.filter((id) => !idsInvalidos.includes(id))
         atualizarSearchParams(setSearchParams, { ids: idsValidos.join(',') || null })
+        // Nova busca sempre volta à primeira página (evita "Página 3 de 1")
+        setPage(0)
     }
 
     if (ids.length === 0) {
