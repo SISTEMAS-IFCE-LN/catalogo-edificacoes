@@ -7,8 +7,7 @@ import {
     DialogDescription,
 } from '@/components/ui/dialog'
 import {Button} from '@/components/ui/button'
-import {useState} from 'react'
-import {toast} from 'sonner'
+import {useAsyncAction} from '@/hooks/useAsyncAction'
 
 interface Props {
     open: boolean
@@ -29,22 +28,12 @@ export function ModalConfirmacao({
                                      variant = 'default',
                                      confirmLabel = 'Confirmar',
                                  }: Props) {
-    const [executando, setExecutando] = useState(false)
+    const {executando, executar} = useAsyncAction({
+        onClose: () => onOpenChange(false),
+    })
 
-    async function confirmar() {
-        setExecutando(true)
-        try {
-            await onConfirm()
-            onOpenChange(false)
-        } catch (error) {
-            toast.error('Erro ao executar ação. Tente novamente.')
-            console.error(
-                'Erro ao confirmar:',
-                error instanceof Error ? error.message : String(error),
-            )
-        } finally {
-            setExecutando(false)
-        }
+    function confirmar() {
+        void executar(onConfirm)
     }
 
     return (
