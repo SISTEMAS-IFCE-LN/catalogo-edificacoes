@@ -5,7 +5,7 @@ import {fetchDetalhePublicados} from '@/lib/api/api-publicados'
 import {privarAmbiente} from '@/lib/api/api-validacao'
 import {DetalheAmbiente} from '@/components/ambientes/DetalheAmbiente'
 import {Button} from '@/components/ui/button'
-import {ROUTES} from '@/constants/routes'
+import {PAGES_ROUTES} from '@/constants/routes'
 import {StatusAmbiente} from '@/types/ambientes/enums'
 import {ModalConfirmacao} from '@/components/ambientes/ModalConfirmacao'
 import {PermissionButton} from '@/components/auth/PermissionButton'
@@ -36,7 +36,7 @@ export function PublicadoDetalhePage() {
         await privarAmbiente(ambiente.id)
         toast.success('Ambiente privado.')
         void queryClient.invalidateQueries({queryKey: ['ambientes', 'publicados']})
-        navigate(ROUTES.PUBLICADOS)
+        navigate(PAGES_ROUTES.PUBLICADOS)
     }
 
     if (isLoading) return <p>Carregando…</p>
@@ -44,7 +44,7 @@ export function PublicadoDetalhePage() {
         return (
             <div className="space-y-4">
                 <p>Ambiente não encontrado.</p>
-                <Button variant="outline" onClick={() => navigate(ROUTES.PUBLICADOS)}>
+                <Button variant="outline" onClick={() => navigate(PAGES_ROUTES.PUBLICADOS)}>
                     Voltar à lista
                 </Button>
             </div>
@@ -56,7 +56,7 @@ export function PublicadoDetalhePage() {
 
     return (
         <div className="space-y-4">
-            <Button variant="outline" onClick={() => navigate(ROUTES.PUBLICADOS)}>
+            <Button variant="outline" onClick={() => navigate(PAGES_ROUTES.PUBLICADOS)}>
                 Voltar
             </Button>
             <DetalheAmbiente ambiente={ambiente}/>

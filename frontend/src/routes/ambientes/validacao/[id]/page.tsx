@@ -5,7 +5,7 @@ import {Button} from '@/components/ui/button'
 import {useState} from 'react'
 import {fetchDetalheValidacao, privarAmbiente, publicarAmbiente} from '@/lib/api/api-validacao'
 import {toast} from 'sonner'
-import {ROUTES} from '@/constants/routes'
+import {PAGES_ROUTES} from '@/constants/routes'
 import {StatusAmbiente} from '@/types/ambientes/enums'
 import {ModalConfirmacao} from '@/components/ambientes/ModalConfirmacao'
 import {PermissionButton} from '@/components/auth/PermissionButton'
@@ -35,7 +35,7 @@ export function ValidacaoDetalhePage() {
         else if (modalOpen === 'privar') await privarAmbiente(ambiente.id)
         toast.success(modalOpen === 'publicar' ? 'Ambiente publicado.' : 'Ambiente privado.')
         void queryClient.invalidateQueries({queryKey: ['ambientes', 'validacao']})
-        navigate(ROUTES.VALIDACAO)
+        navigate(PAGES_ROUTES.VALIDACAO)
     }
 
     if (isLoading) return <p>Carregando…</p>
@@ -43,7 +43,7 @@ export function ValidacaoDetalhePage() {
         return (
             <div className="space-y-4">
                 <p>Ambiente não encontrado.</p>
-                <Button variant="outline" onClick={() => navigate(ROUTES.VALIDACAO)}>
+                <Button variant="outline" onClick={() => navigate(PAGES_ROUTES.VALIDACAO)}>
                     Voltar à lista
                 </Button>
             </div>
@@ -58,7 +58,7 @@ export function ValidacaoDetalhePage() {
 
     return (
         <div className="space-y-4">
-            <Button variant="outline" onClick={() => navigate(ROUTES.VALIDACAO)}>
+            <Button variant="outline" onClick={() => navigate(PAGES_ROUTES.VALIDACAO)}>
                 Voltar
             </Button>
             <DetalheAmbiente ambiente={ambiente}/>

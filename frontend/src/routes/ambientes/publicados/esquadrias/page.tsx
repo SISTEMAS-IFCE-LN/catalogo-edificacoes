@@ -19,7 +19,7 @@ import {
     type FiltroEsquadrias,
 } from '@/lib/ambientes/esquadrias'
 import { MaterialEsquadria, TipoEsquadria } from '@/types/ambientes/enums'
-import { ROUTES } from '@/constants/routes'
+import { PAGES_ROUTES } from '@/constants/routes'
 
 const OPCAO_TODOS = 'TODOS'
 
@@ -127,7 +127,7 @@ export function EsquadriasPage() {
 
     return (
         <div className="space-y-6">
-            <Button variant="outline" onClick={() => navigate(ROUTES.PUBLICADOS)}>
+            <Button variant="outline" onClick={() => navigate(PAGES_ROUTES.PUBLICADOS)}>
                 Voltar
             </Button>
             {/* Filtros client-side por tipo e material (UC20-FE) */}

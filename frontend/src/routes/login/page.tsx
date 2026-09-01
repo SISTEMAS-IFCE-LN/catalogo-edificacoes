@@ -1,11 +1,11 @@
 import {Button} from '@/components/ui/button'
 import {Card} from '@/components/ui/card'
-import {ROUTES} from '@/constants/routes'
+import {PAGES_ROUTES} from '@/constants/routes'
 
 export function LoginPage() {
 
     function handleGoogleLogin() {
-        window.location.href = ROUTES.GOOGLE_OAUTH_ENTRY
+        window.location.href = PAGES_ROUTES.GOOGLE_OAUTH_ENTRY
     }
 
     return (

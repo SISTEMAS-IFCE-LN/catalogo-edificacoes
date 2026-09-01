@@ -7,7 +7,7 @@ vi.mock('@/lib/api/api', () => ({
   api: { get: vi.fn() },
 }))
 
-const ROTA = '/ambientes/teste'
+const ROTA = '/api/ambientes/teste'
 
 const paginadoVazio = {
   ambientes: [],
@@ -60,7 +60,7 @@ describe('fetchAmbientes', () => {
   it('chama a rota base com page/size', async () => {
     vi.mocked(api.get).mockResolvedValueOnce({ data: paginadoVazio })
     await fetchAmbientes({ page: 1, size: 20, tipoFiltro: TipoFiltro.NENHUM }, ROTA)
-    expect(api.get).toHaveBeenCalledWith(`/api${ROTA}`, expect.objectContaining({
+    expect(api.get).toHaveBeenCalledWith(`${ROTA}`, expect.objectContaining({
       params: expect.objectContaining({ page: 1, size: 20 }),
     }))
   })
@@ -68,7 +68,7 @@ describe('fetchAmbientes', () => {
   it('chama /nome quando tipoFiltro é NOME', async () => {
     vi.mocked(api.get).mockResolvedValueOnce({ data: paginadoVazio })
     await fetchAmbientes({ page: 0, size: 20, nome: 'sala', tipoFiltro: TipoFiltro.NOME }, ROTA)
-    expect(api.get).toHaveBeenCalledWith(`/api${ROTA}/nome`, expect.objectContaining({
+    expect(api.get).toHaveBeenCalledWith(`${ROTA}/nome`, expect.objectContaining({
       params: expect.objectContaining({ page: 0, size: 20, nome: 'sala' }),
     }))
   })
@@ -76,7 +76,7 @@ describe('fetchAmbientes', () => {
   it('chama /tipo quando tipoFiltro é TIPO', async () => {
     vi.mocked(api.get).mockResolvedValueOnce({ data: paginadoVazio })
     await fetchAmbientes({ page: 0, size: 20, tipo: 'SALA_AULA', tipoFiltro: TipoFiltro.TIPO }, ROTA)
-    expect(api.get).toHaveBeenCalledWith(`/api${ROTA}/tipo`, expect.objectContaining({
+    expect(api.get).toHaveBeenCalledWith(`${ROTA}/tipo`, expect.objectContaining({
       params: expect.objectContaining({ page: 0, size: 20, tipo: 'SALA_AULA' }),
     }))
   })
@@ -84,7 +84,7 @@ describe('fetchAmbientes', () => {
   it('chama /localizacao quando tipoFiltro é LOCALIZACAO', async () => {
     vi.mocked(api.get).mockResolvedValueOnce({ data: paginadoVazio })
     await fetchAmbientes({ page: 0, size: 20, bloco: 'Bloco 1', unidade: 'Sede', andar: 2, tipoFiltro: TipoFiltro.LOCALIZACAO }, ROTA)
-    expect(api.get).toHaveBeenCalledWith(`/api${ROTA}/localizacao`, expect.objectContaining({
+    expect(api.get).toHaveBeenCalledWith(`${ROTA}/localizacao`, expect.objectContaining({
       params: expect.objectContaining({ page: 0, size: 20, bloco: 'Bloco 1', unidade: 'Sede', andar: 2 }),
     }))
   })
@@ -93,7 +93,7 @@ describe('fetchAmbientes', () => {
     const controller = new AbortController()
     vi.mocked(api.get).mockResolvedValueOnce({ data: paginadoVazio })
     await fetchAmbientes({ page: 0, size: 20, tipoFiltro: TipoFiltro.NENHUM }, ROTA, controller.signal)
-    expect(api.get).toHaveBeenCalledWith(`/api${ROTA}`, expect.objectContaining({
+    expect(api.get).toHaveBeenCalledWith(`${ROTA}`, expect.objectContaining({
       signal: controller.signal,
     }))
   })
@@ -117,17 +117,17 @@ describe('fetchDetalheAmbiente', () => {
     vi.mocked(api.get).mockClear()
   })
 
-  it('chama /api{rota}/{id}', async () => {
+  it('chama {rota}/{id}', async () => {
     vi.mocked(api.get).mockResolvedValueOnce({ data: detalheValido })
     await fetchDetalheAmbiente(1, ROTA)
-    expect(api.get).toHaveBeenCalledWith(`/api${ROTA}/1`, expect.any(Object))
+    expect(api.get).toHaveBeenCalledWith(`${ROTA}/1`, expect.any(Object))
   })
 
   it('repassa signal ao axios', async () => {
     const controller = new AbortController()
     vi.mocked(api.get).mockResolvedValueOnce({ data: detalheValido })
     await fetchDetalheAmbiente(1, ROTA, controller.signal)
-    expect(api.get).toHaveBeenCalledWith(`/api${ROTA}/1`, expect.objectContaining({
+    expect(api.get).toHaveBeenCalledWith(`${ROTA}/1`, expect.objectContaining({
       signal: controller.signal,
     }))
   })
@@ -151,10 +151,10 @@ describe('fetchEsquadriasAmbientes', () => {
     vi.mocked(api.get).mockClear()
   })
 
-  it('chama /api{rota}/esquadrias com ids serializados', async () => {
+  it('chama {rota}/esquadrias com ids serializados', async () => {
     vi.mocked(api.get).mockResolvedValueOnce({ data: esquadriasVazio })
     await fetchEsquadriasAmbientes({ ids: [1, 2, 3], page: 0, size: 100 }, ROTA)
-    expect(api.get).toHaveBeenCalledWith(`/api${ROTA}/esquadrias`, expect.objectContaining({
+    expect(api.get).toHaveBeenCalledWith(`${ROTA}/esquadrias`, expect.objectContaining({
       params: expect.objectContaining({ ids: '1,2,3', page: 0, size: 100 }),
     }))
   })
@@ -163,7 +163,7 @@ describe('fetchEsquadriasAmbientes', () => {
     const controller = new AbortController()
     vi.mocked(api.get).mockResolvedValueOnce({ data: esquadriasVazio })
     await fetchEsquadriasAmbientes({ ids: [1], page: 0, size: 100 }, ROTA, controller.signal)
-    expect(api.get).toHaveBeenCalledWith(`/api${ROTA}/esquadrias`, expect.objectContaining({
+    expect(api.get).toHaveBeenCalledWith(`${ROTA}/esquadrias`, expect.objectContaining({
       params: expect.objectContaining({ ids: '1', page: 0, size: 100 }),
       signal: controller.signal,
     }))

@@ -16,22 +16,22 @@ interface QueryComponents {
     params: Record<string, string | number | null | undefined>
 }
 
-function definirQueryComponents(query: AmbientesQuery, route: string): QueryComponents {
+function definirQueryComponents(query: AmbientesQuery, apiRoute: string): QueryComponents {
     const queryComponents: QueryComponents = {
         url: '',
         params: {},
     }
     switch (query.tipoFiltro) {
         case TipoFiltro.NOME:
-            queryComponents.url = `/api${route}/nome`
+            queryComponents.url = `${apiRoute}/nome`
             queryComponents.params = {page: query.page ?? 0, size: query.size ?? 20, nome: query.nome}
             break
         case TipoFiltro.TIPO:
-            queryComponents.url = `/api${route}/tipo`
+            queryComponents.url = `${apiRoute}/tipo`
             queryComponents.params = {page: query.page ?? 0, size: query.size ?? 20, tipo: query.tipo}
             break
         case TipoFiltro.LOCALIZACAO:
-            queryComponents.url = `/api${route}/localizacao`
+            queryComponents.url = `${apiRoute}/localizacao`
             queryComponents.params = {
                 page: query.page ?? 0,
                 size: query.size ?? 20,
@@ -41,7 +41,7 @@ function definirQueryComponents(query: AmbientesQuery, route: string): QueryComp
             }
             break
         default:
-            queryComponents.url = `/api${route}`
+            queryComponents.url = `${apiRoute}`
             queryComponents.params = {page: query.page ?? 0, size: query.size ?? 20}
             break
     }
@@ -50,11 +50,11 @@ function definirQueryComponents(query: AmbientesQuery, route: string): QueryComp
 
 export async function fetchAmbientes(
     query: AmbientesQuery,
-    route: string,
+    apiRoute: string,
     signal?: AbortSignal
 ): Promise<AmbientesBasicosPaginados> {
 
-    const {url, params} = definirQueryComponents(query, route)
+    const {url, params} = definirQueryComponents(query, apiRoute)
 
     const {data} = await api.get(url, {
         params,
@@ -65,19 +65,19 @@ export async function fetchAmbientes(
 
 export async function fetchDetalheAmbiente(
     id: number,
-    route: string,
+    apiRoute: string,
     signal?: AbortSignal
 ): Promise<AmbienteDetalhe> {
-    const {data} = await api.get(`/api${route}/${id}`, {signal})
+    const {data} = await api.get(`${apiRoute}/${id}`, {signal})
     return AmbienteDetalheSchema.parse(data)
 }
 
 export async function fetchEsquadriasAmbientes(
     query: EsquadriasQuery,
-    route: string,
+    apiRoute: string,
     signal?: AbortSignal
 ): Promise<EsquadriasResponse> {
-    const {data} = await api.get<EsquadriasResponse>(`/api${route}/esquadrias`, {
+    const {data} = await api.get<EsquadriasResponse>(`${apiRoute}/esquadrias`, {
         params: {
             ids: query.ids.join(','),
             page: query.page ?? 0,

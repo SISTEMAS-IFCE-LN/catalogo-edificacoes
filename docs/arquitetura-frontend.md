@@ -90,7 +90,7 @@ O frontend **não decodifica** o JWT — apenas o recebe em `#token=...` (login 
      │             - accessToken (memória) = token
      │             - Authorization: Bearer <token> no Axios
      │             - GET /api/usuarios/me → User no Context
-     │             - navigate(ROUTES.HOME) conforme perfis
+     │             - navigate(PAGES_ROUTES.HOME) conforme perfis
      ▼
   App autenticado
 ```
@@ -275,7 +275,7 @@ frontend/
 │   │
 │   └── constants/
 │       ├── roles.ts                  # ROLE_LABELS (rótulos de perfis); Role vive em types/usuarios/user.ts
-│       └── routes.ts                 # ROTAS = { LOGIN: '/login', ... }
+│       └── routes.ts                 # PAGES_ROUTES, API_ROUTES, BACKEND_URL
 │
 ├── public/
 │   └── favicon.svg
@@ -590,8 +590,7 @@ export function clearAccessToken() { accessToken = null }
 import axios, { type AxiosError, type AxiosRequestConfig, type InternalAxiosRequestConfig } from 'axios'
 import { getAccessToken, setAccessToken, clearAccessToken } from '@/lib/security/auth'
 import { getCsrfToken, ensureCsrfToken } from '@/lib/security/csrf'
-
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? ''
+import { API_ROUTES, BACKEND_URL } from '@/constants/routes'
 
 export const api = axios.create({
   baseURL: BACKEND_URL,
@@ -614,7 +613,7 @@ export function refreshAccessToken(): Promise<string> {
     // Garante que o cookie XSRF-TOKEN existe antes do POST /auth/refresh
     // (exigido pelo authFilterChain do backend — ver seguranca.md §3)
     await ensureCsrfToken()
-    const { data } = await axios.post(`${BACKEND_URL}/auth/refresh`, {}, {
+    const { data } = await axios.post(`${BACKEND_URL}${API_ROUTES.AUTH}/refresh`, {}, {
       withCredentials: true,
       headers: { 'X-XSRF-TOKEN': getCsrfToken() },
     })
@@ -633,7 +632,7 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 
   // CSRF: apenas em POST/PUT/PATCH/DELETE para /auth/**
   const isAuthMutation =
-    config.url?.startsWith('/auth/') &&
+    config.url?.startsWith(`${API_ROUTES.AUTH}/`) &&
     ['post', 'put', 'patch', 'delete'].includes(config.method ?? '')
 
   if (isAuthMutation) {
@@ -651,7 +650,7 @@ api.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const original = error.config as RetryConfig | undefined
-    const isAuthEndpoint = original?.url?.startsWith('/auth/')
+    const isAuthEndpoint = original?.url?.startsWith(`${API_ROUTES.AUTH}/`)
 
     if (error.response?.status === 401 && !isAuthEndpoint && original && !original._retry) {
       original._retry = true
@@ -675,8 +674,7 @@ api.interceptors.response.use(
 // lib/security/csrf.ts
 
 import axios from 'axios'
-
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? ''
+import { API_ROUTES, BACKEND_URL } from '@/constants/routes'
 
 // Token CSRF mascarado em memória (ver §3.5). O raw fica no cookie HttpOnly
 // e NÃO é legível via JS; o mascarado vem do body de GET /auth/csrf-token.
@@ -691,7 +689,7 @@ export function getCsrfToken(): string | null {
 // do AuthProvider e antes de cada POST /auth/*.
 export async function ensureCsrfToken(): Promise<void> {
   if (maskedCsrfToken) return
-  const { data } = await axios.get(`${BACKEND_URL}/auth/csrf-token`, { withCredentials: true })
+  const { data } = await axios.get(`${BACKEND_URL}${API_ROUTES.AUTH}/csrf-token`, { withCredentials: true })
   maskedCsrfToken = data.token
 }
 
@@ -705,6 +703,8 @@ No callback de login (rota `/callback`), chamar `ensureCsrfToken()` antes de qua
 
 ```typescript
 // routes/callback/page.tsx
+import { PAGES_ROUTES } from '@/constants/routes'
+
 useEffect(() => {
   (async () => {
     const hash = window.location.hash.slice(1)
@@ -713,7 +713,7 @@ useEffect(() => {
     if (!token) { navigate('/login'); return }
     await ensureCsrfToken()
     await login(token)
-    navigate(ROUTES.HOME)
+    navigate(PAGES_ROUTES.HOME)
   })()
 }, [])
 ```
@@ -795,7 +795,7 @@ import { RequireRole } from '@/components/auth/RequireRole'
 import { PublicOnly } from '@/components/auth/PublicOnly'
 import { Role } from '@/types/usuarios/user'
 import { Loading } from '@/components/ui/Loading'
-import { ROUTES } from '@/constants/routes'
+import { PAGES_ROUTES } from '@/constants/routes'
 import {
   HomePage,
   LoginPage,
@@ -815,7 +815,7 @@ export const router = createBrowserRouter([
   {
     element: <PublicOnly />,
     children: [
-      { path: ROUTES.LOGIN, element: <Suspense fallback={<Loading />}><LoginPage /></Suspense> },
+      { path: PAGES_ROUTES.LOGIN, element: <Suspense fallback={<Loading />}><LoginPage /></Suspense> },
     ],
   },
   { path: '/callback', element: <Suspense fallback={<Loading />}><CallbackPage /></Suspense> },     // host do #token
@@ -986,7 +986,7 @@ export function ProtectedLayout() {
 
 O `Header` é **auth-aware** e renderiza internamente o `ProtectedNavigation` (que filtra itens por `user.perfis.some(r => item.roles?.includes(r) ?? true)` e destaca o ativo via `useLocation()`):
 
-- Anônimo: logo + botão "Login" (`ROUTES.LOGIN`), sem `ProtectedNavigation`.
+- Anônimo: logo + botão "Login" (`PAGES_ROUTES.LOGIN`), sem `ProtectedNavigation`.
 - Autenticado: logo + `ProtectedNavigation` + nome/email + botão "Sair" (`logout()` com navegação para `/login`).
 
 Como o layout envolve também a rota pública `/ambientes/publicados` (§9.2), o `ProtectedLayout` não é exclusivo de rotas autenticadas — o `Header` decide o que exibir conforme o estado de autenticação.
@@ -1200,10 +1200,10 @@ services:
 
 | Env var | Default | Descrição |
 |---|---|---|
-| `VITE_BACKEND_URL` | `''` (mesma origem — proxy Nginx) | Usada pelo Axios. Em dev, `http://localhost:8080` para contornar o proxy |
+| `VITE_BACKEND_URL` | `''` (mesma origem — proxy Nginx) | Lida apenas em `constants/routes.ts` (`BACKEND_URL`). Usada como `baseURL` do Axios e nas chamadas de auth/CSRF com axios puro. Em dev, `http://localhost:8080` para contornar o proxy |
 | `VITE_FAKE_AUTH` | `'false'` | Quando `'true'`, ativa FakeAuth (usuário mockado) para dev sem backend. **Nunca em produção** — o build de produção deve omiti-la ou setá-la `'false'` |
 
-> O entry do OAuth2 (`/oauth2/authorization/google`) é uma **constante** (`ROUTES.GOOGLE_OAUTH_ENTRY` em `constants/routes.ts`); não é env var porque nunca varia entre ambientes.
+> O entry do OAuth2 (`/oauth2/authorization/google`) é uma **constante** (`PAGES_ROUTES.GOOGLE_OAUTH_ENTRY` em `constants/routes.ts`); não é env var porque nunca varia entre ambientes.
 
 Em dev local, `vite dev` (porta 5173) chama a API diretamente em `localhost:8080`. O `vite.config.ts` pode definir `server.proxy` para reproduzir o Nginx:
 

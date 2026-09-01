@@ -5,8 +5,7 @@ import axios, {
 } from 'axios'
 import {getAccessToken, setAccessToken, clearAccessToken} from '@/lib/security/auth'
 import {getCsrfToken, ensureCsrfToken} from '@/lib/security/csrf'
-
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? ''
+import {API_ROUTES, BACKEND_URL} from "@/constants/routes";
 
 // Cria uma instância central do axios que será usada por todo frontend
 export const api = axios.create({
@@ -29,12 +28,12 @@ export function refreshAccessToken(): Promise<string> {
     refreshPromise = (async () => {
         // Garante que o token CSRF mascarado está em memória antes do POST /auth/refresh
         await ensureCsrfToken()
-        const { data } = await axios.post(
-            `${BACKEND_URL}/auth/refresh`,
+        const {data} = await axios.post(
+            `${BACKEND_URL}${API_ROUTES.AUTH}/refresh`,
             {},
             {
                 withCredentials: true,
-                headers: { 'X-XSRF-TOKEN': getCsrfToken() },
+                headers: {'X-XSRF-TOKEN': getCsrfToken()},
             },
         )
         const newToken: string = data.accessToken
@@ -54,7 +53,7 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
     }
 
     const isAuthMutation =
-        config.url?.startsWith('/auth/') &&
+        config.url?.startsWith(`${API_ROUTES.AUTH}/`) &&
         ['post', 'put', 'patch', 'delete'].includes(config.method ?? '')
 
     if (isAuthMutation) {
@@ -75,7 +74,7 @@ api.interceptors.response.use(
     (response) => response,
     async (error: AxiosError) => {
         const original = error.config as RetryConfig | undefined
-        const isAuthEndpoint = original?.url?.startsWith('/auth/')
+        const isAuthEndpoint = original?.url?.startsWith(`${API_ROUTES.AUTH}/`)
         if (
             error.response?.status === 401 &&
             !isAuthEndpoint &&

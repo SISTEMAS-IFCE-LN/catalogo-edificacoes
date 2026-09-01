@@ -5,7 +5,7 @@ import {RequireAuth} from '@/components/auth/RequireAuth'
 import {RequireRole} from '@/components/auth/RequireRole'
 import {Role} from '@/types/usuarios/user'
 import {Loading} from '@/components/ui/Loading'
-import {ROUTES} from '@/constants/routes'
+import {PAGES_ROUTES} from '@/constants/routes'
 import {
     HomePage,
     LoginPage,
@@ -23,7 +23,7 @@ import {
 export const router = createBrowserRouter([
     {
         element: <PublicOnly/>,
-        children: [{path: ROUTES.LOGIN, element: <Suspense fallback={<Loading/>}><LoginPage/></Suspense>}],
+        children: [{path: PAGES_ROUTES.LOGIN, element: <Suspense fallback={<Loading/>}><LoginPage/></Suspense>}],
     },
     {path: '/callback', element: <Suspense fallback={<Loading/>}><CallbackPage/></Suspense>},
     {path: '/unauthorized', element: <Suspense fallback={<Loading/>}><UnauthorizedPage/></Suspense>},

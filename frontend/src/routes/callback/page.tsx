@@ -1,7 +1,7 @@
 import {useEffect, useRef} from 'react'
 import {useNavigate} from 'react-router'
 import {ensureCsrfToken} from '@/lib/security/csrf'
-import {ROUTES} from '@/constants/routes'
+import {PAGES_ROUTES} from '@/constants/routes'
 import {toast} from 'sonner'
 import {useAuth} from "@/hooks/useAuth"
 
@@ -18,7 +18,7 @@ export function CallbackPage() {
 
         ;(async () => {
             if (FAKE_AUTH) {
-                navigate(ROUTES.HOME, {replace: true})
+                navigate(PAGES_ROUTES.HOME, {replace: true})
                 return
             }
 
@@ -34,18 +34,18 @@ export function CallbackPage() {
 
             if (!token) {
                 toast.error('Token não recebido. Tente novamente.')
-                navigate(ROUTES.LOGIN, {replace: true})
+                navigate(PAGES_ROUTES.LOGIN, {replace: true})
                 return
             }
 
             try {
                 await ensureCsrfToken()
                 await login(token)
-                navigate(ROUTES.HOME, {replace: true})
+                navigate(PAGES_ROUTES.HOME, {replace: true})
             } catch {
                 console.error('Falha no callback OAuth2')
                 toast.error('Falha ao autenticar. Tente novamente.')
-                navigate(ROUTES.LOGIN, {replace: true})
+                navigate(PAGES_ROUTES.LOGIN, {replace: true})
             }
         })()
     }, [login, navigate])

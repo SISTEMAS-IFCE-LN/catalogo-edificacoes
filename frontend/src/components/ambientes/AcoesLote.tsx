@@ -9,7 +9,7 @@ import {
     SelectValue,
 } from '@/components/ui/select'
 import { useIsMobile } from '@/hooks/useIsMobile'
-import { ROUTES } from '@/constants/routes'
+import { PAGES_ROUTES } from '@/constants/routes'
 
 const OPCAO_NENHUMA = 'NENHUMA'
 
@@ -44,7 +44,7 @@ export function AcoesLote({ selectedIds, onClear, acoes: acoesCustomizadas }: Ac
         {
             value: 'Detalhar Esquadrias',
             onRun: (ids) => {
-                navigate(`${ROUTES.PUBLICADOS}/esquadrias?ids=${ids.join(',')}`)
+                navigate(`${PAGES_ROUTES.PUBLICADOS}/esquadrias?ids=${ids.join(',')}`)
             },
         },
     ]

@@ -1,6 +1,6 @@
 import {Link} from 'react-router'
 import {buttonVariants} from '@/components/ui/button'
-import {ROUTES} from '@/constants/routes'
+import {PAGES_ROUTES} from '@/constants/routes'
 
 export function UnauthorizedPage() {
     return (
@@ -9,7 +9,7 @@ export function UnauthorizedPage() {
             <p className="text-muted-foreground">
                 Você não tem permissão para acessar esta página.
             </p>
-            <Link to={ROUTES.HOME} className={buttonVariants({variant: 'default'})}>
+            <Link to={PAGES_ROUTES.HOME} className={buttonVariants({variant: 'default'})}>
                 Ir para a página inicial
             </Link>
         </div>

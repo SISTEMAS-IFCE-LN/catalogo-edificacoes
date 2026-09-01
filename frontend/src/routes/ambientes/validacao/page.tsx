@@ -8,7 +8,7 @@ import {ErrorLista} from '@/components/ambientes/ErrorLista'
 import {PaginacaoFooter} from '@/components/ambientes/PaginacaoFooter'
 import {toast} from 'sonner'
 import {useAmbientesSearchParams} from '@/hooks/useAmbientesSearchParams'
-import {ROUTES} from '@/constants/routes'
+import {PAGES_ROUTES} from '@/constants/routes'
 
 export function ValidacaoPage() {
     const {
@@ -66,7 +66,7 @@ export function ValidacaoPage() {
                 <>
                     <TabelaPadrao
                         itens={data.ambientes}
-                        detalheBasePath={ROUTES.VALIDACAO}
+                        detalheBasePath={PAGES_ROUTES.VALIDACAO}
                     />
                     <PaginacaoFooter
                         page={page}

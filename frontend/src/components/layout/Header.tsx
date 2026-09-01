@@ -2,7 +2,7 @@ import {Link} from 'react-router'
 import {ProtectedNavigation} from '@/components/layout/ProtectedNavigation'
 import {useAuth} from '@/hooks/useAuth'
 import {Button, buttonVariants} from '@/components/ui/button'
-import {ROUTES} from '@/constants/routes'
+import {PAGES_ROUTES} from '@/constants/routes'
 import {cn} from '@/lib/utils/shadcn-helper'
 
 export function Header() {
@@ -28,7 +28,7 @@ export function Header() {
                             </>
                         ) : (
                             <Link
-                                to={ROUTES.LOGIN}
+                                to={PAGES_ROUTES.LOGIN}
                                 className={cn(buttonVariants({variant: 'default', size: 'sm'}))}
                             >
                                 Login

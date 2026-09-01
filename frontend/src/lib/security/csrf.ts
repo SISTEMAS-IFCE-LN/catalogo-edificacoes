@@ -1,6 +1,5 @@
 import axios from 'axios'
-
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL ?? ''
+import {API_ROUTES, BACKEND_URL} from "@/constants/routes";
 
 // Ver docs/seguranca.md §4.2 e docs/arquitetura-frontend.md §3.5.
 let maskedCsrfToken: string | null = null
@@ -15,7 +14,7 @@ export function getCsrfToken(): string | null {
 // cada POST /auth/*.
 export async function ensureCsrfToken(): Promise<void> {
     if (maskedCsrfToken) return
-    const { data } = await axios.get(`${BACKEND_URL}/auth/csrf-token`, { withCredentials: true })
+    const { data } = await axios.get(`${BACKEND_URL}${API_ROUTES.AUTH}/csrf-token`, { withCredentials: true })
     maskedCsrfToken = data.token
 }
 
