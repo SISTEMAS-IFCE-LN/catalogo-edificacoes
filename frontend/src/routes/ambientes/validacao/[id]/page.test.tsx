@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { MemoryRouter, Routes, Route } from 'react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ValidacaoDetalhePage } from './page'
-import type { AmbienteDetalhe } from '@/types/ambientes/ambiente'
+import type { AmbienteDetalhe } from '@/types/ambientes/response'
 import type { User } from '@/types/usuarios/user'
 import { Role } from '@/types/usuarios/user'
 import {

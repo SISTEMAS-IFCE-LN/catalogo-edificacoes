@@ -7,7 +7,7 @@ import {
     TableRow,
 } from '@/components/ui/table'
 import { Checkbox } from '@/components/ui/checkbox'
-import type { AmbienteBasico } from '@/types/ambientes/ambiente'
+import type { AmbienteBasico } from '@/types/ambientes/response'
 import { Link } from 'react-router'
 
 interface TabelaPadraoProps {

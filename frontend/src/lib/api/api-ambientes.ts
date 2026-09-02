@@ -3,11 +3,9 @@ import {
     AmbienteDetalheSchema,
     type AmbientesBasicosPaginados,
     AmbientesBasicosPaginadosSchema,
-    type AmbientesQuery,
-    type EsquadriasQuery,
-    type EsquadriasResponse,
-    EsquadriasResponseSchema
-} from '@/types/ambientes/ambiente'
+} from '@/types/ambientes/response'
+import type {AmbientesQuery, EsquadriasQuery} from '@/types/ambientes/query'
+import {type EsquadriasResponse, EsquadriasResponseSchema} from '@/types/ambientes/esquadrias'
 import {TipoFiltro} from '@/types/ambientes/enums'
 import {api} from '@/lib/api/api'
 

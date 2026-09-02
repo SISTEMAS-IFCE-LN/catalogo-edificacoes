@@ -6,7 +6,7 @@ import {
     TableHeader,
     TableRow,
 } from '@/components/ui/table'
-import type {AmbienteDetalhe} from '@/types/ambientes/ambiente'
+import type {AmbienteDetalhe} from '@/types/ambientes/response'
 
 const DECIMAIS_MEDIDA = 2
 

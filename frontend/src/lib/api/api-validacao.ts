@@ -1,4 +1,5 @@
-import {type AmbienteDetalhe, type AmbientesBasicosPaginados, type AmbientesQuery,} from '@/types/ambientes/ambiente'
+import {type AmbienteDetalhe, type AmbientesBasicosPaginados} from '@/types/ambientes/response'
+import type {AmbientesQuery} from '@/types/ambientes/query'
 import {API_ROUTES} from '@/constants/routes'
 import {fetchAmbientes, fetchDetalheAmbiente} from '@/lib/api/api-ambientes'
 import {api} from '@/lib/api/api'

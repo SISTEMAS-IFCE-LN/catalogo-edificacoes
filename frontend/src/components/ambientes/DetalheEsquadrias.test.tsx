@@ -1,7 +1,7 @@
 import { render, screen, within } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
 import { DetalheEsquadrias } from './DetalheEsquadrias'
-import type { EsquadriasResponse } from '@/types/ambientes/ambiente'
+import type { EsquadriasResponse } from '@/types/ambientes/esquadrias'
 import { Bloco, MaterialEsquadria, TipoEsquadria, Unidade } from '@/types/ambientes/enums'
 
 const mockResponse: EsquadriasResponse = {

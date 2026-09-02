@@ -265,13 +265,18 @@ frontend/
 │   │   └── useUsuariosSearchParams.ts # adaptador fino: usePaginationParams + nome/email + tipoFiltro
 │   │
 │   ├── types/
+│   │   ├── paginacao.ts              # DadosPaginacaoSchema + DadosPaginacao (compartilhado entre domínios)
 │   │   ├── usuarios/
 │   │   │   ├── user.ts               # Role, User, AuthState, StatusAcao
 │   │   │   └── filtros.ts            # TipoFiltroUsuarios, FiltrosUsuarios, FILTROS_USUARIOS_VAZIOS
 │   │   └── ambientes/
-│   │       ├── ambiente.ts           # schemas/tipos de resposta (AmbienteBasico, AmbienteDetalhe, EsquadriasResponse…)
+│   │       ├── enums.ts              # enums espelhados do backend + transforms de resposta de enum
 │   │       ├── filtros.ts            # Filtros, FILTROS_VAZIOS, UrlFiltrosSchema
-│   │       └── enums.ts              # enums espelhados do backend (TipoAmbiente, Bloco, Unidade, TipoFiltro…)
+│   │       ├── localizacao.ts        # LocalizacaoSchema (resposta; usado por response/esquadrias)
+│   │       ├── query.ts              # AmbientesQuery, EsquadriasQuery
+│   │       ├── request.ts            # schemas de request (AmbienteReq…) + keysOf/nomeTecnicoDeRotulo
+│   │       ├── response.ts           # schemas/tipos de resposta de ambiente (AmbienteBasico, AmbienteDetalhe…)
+│   │       └── esquadrias.ts         # schemas/tipos de resposta de esquadrias (Esquadria, EsquadriasResponse…)
 │   │
 │   └── constants/
 │       ├── roles.ts                  # ROLE_LABELS (rótulos de perfis); Role vive em types/usuarios/user.ts
@@ -1030,8 +1035,8 @@ Convenções:
 
 import { useForm, FormProvider } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ambienteSchema } from '@/schemas/ambiente'
-import type { AmbienteInput } from '@/schemas/ambiente'
+import { ambienteSchema } from '@/types/ambientes/request'
+import type { AmbienteInput } from '@/types/ambientes/request'
 
 export default function NovoAmbientePage() {
   const form = useForm<AmbienteInput>({
@@ -1045,13 +1050,18 @@ export default function NovoAmbientePage() {
 ```
 
 ```typescript
-// schemas/ambiente.ts
+// types/ambientes/request.ts
 
 import { z } from 'zod'
+import { TipoEsquadria, TipoGeometria } from '@/types/ambientes/enums'
+
+// As chaves dos enums TS espelham os NOMES TÉCNICOS dos enums Kotlin.
+const keysOf = <T extends Record<string, string>>(e: T) =>
+  Object.keys(e) as [(keyof T & string), ...(keyof T & string)[]]
 
 // Espelha GeometriaAmbienteReq do backend
 export const geometriaSchema = z.object({
-  tipo: z.enum(['RETANGULAR', 'CIRCULAR', 'TRAPEZOIDAL']),
+  tipo: z.enum(keysOf(TipoGeometria)),   // 'RETANGULAR', 'TRIANGULAR'
   base: z.number().positive(),
   altura: z.number().positive(),
   repeticao: z.number().int().positive().default(1),
@@ -1066,7 +1076,7 @@ export const geometriaEsquadriaSchema = z.object({
 
 // Espelha EsquadriaReq do backend
 export const esquadriaSchema = z.object({
-  tipo: z.enum(['PORTA', 'JANELA']),
+  tipo: z.enum(keysOf(TipoEsquadria)),   // 'PORTA', 'JANELA', 'COBOGO', 'VAO_ABERTO', 'ESQUADRIA_OUTRO_AMBIENTE'
   geometria: geometriaEsquadriaSchema,
   material: z.string().min(1),
   alturaPeitoril: z.number().min(0).default(0),

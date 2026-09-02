@@ -3,11 +3,16 @@ import {
     type AmbienteDetalhe,
     AmbienteDetalheSchema,
     type AmbientesBasicosPaginados,
-    type AmbientesQuery,
-} from '@/types/ambientes/ambiente'
+} from '@/types/ambientes/response'
+import type {AmbientesQuery} from '@/types/ambientes/query'
 import {API_ROUTES} from '@/constants/routes'
 import {fetchAmbientes, fetchDetalheAmbiente} from '@/lib/api/api-ambientes'
-import {type AmbienteInput, type EsquadriaInput, type GeometriaInput, type LocalizacaoInput,} from '@/schemas/ambiente'
+import {
+    type AmbienteInput,
+    type EsquadriaInput,
+    type GeometriaInput,
+    type LocalizacaoInput,
+} from '@/types/ambientes/request'
 
 export function fetchNaoPublicados(
     query: AmbientesQuery,

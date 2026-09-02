@@ -3,7 +3,7 @@ import type {
     Esquadria,
     EsquadriaTipoMaterial,
     EsquadriasResponse,
-} from '@/types/ambientes/ambiente'
+} from '@/types/ambientes/esquadrias'
 
 export interface FiltroEsquadrias {
     tipo?: string

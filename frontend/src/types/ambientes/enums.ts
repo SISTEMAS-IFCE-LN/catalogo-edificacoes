@@ -1,3 +1,5 @@
+import {z} from 'zod'
+
 // Enums espelhados do backend (Kotlin)
 // Fonte: apis/ambientes-internos-module/src/main/kotlin/br/edu/ifce/ambientes_internos/model/domain/entity/ambientes/enums/
 
@@ -95,3 +97,58 @@ export enum StatusAmbiente {
     NAO_PUBLICADO = "Não Publicado",
     AGUARDANDO_VALIDACAO = "Aguardando Validação"
 }
+
+// Os DTOs de detalhe retornam os nomes dos enums Kotlin (por exemplo,
+// `RETANGULAR`), enquanto a lista retorna os rótulos (`Retangular`).
+// Normalizamos ambos para os valores exibidos pelo frontend.
+export const TipoGeometriaResponseSchema = z.union([
+    z.enum(TipoGeometria),
+    z.enum(['RETANGULAR', 'TRIANGULAR']),
+]).transform((value) => (
+    value in TipoGeometria
+        ? TipoGeometria[value as keyof typeof TipoGeometria]
+        : value
+))
+
+export const TipoEsquadriaResponseSchema = z.union([
+    z.enum(TipoEsquadria),
+    z.enum(['PORTA', 'JANELA', 'COBOGO', 'VAO_ABERTO', 'ESQUADRIA_OUTRO_AMBIENTE']),
+]).transform((value) => (
+    value in TipoEsquadria
+        ? TipoEsquadria[value as keyof typeof TipoEsquadria]
+        : value
+))
+
+export const MaterialEsquadriaResponseSchema = z.union([
+    z.enum(MaterialEsquadria),
+    z.enum([
+        'ALUMINIO',
+        'ALUMINIO_VIDRO',
+        'ALUMINIO_PVC',
+        'FERRO',
+        'FERRO_VIDRO',
+        'VIDRO',
+        'PVC',
+        'MADEIRA_MACICA',
+        'MADEIRA_VIDRO',
+        'MADEIRA_VENEZIANA',
+        'MADEIRA_FICHA',
+        'MADEIRA_PARANA',
+        'PRE_MOLDADO',
+        'NAO_SE_APLICA',
+        'OUTRO',
+    ]),
+]).transform((value) => (
+    value in MaterialEsquadria
+        ? MaterialEsquadria[value as keyof typeof MaterialEsquadria]
+        : value
+))
+
+export const StatusAmbienteResponseSchema = z.union([
+    z.enum(StatusAmbiente),
+    z.enum(['PUBLICADO', 'NAO_PUBLICADO', 'AGUARDANDO_VALIDACAO']),
+]).transform((value) => (
+    value in StatusAmbiente
+        ? StatusAmbiente[value as keyof typeof StatusAmbiente]
+        : value
+))

@@ -2,7 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import { MemoryRouter } from 'react-router'
 import { TabelaPadrao } from './TabelaPadrao'
-import type { AmbienteBasico } from '@/types/ambientes/ambiente'
+import type { AmbienteBasico } from '@/types/ambientes/response'
 import { Bloco, TipoAmbiente, Unidade } from '@/types/ambientes/enums'
 
 const mockItens: AmbienteBasico[] = [

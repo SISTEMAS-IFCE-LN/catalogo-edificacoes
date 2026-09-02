@@ -1,7 +1,7 @@
 import { render, screen, within } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
 import { DetalheAmbiente } from './DetalheAmbiente'
-import type { AmbienteDetalhe } from '@/types/ambientes/ambiente'
+import type { AmbienteDetalhe } from '@/types/ambientes/response'
 import {
   TipoAmbiente,
   Bloco,

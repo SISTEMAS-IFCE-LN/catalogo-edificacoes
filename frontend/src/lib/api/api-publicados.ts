@@ -1,10 +1,9 @@
 import {
     type AmbienteDetalhe,
     type AmbientesBasicosPaginados,
-    type AmbientesQuery,
-    type EsquadriasQuery,
-    type EsquadriasResponse,
-} from '@/types/ambientes/ambiente'
+} from '@/types/ambientes/response'
+import type {AmbientesQuery, EsquadriasQuery} from '@/types/ambientes/query'
+import type {EsquadriasResponse} from '@/types/ambientes/esquadrias'
 import {API_ROUTES} from '@/constants/routes'
 import {fetchAmbientes, fetchDetalheAmbiente, fetchEsquadriasAmbientes} from '@/lib/api/api-ambientes'
 

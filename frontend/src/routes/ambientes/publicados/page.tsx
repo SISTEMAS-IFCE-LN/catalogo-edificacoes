@@ -1,7 +1,7 @@
 import {useQuery} from '@tanstack/react-query'
 import {useEffect, useMemo} from 'react'
 import {fetchPublicados} from '@/lib/api/api-publicados'
-import type {AmbientesQuery} from '@/types/ambientes/ambiente'
+import type {AmbientesQuery} from '@/types/ambientes/query'
 import {PesquisaBarAmbientes} from '@/components/ambientes/PesquisaBarAmbientes'
 import {TabelaPadrao} from '@/components/ambientes/TabelaPadrao'
 import {AcoesLote} from '@/components/ambientes/AcoesLote'

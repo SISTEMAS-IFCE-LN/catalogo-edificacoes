@@ -7,7 +7,7 @@ import {
     resumirPorTipoMaterial,
     temEsquadriasVisiveis,
 } from './esquadrias'
-import type { EsquadriasResponse } from '@/types/ambientes/ambiente'
+import type { EsquadriasResponse } from '@/types/ambientes/esquadrias'
 import { Bloco, MaterialEsquadria, TipoEsquadria, Unidade } from '@/types/ambientes/enums'
 
 const dadosPaginacao = {

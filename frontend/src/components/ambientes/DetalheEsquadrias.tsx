@@ -10,7 +10,7 @@ import type {
     AmbienteEsquadrias,
     EsquadriaTipoMaterial,
     EsquadriasResponse,
-} from '@/types/ambientes/ambiente'
+} from '@/types/ambientes/esquadrias'
 
 const DECIMAIS_MEDIDA = 2
 

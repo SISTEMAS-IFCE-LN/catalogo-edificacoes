@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { MemoryRouter } from 'react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ValidacaoPage } from './page'
-import type { AmbientesBasicosPaginados } from '@/types/ambientes/ambiente'
+import type { AmbientesBasicosPaginados } from '@/types/ambientes/response'
 import { Bloco, TipoAmbiente, TipoFiltro, Unidade } from '@/types/ambientes/enums'
 import { toast } from 'sonner'
 

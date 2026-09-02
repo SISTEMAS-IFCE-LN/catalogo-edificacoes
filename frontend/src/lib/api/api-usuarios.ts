@@ -1,17 +1,11 @@
 import {api} from '@/lib/api/api'
 import type {Role, User} from '@/types/usuarios/user'
+import type {DadosPaginacao} from '@/types/paginacao'
 import {API_ROUTES} from '@/constants/routes'
 
 export interface UsuariosPaginados {
     usuarios: User[]
-    dadosPaginacao: {
-        totalElements: number
-        totalPages: number
-        currentPage: number
-        pageSize: number
-        hasNext: boolean
-        hasPrevious: boolean
-    }
+    dadosPaginacao: DadosPaginacao
 }
 
 export async function fetchUsuarios(page = 0, size = 20, signal?: AbortSignal): Promise<UsuariosPaginados> {

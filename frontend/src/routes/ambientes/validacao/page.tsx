@@ -1,7 +1,7 @@
 import {useQuery} from '@tanstack/react-query'
 import {useEffect} from 'react'
 import {fetchValidacao} from '@/lib/api/api-validacao'
-import type {AmbientesQuery} from '@/types/ambientes/ambiente'
+import type {AmbientesQuery} from '@/types/ambientes/query'
 import {PesquisaBarAmbientes} from '@/components/ambientes/PesquisaBarAmbientes'
 import {TabelaPadrao} from '@/components/ambientes/TabelaPadrao'
 import {ErrorLista} from '@/components/ambientes/ErrorLista'
