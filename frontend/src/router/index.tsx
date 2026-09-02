@@ -15,6 +15,8 @@ import {
     PublicadosPage,
     PublicadoDetalhePage,
     EsquadriasPage,
+    NaoPublicadosPage,
+    NovoAmbientePage,
     ValidacaoPage,
     ValidacaoDetalhePage,
     UsuariosPage,
@@ -61,7 +63,10 @@ export const router = createBrowserRouter([
                     {
                         path: '/ambientes/nao-publicados',
                         element: <RequireRole roles={[Role.GESTOR_SISTEMA]}/>,
-                        children: [{index: true, element: <Suspense fallback={<Loading/>}><HomePage/></Suspense>}],
+                        children: [
+                            {index: true, element: <Suspense fallback={<Loading/>}><NaoPublicadosPage/></Suspense>},
+                            {path: 'novo', element: <Suspense fallback={<Loading/>}><NovoAmbientePage/></Suspense>},
+                        ],
                     },
                     // Administrador (UC22-UC26-FE)
                     {

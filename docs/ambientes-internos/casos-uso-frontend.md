@@ -129,11 +129,13 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
     2. Geometrias: lista editável com `tipo`, `repetição`, `comprimento` e `largura` ou `base` e `altura`.
     3. Pés-direitos: lista editável com alturas.
     4. Esquadrias: lista com `tipo`, `repetição`, `largura`, `altura`, `material`, `peitoril`, `info adicional`.
-    5. Exibir erros inline para cada etapa conforme validações.
-    6. Botão `Salvar` para submeter o formulário completo. (requisição POST para `/api/ambientes/nao-publicados`).
-    7. Desabilitar botão `Salvar` e mostrar estado de loading durante a submissão.
+    5. Informação Adicional: campo de texto opcional (`informacaoAdicional` do ambiente), máx. 255 caracteres. Pode ser deixado vazio e preenchido depois via UC14-FE (`ModalInfoAdicional` no detalhe).
+    6. Exibir erros inline para cada etapa conforme validações.
+    7. Botão `Salvar` para submeter o formulário completo. (requisição POST para `/api/ambientes/nao-publicados`).
+    8. Desabilitar botão `Salvar` e mostrar estado de loading durante a submissão.
 - Validações client-side:
   - Campos obrigatórios (dados básicos, pelo menos uma geometria, pelo menos uma porta nas esquadrias).
+  - Informação adicional do ambiente: opcional; quando preenchida, máx. 255 caracteres (espelha `@Size(max = 255)` de `AmbienteReq.kt`).
   - Regras RN-1.6 / RN-1.7 aplicadas no cliente quando possível.
 - Estados e erros:
   - Durante submissão, mostrar loading e desabilitar botões.

@@ -1374,6 +1374,7 @@ Itens `roles === null` são considerados visíveis a qualquer autenticado (ex.: 
 - Botões `Voltar`/`Próximo`/`Salvar`/`Cancelar` em `w-full md:w-auto`.
 - Campos numéricos com `inputMode="numeric"` ou `"decimal"` (abre teclado correto no mobile).
 - Listas editáveis (geometrias, pés-direitos, esquadrias): cada item é um card empilhado, com botão "remover" (`lucide-react` `Trash2` ícone) à direita; novos itens adicionados ao final com animação ease-in.
+- 5ª etapa "Informação Adicional" (opcional): `<Textarea>` com `maxLength=255` e contador de caracteres; o campo pode ser deixado vazio (o `trigger()` da etapa passa) e preenchido depois via UC14-FE.
 - Validação por etapa (Zod schema recortado) para evitar avançar com dados inválidos — UX melhor que validar apenas ao final.
 
 ### 15.9. `<ResponsiveModal>` — modais UC07–UC13
