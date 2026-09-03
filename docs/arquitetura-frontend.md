@@ -1389,7 +1389,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import {
   Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter,
 } from '@/components/ui/drawer'
-import { useIsMobile } from '@/hooks/use-mobile'
+import { useIsMobile } from '@/hooks/useIsMobile'
 import type { DialogProps } from '@radix-ui/react-dialog'
 
 interface Props extends DialogProps {
@@ -1461,7 +1461,7 @@ Padrão oficial documentado em https://ui.shadcn.com/docs/components/drawer#resp
 
 ### 15.13. Sem novas deps npm
 
-Todas as peças usadas pertencem ao catálogo do shadcn: `avatar`, `sheet`, `drawer`, `dropdown-menu`, `accordion`, `dialog`, `badge`, `table`, `button`. O hook `useIsMobile` é fornecido automaticamente pela CLI do shadcn em `src/hooks/use-mobile.ts`.
+Todas as peças usadas pertencem ao catálogo do shadcn: `avatar`, `sheet`, `drawer`, `dropdown-menu`, `accordion`, `dialog`, `badge`, `table`, `button`. O hook `useIsMobile` é fornecido automaticamente pela CLI do shadcn em `src/hooks/useIsMobile.ts`.
 
 ---
 
