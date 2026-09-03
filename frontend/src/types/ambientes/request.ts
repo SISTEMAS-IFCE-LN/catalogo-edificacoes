@@ -32,6 +32,15 @@ export const localizacaoSchema = z.object({
 })
 export type LocalizacaoInput = z.infer<typeof localizacaoSchema>
 
+// Espelha AmbienteNomeLocalizacaoReq do backend (duplicação UC17 — nome com
+// @NotBlank/@Size(max=50) + localizacao). O usuário define nome e localização
+// do novo ambiente; a duplicidade (RN-1.7) é validada pelo backend.
+export const duplicacaoSchema = z.object({
+    nome: z.string().trim().min(1, 'Nome obrigatório.').max(50, 'Máximo 50 caracteres.'),
+    localizacao: localizacaoSchema,
+})
+export type DuplicacaoInput = z.infer<typeof duplicacaoSchema>
+
 // Espelha GeometriaAmbienteReq do backend
 export const geometriaSchema = z.object({
     tipo: z.enum(keysOf(TipoGeometria)),   // 'RETANGULAR', 'TRIANGULAR'
