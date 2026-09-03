@@ -233,7 +233,11 @@ frontend/
 │   │   │   ├── UserMenu.tsx           # avatar → Sheet (mobile) / DropdownMenu (desktop)
 │   │   │   └── Footer.tsx
 │   │   ├── ambientes/                # TabelaPadrao, DetalheAmbiente, FormAmbiente, PesquisaBarAmbientes,
-│   │   │                              # ModalConfirmacao, AcoesLote, PaginacaoFooter, ErrorLista, modais UC07–UC18
+│   │   │                              # ModalFormulario (shell dos modais UC07–UC17), LocalizacaoFields,
+│   │   │                              # CampoEnum, CampoNumerico, BotaoRemover, ErroCampo,
+│   │   │                              # ModalGeometrias, ModalPesDireitos, ModalEsquadrias (genéricos de lista),
+│   │   │                              # ModalEditarDadosBasicos, ModalInfoAdicional, ModalAlterarTipo,
+│   │   │                              # ModalDuplicar, ModalConfirmacao, AcoesLote, PaginacaoFooter, ErrorLista
 │   │   ├── usuarios/                 # TabelaUsuarios, ModalEditarPerfis, ModalConfirmacaoStatusUsuario
 │   │   └── common/
 │   │       └── ResponsiveModal.tsx   # wrapper: Dialog (desktop) | Drawer (mobile)
@@ -251,7 +255,8 @@ frontend/
 │   │   │   ├── api-validacao.ts      # UC01–UC03-FE (fetchValidacao, fetchDetalheValidacao, publicarAmbiente, privarAmbiente)
 │   │   │   └── api-naopublicados.ts  # UC05–UC18-FE
 │   │   ├── ambientes/
-│   │   │   └── esquadrias.ts         # filtro/resumo de esquadrias (lógica pura)
+│   │   │   ├── esquadrias.ts         # filtro/resumo de esquadrias (lógica pura)
+│   │   │   └── mappers.ts            # conversão resposta→request (rótulos → nomes técnicos) UC07–UC17
 │   │   └── shadcn-helper.ts                  # cn(), formatadores, helpers
 │   │
 │   ├── hooks/
@@ -1377,7 +1382,7 @@ Itens `roles === null` são considerados visíveis a qualquer autenticado (ex.: 
 - 5ª etapa "Informação Adicional" (opcional): `<Textarea>` com `maxLength=255` e contador de caracteres; o campo pode ser deixado vazio (o `trigger()` da etapa passa) e preenchido depois via UC14-FE.
 - Validação por etapa (Zod schema recortado) para evitar avançar com dados inválidos — UX melhor que validar apenas ao final.
 
-### 15.9. `<ResponsiveModal>` — modais UC07–UC13
+### 15.9. `<ResponsiveModal>` — modais de edição UC07–UC17
 
 Wrapper que renderiza `Dialog` (desktop) ou `Drawer` (mobile) conforme viewport:
 
@@ -1434,9 +1439,11 @@ export function ResponsiveModal({ title, description, children, footer, ...rest 
 
 Padrão oficial documentado em https://ui.shadcn.com/docs/components/drawer#responsive.
 
+Os modais de edição são construídos sobre `ModalFormulario` (shell: `Dialog` + React Hook Form + `zodResolver` + `useAsyncAction`), com **montagem condicional** na página de detalhe — os `defaultValues` são relidos a cada abertura, sem efeito de reset (regra `react-hooks/set-state-in-effect`). O genérico `V` do shell é o **output** do schema Zod: `handleSubmit` entrega os valores parseados/transformados (trim, defaults) ao `onSubmit`, cujo retorno chega ao `onSalvou` (`R = number` em UC16/UC17 para navegar ao novo registro; `void` nos demais). Os genéricos de lista (`ModalGeometrias`, `ModalPesDireitos`, `ModalEsquadrias`) recebem `modo`, `titulo`, `inicial` e `onSubmit` da página por UC; as conversões rótulo → nome técnico ficam centralizadas em `lib/ambientes/mappers.ts`. Campos numéricos usam `step="0.01"` nas medidas decimais (espelha `@Digits(integer=7, fraction=2)`) — sem o step, a constraint validation nativa do browser bloqueia o submit antes da validação Zod.
+
 **Aplicação**:
 - `ModalConfirmacao`, `ModalEditarPerfis`, `ModalConfirmacaoStatusUsuario`: mantêm `Dialog` em todos viewports — curtos, sem listas editáveis.
-- Modais UC07–UC13 (inclusão/edição de geometrias, pés-direitos, esquadrias, informação adicional): usam `<ResponsiveModal>` — são listas editáveis que em mobile se beneficiam do bottom-sheet tactile.
+- Modais UC07–UC14 e UC17 (dados básicos, inclusão/edição de geometrias, pés-direitos, esquadrias, informação adicional, duplicação): usam `<ResponsiveModal>` **via o shell `ModalFormulario`** — a troca é feita em um único ponto. `ModalAlterarTipo` (UC16) usa `<ResponsiveModal>` diretamente (envolve `FormAmbiente`).
 - Em listas longas dentro de `Drawer`, configurar `snapPoints` para limitar altura e permitir drag-to-expand.
 
 ### 15.10. `PesquisaBarAmbientes`

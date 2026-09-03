@@ -6,13 +6,30 @@ import {NaoPublicadoDetalhePage} from './page'
 import type {AmbienteDetalhe} from '@/types/ambientes/response'
 import type {User} from '@/types/usuarios/user'
 import {Role} from '@/types/usuarios/user'
-import {Bloco, StatusAmbiente, TipoAmbiente, Unidade} from '@/types/ambientes/enums'
+import {
+    Bloco,
+    MaterialEsquadria,
+    StatusAmbiente,
+    TipoAmbiente,
+    TipoEsquadria,
+    TipoGeometria,
+    Unidade,
+} from '@/types/ambientes/enums'
 
 vi.mock('@/lib/api/api-naopublicados', () => ({
     fetchAmbienteNaoPublicado: vi.fn(),
     deletarAmbientes: vi.fn(),
     enviarParaValidacao: vi.fn(),
     duplicarAmbiente: vi.fn(),
+    atualizarDadosBasicos: vi.fn(),
+    incluirGeometrias: vi.fn(),
+    atualizarGeometrias: vi.fn(),
+    incluirPesDireitos: vi.fn(),
+    atualizarPesDireitos: vi.fn(),
+    incluirEsquadrias: vi.fn(),
+    atualizarEsquadrias: vi.fn(),
+    atualizarInfoAdicional: vi.fn(),
+    alterarTipo: vi.fn(),
 }))
 
 vi.mock('sonner', () => ({
@@ -24,10 +41,17 @@ vi.mock('@/hooks/useAuth', () => ({
 }))
 
 import {
+    alterarTipo,
+    atualizarDadosBasicos,
+    atualizarEsquadrias,
+    atualizarGeometrias,
+    atualizarInfoAdicional,
+    atualizarPesDireitos,
     deletarAmbientes,
     duplicarAmbiente,
     enviarParaValidacao,
     fetchAmbienteNaoPublicado,
+    incluirGeometrias,
 } from '@/lib/api/api-naopublicados'
 import {useAuth} from '@/hooks/useAuth'
 
@@ -57,6 +81,30 @@ const AMBIENTE: AmbienteDetalhe = {
     esquadriasDetalhes: {esquadrias: [], esquadriasTipoMaterial: []},
     informacaoAdicional: '',
     status: StatusAmbiente.NAO_PUBLICADO,
+}
+
+// Ambiente com geometrias/esquadrias preenchidas — usado pelos modais de
+// edição (UC09/UC11/UC13/UC16), cujo pré-preenchimento precisa de conteúdo.
+const AMBIENTE_COMPLETO: AmbienteDetalhe = {
+    ...AMBIENTE,
+    geometrias: [
+        {id: 10, tipo: TipoGeometria.RETANGULAR, base: 4, altura: 3, repeticao: 2, area: 24},
+    ],
+    areaAmbiente: 24,
+    esquadriasDetalhes: {
+        esquadrias: [
+            {
+                id: 11,
+                tipo: TipoEsquadria.PORTA,
+                geometria: {id: 12, base: 0.9, altura: 2.1, repeticao: 1, area: 1.89},
+                alturaPeitoril: 0,
+                area: 1.89,
+                material: MaterialEsquadria.ALUMINIO,
+                informacaoAdicional: '',
+            },
+        ],
+        esquadriasTipoMaterial: [],
+    },
 }
 
 function createQueryClient() {
@@ -264,6 +312,269 @@ describe('NaoPublicadoDetalhePage', () => {
             // Modal permanece aberto e a página não navega
             expect(screen.getByText('Duplicar Ambiente')).toBeInTheDocument()
             expect(screen.queryByText('detalhe-duplicado')).not.toBeInTheDocument()
+        })
+    })
+
+    // O texto da etapa do wizard é dividido entre nós de texto e um <strong>
+    // — compara o textContent do wrapper (ver FormAmbiente.test.tsx).
+    function buscarEtapa(n: number, nome: string) {
+        const alvo = `Etapa ${n} de 5: ${nome}`
+        return screen.queryByText((_, el) => el?.tagName === 'DIV' && el.textContent === alvo)
+    }
+
+    async function avancarEtapa(n: number, nome: string) {
+        const dialogo = within(screen.getByRole('dialog'))
+        fireEvent.click(dialogo.getByRole('button', {name: 'Próximo'}))
+        await waitFor(() => expect(buscarEtapa(n, nome)).not.toBeNull())
+    }
+
+    describe('editar dados básicos via ModalEditarDadosBasicos (UC07-FE)', () => {
+        it('abre pré-preenchido, salva e invalida o detalhe', async () => {
+            vi.mocked(fetchAmbienteNaoPublicado).mockResolvedValue(AMBIENTE)
+            vi.mocked(atualizarDadosBasicos).mockResolvedValueOnce(undefined)
+            const queryClient = createQueryClient()
+            const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
+            renderPage(undefined, queryClient)
+
+            await waitFor(() => {
+                expect(screen.getByRole('button', {name: 'Editar Dados Básicos'})).toBeEnabled()
+            })
+            fireEvent.click(screen.getByRole('button', {name: 'Editar Dados Básicos'}))
+
+            const dialogo = within(screen.getByRole('dialog'))
+            expect(dialogo.getByText('Editar Dados Básicos')).toBeInTheDocument()
+            expect(dialogo.getByLabelText('Nome')).toHaveValue('Sala 101')
+            fireEvent.change(dialogo.getByLabelText('Nome'), {target: {value: 'Sala 102'}})
+            fireEvent.click(dialogo.getByRole('button', {name: 'Salvar'}))
+
+            await waitFor(() => {
+                expect(atualizarDadosBasicos).toHaveBeenCalledWith(7, {
+                    nome: 'Sala 102',
+                    capacidade: 30,
+                    localizacao: {bloco: 'BLOCO_1', unidade: 'SEDE', andar: 2},
+                })
+            })
+            const {toast} = await import('sonner')
+            expect(toast.success).toHaveBeenCalledWith('Dados básicos atualizados.')
+            expect(invalidateSpy).toHaveBeenCalledWith({
+                queryKey: ['ambientes', 'nao-publicados', 'detalhe', '7'],
+            })
+        })
+
+        it('mantém o modal aberto em erro do backend (mensagem corrigível)', async () => {
+            vi.mocked(fetchAmbienteNaoPublicado).mockResolvedValue(AMBIENTE)
+            vi.mocked(atualizarDadosBasicos).mockRejectedValueOnce(
+                Object.assign(new Error('conflict'), {
+                    isAxiosError: true,
+                    response: {status: 409, data: {mensagem: 'Já existe um ambiente com este nome nesta localização.'}},
+                }),
+            )
+            renderPage()
+
+            await waitFor(() => {
+                expect(screen.getByRole('button', {name: 'Editar Dados Básicos'})).toBeEnabled()
+            })
+            fireEvent.click(screen.getByRole('button', {name: 'Editar Dados Básicos'}))
+            fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', {name: 'Salvar'}))
+
+            const {toast} = await import('sonner')
+            await waitFor(() => {
+                expect(toast.error).toHaveBeenCalledWith('Já existe um ambiente com este nome nesta localização.')
+            })
+            // O título existe no botão da página E no dialog — consulta dentro do dialog
+            expect(within(screen.getByRole('dialog')).getByText('Editar Dados Básicos')).toBeInTheDocument()
+        })
+    })
+
+    describe('incluir geometrias via ModalGeometrias (UC08-FE)', () => {
+        it('abre com card em branco, salva e invalida o detalhe', async () => {
+            vi.mocked(fetchAmbienteNaoPublicado).mockResolvedValue(AMBIENTE)
+            vi.mocked(incluirGeometrias).mockResolvedValueOnce(undefined)
+            const queryClient = createQueryClient()
+            const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
+            renderPage(undefined, queryClient)
+
+            await waitFor(() => {
+                expect(screen.getByRole('button', {name: 'Incluir Geometrias'})).toBeEnabled()
+            })
+            fireEvent.click(screen.getByRole('button', {name: 'Incluir Geometrias'}))
+
+            const dialogo = within(screen.getByRole('dialog'))
+            fireEvent.change(dialogo.getByLabelText('Base (m)'), {target: {value: '4'}})
+            fireEvent.change(dialogo.getByLabelText('Altura (m)'), {target: {value: '3'}})
+            fireEvent.click(dialogo.getByRole('button', {name: 'Salvar'}))
+
+            await waitFor(() => {
+                expect(incluirGeometrias).toHaveBeenCalledWith(7, [
+                    {tipo: 'RETANGULAR', base: 4, altura: 3, repeticao: 1},
+                ])
+            })
+            const {toast} = await import('sonner')
+            expect(toast.success).toHaveBeenCalledWith('Geometrias incluídas.')
+            expect(invalidateSpy).toHaveBeenCalledWith({
+                queryKey: ['ambientes', 'nao-publicados', 'detalhe', '7'],
+            })
+        })
+    })
+
+    describe('editar geometrias via ModalGeometrias (UC09-FE)', () => {
+        it('abre pré-preenchido com as geometrias atuais (nomes técnicos) e salva', async () => {
+            vi.mocked(fetchAmbienteNaoPublicado).mockResolvedValue(AMBIENTE_COMPLETO)
+            vi.mocked(atualizarGeometrias).mockResolvedValueOnce(undefined)
+            renderPage()
+
+            await waitFor(() => {
+                expect(screen.getByRole('button', {name: 'Editar Geometrias'})).toBeEnabled()
+            })
+            fireEvent.click(screen.getByRole('button', {name: 'Editar Geometrias'}))
+
+            const dialogo = within(screen.getByRole('dialog'))
+            expect(dialogo.getByLabelText('Base (m)')).toHaveValue(4)
+            expect(dialogo.getByLabelText('Altura (m)')).toHaveValue(3)
+            fireEvent.click(dialogo.getByRole('button', {name: 'Salvar'}))
+
+            await waitFor(() => {
+                expect(atualizarGeometrias).toHaveBeenCalledWith(7, [
+                    {tipo: 'RETANGULAR', base: 4, altura: 3, repeticao: 2},
+                ])
+            })
+            const {toast} = await import('sonner')
+            expect(toast.success).toHaveBeenCalledWith('Geometrias atualizadas.')
+        })
+    })
+
+    describe('editar pés-direitos via ModalPesDireitos (UC11-FE)', () => {
+        it('abre pré-preenchido com as alturas e salva', async () => {
+            vi.mocked(fetchAmbienteNaoPublicado).mockResolvedValue(AMBIENTE)
+            vi.mocked(atualizarPesDireitos).mockResolvedValueOnce(undefined)
+            renderPage()
+
+            await waitFor(() => {
+                expect(screen.getByRole('button', {name: 'Editar Pés-direitos'})).toBeEnabled()
+            })
+            fireEvent.click(screen.getByRole('button', {name: 'Editar Pés-direitos'}))
+
+            const dialogo = within(screen.getByRole('dialog'))
+            expect(dialogo.getByLabelText('Pé-direito 1 (m)')).toHaveValue(3)
+            fireEvent.click(dialogo.getByRole('button', {name: 'Salvar'}))
+
+            await waitFor(() => {
+                expect(atualizarPesDireitos).toHaveBeenCalledWith(7, [3])
+            })
+            const {toast} = await import('sonner')
+            expect(toast.success).toHaveBeenCalledWith('Pés-direitos atualizados.')
+        })
+    })
+
+    describe('editar esquadrias via ModalEsquadrias (UC13-FE)', () => {
+        it('abre pré-preenchido (nomes técnicos) e salva', async () => {
+            vi.mocked(fetchAmbienteNaoPublicado).mockResolvedValue(AMBIENTE_COMPLETO)
+            vi.mocked(atualizarEsquadrias).mockResolvedValueOnce(undefined)
+            renderPage()
+
+            await waitFor(() => {
+                expect(screen.getByRole('button', {name: 'Editar Esquadrias'})).toBeEnabled()
+            })
+            fireEvent.click(screen.getByRole('button', {name: 'Editar Esquadrias'}))
+
+            const dialogo = within(screen.getByRole('dialog'))
+            expect(dialogo.getByLabelText('Base (m)')).toHaveValue(0.9)
+            fireEvent.click(dialogo.getByRole('button', {name: 'Salvar'}))
+
+            await waitFor(() => {
+                expect(atualizarEsquadrias).toHaveBeenCalledWith(7, [
+                    {
+                        tipo: 'PORTA',
+                        material: 'ALUMINIO',
+                        geometria: {base: 0.9, altura: 2.1, repeticao: 1},
+                        alturaPeitoril: 0,
+                        informacaoAdicional: '',
+                    },
+                ])
+            })
+            const {toast} = await import('sonner')
+            expect(toast.success).toHaveBeenCalledWith('Esquadrias atualizadas.')
+        })
+    })
+
+    describe('info adicional via ModalInfoAdicional (UC14-FE)', () => {
+        it('salva o texto editado e invalida o detalhe', async () => {
+            vi.mocked(fetchAmbienteNaoPublicado).mockResolvedValue(AMBIENTE)
+            vi.mocked(atualizarInfoAdicional).mockResolvedValueOnce(undefined)
+            const queryClient = createQueryClient()
+            const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
+            renderPage(undefined, queryClient)
+
+            await waitFor(() => {
+                expect(screen.getByRole('button', {name: 'Info Adicional'})).toBeEnabled()
+            })
+            fireEvent.click(screen.getByRole('button', {name: 'Info Adicional'}))
+
+            const dialogo = within(screen.getByRole('dialog'))
+            fireEvent.change(dialogo.getByLabelText('Informação Adicional (opcional)'), {
+                target: {value: 'Sala com ar-condicionado'},
+            })
+            fireEvent.click(dialogo.getByRole('button', {name: 'Salvar'}))
+
+            await waitFor(() => {
+                expect(atualizarInfoAdicional).toHaveBeenCalledWith(7, 'Sala com ar-condicionado')
+            })
+            const {toast} = await import('sonner')
+            expect(toast.success).toHaveBeenCalledWith('Informação adicional atualizada.')
+            expect(invalidateSpy).toHaveBeenCalledWith({
+                queryKey: ['ambientes', 'nao-publicados', 'detalhe', '7'],
+            })
+        })
+    })
+
+    describe('alterar tipo via ModalAlterarTipo (UC16-FE)', () => {
+        it('abre o wizard pré-preenchido, submete o AmbienteReq completo e navega para o novo id', async () => {
+            vi.mocked(fetchAmbienteNaoPublicado).mockResolvedValue(AMBIENTE_COMPLETO)
+            vi.mocked(alterarTipo).mockResolvedValueOnce({...AMBIENTE_COMPLETO, id: 8})
+            const queryClient = createQueryClient()
+            const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
+            renderPage(undefined, queryClient)
+
+            await waitFor(() => {
+                expect(screen.getByRole('button', {name: 'Alterar Tipo'})).toBeEnabled()
+            })
+            fireEvent.click(screen.getByRole('button', {name: 'Alterar Tipo'}))
+
+            const dialogo = within(screen.getByRole('dialog'))
+            expect(dialogo.getByText(/cria um novo ambiente e remove o antigo/)).toBeInTheDocument()
+            expect(dialogo.getByLabelText('Nome')).toHaveValue('Sala 101')
+
+            await avancarEtapa(2, 'Geometrias')
+            await avancarEtapa(3, 'Pés-direitos')
+            await avancarEtapa(4, 'Esquadrias')
+            await avancarEtapa(5, 'Informação Adicional')
+            fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', {name: 'Salvar'}))
+
+            await waitFor(() => {
+                expect(alterarTipo).toHaveBeenCalledWith(7, {
+                    nome: 'Sala 101',
+                    tipo: 'SALA_AULA',
+                    capacidade: 30,
+                    localizacao: {bloco: 'BLOCO_1', unidade: 'SEDE', andar: 2},
+                    geometrias: [{tipo: 'RETANGULAR', base: 4, altura: 3, repeticao: 2}],
+                    pesDireitos: [3],
+                    esquadrias: [
+                        {
+                            tipo: 'PORTA',
+                            material: 'ALUMINIO',
+                            geometria: {base: 0.9, altura: 2.1, repeticao: 1},
+                            alturaPeitoril: 0,
+                            informacaoAdicional: '',
+                        },
+                    ],
+                    informacaoAdicional: '',
+                })
+            })
+            const {toast} = await import('sonner')
+            expect(toast.success).toHaveBeenCalledWith('Tipo alterado.')
+            // UC16: ambiente antigo deixa de existir → invalida a LISTA e navega
+            expect(invalidateSpy).toHaveBeenCalledWith({queryKey: ['ambientes', 'nao-publicados']})
+            expect(await screen.findByText('detalhe-duplicado')).toBeInTheDocument()
         })
     })
 })

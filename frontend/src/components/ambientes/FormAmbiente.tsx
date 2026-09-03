@@ -6,12 +6,11 @@ import {
     useWatch,
     type Control,
     type Path,
-    type UseFormRegister,
     type UseFormReturn,
 } from 'react-hook-form'
 import {zodResolver} from '@hookform/resolvers/zod'
 import {z} from 'zod'
-import {PlusIcon, Trash2Icon} from 'lucide-react'
+import {PlusIcon} from 'lucide-react'
 import {ambienteSchema, type AmbienteInput} from '@/types/ambientes/request'
 import {
     Bloco,
@@ -25,13 +24,10 @@ import {Button} from '@/components/ui/button'
 import {Input} from '@/components/ui/input'
 import {Label} from '@/components/ui/label'
 import {Textarea} from '@/components/ui/textarea'
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select'
+import {CampoEnum} from '@/components/ambientes/CampoEnum'
+import {CampoNumerico} from '@/components/ambientes/CampoNumerico'
+import {BotaoRemover} from '@/components/ambientes/BotaoRemover'
+import {ErroCampo} from '@/components/ambientes/ErroCampo'
 
 const ETAPAS = ['Dados Básicos', 'Geometrias', 'Pés-direitos', 'Esquadrias', 'Informação Adicional'] as const
 
@@ -63,11 +59,26 @@ const ESQUADRIA_VAZIA = {
 
 type AmbienteFormValues = z.input<typeof ambienteSchema>
 
-interface Props {
-    onSubmit: (data: AmbienteInput) => Promise<void>
+// Defaults do wizard (valores técnicos de enum — ver GEOMETRIA_VAZIA acima).
+const DEFAULT_AMBIENTE_INPUT: AmbienteFormValues = {
+    nome: '',
+    localizacao: {bloco: 'BLOCO_1', unidade: 'SEDE', andar: 0},
+    tipo: 'SALA_AULA',
+    capacidade: 1,
+    geometrias: [{...GEOMETRIA_VAZIA}],
+    pesDireitos: [0],
+    esquadrias: [{...ESQUADRIA_VAZIA, geometria: {...ESQUADRIA_VAZIA.geometria}}],
+    informacaoAdicional: '',
 }
 
-export function FormAmbiente({onSubmit}: Props) {
+interface Props {
+    onSubmit: (data: AmbienteInput) => Promise<void>
+    // Pré-preenchimento do wizard (UC16 ModalAlterarTipo): AmbienteReq completo
+    // do ambiente atual, com nomes técnicos (lib/ambientes/mappers).
+    initial?: AmbienteInput
+}
+
+export function FormAmbiente({onSubmit, initial}: Props) {
     const [etapa, setEtapa] = useState(0)
     const [submitting, setSubmitting] = useState(false)
 
@@ -75,16 +86,7 @@ export function FormAmbiente({onSubmit}: Props) {
         resolver: zodResolver(ambienteSchema),
         mode: 'onTouched',
         // Arrays com 1 item vazio para o useFieldArray renderizar o primeiro card.
-        defaultValues: {
-            nome: '',
-            localizacao: {bloco: 'BLOCO_1', unidade: 'SEDE', andar: 0},
-            tipo: 'SALA_AULA',
-            capacidade: 1,
-            geometrias: [{...GEOMETRIA_VAZIA}],
-            pesDireitos: [0],
-            esquadrias: [{...ESQUADRIA_VAZIA, geometria: {...ESQUADRIA_VAZIA.geometria}}],
-            informacaoAdicional: '',
-        },
+        defaultValues: initial ?? DEFAULT_AMBIENTE_INPUT,
     })
 
     // Contador da 5ª etapa. O campo é opcional (`.optional().default('')` no
@@ -175,23 +177,21 @@ function EtapaDadosBasicos({form}: FormProp) {
                 <Input id="nome" maxLength={50} {...register('nome')} />
                 {errors.nome && <ErroCampo mensagem={String(errors.nome.message)}/>}
             </div>
-            <CampoEnum label="Bloco" control={control} name="localizacao.bloco" opcoes={Bloco}/>
-            <CampoEnum label="Unidade" control={control} name="localizacao.unidade" opcoes={Unidade}/>
-            <CampoNumero
+            <CampoEnumDeForm label="Bloco" control={control} name="localizacao.bloco" opcoes={Bloco}/>
+            <CampoEnumDeForm label="Unidade" control={control} name="localizacao.unidade" opcoes={Unidade}/>
+            <CampoNumerico
                 label="Andar"
-                register={register}
-                name="localizacao.andar"
+                id="localizacao.andar"
                 inputMode="numeric"
-                min={0}
+                registration={register('localizacao.andar', {valueAsNumber: true})}
                 erro={errors.localizacao?.andar?.message}
             />
-            <CampoEnum label="Tipo" control={control} name="tipo" opcoes={TipoAmbiente}/>
-            <CampoNumero
+            <CampoEnumDeForm label="Tipo" control={control} name="tipo" opcoes={TipoAmbiente}/>
+            <CampoNumerico
                 label="Capacidade"
-                register={register}
-                name="capacidade"
+                id="capacidade"
                 inputMode="numeric"
-                min={1}
+                registration={register('capacidade', {valueAsNumber: true})}
                 erro={errors.capacidade?.message}
             />
         </div>
@@ -213,26 +213,27 @@ function EtapaGeometrias({form}: FormProp) {
                         <p className="text-sm font-medium">Geometria {i + 1}</p>
                         <BotaoRemover ariaLabel={`Remover geometria ${i + 1}`} onClick={() => remove(i)}/>
                     </div>
-                    <CampoEnum label="Tipo" control={control} name={`geometrias.${i}.tipo`} opcoes={TipoGeometria}/>
+                    <CampoEnumDeForm label="Tipo" control={control} name={`geometrias.${i}.tipo`} opcoes={TipoGeometria}/>
                     <div className="grid gap-3 sm:grid-cols-3">
-                        <CampoNumero
+                        <CampoNumerico
                             label="Base (m)"
-                            register={register}
-                            name={`geometrias.${i}.base`}
+                            id={`geometrias.${i}.base`}
+                            step="0.01"
+                            registration={register(`geometrias.${i}.base`, {valueAsNumber: true})}
                             erro={errors.geometrias?.[i]?.base?.message}
                         />
-                        <CampoNumero
+                        <CampoNumerico
                             label="Altura (m)"
-                            register={register}
-                            name={`geometrias.${i}.altura`}
+                            id={`geometrias.${i}.altura`}
+                            step="0.01"
+                            registration={register(`geometrias.${i}.altura`, {valueAsNumber: true})}
                             erro={errors.geometrias?.[i]?.altura?.message}
                         />
-                        <CampoNumero
+                        <CampoNumerico
                             label="Repetição"
-                            register={register}
-                            name={`geometrias.${i}.repeticao`}
+                            id={`geometrias.${i}.repeticao`}
                             inputMode="numeric"
-                            min={1}
+                            registration={register(`geometrias.${i}.repeticao`, {valueAsNumber: true})}
                             erro={errors.geometrias?.[i]?.repeticao?.message}
                         />
                     </div>
@@ -270,10 +271,11 @@ function EtapaPesDireitos({form}: FormProp) {
             {alturas.map((_, i) => (
                 <div key={i} className="flex items-end gap-2">
                     <div className="flex-1">
-                        <CampoNumero
+                        <CampoNumerico
                             label={`Pé-direito ${i + 1} (m)`}
-                            register={register}
-                            name={`pesDireitos.${i}`}
+                            id={`pesDireitos.${i}`}
+                            step="0.01"
+                            registration={register(`pesDireitos.${i}`, {valueAsNumber: true})}
                             erro={errors.pesDireitos?.[i]?.message}
                         />
                     </div>
@@ -304,38 +306,39 @@ function EtapaEsquadrias({form}: FormProp) {
                         <BotaoRemover ariaLabel={`Remover esquadria ${i + 1}`} onClick={() => remove(i)}/>
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2">
-                        <CampoEnum label="Tipo" control={control} name={`esquadrias.${i}.tipo`} opcoes={TipoEsquadria}/>
-                        <CampoEnum label="Material" control={control} name={`esquadrias.${i}.material`}
-                                   opcoes={MaterialEsquadria}/>
+                        <CampoEnumDeForm label="Tipo" control={control} name={`esquadrias.${i}.tipo`} opcoes={TipoEsquadria}/>
+                        <CampoEnumDeForm label="Material" control={control} name={`esquadrias.${i}.material`}
+                                         opcoes={MaterialEsquadria}/>
                     </div>
                     <div className="grid gap-3 sm:grid-cols-3">
-                        <CampoNumero
+                        <CampoNumerico
                             label="Base (m)"
-                            register={register}
-                            name={`esquadrias.${i}.geometria.base`}
+                            id={`esquadrias.${i}.geometria.base`}
+                            step="0.01"
+                            registration={register(`esquadrias.${i}.geometria.base`, {valueAsNumber: true})}
                             erro={errors.esquadrias?.[i]?.geometria?.base?.message}
                         />
-                        <CampoNumero
+                        <CampoNumerico
                             label="Altura (m)"
-                            register={register}
-                            name={`esquadrias.${i}.geometria.altura`}
+                            id={`esquadrias.${i}.geometria.altura`}
+                            step="0.01"
+                            registration={register(`esquadrias.${i}.geometria.altura`, {valueAsNumber: true})}
                             erro={errors.esquadrias?.[i]?.geometria?.altura?.message}
                         />
-                        <CampoNumero
+                        <CampoNumerico
                             label="Repetição"
-                            register={register}
-                            name={`esquadrias.${i}.geometria.repeticao`}
+                            id={`esquadrias.${i}.geometria.repeticao`}
                             inputMode="numeric"
-                            min={1}
+                            registration={register(`esquadrias.${i}.geometria.repeticao`, {valueAsNumber: true})}
                             erro={errors.esquadrias?.[i]?.geometria?.repeticao?.message}
                         />
                     </div>
                     <div className="grid gap-3 sm:grid-cols-2">
-                        <CampoNumero
+                        <CampoNumerico
                             label="Peitoril (m)"
-                            register={register}
-                            name={`esquadrias.${i}.alturaPeitoril`}
-                            min={0}
+                            id={`esquadrias.${i}.alturaPeitoril`}
+                            step="0.01"
+                            registration={register(`esquadrias.${i}.alturaPeitoril`, {valueAsNumber: true})}
                             erro={errors.esquadrias?.[i]?.alturaPeitoril?.message}
                         />
                         <div className="space-y-1.5">
@@ -361,91 +364,32 @@ function EtapaEsquadrias({form}: FormProp) {
     )
 }
 
-// Opções vindas dos enums TS: value = chave técnica ('BLOCO_1'), texto = rótulo
-// ('Bloco 1') — ver plano 11 §4.
-function CampoEnum({
-                       label,
-                       control,
-                       name,
-                       opcoes,
-                   }: {
+// Adapta o CampoEnum compartilhado (value/onChange) ao Controller do RHF —
+// mantém a assinatura (control + name) usada nas etapas do wizard.
+function CampoEnumDeForm({
+                             label,
+                             control,
+                             name,
+                             opcoes,
+                         }: {
     label: string
     control: Control<AmbienteFormValues>
     name: Path<AmbienteFormValues>
     opcoes: Record<string, string>
 }) {
     return (
-        <div className="space-y-1.5">
-            <Label>{label}</Label>
-            <Controller
-                control={control}
-                name={name}
-                render={({field, fieldState}) => (
-                    <>
-                        <Select value={field.value as string} onValueChange={(v) => {
-                            if (v !== null) field.onChange(v)
-                        }}>
-                            <SelectTrigger aria-label={label} className="w-full">
-                                <SelectValue/>
-                            </SelectTrigger>
-                            <SelectContent>
-                                {Object.entries(opcoes).map(([chave, rotulo]) => (
-                                    <SelectItem key={chave} value={chave}>
-                                        {rotulo}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        {fieldState.error && <ErroCampo mensagem={String(fieldState.error.message)}/>}
-                    </>
-                )}
-            />
-        </div>
-    )
-}
-
-function CampoNumero({
-                         label,
-                         register,
-                         name,
-                         erro,
-                         min,
-                         inputMode = 'decimal',
-                     }: {
-    label: string
-    register: UseFormRegister<AmbienteFormValues>
-    name: Path<AmbienteFormValues>
-    erro?: string
-    min?: number
-    inputMode?: 'decimal' | 'numeric'
-}) {
-    return (
-        <div className="space-y-1.5">
-            <Label htmlFor={name}>{label}</Label>
-            <Input
-                id={name}
-                type="number"
-                inputMode={inputMode}
-                min={min}
-                {...register(name, {valueAsNumber: true})}
-            />
-            {erro && <ErroCampo mensagem={erro}/>}
-        </div>
-    )
-}
-
-function BotaoRemover({ariaLabel, onClick}: { ariaLabel: string; onClick: () => void }) {
-    return (
-        <Button type="button" variant="ghost" size="icon" aria-label={ariaLabel} onClick={onClick}>
-            <Trash2Icon/>
-        </Button>
-    )
-}
-
-function ErroCampo({mensagem}: { mensagem: string }) {
-    return (
-        <p role="alert" className="text-sm text-destructive">
-            {mensagem}
-        </p>
+        <Controller
+            control={control}
+            name={name}
+            render={({field, fieldState}) => (
+                <CampoEnum
+                    label={label}
+                    opcoes={opcoes}
+                    value={String(field.value)}
+                    onChange={field.onChange}
+                    erro={fieldState.error?.message}
+                />
+            )}
+        />
     )
 }

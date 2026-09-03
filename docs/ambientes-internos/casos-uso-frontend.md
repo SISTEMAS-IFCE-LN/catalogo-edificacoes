@@ -24,6 +24,8 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - DetalheAmbiente — visão detalhada com geometrias, pés-direitos, lista de esquadrias (portas/janelas) e áreas.
 - FormAmbiente (multistep) — criação/atualização de ambiente: dados básicos, geometrias, pés-direitos, esquadrias, informação adicional.
 - ModalConfirmacao — confirmações para deletar, publicar/privar, duplicar.
+- ModalFormulario — shell padrão dos modais de edição (UC07–UC17): Dialog + validação Zod + tratamento de erro via useAsyncAction; montagem condicional na página de detalhe.
+- ModalGeometrias / ModalPesDireitos / ModalEsquadrias — modais genéricos de lista editável (inclusão/edição, UC08–UC13), configurados por UC na página de detalhe (`modo`, `titulo`, `inicial`, `onSubmit`).
 - AcoesLote — ações em lote (ex: deletar, enviar para validação e publicar/privar) com checagem de permissões.
 - Toast/Snackbar — mensagens de sucesso/erro.
 - PaginaLogin — página de login com logo/descrição do sistema, botão "Entrar com Google" e mensagens de erro.

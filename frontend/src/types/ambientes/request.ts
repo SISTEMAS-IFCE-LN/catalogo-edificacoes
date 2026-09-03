@@ -41,6 +41,24 @@ export const duplicacaoSchema = z.object({
 })
 export type DuplicacaoInput = z.infer<typeof duplicacaoSchema>
 
+// Espelha o payload de PATCH /{id}/dados-basicos (UC07-FE): nome (@NotBlank/
+// @Size(max=50)) + localizacao + capacidade. Nome com trim — o payload enviado
+// é o output do parse (zodResolver entrega os valores transformados).
+export const dadosBasicosSchema = z.object({
+    nome: z.string().trim().min(1, 'Nome obrigatório.').max(50, 'Máximo 50 caracteres.'),
+    capacidade: z.int().positive('Capacidade deve ser maior que 0.'),
+    localizacao: localizacaoSchema,
+})
+export type DadosBasicosInput = z.infer<typeof dadosBasicosSchema>
+
+// Espelha o payload de PATCH /{id}/informacao-adicional (UC14-FE) —
+// @Size(max=255) de AmbienteReq.kt. O corpo text/plain é montado na camada de
+// API (api-naopublicados.atualizarInfoAdicional); aqui só se valida o texto.
+export const informacaoAdicionalSchema = z.object({
+    informacaoAdicional: z.string().max(255, 'Máximo 255 caracteres.'),
+})
+export type InformacaoAdicionalInput = z.infer<typeof informacaoAdicionalSchema>
+
 // Espelha GeometriaAmbienteReq do backend
 export const geometriaSchema = z.object({
     tipo: z.enum(keysOf(TipoGeometria)),   // 'RETANGULAR', 'TRIANGULAR'
