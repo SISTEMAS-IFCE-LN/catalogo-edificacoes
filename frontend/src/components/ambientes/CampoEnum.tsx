@@ -27,7 +27,11 @@ export function CampoEnum({label, opcoes, value, onChange, erro}: CampoEnumProps
                 if (v !== null) onChange(v)
             }}>
                 <SelectTrigger aria-label={label} className="w-full">
-                    <SelectValue/>
+                    {value && opcoes[value] ? (
+                        <span>{opcoes[value]}</span>
+                    ) : (
+                        <SelectValue placeholder="Selecione..." />
+                    )}
                 </SelectTrigger>
                 <SelectContent>
                     {Object.entries(opcoes).map(([chave, rotulo]) => (

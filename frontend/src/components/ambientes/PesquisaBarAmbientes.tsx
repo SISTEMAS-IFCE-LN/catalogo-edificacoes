@@ -17,6 +17,17 @@ function rotuloTipo(tipo: string): string {
   return TipoAmbiente[tipo as keyof typeof TipoAmbiente] ?? tipo
 }
 
+// Mapeia o valor do enum TipoFiltro para o rótulo exibido
+function rotuloTipoFiltro(tipo: string): string {
+  const map: Record<string, string> = {
+    '': 'Nenhum',
+    'nome': 'Nome',
+    'tipo': 'Tipo',
+    'localizacao': 'Localização',
+  }
+  return map[tipo] ?? tipo
+}
+
 export function PesquisaBarAmbientes({
   initial,
   onChange,
@@ -78,7 +89,11 @@ export function PesquisaBarAmbientes({
       <div className="max-w-xs">
         <Select value={tipoFiltro} onValueChange={handleTipoFiltroChange}>
           <SelectTrigger aria-label="Tipo de filtro">
-            <SelectValue placeholder="Selecione o tipo de filtro" />
+            {tipoFiltro ? (
+              <span>{rotuloTipoFiltro(tipoFiltro)}</span>
+            ) : (
+              <SelectValue placeholder="Selecione o tipo de filtro" />
+            )}
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={TipoFiltro.NENHUM}>Nenhum</SelectItem>
@@ -131,12 +146,14 @@ export function PesquisaBarAmbientes({
             onValueChange={(value) => setLocal({ ...local, bloco: value ?? '' })}
           >
             <SelectTrigger aria-label="Filtrar por bloco">
-              <SelectValue placeholder="Bloco" />
+              {local.bloco && Bloco[local.bloco as keyof typeof Bloco]
+                ? <span>{Bloco[local.bloco as keyof typeof Bloco]}</span>
+                : <SelectValue placeholder="Bloco" />}
             </SelectTrigger>
             <SelectContent>
-              {Object.entries(Bloco).map(([key, value]) => (
-                <SelectItem key={key} value={value}>
-                  {value}
+              {Object.entries(Bloco).map(([key, rotulo]) => (
+                <SelectItem key={key} value={key}>
+                  {rotulo}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -147,12 +164,14 @@ export function PesquisaBarAmbientes({
             onValueChange={(value) => setLocal({ ...local, unidade: value ?? '' })}
           >
             <SelectTrigger aria-label="Filtrar por unidade">
-              <SelectValue placeholder="Unidade" />
+              {local.unidade && Unidade[local.unidade as keyof typeof Unidade]
+                ? <span>{Unidade[local.unidade as keyof typeof Unidade]}</span>
+                : <SelectValue placeholder="Unidade" />}
             </SelectTrigger>
             <SelectContent>
-              {Object.entries(Unidade).map(([key, value]) => (
-                <SelectItem key={key} value={value}>
-                  {value}
+              {Object.entries(Unidade).map(([key, rotulo]) => (
+                <SelectItem key={key} value={key}>
+                  {rotulo}
                 </SelectItem>
               ))}
             </SelectContent>
