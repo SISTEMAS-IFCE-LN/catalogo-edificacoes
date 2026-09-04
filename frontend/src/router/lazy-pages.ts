@@ -11,6 +11,7 @@ export const PublicadoDetalhePage = lazy(() => import('@/routes/ambientes/public
 export const EsquadriasPage = lazy(() => import('@/routes/ambientes/publicados/esquadrias/page').then(m => ({default: m.EsquadriasPage})))
 export const NaoPublicadosPage = lazy(() => import('@/routes/ambientes/nao-publicados/page').then(m => ({default: m.NaoPublicadosPage})))
 export const NovoAmbientePage = lazy(() => import('@/routes/ambientes/nao-publicados/novo/page').then(m => ({default: m.NovoAmbientePage})))
+export const NaoPublicadoDetalhePage = lazy(() => import('@/routes/ambientes/nao-publicados/[id]/page').then(m => ({default: m.NaoPublicadoDetalhePage})))
 export const ValidacaoPage = lazy(() => import('@/routes/ambientes/validacao/page').then(m => ({default: m.ValidacaoPage})))
 export const ValidacaoDetalhePage = lazy(() => import('@/routes/ambientes/validacao/[id]/page').then(m => ({default: m.ValidacaoDetalhePage})))
 export const UsuariosPage = lazy(() => import('@/routes/usuarios/page').then(m => ({default: m.UsuariosPage})))

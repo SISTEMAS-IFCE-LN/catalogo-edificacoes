@@ -17,6 +17,7 @@ import {
     EsquadriasPage,
     NaoPublicadosPage,
     NovoAmbientePage,
+    NaoPublicadoDetalhePage,
     ValidacaoPage,
     ValidacaoDetalhePage,
     UsuariosPage,
@@ -66,6 +67,7 @@ export const router = createBrowserRouter([
                         children: [
                             {index: true, element: <Suspense fallback={<Loading/>}><NaoPublicadosPage/></Suspense>},
                             {path: 'novo', element: <Suspense fallback={<Loading/>}><NovoAmbientePage/></Suspense>},
+                            {path: ':id', element: <Suspense fallback={<Loading/>}><NaoPublicadoDetalhePage/></Suspense>},
                         ],
                     },
                     // Administrador (UC22-UC26-FE)
