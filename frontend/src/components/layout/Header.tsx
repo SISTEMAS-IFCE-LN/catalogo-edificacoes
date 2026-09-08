@@ -1,5 +1,5 @@
 import {Link} from 'react-router'
-import {ProtectedNavigation} from '@/components/layout/ProtectedNavigation'
+import {HeaderNav} from '@/components/layout/HeaderNav'
 import {useAuth} from '@/hooks/useAuth'
 import {Button, buttonVariants} from '@/components/ui/button'
 import {PAGES_ROUTES} from '@/constants/routes'
@@ -12,8 +12,10 @@ export function Header() {
         <header className="border-b border-border bg-background">
             <div className="container mx-auto px-4">
                 <div className="flex h-16 items-center justify-between">
-                    <Link to="/" className="font-bold text-xl">Catálogo Edificações</Link>
-                    {user && <ProtectedNavigation/>}
+                    <div className="flex items-center gap-2">
+                        {user && <HeaderNav />}
+                        <Link to="/" className="font-bold text-xl">Catálogo Edificações</Link>
+                    </div>
                     <div className="flex items-center gap-4">
                         {user ? (
                             <>

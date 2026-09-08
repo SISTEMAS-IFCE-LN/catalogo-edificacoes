@@ -38,9 +38,9 @@ describe('Header — anônimo', () => {
         expect(screen.getByText('Catálogo Edificações')).toBeInTheDocument()
     })
 
-    it('não renderiza ProtectedNavigation', () => {
+    it('não renderiza HeaderNav', () => {
         renderWithAuth()
-        expect(screen.queryByText('Publicados')).not.toBeInTheDocument()
+        expect(screen.queryByRole('button', { name: /Abrir menu de navegação/i })).not.toBeInTheDocument()
     })
 
     it('não renderiza nome/email do usuário', () => {
@@ -82,9 +82,9 @@ describe('Header — autenticado', () => {
         expect(screen.getByText('Catálogo Edificações')).toBeInTheDocument()
     })
 
-    it('renderiza ProtectedNavigation', () => {
+    it('renderiza HeaderNav', () => {
         renderWithAuth()
-        expect(screen.getByText('Publicados')).toBeInTheDocument()
+        expect(screen.getByRole('button', { name: /Abrir menu de navegação/i })).toBeInTheDocument()
     })
 
     it('renderiza nome e email do usuário', () => {

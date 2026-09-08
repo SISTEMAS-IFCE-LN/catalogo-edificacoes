@@ -96,7 +96,7 @@ export function UsuariosPage() {
 
     return (
         <div className="space-y-4">
-            <h1 className="text-2xl font-bold">Usuários</h1>
+            <h1 className="text-2xl font-bold">Gestão de Usuários</h1>
             <PesquisaBarUsuarios
                 initial={filtrosLocal}
                 onChange={handleFiltrosChange}

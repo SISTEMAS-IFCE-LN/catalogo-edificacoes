@@ -229,7 +229,7 @@ frontend/
 │   │   │   └── PermissionButton.tsx # botão condicional por role
 │   │   ├── layout/
 │   │   │   ├── Header.tsx
-│   │   │   ├── ProtectedNavigation.tsx  # menu adaptativo por role (desktop + mobile drawer)
+│   │   │   ├── HeaderNav.tsx            # dropdown unificado (hamburger) por role — §15.4/§15.5
 │   │   │   ├── UserMenu.tsx           # avatar → Sheet (mobile) / DropdownMenu (desktop)
 │   │   │   └── Footer.tsx
 │   │   ├── ambientes/                # TabelaPadrao, DetalheAmbiente, FormAmbiente, PesquisaBarAmbientes,
@@ -889,24 +889,22 @@ export const router = createBrowserRouter([
 ])
 ```
 
-### 9.3. Navegação adaptativa
+### 9.3. Navegação adaptativa (HeaderNav)
 
 ```typescript
-// components/layout/ProtectedNavigation.tsx
+// components/layout/HeaderNav.tsx
 
-const menuItems: MenuItem[] = [
-  { href: '/ambientes/publicados', label: 'Publicados',
-    roles: null },                                  // público — sempre visível quando autenticado
-  { href: '/ambientes/validacao', label: 'Aguardando Validação',
-    roles: [Role.VALIDADOR] },
-  { href: '/ambientes/nao-publicados', label: 'Não Publicados',
-    roles: [Role.GESTOR_SISTEMA] },
-  { href: '/usuarios', label: 'Usuários',
-    roles: [Role.ADMINISTRADOR] },
+const menuItens: MenuItem[] = [
+  // Grupo "Ambientes"
+  { href: '/ambientes/publicados', label: 'Listar', roles: null },
+  { href: '/ambientes/validacao', label: 'Validar', roles: [Role.VALIDADOR] },
+  { href: '/ambientes/nao-publicados', label: 'Gerir', roles: [Role.GESTOR_SISTEMA] },
+  // Grupo "Usuários"
+  { href: '/usuarios', label: 'Gerir', roles: [Role.ADMINISTRADOR] },
 ]
 ```
 
-> Sempre que `roles === null`, o item é mostrado a todo autenticado. O item **Publicados** aparece para todos. A lista pública (`/ambientes/publicados`) é servida **dentro** do layout comum: o `Header` é **auth-aware** — para anônimos exibe logo + botão "Login"; para autenticados, navegação + nome/email + "Sair". O `ProtectedNavigation` só é renderizado com usuário logado.
+> Sempre que `roles === null`, o item é mostrado a todo autenticado (ex.: **Listar**). Os itens são agrupados em "Ambientes" e "Usuários" num `<DropdownMenu>` aberto pelo hamburger à esquerda do título (ver §15.4/§15.5). A lista pública (`/ambientes/publicados`) é servida **dentro** do layout comum: o `Header` é **auth-aware** — para anônimos exibe logo + botão "Login"; para autenticados, `HeaderNav` + nome/email + "Sair". O `HeaderNav` só é renderizado com usuário logado.
 
 ---
 
@@ -994,10 +992,10 @@ export function ProtectedLayout() {
 }
 ```
 
-O `Header` é **auth-aware** e renderiza internamente o `ProtectedNavigation` (que filtra itens por `user.perfis.some(r => item.roles?.includes(r) ?? true)` e destaca o ativo via `useLocation()`):
+O `Header` é **auth-aware** e renderiza internamente o `HeaderNav` (que filtra itens por `user.perfis.some(r => item.roles?.includes(r) ?? true)`, agrupa em "Ambientes"/"Usuários" num dropdown e destaca o ativo via `useLocation()`):
 
-- Anônimo: logo + botão "Login" (`PAGES_ROUTES.LOGIN`), sem `ProtectedNavigation`.
-- Autenticado: logo + `ProtectedNavigation` + nome/email + botão "Sair" (`logout()` com navegação para `/login`).
+- Anônimo: logo + botão "Login" (`PAGES_ROUTES.LOGIN`), sem `HeaderNav`.
+- Autenticado: `HeaderNav` (hamburger à esquerda) + logo + nome/email + botão "Sair" (`logout()` com navegação para `/login`).
 
 Como o layout envolve também a rota pública `/ambientes/publicados` (§9.2), o `ProtectedLayout` não é exclusivo de rotas autenticadas — o `Header` decide o que exibir conforme o estado de autenticação.
 
@@ -1272,18 +1270,39 @@ A aplicação deve ser plenamente utilizável em desktops e celulares. Esta seç
 
 O `Drawer` do shadcn é a camada visual para bottom-sheets e side-sheets em mobile. A partir da release atual, ele usa **Base UI**. Para bottom-sheets (eixos verticais), use `swipeDirection="down"`. Para side-sheets (eixos horizontais), use `swipeDirection="left"` ou `"right"`.
 
-### 15.4. Header compacto
+### 15.4. Header unificado (hamburger + dropdown)
 
-- Altura `h-14` em mobile (`md:h-16`).
-- Sempre visível.
-- Mobile (`<md`):
-  - **Esquerda**: hamburger (`lucide-react` `Menu`) → abre `<Sheet side="left">` contendo `<ProtectedNavigation>` em lista vertical (variant mobile). Item fecha o Sheet ao ser selecionado.
-  - **Direita**: **avatar do usuário** (`<Avatar>` shadcn com iniciais em `<AvatarFallback>`, pois não há `picture` em `Usuario`) → abre `<Sheet side="right">` com perfil dedicado (nome, email, badges de `perfis`, botão "Sair" full-width).
-- Desktop (`≥md`): hamburger e avatar-sheet ocultos; `<ProtectedNavigation>` inline horizontal à esquerda; `<UserMenu>` (avatar pequeno + `DropdownMenu`) à direita.
-- Ambos os triggers: `min-h-[44px] min-w-[44px]` e `aria-label` explícito ("Abrir menu" / "Abrir perfil").
-- Implementação mostrar/ocultar puramente via CSS (`flex md:hidden` / `hidden md:flex`) — SSR-safe.
+- **Comportamento**: igual em todos os breakpoints (desktop e mobile).
+  À **esquerda** do logo "Catálogo Edificações", um botão hamburger (`Menu` do `lucide-react`) abre um `<DropdownMenu>`.
 
-### 15.5. `<UserMenu>` (componente único para mobile e desktop)
+- **Estrutura do menu**:
+
+  | Grupo | Itens | Visibilidade |
+  |---|---|---|
+  | **Ambientes** | Listar (`/ambientes/publicados`) | Sempre visível |
+  | | Validar (`/ambientes/validacao`) | `ROLE_VALIDADOR` |
+  | | Gerir (`/ambientes/nao-publicados`) | `ROLE_GESTOR_SISTEMA` |
+  | **Usuários** | Gerir (`/usuarios`) | `ROLE_ADMINISTRADOR` |
+
+  Um grupo inteiro some se nenhum de seus itens for visível para o usuário atual.
+  O item ativo (pathname atual) é destacado com `bg-accent text-accent-foreground font-medium`.
+
+- **Trigger**: `Button variant="ghost" size="sm"` com `min-h-[44px] min-w-[44px]` (alvo de toque), `aria-label="Abrir menu de navegação"`.
+
+### 15.5. `<HeaderNav>` (componente de navegação)
+
+```tsx
+// components/layout/HeaderNav.tsx
+
+// Responsável por:
+// 1. Ler user.perfis via useAuth().
+// 2. Filtrar menuItens (array local) por permissão.
+// 3. Agrupar visíveis em "Ambientes" e "Usuários".
+// 4. Renderizar DropdownMenu com DropdownMenuGroup + DropdownMenuLabel.
+// 5. Destacar item ativo via useLocation().
+```
+
+### 15.6. `<UserMenu>` (componente único para mobile e desktop)
 
 ```tsx
 // components/layout/UserMenu.tsx
@@ -1350,15 +1369,6 @@ export function UserMenu() {
   )
 }
 ```
-
-### 15.6. `<ProtectedNavigation>` — duas variantes
-
-A mesma fonte de dados `menuItems` renderiza em duas variantes:
-
-- `<DesktopNav>`: inline horizontal, exibida em `≥md` (`hidden md:flex`).
-- `<MobileNavList>`: lista vertical dentro do `<Sheet side="left">`, cada item com ícone `lucide-react` + label, `min-h-[44px]`, fechando o Sheet em seleção.
-
-Itens `roles === null` são considerados visíveis a qualquer autenticado (ex.: "Publicados" — visível para todos, dado que `COLABORADOR` é perfil mínimo universal).
 
 ### 15.7. Tabelas — `TabelaPadrao`, `TabelaUsuarios`
 
@@ -1514,7 +1524,7 @@ Cobertura mínima recomendada: `lib/security/permissions.ts` 100%, `lib/security
 7. **`/ambientes/publicados`** (lista pública, UC21-FE) e **`/ambientes/publicados/:id`** (UC19-FE).
 8. **`/usuarios`** (UC22–UC26-FE) — Administrador.
 9. **`/ambientes/validacao`** e **`/ambientes/nao-publicados`** com `FormAmbiente` multistep e modais UC07–UC18.
-10. **Responsividade**: `<UserMenu>` (Sheet + DropdownMenu), `<ProtectedNavigation>` variants Desktop/Mobile, `<ResponsiveModal>` para UC07–UC13, cards-vs-tabela em `TabelaPadrao`/`TabelaUsuarios`, `AcoesLote` barra fixa em mobile, `<Accordion>` em `DetalheAmbiente` mobile. Adicionar `body { position: relative; }` em `globals.css`.
+10. **Responsividade**: `<UserMenu>` (Sheet + DropdownMenu), `<HeaderNav>` (dropdown unificado — §15.4/§15.5), `<ResponsiveModal>` para UC07–UC13, cards-vs-tabela em `TabelaPadrao`/`TabelaUsuarios`, `AcoesLote` barra fixa em mobile, `<Accordion>` em `DetalheAmbiente` mobile. Adicionar `body { position: relative; }` em `globals.css`.
 11. **Nginx** config + `docker-compose` (frontend service).
 12. **Testes**: `permissions`, `auth`, guards, interceptor Axios mockado; smoke E2E em viewports 375×667 e 1280×800.
 

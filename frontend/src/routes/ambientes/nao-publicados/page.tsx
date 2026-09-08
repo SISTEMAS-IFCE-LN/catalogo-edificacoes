@@ -78,7 +78,7 @@ export function NaoPublicadosPage() {
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold">Não Publicados</h1>
+                <h1 className="text-2xl font-bold">Gestão de Ambientes</h1>
                 <PermissionButton requiredRoles={[Role.GESTOR_SISTEMA]}
                                   onClick={() => navigate('/ambientes/nao-publicados/novo')}>
                     Criar Novo
