@@ -11,7 +11,7 @@ import {
 import { useIsMobile } from '@/hooks/useIsMobile'
 import { PAGES_ROUTES } from '@/constants/routes'
 
-const OPCAO_NENHUMA = 'NENHUMA'
+const OPCAO_NENHUMA = 'Selecionar ação…'
 
 export interface AcaoLote {
     value: string

@@ -124,10 +124,11 @@ describe('ModalAlterarTipo (UC16-FE)', () => {
         expect(screen.getByLabelText('Nome')).toHaveValue('Sala 101')
         expect(screen.getByLabelText('Capacidade')).toHaveValue(30)
         expect(screen.getByLabelText('Andar')).toHaveValue(2)
-        // Selects mostram o valor técnico (sem items abertos)
-        expect(screen.getByLabelText('Bloco')).toHaveTextContent('BLOCO_1')
-        expect(screen.getByLabelText('Unidade')).toHaveTextContent('SEDE')
-        expect(screen.getByLabelText('Tipo')).toHaveTextContent('SALA_AULA')
+        // Selects exibem o rótulo do enum (sem items abertos); o valor técnico
+        // pré-preenchido no form é garantido pelo payload do spec de submissão
+        expect(screen.getByLabelText('Bloco')).toHaveTextContent('Bloco 1')
+        expect(screen.getByLabelText('Unidade')).toHaveTextContent('Sede')
+        expect(screen.getByLabelText('Tipo')).toHaveTextContent('Sala de Aula')
     })
 
     it('submete o AmbienteReq COMPLETO (não só o tipo), toasta e chama onSalvou com o novo id', async () => {

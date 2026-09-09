@@ -158,8 +158,9 @@ describe('ModalGeometrias (UC08/UC09-FE)', () => {
 
     it('o select de tipo expõe as opções técnicas com rótulos do enum', () => {
         renderModal()
-        // Trigger com o valor técnico aplicado (default RETANGULAR)
-        expect(screen.getByLabelText('Tipo')).toHaveTextContent('RETANGULAR')
+        // Trigger exibe o rótulo do enum (default Retangular); o valor técnico
+        // no payload é garantido pelo spec "submit válido entrega a lista…"
+        expect(screen.getByLabelText('Tipo')).toHaveTextContent('Retangular')
         expect(Object.entries(TipoGeometria).length).toBeGreaterThan(0)
     })
 })

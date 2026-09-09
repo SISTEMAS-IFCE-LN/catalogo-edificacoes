@@ -56,18 +56,24 @@ export function PublicadoDetalhePage() {
 
     return (
         <div className="space-y-4">
-            <Button variant="outline" onClick={() => navigate(PAGES_ROUTES.PUBLICADOS)}>
-                Voltar
-            </Button>
+            {/* Ação crítica (UC03-FE) no topo, à direita do "Voltar"
+                (arquitetura §15.11) — sem select, apenas botão direto. */}
+            <div className="flex flex-wrap items-center justify-between gap-2">
+                <Button variant="outline" onClick={() => navigate(PAGES_ROUTES.PUBLICADOS)}>
+                    Voltar
+                </Button>
+                <div className="flex gap-2">
+                    <PermissionButton
+                        requiredRoles={[Role.VALIDADOR]}
+                        variant="destructive"
+                        disabled={!podePrivar}
+                        onClick={() => setModalOpen(true)}
+                    >
+                        Privar
+                    </PermissionButton>
+                </div>
+            </div>
             <DetalheAmbiente ambiente={ambiente}/>
-            <PermissionButton
-                requiredRoles={[Role.VALIDADOR]}
-                variant="destructive"
-                disabled={!podePrivar}
-                onClick={() => setModalOpen(true)}
-            >
-                Privar
-            </PermissionButton>
             <ModalConfirmacao
                 open={modalOpen}
                 title="Privar ambiente?"

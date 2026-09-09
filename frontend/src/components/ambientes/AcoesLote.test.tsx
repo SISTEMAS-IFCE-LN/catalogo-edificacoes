@@ -49,8 +49,8 @@ describe('AcoesLote', () => {
     it('renderiza seletor de ação com opção placeholder', () => {
         renderWithRouter({ selectedIds: [1], onClear: vi.fn() })
         expect(screen.getByLabelText('Selecionar ação em lote')).toBeInTheDocument()
-        // O trigger mostra o valor selecionado atual (placeholder "NENHUMA")
-        expect(screen.getByText('NENHUMA')).toBeInTheDocument()
+        // O trigger exibe o rótulo da opção selecionada (placeholder "Selecionar ação…")
+        expect(screen.getByText('Selecionar ação…')).toBeInTheDocument()
     })
 
     it('renderiza ação "Detalhar Esquadrias" ao abrir o seletor', async () => {

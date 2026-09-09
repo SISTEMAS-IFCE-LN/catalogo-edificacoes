@@ -27,6 +27,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - ModalFormulario — shell padrão dos modais de edição (UC07–UC17): Dialog + validação Zod + tratamento de erro via useAsyncAction; montagem condicional na página de detalhe.
 - ModalGeometrias / ModalPesDireitos / ModalEsquadrias — modais genéricos de lista editável (inclusão/edição, UC08–UC13), configurados por UC na página de detalhe (`modo`, `titulo`, `inicial`, `onSubmit`).
 - AcoesLote — ações em lote (ex: deletar, enviar para validação e publicar/privar) com checagem de permissões.
+- AcoesAmbiente — barra de ações do detalhe (select + ações críticas).
 - Toast/Snackbar — mensagens de sucesso/erro.
 - PaginaLogin — página de login com logo/descrição do sistema, botão "Entrar com Google" e mensagens de erro.
 - TabelaUsuarios — exibe ID, Email, Nome, Ativo, CriadoEm, Perfis; suporte a paginação e ações individuais.
@@ -164,7 +165,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 
 ### UC08-FE: Incluir Geometrias
 
-- Modal: Modal acionado por meio de um botão com ícone referente a inclusão de Geometrias em `DetalheAmbiente` (rota `/ambientes/nao-publicados/{id}`).
+- Modal: acionado pela ação correspondente no componente `AcoesAmbiente` (select de ações no topo) da página de detalhes (rota `/ambientes/nao-publicados/{id}`).
 - Pré-condições: Usuário logado com role `gestor` e ambiente com `status = NAO_PUBLICADO`.
 - Fluxo principal (UI):
   1. O usuário clica no ícone de inclusão de geometrias.
@@ -182,7 +183,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 
 ### UC09-FE: Atualizar / Remover Geometrias
 
-- Modal: Modal acionado por meio de um botão com ícone referente a edição de Geometrias em `DetalheAmbiente` (rota `/ambientes/nao-publicados/{id}`).
+- Modal: acionado pela ação correspondente no componente `AcoesAmbiente` (select de ações no topo) da página de detalhes (rota `/ambientes/nao-publicados/{id}`).
 - Pré-condições: Usuário logado com role `gestor` e ambiente com `status = NAO_PUBLICADO`.
 - Fluxo principal (UI):
   1. O usuário clica no ícone de edição de geometrias.
@@ -200,7 +201,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 
 ### UC10-FE: Incluir Pés-direitos
 
-- Modal: Modal acionado por meio de um botão com ícone referente a inclusão de Pés-direitos em `DetalheAmbiente` (rota `/ambientes/nao-publicados/{id}`).
+- Modal: acionado pela ação correspondente no componente `AcoesAmbiente` (select de ações no topo) da página de detalhes (rota `/ambientes/nao-publicados/{id}`).
 - Pré-condições: Usuário logado com role `gestor` e ambiente com `status = NAO_PUBLICADO`.
 - Fluxo principal (UI):
   1. Usuário clica no ícone de inclusão de pés-direitos.
@@ -217,7 +218,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 
 ### UC11-FE: Atualizar / Remover Pés-direitos
 
-- Modal: Modal acionado por meio de um botão com ícone referente a edição de Pés-direitos em `DetalheAmbiente` (rota `/ambientes/nao-publicados/{id}`).
+- Modal: acionado pela ação correspondente no componente `AcoesAmbiente` (select de ações no topo) da página de detalhes (rota `/ambientes/nao-publicados/{id}`).
 - Pré-condições: Usuário logado com role `gestor` e ambiente com `status = NAO_PUBLICADO`.
 - Fluxo principal (UI):
   1. O usuário clica no ícone de edição de pés-direitos.
@@ -235,7 +236,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 
 ### UC12-FE: Incluir Esquadrias
 
-- Modal: Modal acionado por meio de um botão com ícone referente a inclusão de Esquadrias em `DetalheAmbiente` (rota `/ambientes/nao-publicados/{id}`).
+- Modal: acionado pela ação correspondente no componente `AcoesAmbiente` (select de ações no topo) da página de detalhes (rota `/ambientes/nao-publicados/{id}`).
 - Pré-condições: Usuário logado com role `gestor` e ambiente com `status = NAO_PUBLICADO`.
 - Fluxo principal (UI):
   1. O usuário clica no ícone de inclusão de esquadrias.
@@ -253,7 +254,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 
 ### UC13-FE: Atualizar / Remover Esquadrias
 
-- Modal: Modal acionado por meio de um botão com ícone referente a edição de Esquadrias em `DetalheAmbiente` (rota `/ambientes/nao-publicados/{id}`).
+- Modal: acionado pela ação correspondente no componente `AcoesAmbiente` (select de ações no topo) da página de detalhes (rota `/ambientes/nao-publicados/{id}`).
 - Pré-condições: Usuário logado com role `gestor` e ambiente com `status = NAO_PUBLICADO`.
 - Fluxo principal (UI):
   1. O usuário clica no ícone de edição de esquadrias.
@@ -271,7 +272,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 
 ### UC14-FE: Atualizar Informação Adicional
 
-- Componente: Input acionado por meio de um botão com ícone referente a edição de Informação Adicional em `DetalheAmbiente` (rota `/ambientes/nao-publicados/{id}`).
+- Componente: acionado pela ação correspondente no componente `AcoesAmbiente` (select de ações no topo) da página de detalhes (rota `/ambientes/nao-publicados/{id}`).
 - Pré-condições: Usuário logado com role `gestor` e ambiente com `status = NAO_PUBLICADO`.
 - Fluxo principal (UI):
   1. Usuário clica no ícone de edição das informações adicionais e clica em ícone de salvar.
@@ -299,7 +300,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 
 ### UC16-FE: Alterar Tipo e Dados de Ambientes Não Publicados
 
-- Modal: Ação acionada por botão `Alterar tipo` em `DetalheAmbiente` (rota `/ambientes/nao-publicados/{id}`).
+- Modal: acionado pela ação correspondente no componente `AcoesAmbiente` (select de ações no topo) da página de detalhes (rota `/ambientes/nao-publicados/{id}`).
 - Pré-condições: Usuário logado com role `gestor` e ambiente com `status = NAO_PUBLICADO`.
 - Fluxo principal (UI):
   1. Usuário fornece novo `tipo` e dados complementares no formulário exibido.
@@ -313,7 +314,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 
 ### UC17-FE: Duplicar Ambiente Não Publicados
 
-- Modal: Ação acionada por botão `Duplicar` em `DetalheAmbiente` (rota `/ambientes/nao-publicados/{id}`) que abre modal para `nome` e `localizacao` do novo ambiente.
+- Modal: acionado pela ação correspondente no componente `AcoesAmbiente` (select de ações no topo) da página de detalhes (rota `/ambientes/nao-publicados/{id}`), que abre modal para `nome` e `localizacao` do novo ambiente.
 - Pré-condições: Usuário logado com role `gestor` e ambiente com `status = NAO_PUBLICADO`.
 - Fluxo principal (UI):
   1. Usuário fornece `nome`/`localizacao` no modal e confirma.

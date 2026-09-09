@@ -1,4 +1,5 @@
 import {fireEvent, render, screen, waitFor, within} from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import {describe, it, expect, vi, beforeEach} from 'vitest'
 import {MemoryRouter, Route, Routes} from 'react-router'
 import {QueryClient, QueryClientProvider} from '@tanstack/react-query'
@@ -131,6 +132,15 @@ function renderPage(initialEntries: string[] = ['/ambientes/nao-publicados/7'], 
     )
 }
 
+// Ações migradas para o AcoesAmbiente: abre o select de ações do topo,
+// escolhe a opção pelo rótulo e clica em Executar (o select é resetado).
+async function abrirAcao(nome: string) {
+    const user = userEvent.setup()
+    await user.click(await screen.findByLabelText('Selecionar ação'))
+    await user.click(await screen.findByRole('option', {name: nome}))
+    await user.click(screen.getByRole('button', {name: 'Executar'}))
+}
+
 describe('NaoPublicadoDetalhePage', () => {
     beforeEach(() => {
         vi.clearAllMocks()
@@ -168,18 +178,22 @@ describe('NaoPublicadoDetalhePage', () => {
         expect(screen.getByText('Voltar à lista')).toBeInTheDocument()
     })
 
-    it('renderiza o detalhe e os botões de ação do gestor', async () => {
+    it('renderiza o detalhe, os botões críticos e o select de ações do gestor', async () => {
         vi.mocked(fetchAmbienteNaoPublicado).mockResolvedValueOnce(AMBIENTE)
         renderPage()
 
         await waitFor(() => {
             expect(screen.getByText('Sala 101')).toBeInTheDocument()
         })
-        expect(screen.getByRole('button', {name: 'Editar Dados Básicos'})).toBeInTheDocument()
-        expect(screen.getByRole('button', {name: 'Alterar Tipo'})).toBeInTheDocument()
-        expect(screen.getByRole('button', {name: 'Duplicar'})).toBeInTheDocument()
+        // Ações críticas (UC15/UC18) permanecem botões diretos na barra
         expect(screen.getByRole('button', {name: 'Enviar p/ Validação'})).toBeInTheDocument()
         expect(screen.getByRole('button', {name: 'Deletar'})).toBeInTheDocument()
+        // Ações não-críticas ficam como opções do select do AcoesAmbiente
+        const user = userEvent.setup()
+        await user.click(screen.getByLabelText('Selecionar ação'))
+        expect(await screen.findByRole('option', {name: 'Editar Dados Básicos'})).toBeInTheDocument()
+        expect(screen.getByRole('option', {name: 'Alterar Tipo'})).toBeInTheDocument()
+        expect(screen.getByRole('option', {name: 'Duplicar'})).toBeInTheDocument()
     })
 
     describe('deletar via ModalConfirmacao (UC15-FE)', () => {
@@ -247,10 +261,7 @@ describe('NaoPublicadoDetalhePage', () => {
             vi.mocked(fetchAmbienteNaoPublicado).mockResolvedValue(AMBIENTE)
             renderPage()
 
-            await waitFor(() => {
-                expect(screen.getByRole('button', {name: 'Duplicar'})).toBeEnabled()
-            })
-            fireEvent.click(screen.getByRole('button', {name: 'Duplicar'}))
+            await abrirAcao('Duplicar')
 
             expect(screen.getByText('Duplicar Ambiente')).toBeInTheDocument()
             expect(screen.getByLabelText('Nome')).toHaveValue('Sala 101')
@@ -266,10 +277,7 @@ describe('NaoPublicadoDetalhePage', () => {
             const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
             renderPage(undefined, queryClient)
 
-            await waitFor(() => {
-                expect(screen.getByRole('button', {name: 'Duplicar'})).toBeEnabled()
-            })
-            fireEvent.click(screen.getByRole('button', {name: 'Duplicar'}))
+            await abrirAcao('Duplicar')
             fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', {name: 'Duplicar'}))
 
             await waitFor(() => {
@@ -297,10 +305,7 @@ describe('NaoPublicadoDetalhePage', () => {
             )
             renderPage()
 
-            await waitFor(() => {
-                expect(screen.getByRole('button', {name: 'Duplicar'})).toBeEnabled()
-            })
-            fireEvent.click(screen.getByRole('button', {name: 'Duplicar'}))
+            await abrirAcao('Duplicar')
             fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', {name: 'Duplicar'}))
 
             const {toast} = await import('sonner')
@@ -336,10 +341,7 @@ describe('NaoPublicadoDetalhePage', () => {
             const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
             renderPage(undefined, queryClient)
 
-            await waitFor(() => {
-                expect(screen.getByRole('button', {name: 'Editar Dados Básicos'})).toBeEnabled()
-            })
-            fireEvent.click(screen.getByRole('button', {name: 'Editar Dados Básicos'}))
+            await abrirAcao('Editar Dados Básicos')
 
             const dialogo = within(screen.getByRole('dialog'))
             expect(dialogo.getByText('Editar Dados Básicos')).toBeInTheDocument()
@@ -371,10 +373,7 @@ describe('NaoPublicadoDetalhePage', () => {
             )
             renderPage()
 
-            await waitFor(() => {
-                expect(screen.getByRole('button', {name: 'Editar Dados Básicos'})).toBeEnabled()
-            })
-            fireEvent.click(screen.getByRole('button', {name: 'Editar Dados Básicos'}))
+            await abrirAcao('Editar Dados Básicos')
             fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', {name: 'Salvar'}))
 
             const {toast} = await import('sonner')
@@ -394,10 +393,7 @@ describe('NaoPublicadoDetalhePage', () => {
             const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
             renderPage(undefined, queryClient)
 
-            await waitFor(() => {
-                expect(screen.getByRole('button', {name: 'Incluir Geometrias'})).toBeEnabled()
-            })
-            fireEvent.click(screen.getByRole('button', {name: 'Incluir Geometrias'}))
+            await abrirAcao('Incluir Geometrias')
 
             const dialogo = within(screen.getByRole('dialog'))
             fireEvent.change(dialogo.getByLabelText('Base (m)'), {target: {value: '4'}})
@@ -423,10 +419,7 @@ describe('NaoPublicadoDetalhePage', () => {
             vi.mocked(atualizarGeometrias).mockResolvedValueOnce(undefined)
             renderPage()
 
-            await waitFor(() => {
-                expect(screen.getByRole('button', {name: 'Editar Geometrias'})).toBeEnabled()
-            })
-            fireEvent.click(screen.getByRole('button', {name: 'Editar Geometrias'}))
+            await abrirAcao('Editar Geometrias')
 
             const dialogo = within(screen.getByRole('dialog'))
             expect(dialogo.getByLabelText('Base (m)')).toHaveValue(4)
@@ -449,10 +442,7 @@ describe('NaoPublicadoDetalhePage', () => {
             vi.mocked(atualizarPesDireitos).mockResolvedValueOnce(undefined)
             renderPage()
 
-            await waitFor(() => {
-                expect(screen.getByRole('button', {name: 'Editar Pés-direitos'})).toBeEnabled()
-            })
-            fireEvent.click(screen.getByRole('button', {name: 'Editar Pés-direitos'}))
+            await abrirAcao('Editar Pés-direitos')
 
             const dialogo = within(screen.getByRole('dialog'))
             expect(dialogo.getByLabelText('Pé-direito 1 (m)')).toHaveValue(3)
@@ -472,10 +462,7 @@ describe('NaoPublicadoDetalhePage', () => {
             vi.mocked(atualizarEsquadrias).mockResolvedValueOnce(undefined)
             renderPage()
 
-            await waitFor(() => {
-                expect(screen.getByRole('button', {name: 'Editar Esquadrias'})).toBeEnabled()
-            })
-            fireEvent.click(screen.getByRole('button', {name: 'Editar Esquadrias'}))
+            await abrirAcao('Editar Esquadrias')
 
             const dialogo = within(screen.getByRole('dialog'))
             expect(dialogo.getByLabelText('Base (m)')).toHaveValue(0.9)
@@ -505,10 +492,7 @@ describe('NaoPublicadoDetalhePage', () => {
             const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
             renderPage(undefined, queryClient)
 
-            await waitFor(() => {
-                expect(screen.getByRole('button', {name: 'Info Adicional'})).toBeEnabled()
-            })
-            fireEvent.click(screen.getByRole('button', {name: 'Info Adicional'}))
+            await abrirAcao('Info Adicional')
 
             const dialogo = within(screen.getByRole('dialog'))
             fireEvent.change(dialogo.getByLabelText('Informação Adicional (opcional)'), {
@@ -535,10 +519,7 @@ describe('NaoPublicadoDetalhePage', () => {
             const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
             renderPage(undefined, queryClient)
 
-            await waitFor(() => {
-                expect(screen.getByRole('button', {name: 'Alterar Tipo'})).toBeEnabled()
-            })
-            fireEvent.click(screen.getByRole('button', {name: 'Alterar Tipo'}))
+            await abrirAcao('Alterar Tipo')
 
             const dialogo = within(screen.getByRole('dialog'))
             expect(dialogo.getByText(/cria um novo ambiente e remove o antigo/)).toBeInTheDocument()

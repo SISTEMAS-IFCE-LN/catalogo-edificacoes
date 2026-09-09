@@ -22,6 +22,8 @@ import {ModalPesDireitos} from '@/components/ambientes/ModalPesDireitos'
 import {ModalEsquadrias} from '@/components/ambientes/ModalEsquadrias'
 import {ModalInfoAdicional} from '@/components/ambientes/ModalInfoAdicional'
 import {ModalAlterarTipo} from '@/components/ambientes/ModalAlterarTipo'
+import {AcoesAmbiente} from '@/components/ambientes/AcoesAmbiente'
+import type {AcaoAmbiente} from '@/components/ambientes/AcoesAmbiente'
 import {PermissionButton} from '@/components/auth/PermissionButton'
 import {Role} from '@/types/usuarios/user'
 import {Button} from '@/components/ui/button'
@@ -95,6 +97,21 @@ export function NaoPublicadoDetalhePage() {
         void queryCliente.invalidateQueries({ queryKey: ['ambientes', 'nao-publicados'] })
     }
 
+    // Ações não-críticas (UC07–UC14, UC16, UC17) como opções do AcoesAmbiente;
+    // a permissão de cada uma é checada pelo componente via canDo(actionKey).
+    const acoes: AcaoAmbiente[] = [
+        {value: 'Editar Dados Básicos', actionKey: 'ambiente:editar', onRun: () => setModal('editar-dados-basicos')},
+        {value: 'Incluir Geometrias', actionKey: 'ambiente:editar', onRun: () => setModal('incluir-geometrias')},
+        {value: 'Editar Geometrias', actionKey: 'ambiente:editar', onRun: () => setModal('editar-geometrias')},
+        {value: 'Incluir Pés-direitos', actionKey: 'ambiente:editar', onRun: () => setModal('incluir-pes-direitos')},
+        {value: 'Editar Pés-direitos', actionKey: 'ambiente:editar', onRun: () => setModal('editar-pes-direitos')},
+        {value: 'Incluir Esquadrias', actionKey: 'ambiente:editar', onRun: () => setModal('incluir-esquadrias')},
+        {value: 'Editar Esquadrias', actionKey: 'ambiente:editar', onRun: () => setModal('editar-esquadrias')},
+        {value: 'Info Adicional', actionKey: 'ambiente:editar', onRun: () => setModal('info-adicional')},
+        {value: 'Alterar Tipo', actionKey: 'ambiente:alterar-tipo', onRun: () => setModal('alterar-tipo')},
+        {value: 'Duplicar', actionKey: 'ambiente:duplicar', onRun: () => setModal('duplicar')},
+    ]
+
     if (isLoading) return <p>Carregando…</p>
     if (error || !ambiente) {
         return (
@@ -110,45 +127,22 @@ export function NaoPublicadoDetalhePage() {
     return (
         <div className="space-y-4">
             <Button variant="outline" onClick={() => navigate(PAGES_ROUTES.NAO_PUBLICADOS)}>Voltar</Button>
+            {/* Barra de ações no topo (arquitetura §15.11): select de ações
+                não-críticas à esquerda + críticas (UC15/UC18) como botões diretos. */}
+            <AcoesAmbiente
+                acoes={acoes}
+                criticalActions={
+                    <>
+                        <PermissionButton requiredRoles={[Role.GESTOR_SISTEMA]} onClick={() => setModal('enviar-validacao')}>
+                            Enviar p/ Validação
+                        </PermissionButton>
+                        <PermissionButton requiredRoles={[Role.GESTOR_SISTEMA]} variant="destructive" onClick={() => setModal('deletar')}>
+                            Deletar
+                        </PermissionButton>
+                    </>
+                }
+            />
             <DetalheAmbiente ambiente={ambiente}/>
-            <div className="flex flex-wrap gap-2">
-                <PermissionButton requiredRoles={[Role.GESTOR_SISTEMA]} variant="outline" onClick={() => setModal('editar-dados-basicos')}>
-                    Editar Dados Básicos
-                </PermissionButton>
-                <PermissionButton requiredRoles={[Role.GESTOR_SISTEMA]} variant="outline" onClick={() => setModal('incluir-geometrias')}>
-                    Incluir Geometrias
-                </PermissionButton>
-                <PermissionButton requiredRoles={[Role.GESTOR_SISTEMA]} variant="outline" onClick={() => setModal('editar-geometrias')}>
-                    Editar Geometrias
-                </PermissionButton>
-                <PermissionButton requiredRoles={[Role.GESTOR_SISTEMA]} variant="outline" onClick={() => setModal('incluir-pes-direitos')}>
-                    Incluir Pés-direitos
-                </PermissionButton>
-                <PermissionButton requiredRoles={[Role.GESTOR_SISTEMA]} variant="outline" onClick={() => setModal('editar-pes-direitos')}>
-                    Editar Pés-direitos
-                </PermissionButton>
-                <PermissionButton requiredRoles={[Role.GESTOR_SISTEMA]} variant="outline" onClick={() => setModal('incluir-esquadrias')}>
-                    Incluir Esquadrias
-                </PermissionButton>
-                <PermissionButton requiredRoles={[Role.GESTOR_SISTEMA]} variant="outline" onClick={() => setModal('editar-esquadrias')}>
-                    Editar Esquadrias
-                </PermissionButton>
-                <PermissionButton requiredRoles={[Role.GESTOR_SISTEMA]} variant="outline" onClick={() => setModal('info-adicional')}>
-                    Info Adicional
-                </PermissionButton>
-                <PermissionButton requiredRoles={[Role.GESTOR_SISTEMA]} variant="outline" onClick={() => setModal('alterar-tipo')}>
-                    Alterar Tipo
-                </PermissionButton>
-                <PermissionButton requiredRoles={[Role.GESTOR_SISTEMA]} variant="outline" onClick={() => setModal('duplicar')}>
-                    Duplicar
-                </PermissionButton>
-                <PermissionButton requiredRoles={[Role.GESTOR_SISTEMA]} onClick={() => setModal('enviar-validacao')}>
-                    Enviar p/ Validação
-                </PermissionButton>
-                <PermissionButton requiredRoles={[Role.GESTOR_SISTEMA]} variant="destructive" onClick={() => setModal('deletar')}>
-                    Deletar
-                </PermissionButton>
-            </div>
 
             {/* Confirmações UC15/UC18 (UC17 Duplicar e UC16 Alterar Tipo têm modais
                 próprios — o usuário define dados antes de confirmar) */}

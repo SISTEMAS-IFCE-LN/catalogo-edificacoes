@@ -66,8 +66,10 @@ describe('ModalEditarDadosBasicos (UC07-FE)', () => {
 
         it('converte rótulos da resposta para nomes técnicos nos selects', () => {
             renderModal()
-            expect(screen.getByLabelText('Bloco')).toHaveTextContent('BLOCO_1')
-            expect(screen.getByLabelText('Unidade')).toHaveTextContent('SEDE')
+            // Trigger exibe o rótulo da chave técnica pré-preenchida no form;
+            // a conversão para técnicos é garantida pelo payload do spec de sucesso
+            expect(screen.getByLabelText('Bloco')).toHaveTextContent('Bloco 1')
+            expect(screen.getByLabelText('Unidade')).toHaveTextContent('Sede')
         })
     })
 

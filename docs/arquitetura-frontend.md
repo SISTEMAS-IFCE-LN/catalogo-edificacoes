@@ -237,7 +237,7 @@ frontend/
 │   │   │                              # CampoEnum, CampoNumerico, BotaoRemover, ErroCampo,
 │   │   │                              # ModalGeometrias, ModalPesDireitos, ModalEsquadrias (genéricos de lista),
 │   │   │                              # ModalEditarDadosBasicos, ModalInfoAdicional, ModalAlterarTipo,
-│   │   │                              # ModalDuplicar, ModalConfirmacao, AcoesLote, PaginacaoFooter, ErrorLista
+│   │   │                              # ModalDuplicar, ModalConfirmacao, AcoesLote, AcoesAmbiente, PaginacaoFooter, ErrorLista
 │   │   ├── usuarios/                 # TabelaUsuarios, ModalEditarPerfis, ModalConfirmacaoStatusUsuario
 │   │   └── common/
 │   │       └── ResponsiveModal.tsx   # wrapper: Dialog (desktop) | Drawer (mobile)
@@ -1464,8 +1464,9 @@ Os modais de edição são construídos sobre `ModalFormulario` (shell: `Dialog`
 
 ### 15.11. `DetalheAmbiente` (UC02/UC05/UC19)
 
-- **`≥lg`**: layout grid com sidebar de ações à direita (sticky).
-- **`<lg`**: ações no topo como `<DropdownMenu>` ou como barra sticky no rodapé quando há ações contextuais (Publicar/Privar/Editar/Enviar p/ validação).
+- **Barra de ações no TOPO** da página de detalhe (entre o botão "Voltar" e o `DetalheAmbiente`):
+  - `nao-publicados/[id]`: componente `AcoesAmbiente` — select "Selecionar ação…" + `Executar`/`Limpar` à esquerda (ações não-críticas UC07–UC14/UC16/UC17, filtradas por permissão via `canDo`) e ações críticas (Enviar p/ Validação, Deletar) como botões diretos à direita da barra.
+  - `validacao/[id]` e `publicados/[id]`: sem select — botões críticos (Publicar/Privar, Privar) alinhados à direita do cabeçalho, na mesma linha do botão "Voltar" (`flex flex-wrap items-center justify-between gap-2`).
 - Seções (dados básicos, geometrias, pés-direitos, esquadrias, informação adicional): `<Accordion>` em mobile para escaneabilidade vertical, apresentação linear em desktop.
 
 ### 15.12. Acessibilidade mobile
