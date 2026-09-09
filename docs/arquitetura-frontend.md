@@ -187,7 +187,8 @@ frontend/
 │   ├── App.tsx                     # <RouterProvider router={router}/>
 │   │
 │   ├── router/
-│   │   └── index.tsx               # createBrowserRouter(...)
+│   │   ├── index.tsx               # createBrowserRouter(...)
+│   │   └── lazy-pages.ts           # React.lazy por página (code-splitting)
 │   │
 │   ├── routes/                     # 1 pasta por rota
 │   │   ├── login/
@@ -799,7 +800,7 @@ export function PublicOnly() {
 // router/index.tsx
 
 import { Suspense } from 'react'
-import { createBrowserRouter } from 'react-router'
+import { createBrowserRouter, Navigate } from 'react-router'
 import { RequireAuth } from '@/components/auth/RequireAuth'
 import { RequireRole } from '@/components/auth/RequireRole'
 import { PublicOnly } from '@/components/auth/PublicOnly'
@@ -807,7 +808,6 @@ import { Role } from '@/types/usuarios/user'
 import { Loading } from '@/components/ui/Loading'
 import { PAGES_ROUTES } from '@/constants/routes'
 import {
-  HomePage,
   LoginPage,
   CallbackPage,
   UnauthorizedPage,
@@ -815,6 +815,9 @@ import {
   PublicadosPage,
   PublicadoDetalhePage,
   EsquadriasPage,
+  NaoPublicadosPage,
+  NovoAmbientePage,
+  NaoPublicadoDetalhePage,
   ValidacaoPage,
   ValidacaoDetalhePage,
   UsuariosPage,
@@ -864,13 +867,15 @@ export const router = createBrowserRouter([
             ],
           },
 
-          // Gestor (UC04-UC18-FE) — Parte 11: a implementar.
-          // Estado atual: placeholder <HomePage/>. As rotas 'novo' e ':id'
-          // serão adicionadas pela parte 11 (plano 11-pagina-naopublicados-formambiente.md).
+          // Gestor (UC04-UC18-FE)
           {
             path: '/ambientes/nao-publicados',
             element: <RequireRole roles={[Role.GESTOR_SISTEMA]} />,
-            children: [{ index: true, element: <Suspense fallback={<Loading />}><HomePage /></Suspense> }],
+            children: [
+              { index: true, element: <Suspense fallback={<Loading />}><NaoPublicadosPage /></Suspense> },
+              { path: 'novo', element: <Suspense fallback={<Loading />}><NovoAmbientePage /></Suspense> },
+              { path: ':id', element: <Suspense fallback={<Loading />}><NaoPublicadoDetalhePage /></Suspense> },
+            ],
           },
 
           // Administrador (UC22-UC26-FE)
@@ -884,10 +889,12 @@ export const router = createBrowserRouter([
     ],
   },
 
-  { path: '/', element: <Suspense fallback={<Loading />}><HomePage /></Suspense> },
+  { path: '/', element: <Navigate to={PAGES_ROUTES.PUBLICADOS} replace /> },
   { path: '*', element: <Suspense fallback={<Loading />}><UnauthorizedPage /></Suspense> },
 ])
 ```
+
+> **Nota**: a rota raiz `/` é apenas um `<Navigate to={PAGES_ROUTES.PUBLICADOS} replace />` — não existe página home dedicada; a porta de entrada pública é a lista de publicados (UC21-FE, `permitAll` no backend — `seguranca.md` §7.1). `PAGES_ROUTES.HOME` permanece `'/'` como entrada canônica: logo do `Header`, `PublicOnly`, callback pós-login e botão da `UnauthorizedPage` apontam para `/` e caem no redirect automaticamente. O `replace` é obrigatório para o botão "voltar" não prender o usuário no loop `/` → `/ambientes/publicados`.
 
 ### 9.3. Navegação adaptativa (HeaderNav)
 

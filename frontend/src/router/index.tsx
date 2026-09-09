@@ -1,5 +1,5 @@
 ﻿import {Suspense} from 'react'
-import {createBrowserRouter} from 'react-router'
+import {createBrowserRouter, Navigate} from 'react-router'
 import {PublicOnly} from '@/components/auth/PublicOnly'
 import {RequireAuth} from '@/components/auth/RequireAuth'
 import {RequireRole} from '@/components/auth/RequireRole'
@@ -7,7 +7,6 @@ import {Role} from '@/types/usuarios/user'
 import {Loading} from '@/components/ui/Loading'
 import {PAGES_ROUTES} from '@/constants/routes'
 import {
-    HomePage,
     LoginPage,
     CallbackPage,
     UnauthorizedPage,
@@ -80,6 +79,6 @@ export const router = createBrowserRouter([
             },
         ],
     },
-    {path: '/', element: <Suspense fallback={<Loading/>}><HomePage/></Suspense>},
+    {path: '/', element: <Navigate to={PAGES_ROUTES.PUBLICADOS} replace/>},
     {path: '*', element: <Suspense fallback={<Loading/>}><UnauthorizedPage/></Suspense>},
 ])
