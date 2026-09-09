@@ -1399,53 +1399,86 @@ Wrapper que renderiza `Dialog` (desktop) ou `Drawer` (mobile) conforme viewport:
 ```tsx
 // src/components/common/ResponsiveModal.tsx
 
-import * as React from 'react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import type {ReactNode} from 'react'
 import {
-  Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog'
+import {
+    Drawer,
+    DrawerContent,
+    DrawerDescription,
+    DrawerFooter,
+    DrawerHeader,
+    DrawerTitle,
 } from '@/components/ui/drawer'
-import { useIsMobile } from '@/hooks/useIsMobile'
-import type { DialogProps } from '@radix-ui/react-dialog'
+import {useIsMobile} from '@/hooks/useIsMobile'
 
-interface Props extends DialogProps {
-  title: string
-  description?: string
-  children: React.ReactNode
-  footer?: React.ReactNode
+interface ResponsiveModalProps {
+    open: boolean
+    onOpenChange: (open: boolean) => void
+    title: string
+    description?: string
+    children: ReactNode
+    footer?: ReactNode
 }
 
-export function ResponsiveModal({ title, description, children, footer, ...rest }: Props) {
-  const isMobile = useIsMobile()   // hook fornecido pela CLI do shadcn
+// Wrapper dos modais de edição (UC07–UC17): Dialog no desktop, Drawer no
+// mobile (breakpoint `md`, via useIsMobile). No desktop o DialogContent usa
+// `grid-rows-[auto_minmax(0,1fr)_auto]` para fixar header e footer e deixar
+// apenas o corpo com scroll (`overflow-y-auto` + `min-h-0`); o
+// `overflow-hidden` neutraliza a guarda global de `ui/dialog.tsx` via
+// tailwind-merge. No mobile o Drawer limita a altura a 85dvh; o corpo rola
+// entre header e footer, que respeita a safe-area inferior (iPhone).
+export function ResponsiveModal({
+    open,
+    onOpenChange,
+    title,
+    description,
+    children,
+    footer,
+}: ResponsiveModalProps) {
+    const isMobile = useIsMobile()
 
-  if (isMobile) {
+    if (isMobile) {
+        return (
+            <Drawer open={open} onOpenChange={onOpenChange}>
+                <DrawerContent className="max-h-[85dvh]">
+                    <DrawerHeader>
+                        <DrawerTitle>{title}</DrawerTitle>
+                        {description && <DrawerDescription>{description}</DrawerDescription>}
+                    </DrawerHeader>
+                    <div className="flex-1 overflow-y-auto p-4">{children}</div>
+                    {footer && (
+                        <DrawerFooter className="pb-[env(safe-area-inset-bottom)]">{footer}</DrawerFooter>
+                    )}
+                </DrawerContent>
+            </Drawer>
+        )
+    }
+
     return (
-      <Drawer open={rest.open} onOpenChange={rest.onOpenChange} swipeDirection="down">
-        <DrawerContent className="max-h-[85dvh]">
-          <DrawerHeader>
-            <DrawerTitle>{title}</DrawerTitle>
-            {description && <DrawerDescription>{description}</DrawerDescription>}
-          </DrawerHeader>
-          <div className="flex-1 overflow-y-auto p-4">{children}</div>
-          {footer && <DrawerFooter className="pb-[env(safe-area-inset-bottom)]">{footer}</DrawerFooter>}
-        </DrawerContent>
-      </Drawer>
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="max-w-2xl max-h-[85dvh] grid-rows-[auto_minmax(0,1fr)_auto] overflow-hidden">
+                <DialogHeader>
+                    <DialogTitle>{title}</DialogTitle>
+                    {description && <DialogDescription>{description}</DialogDescription>}
+                </DialogHeader>
+                <div className="-mx-4 min-h-0 overflow-y-auto px-4">{children}</div>
+                {footer && <DialogFooter>{footer}</DialogFooter>}
+            </DialogContent>
+        </Dialog>
     )
-  }
-
-  return (
-    <Dialog {...rest}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          {description && <DialogDescription>{description}</DialogDescription>}
-        </DialogHeader>
-        {children}
-        {footer && <DialogFooter>{footer}</DialogFooter>}
-      </DialogContent>
-    </Dialog>
-  )
 }
 ```
+
+Em desktop, o corpo rolante é produzido pelo layout `grid-rows-[auto_minmax(0,1fr)_auto]` + `overflow-hidden` no `DialogContent`: header (primeira linha) e footer (última) permanecem fixos e apenas o corpo central (`min-h-0 overflow-y-auto`) rola, mantendo os botões Salvar/Cancelar sempre visíveis mesmo com listas longas (geometrias, pés-direitos, esquadrias) em qualquer viewport. No mobile o `Drawer` já limita a altura a `max-h-[85dvh]`, com o scroll concentrado no corpo entre header e footer.
+
+Nota: `DialogContent` (`src/components/ui/dialog.tsx`) carrega uma guarda global `max-h-[calc(100dvh-2rem)] overflow-y-auto` como fallback para modais que não usam o wrapper (ex.: modais de confirmação curtos, `ModalConfirmacao`). O `<ResponsiveModal>` a neutraliza passando `overflow-hidden` — o `tailwind-merge` (via `cn`) resolve o conflito de classes em favor do caller.
 
 Padrão oficial documentado em https://ui.shadcn.com/docs/components/drawer#responsive.
 
@@ -1542,7 +1575,7 @@ Cobertura mínima recomendada: `lib/security/permissions.ts` 100%, `lib/security
 | Backend rotaciona refresh token (vida restante < accessExpiration) | Interceptor de response não chama `setRefreshToken` (cookie gerido por `Set-Cookie` do backend, navegador atualiza automaticamente). Comportamento alinhado a `seguranca.md` §3. |
 | Adição de novo perfil | Adicionar ao enum `Role`; atualizar `ROUTE_PERMISSIONS`/`ACTION_PERMISSIONS`; sem refactor estrutural |
 | Drawer em iOS Safari mais antigo | `body { position: relative; }` em `globals.css` resolve overlay; Base UI cobre iOS 12+. Se necessário, fallback para `Dialog` em viewport mínima. |
-| Modais UC07–UC13 com listas longas em mobile | Configurar `snapPoints` no `Drawer` para limitar altura e permitir drag-to-expand; fallback de scroll com `flex-1 overflow-y-auto`. |
+| Modais UC07–UC17 com listas longas (mobile e desktop) | `<ResponsiveModal>` mantém header/footer fixos e concentra o scroll no corpo em ambas as variantes (desktop: `grid-rows-[auto_minmax(0,1fr)_auto]` + `overflow-hidden`; mobile: `max-h-[85dvh]` com `flex-1 overflow-y-auto`). Em listas longas no `Drawer`, `snapPoints` habilitam drag-to-expand; a guarda global `max-h-[calc(100dvh-2rem)] overflow-y-auto` do `DialogContent` cobre modais que não usam o wrapper. |
 | Avatar sem foto real | Backend não provê `picture` do Google hoje; `<AvatarFallback>` com iniciais já cobre UX. Adicionar `picture` ao `Usuario` + endpoint é evolução futura. |
 
 ---

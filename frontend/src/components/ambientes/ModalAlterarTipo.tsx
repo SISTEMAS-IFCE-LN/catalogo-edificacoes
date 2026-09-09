@@ -1,10 +1,4 @@
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog'
+import {ResponsiveModal} from '@/components/common/ResponsiveModal'
 import {FormAmbiente} from '@/components/ambientes/FormAmbiente'
 import {useAsyncAction} from '@/hooks/useAsyncAction'
 import {alterarTipo} from '@/lib/api/api-naopublicados'
@@ -32,26 +26,23 @@ export function ModalAlterarTipo({open, ambiente, onOpenChange, onSalvou}: Modal
     })
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-h-[85dvh] overflow-y-auto">
-                <DialogHeader>
-                    <DialogTitle>Alterar Tipo</DialogTitle>
-                    <DialogDescription>
-                        Atenção: alterar o tipo cria um novo ambiente e remove o antigo.
-                    </DialogDescription>
-                </DialogHeader>
-                <FormAmbiente
-                    initial={ambienteDeDetalhe(ambiente)}
-                    onSubmit={(values) =>
-                        executar(async () => {
-                            const novo = await alterarTipo(ambiente.id, values)
-                            toast.success('Tipo alterado.')
-                            onSalvou(novo.id)
-                        })
-                    }
-                />
-                {executando && <p className="text-sm text-muted-foreground">Salvando…</p>}
-            </DialogContent>
-        </Dialog>
+        <ResponsiveModal
+            open={open}
+            onOpenChange={onOpenChange}
+            title="Alterar Tipo"
+            description="Atenção: alterar o tipo cria um novo ambiente e remove o antigo."
+        >
+            <FormAmbiente
+                initial={ambienteDeDetalhe(ambiente)}
+                onSubmit={(values) =>
+                    executar(async () => {
+                        const novo = await alterarTipo(ambiente.id, values)
+                        toast.success('Tipo alterado.')
+                        onSalvou(novo.id)
+                    })
+                }
+            />
+            {executando && <p className="text-sm text-muted-foreground">Salvando…</p>}
+        </ResponsiveModal>
     )
 }

@@ -8,14 +8,7 @@ import {
 import {zodResolver} from '@hookform/resolvers/zod'
 import type {FieldValues} from 'react-hook-form'
 import type {z} from 'zod'
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog'
+import {ResponsiveModal} from '@/components/common/ResponsiveModal'
 import {Button} from '@/components/ui/button'
 import {useAsyncAction} from '@/hooks/useAsyncAction'
 import {toast} from 'sonner'
@@ -38,10 +31,12 @@ export interface ModalFormularioProps<V extends FieldValues, R = void> {
     children: (form: UseFormReturn<V>) => ReactNode
 }
 
-// Shell dos modais de edição (UC07–UC17): Dialog + RHF + zodResolver +
+// Shell dos modais de edição (UC07–UC17): ResponsiveModal + RHF + zodResolver +
 // useAsyncAction. A página monta o modal condicionalmente, então os
 // `defaultValues` são relidos a cada abertura — sem reset em efeito (regra
-// react-hooks/set-state-in-effect).
+// react-hooks/set-state-in-effect). O footer fica FORA do <form> (prop do
+// ResponsiveModal): os botões submetem via o atributo form={formId}, mantendo
+// header/footer fixos e apenas o corpo rolante (parte 12 §6–§7).
 export function ModalFormulario<V extends FieldValues, R = void>({
                                                                      open,
                                                                      title,
@@ -56,8 +51,6 @@ export function ModalFormulario<V extends FieldValues, R = void>({
                                                                      mensagemPadrao = 'Erro ao salvar. Tente novamente.',
                                                                      children,
                                                                  }: ModalFormularioProps<V, R>) {
-    // Parte 12: o footer migra para fora do <form> no ResponsiveModal; os
-    // botões continuam submetendo via o atributo form={formId}.
     const formId = useId()
 
     // TTransformedValues = V: o handleSubmit entrega ao onValid o OUTPUT do
@@ -85,24 +78,25 @@ export function ModalFormulario<V extends FieldValues, R = void>({
     }
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>{title}</DialogTitle>
-                    {description && <DialogDescription>{description}</DialogDescription>}
-                </DialogHeader>
-                <form id={formId} onSubmit={form.handleSubmit(salvar)} className="space-y-3">
-                    {children(form)}
-                    <DialogFooter>
-                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                            Cancelar
-                        </Button>
-                        <Button type="submit" form={formId} disabled={executando}>
-                            {executando ? 'Salvando…' : salvarLabel}
-                        </Button>
-                    </DialogFooter>
-                </form>
-            </DialogContent>
-        </Dialog>
+        <ResponsiveModal
+            open={open}
+            onOpenChange={onOpenChange}
+            title={title}
+            description={description}
+            footer={
+                <>
+                    <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+                        Cancelar
+                    </Button>
+                    <Button type="submit" form={formId} disabled={executando}>
+                        {executando ? 'Salvando…' : salvarLabel}
+                    </Button>
+                </>
+            }
+        >
+            <form id={formId} onSubmit={form.handleSubmit(salvar)} className="space-y-3">
+                {children(form)}
+            </form>
+        </ResponsiveModal>
     )
 }
