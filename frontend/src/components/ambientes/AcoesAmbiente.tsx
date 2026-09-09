@@ -56,35 +56,36 @@ export function AcoesAmbiente({ acoes, criticalActions }: AcoesAmbienteProps) {
         >
             <div className="flex flex-wrap items-center gap-2">
                 <span className="text-sm font-medium">Ações do ambiente</span>
+                {/* Altura: 44px no mobile (§15.12), altura nativa no desktop (size-11 md:size-8). */}
                 <Select value={acao} onValueChange={(v) => setAcao(v ?? OPCAO_NENHUMA)}>
                     <SelectTrigger
-                        className="w-50 min-h-11"
+                        className="w-50 min-h-11 md:min-h-0"
                         aria-label="Selecionar ação"
                     >
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value={OPCAO_NENHUMA}>Selecionar ação…</SelectItem>
+                        <SelectItem value={OPCAO_NENHUMA} className="min-h-11 md:min-h-0">
+                            Selecionar ação…
+                        </SelectItem>
                         {acoesPermitidas.map((a) => (
-                            <SelectItem key={a.value} value={a.value}>
+                            <SelectItem key={a.value} value={a.value} className="min-h-11 md:min-h-0">
                                 {a.value}
                             </SelectItem>
                         ))}
                     </SelectContent>
                 </Select>
                 <Button
-                    size="sm"
                     onClick={executar}
                     disabled={acao === OPCAO_NENHUMA}
-                    className="min-h-11"
+                    className="min-h-11 md:min-h-0"
                 >
                     Executar
                 </Button>
                 <Button
                     variant="outline"
-                    size="sm"
                     onClick={() => setAcao(OPCAO_NENHUMA)}
-                    className="min-h-11"
+                    className="min-h-11 md:min-h-0"
                 >
                     Limpar
                 </Button>

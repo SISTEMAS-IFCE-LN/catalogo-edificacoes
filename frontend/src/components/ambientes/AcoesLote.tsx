@@ -62,18 +62,21 @@ export function AcoesLote({ selectedIds, onClear, acoes: acoesCustomizadas }: Ac
         </span>
     )
 
+    // Altura: 44px no mobile (§15.12), altura nativa do design system no desktop (size-11 md:size-8).
     const seletor = (
         <Select value={acao} onValueChange={(v) => setAcao(v ?? OPCAO_NENHUMA)}>
             <SelectTrigger
-                className="w-50"
+                className="w-50 min-h-11 md:min-h-0"
                 aria-label="Selecionar ação em lote"
             >
                 <SelectValue />
             </SelectTrigger>
             <SelectContent>
-                <SelectItem value={OPCAO_NENHUMA}>Selecionar ação…</SelectItem>
+                <SelectItem value={OPCAO_NENHUMA} className="min-h-11 md:min-h-0">
+                    Selecionar ação…
+                </SelectItem>
                 {acoes.map((a) => (
-                    <SelectItem key={a.value} value={a.value}>
+                    <SelectItem key={a.value} value={a.value} className="min-h-11 md:min-h-0">
                         {a.value}
                     </SelectItem>
                 ))}
@@ -83,10 +86,9 @@ export function AcoesLote({ selectedIds, onClear, acoes: acoesCustomizadas }: Ac
 
     const botaoExecutar = (
         <Button
-            size="sm"
             onClick={executar}
             disabled={acao === OPCAO_NENHUMA}
-            className="min-h-11"
+            className="min-h-11 md:min-h-0"
         >
             Executar
         </Button>
@@ -95,9 +97,8 @@ export function AcoesLote({ selectedIds, onClear, acoes: acoesCustomizadas }: Ac
     const botaoLimpar = (
         <Button
             variant="outline"
-            size="sm"
             onClick={onClear}
-            className="min-h-11"
+            className="min-h-11 md:min-h-0"
         >
             Limpar
         </Button>
