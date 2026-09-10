@@ -184,6 +184,12 @@ JOIN geometria g
     AND g.base = CAST(0.60 AS DECIMAL(9, 2))
     AND g.altura = CAST(0.60 AS DECIMAL(9, 2));
 
+-- Normaliza o invariant do domínio: geometria de esquadria não pertence à
+-- coleção de geometrias do ambiente (vínculo é só via esquadria.geometria_id).
+-- O ambiente_id foi usado acima apenas como chave de pareamento temporário.
+UPDATE geometria SET ambiente_id = NULL
+WHERE id IN (SELECT geometria_id FROM esquadria);
+
 INSERT INTO ambiente_pes_direitos (ambiente_id, pes_direitos)
 SELECT
     a.id,
