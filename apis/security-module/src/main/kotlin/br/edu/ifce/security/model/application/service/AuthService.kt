@@ -37,7 +37,7 @@ class AuthService(
     private fun gerarTokensPair(usuario: Usuario): TokensPair {
         val roles = usuario.perfis.map { it.name }
         return TokensPair(
-            accessToken = jwtService.gerarAccessToken(usuario.id!!, usuario.email, roles),
+            accessToken = jwtService.gerarAccessToken(usuario.id!!, roles),
             refreshToken = refreshTokenService.gerarRefreshToken(usuario).token
         )
     }
@@ -47,7 +47,7 @@ class AuthService(
         val roles = usuario.perfis.map { it.name }
         val tempoRestanteRt = Duration.between(LocalDateTime.now(), refreshToken.expiraEm).seconds
         return TokensPair(
-            accessToken = jwtService.gerarAccessToken(usuario.id!!, usuario.email, roles),
+            accessToken = jwtService.gerarAccessToken(usuario.id!!, roles),
             refreshToken = if (jwtProperties.accessTokenExpiration > tempoRestanteRt)
                 refreshTokenService.gerarRefreshToken(usuario).token else null
         )

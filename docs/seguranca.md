@@ -135,24 +135,26 @@ Uma `SecurityFilterChain` dedicada (`authFilterChain`, `@Order(2)`) intercepta `
     │  1. GET /auth/csrf-token           │
     │  (após OAuth2 redirect)            │
     ├───────────────────────────────────►│
-    │  Set-Cookie: XSRF-TOKEN=abc123     │  CookieCsrfTokenRepository
-    │  Body: { token: "abc123" }         │  (HttpOnly=false)
+    │  Set-Cookie: XSRF-TOKEN=<raw>      │  CookieCsrfTokenRepository
+    │  (HttpOnly=true)                   │  (raw no cookie; JS não lê)
+    │  Body: { token: "<mascarado>" }    │
     │◄───────────────────────────────────┤
     │                                    │
     │  2. POST /auth/refresh             │
     │  Cookie: refreshToken=xyz          │
-    │  Header: X-XSRF-TOKEN=abc123       │
+    │  Cookie: XSRF-TOKEN=<raw>          │  (enviado automaticamente)
+    │  Header: X-XSRF-TOKEN=<mascarado>  │  (lido da memória pelo frontend)
     ├───────────────────────────────────►│
-    │                                    │  CsrfFilter valida:
-    │                                    │  cookie XSRF-TOKEN == header X-XSRF-TOKEN?
+    │                                    │  XorCsrfTokenRequestHandler:
+    │                                    │  unmask(header) == cookie raw?
     │  200 OK { accessToken }            │
     │◄───────────────────────────────────┤
 ```
 
 ### 4.3. Pontos de atenção
 
-- O `CookieCsrfTokenRepository.withHttpOnlyFalse()` emite o cookie `XSRF-TOKEN` com `HttpOnly=false` para que o JavaScript possa lê-lo.
-- O frontend (`callback.html`) busca o token via `GET /auth/csrf-token` e o envia no header `X-XSRF-TOKEN` em cada POST.
+- O `CookieCsrfTokenRepository` (construtor padrão, `HttpOnly=true`) emite o cookie `XSRF-TOKEN` com o token **raw**. O JavaScript não lê o cookie — o token **mascarado** vem do body de `GET /auth/csrf-token` e é mantido em memória pelo frontend (`csrf.ts`). `HttpOnly=true` elimina exfiltração do raw por XSS, sem bloquear o envio automático do cookie (`withCredentials`) nem a leitura server-side.
+- O frontend busca o token **mascarado** via `GET /auth/csrf-token` (campo `token` do body) e o mantém em memória (`csrf.ts`), enviando-o no header `X-XSRF-TOKEN` a cada POST `/auth/*`. O cookie `XSRF-TOKEN` (raw, `HttpOnly`) é enviado automaticamente pelo navegador e usado pelo servidor para validar. O `callback.html` (página de teste do backend) segue o mesmo padrão (lê `data.token` do body).
 - A proteção CSRF aplica-se **apenas** a `/auth/**`. A API (chain 3) continua stateless e sem CSRF, pois usa JWT via `Authorization: Bearer` (não enviado automaticamente pelo navegador).
 - O `failure.html` não é afetado — não faz chamadas a `/auth/**`.
 
@@ -175,15 +177,14 @@ Quatro perfis, armazenados no campo `perfis` da tabela `usuario_perfis` como `Se
 
 ## 6. Lockout prevention
 
-`UsuarioService.verificarExclusaoAdm()` é invocado por `atualizarPerfis` e `desativarUsuario` para impedir que o sistema fique sem administrador ativo.
+`UsuarioService.verificarExclusaoAdm()` é invocado por `atualizarPerfis` e `desativar` para impedir que o sistema fique sem administrador ativo.
 
 ```kotlin
 private fun verificarExclusaoAdm() {
     val totalAdmins = repository.countByAtivoTrueAndPerfisContains(Perfil.ROLE_ADMINISTRADOR)
     if (totalAdmins <= 1) {
-        throw ResponseStatusException(
-            HttpStatus.CONFLICT,
-            "Ação negada: Não é possível remover/desativar o último Administrador do sistema."
+        throw UltimoAdminException(
+            "Ação negada: Não é possível remover ou desativar o último Administrador do sistema."
         )
     }
 }
@@ -404,7 +405,6 @@ Payload (claims):
 {
   "iss": "catalogo-edificacoes-backend",
   "sub": "1",
-  "email": "ti@ifce.edu.br",
   "roles": [
     "ROLE_ADMINISTRADOR",
     "ROLE_COLABORADOR"
@@ -451,7 +451,8 @@ Todas as respostas de erro tratadas pelo `GlobalExceptionHandler` seguem o forma
 | Validação de `@PathVariable`/`@RequestParam` com `@Validated` | `400` | `ConstraintViolationException`. |
 | Validação de negócio (ex.: "Já existe ambiente com esse nome") | `400` | `IllegalArgumentException` (factories, use cases). |
 | Recurso inexistente (ex.: "Ambiente não encontrado") | `404` | `NoSuchElementException`. |
-| Usuário inexistente / lockout prevention | `404` / `409` | `ResponseStatusException` (`UsuarioService`). |
+| Usuário inexistente | `404` | `NoSuchElementException` (mapeada pelo `GlobalExceptionHandler`). |
+| Lockout prevention | `409` | `UltimoAdminException` (mapeada pelo `GlobalExceptionHandler`). |
 | Parâmetro obrigatório ausente | `400` | `MissingServletRequestParameterException`. |
 | Violação de constraint do banco | `400` | `DataIntegrityViolationException` (mensagem da causa raiz). |
 | Método HTTP não suportado | `405` | `HttpRequestMethodNotSupportedException`. |

@@ -85,9 +85,7 @@ class SecurityConfig(
     fun authFilterChain(http: HttpSecurity): SecurityFilterChain {
         http
             .securityMatcher(authMatcher)
-            .csrf { csrf ->
-                csrf.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-            }
+            .csrf { csrf -> csrf.csrfTokenRepository(CookieCsrfTokenRepository()) }
             .cors { it.configurationSource(corsConfigurationSource()) }
             .sessionManagement { it.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED) }
             .authorizeHttpRequests { auth ->
@@ -115,6 +113,10 @@ class SecurityConfig(
                     "${AMBIENTES_VALIDACAO_PATH}/**",
                     Perfil.ROLE_VALIDADOR.name
                 )
+                auth.requestMatchers(
+                    HttpMethod.GET,
+                    "${USUARIOS_PATH}/me"
+                ).authenticated()
                 auth.customRequestMatchers(
                     listOf(HttpMethod.GET, HttpMethod.PATCH),
                     "${USUARIOS_PATH}/**",

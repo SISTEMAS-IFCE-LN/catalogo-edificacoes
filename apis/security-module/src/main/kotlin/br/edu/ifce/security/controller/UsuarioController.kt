@@ -10,6 +10,8 @@ import br.edu.ifce.security.model.dto.UsuariosPaginadosRes
 import jakarta.validation.constraints.*
 import org.springframework.data.domain.Pageable
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.annotation.AuthenticationPrincipal
+import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
 
@@ -29,19 +31,25 @@ class UsuarioController(private val service: IUsuarioService) {
 
     @PatchMapping("/{id}/desativar")
     fun desativarUsuario(@PathVariable @NotNull @Positive(message = MSG_POSITIVO) id: Long): ResponseEntity<Void> {
-        service.desativarUsuario(id)
+        service.desativar(id)
         return ResponseEntity.noContent().build()
     }
 
     @PatchMapping("/{id}/ativar")
     fun ativarUsuario(@PathVariable @NotNull @Positive(message = MSG_POSITIVO) id: Long): ResponseEntity<Void> {
-        service.ativarUsuario(id)
+        service.ativar(id)
         return ResponseEntity.noContent().build()
     }
 
     @GetMapping
     fun listarUsuarios(pageable: Pageable): ResponseEntity<UsuariosPaginadosRes> =
-        ResponseEntity.ok(service.listarUsuarios(pageable))
+        ResponseEntity.ok(service.listar(pageable))
+
+    @GetMapping("/me")
+    fun obterUsuarioAtual(@AuthenticationPrincipal jwt: Jwt): ResponseEntity<UsuarioRes> {
+        val usuario = service.obterPorId(jwt.subject.toLong())
+        return ResponseEntity.ok(usuario)
+    }
 
     @GetMapping("/email/{email}")
     fun obterUsuarioPorEmail(
@@ -50,7 +58,7 @@ class UsuarioController(private val service: IUsuarioService) {
         @Size(max = 255, message = MSG_MAX_CARACTERES)
         email: String
     ): ResponseEntity<UsuarioRes> =
-        ResponseEntity.ok(service.obterUsuarioPorEmail(email))
+        ResponseEntity.ok(service.obterPorEmail(email))
 
     @GetMapping("/nomes/{nome}")
     fun listarUsuariosPorNome(
@@ -60,5 +68,5 @@ class UsuarioController(private val service: IUsuarioService) {
         nome: String,
         pageable: Pageable
     ): ResponseEntity<UsuariosPaginadosRes> =
-        ResponseEntity.ok(service.listarUsuariosPorNome(nome, pageable))
+        ResponseEntity.ok(service.listarPorNome(nome, pageable))
 }

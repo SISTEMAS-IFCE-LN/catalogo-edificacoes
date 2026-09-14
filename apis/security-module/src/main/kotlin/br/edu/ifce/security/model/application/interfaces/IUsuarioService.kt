@@ -9,14 +9,16 @@ interface IUsuarioService {
 
     fun atualizarPerfis(id: Long, novosPerfis: Set<Perfil>)
 
-    fun desativarUsuario(id: Long)
+    fun desativar(id: Long)
 
-    fun ativarUsuario(id: Long)
+    fun ativar(id: Long)
 
-    fun listarUsuarios(pageable: Pageable): UsuariosPaginadosRes
+    fun listar(pageable: Pageable): UsuariosPaginadosRes
 
-    fun obterUsuarioPorEmail(email: String): UsuarioRes
+    fun obterPorId(id: Long): UsuarioRes
 
-    fun listarUsuariosPorNome(nome: String, pageable: Pageable): UsuariosPaginadosRes
+    fun obterPorEmail(email: String): UsuarioRes
+
+    fun listarPorNome(nome: String, pageable: Pageable): UsuariosPaginadosRes
 
 }

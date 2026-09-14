@@ -1,0 +1,44 @@
+import {Link} from 'react-router'
+import {HeaderNav} from '@/components/layout/HeaderNav'
+import {useAuth} from '@/hooks/useAuth'
+import {Button, buttonVariants} from '@/components/ui/button'
+import {PAGES_ROUTES} from '@/constants/routes'
+import {cn} from '@/lib/utils/shadcn-helper'
+
+export function Header() {
+    const {user, logout} = useAuth()
+
+    return (
+        <header className="border-b border-border bg-background">
+            <div className="container mx-auto px-4">
+                <div className="flex h-16 items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        {user && <HeaderNav />}
+                        <Link to="/" className="font-bold text-xl">Catálogo Edificações</Link>
+                    </div>
+                    <div className="flex items-center gap-4">
+                        {user ? (
+                            <>
+                                <span className="text-sm hidden md:block">
+                                    <span className="font-medium">{user.nome}</span>
+                                    <br/>
+                                    <span className="text-muted-foreground text-xs">{user.email}</span>
+                                </span>
+                                <Button variant="outline" size="sm" onClick={() => logout()}>
+                                    Sair
+                                </Button>
+                            </>
+                        ) : (
+                            <Link
+                                to={PAGES_ROUTES.LOGIN}
+                                className={cn(buttonVariants({variant: 'default', size: 'sm'}))}
+                            >
+                                Login
+                            </Link>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </header>
+    )
+}

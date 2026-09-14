@@ -1,0 +1,88 @@
+import {useState} from 'react'
+import {useNavigate, useParams} from 'react-router'
+import {useQuery, useQueryClient} from '@tanstack/react-query'
+import {fetchDetalhePublicados} from '@/lib/api/api-publicados'
+import {privarAmbiente} from '@/lib/api/api-validacao'
+import {DetalheAmbiente} from '@/components/ambientes/DetalheAmbiente'
+import {Button} from '@/components/ui/button'
+import {PAGES_ROUTES} from '@/constants/routes'
+import {StatusAmbiente} from '@/types/ambientes/enums'
+import {ModalConfirmacao} from '@/components/ambientes/ModalConfirmacao'
+import {PermissionButton} from '@/components/auth/PermissionButton'
+import {Role} from '@/types/usuarios/user'
+import {toast} from 'sonner'
+
+export function PublicadoDetalhePage() {
+    const {id} = useParams<{ id: string }>()
+    const navigate = useNavigate()
+    const queryClient = useQueryClient()
+    const [modalOpen, setModalOpen] = useState(false)
+
+    const {data: ambiente, isLoading, error} = useQuery({
+        queryKey: ['ambientes', 'publicados', 'detalhe', id],
+        queryFn: ({signal}) => {
+            const idNumero = Number(id)
+            if (!Number.isInteger(idNumero) || idNumero <= 0) {
+                throw new Error(`ID de ambiente inválido: ${id}`)
+            }
+            return fetchDetalhePublicados(idNumero, signal)
+        },
+        enabled: !!id,
+    })
+
+    async function confirmar() {
+        if (!ambiente) return
+        // O ModalConfirmacao já trata o erro e mantém o modal aberto (parte 10 §4)
+        await privarAmbiente(ambiente.id)
+        toast.success('Ambiente privado.')
+        void queryClient.invalidateQueries({queryKey: ['ambientes', 'publicados']})
+        navigate(PAGES_ROUTES.PUBLICADOS)
+    }
+
+    if (isLoading) return <p>Carregando…</p>
+    if (error || !ambiente) {
+        return (
+            <div className="space-y-4">
+                <p>Ambiente não encontrado.</p>
+                <Button variant="outline" onClick={() => navigate(PAGES_ROUTES.PUBLICADOS)}>
+                    Voltar à lista
+                </Button>
+            </div>
+        )
+    }
+
+    // Privar (UC03-FE): na lista pública só aparecem ambientes PUBLICADO.
+    const podePrivar = ambiente.status === StatusAmbiente.PUBLICADO
+
+    return (
+        <div className="space-y-4">
+            {/* Ação crítica (UC03-FE) no topo, à direita do "Voltar"
+                (arquitetura §15.11) — sem select, apenas botão direto. */}
+            <div className="flex flex-wrap items-center justify-between gap-2">
+                <Button variant="outline" onClick={() => navigate(PAGES_ROUTES.PUBLICADOS)}>
+                    Voltar
+                </Button>
+                <div className="flex gap-2">
+                    <PermissionButton
+                        requiredRoles={[Role.VALIDADOR]}
+                        variant="destructive"
+                        disabled={!podePrivar}
+                        onClick={() => setModalOpen(true)}
+                    >
+                        Privar
+                    </PermissionButton>
+                </div>
+            </div>
+            <DetalheAmbiente ambiente={ambiente}/>
+            <ModalConfirmacao
+                open={modalOpen}
+                title="Privar ambiente?"
+                description="O ambiente ficará disponível para edição."
+                onConfirm={confirmar}
+                onOpenChange={(o) => !o && setModalOpen(false)}
+                variant="destructive"
+                confirmLabel="Privar"
+            />
+        </div>
+    )
+}

@@ -1,5 +1,6 @@
 package br.edu.ifce.common.config
 
+import br.edu.ifce.common.domain.UltimoAdminException
 import br.edu.ifce.common.dto.ErroRes
 import jakarta.validation.ConstraintViolationException
 import org.slf4j.LoggerFactory
@@ -111,6 +112,12 @@ class GlobalExceptionHandler {
     fun handleAuthorizationDenied(ex: AuthorizationDeniedException): ResponseEntity<ErroRes> {
         log.debug("Autorização negada: {}", ex.message)
         return responderErro(HttpStatus.FORBIDDEN, "Acesso negado: você não tem permissão para realizar esta ação.")
+    }
+
+    @ExceptionHandler(UltimoAdminException::class)
+    fun handleUltimoAdmin(ex: UltimoAdminException): ResponseEntity<ErroRes> {
+        log.debug("Último administrador: {}", ex.message)
+        return responderErro(HttpStatus.CONFLICT, ex.message ?: "Ação não permitida.")
     }
 
     @ExceptionHandler(Exception::class)

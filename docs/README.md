@@ -4,15 +4,16 @@ Este diretório concentra toda a documentação técnica e de negócio do projet
 
 ## Índice
 
-| Documento | Descrição |
-|---|---|
-| [Arquitetura](./arquitetura.md) | Visão geral da arquitetura modular (multi-módulos Maven) e padrão interno de camadas. |
-| [Domínio](./dominio.md) | Conceitos de negócio, subdomínios e atores do sistema. |
-| [Segurança](./seguranca.md) | Fluxos de autenticação OAuth2 + JWT, perfis cumulativos, lockout prevention, mapeamento de endpoints, env vars de segurança. |
-| [Operação](./operacao.md) | Perfis, comportamento de `data.sql`/`data-dev.sql`, geração de chaves RSA, procedimento de bootstrap em produção. |
-| [Execução](./run.md) | Comandos para rodar a aplicação e os testes localmente, smoke test via Postman. |
-| [Ambientes Internos](./ambientes-internos/regras-negocio.md) | Regras de negócio (RN-1.x, RN-2.x, RN-3.x, RN-4.x) do subdomínio de ambientes internos. |
-| [Casos de Uso — Backend](./ambientes-internos/casos-uso-backend.md) | Especificação dos casos de uso do backend (referência histórica; revisar antes de alterar fluxos). |
+| Documento                                                             | Descrição |
+|-----------------------------------------------------------------------|---|
+| [Arquitetura Backend](arquitetura-backend.md)                               | Visão geral da arquitetura modular (multi-módulos Maven) e padrão interno de camadas. |
+| [Arquitetura Frontend](arquitetura-frontend.md)                             | Visão geral da arquitetura do frontend, incluindo componentes e fluxos de navegação. |
+| [Domínio](./dominio.md)                                               | Conceitos de negócio, subdomínios e atores do sistema. |
+| [Segurança](./seguranca.md)                                           | Fluxos de autenticação OAuth2 + JWT, perfis cumulativos, lockout prevention, mapeamento de endpoints, env vars de segurança. |
+| [Operação](./operacao.md)                                             | Perfis, comportamento de `data.sql`/`data-dev.sql`, geração de chaves RSA, procedimento de bootstrap em produção. |
+| [Execução](./run.md)                                                  | Comandos para rodar a aplicação e os testes localmente, smoke test via Postman. |
+| [Ambientes Internos](./ambientes-internos/regras-negocio.md)          | Regras de negócio (RN-1.x, RN-2.x, RN-3.x, RN-4.x) do subdomínio de ambientes internos. |
+| [Casos de Uso — Backend](./ambientes-internos/casos-uso-backend.md)   | Especificação dos casos de uso do backend (referência histórica; revisar antes de alterar fluxos). |
 | [Casos de Uso — Frontend](./ambientes-internos/casos-uso-frontend.md) | Especificação dos casos de uso do frontend. |
 
 ## Estado atual da implementação

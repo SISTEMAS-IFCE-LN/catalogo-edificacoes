@@ -222,6 +222,46 @@ class AmbientePublicadoUseCasesIntegrationTest {
     }
 
     @Test
+    fun `Deve listar ambientes publicados por tipo informando rotulo`() {
+        criarSalaAula(
+            nome = "Sala de Aula 1", bloco = Bloco.BLOCO_10, unidade = Unidade.CIDADE_ALTA, andar = 1,
+            capacidade = 30, base = "6.0", altura = "3.0", informacaoAdicional = "Sala de aula"
+        )
+        criarLaboratorioInformatica(
+            nome = "Laboratório 1", bloco = Bloco.BLOCO_11, unidade = Unidade.CIDADE_ALTA, andar = 2,
+            capacidade = 40, base = "8.0", altura = "4.0", informacaoAdicional = "Laboratório"
+        )
+
+        // Quando listar por tipo informando o rótulo (ex.: "Sala de Aula")
+        val resultado = ambientesPUseCases.listarAmbientesPorTipo(
+            "Sala de Aula",
+            PageRequest.of(0, 10)
+        )
+
+        // Então devem estar apenas ambientes do tipo solicitado
+        assertEquals(1, resultado.dadosPaginacao.totalElements)
+        assertEquals("Sala de Aula 1", resultado.ambientes.first().nome)
+    }
+
+    @Test
+    fun `Deve retornar lista vazia ao listar por tipo com rotulo sem correspondencia`() {
+        criarSalaAula(
+            nome = "Sala Publicada", bloco = Bloco.BLOCO_12, unidade = Unidade.CIDADE_ALTA, andar = 1,
+            capacidade = 30, base = "6.0", altura = "3.0"
+        )
+
+        // Quando filtrar por um rótulo sem correspondência
+        val resultado = ambientesPUseCases.listarAmbientesPorTipo(
+            "Auditório",
+            PageRequest.of(0, 10)
+        )
+
+        // Então a lista deve estar vazia
+        assertTrue(resultado.ambientes.isEmpty())
+        assertEquals(0, resultado.dadosPaginacao.totalElements)
+    }
+
+    @Test
     fun `Deve calcular area total ao filtrar ambientes publicados por tipo`() {
         criarSalaAula(
             nome = "Sala 1", bloco = Bloco.BLOCO_10, unidade = Unidade.CIDADE_ALTA, andar = 1,

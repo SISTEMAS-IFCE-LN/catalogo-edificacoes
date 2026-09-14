@@ -8,7 +8,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - Objetivo: mapear cada caso de uso do backend para telas, componentes e interações no frontend.
 - Regras gerais de UI:
   - Paginação padrão: 100 itens por página (conforme backend), com opções de navegação e busca por texto.
-  - Filtros e buscas aplicam-se client-side quando possível, senão por chamadas à API com debounce de 300ms.
+  - Filtros e buscas aplicam-se client-side quando possível; senão, por chamadas à API acionadas por botão (padrão `PesquisaBarAmbientes`) — sem debounce.
   - Todos os formulários mostram erros inline e mensagens de sucesso via snackbar/toast.
   - Acessibilidade: formulários navegáveis por teclado, rótulos (`label`) para campos e contrastes adequados.
 
@@ -20,17 +20,20 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - AguadandoValidacao - tela específica para listar ambientes aguardando validação.
 - NaoPublicados - tela específica para listar ambientes não publicados.
 - Publicados - tela específica para listar ambientes publicados.
-- PesquisaBar — inputs para filtrar ambientes por `nome`, `localizacao`, `tipo` e botão para limpar filtros.
+- PesquisaBarAmbientes — inputs para filtrar ambientes por `nome`, `localizacao`, `tipo` e botão para limpar filtros.
 - DetalheAmbiente — visão detalhada com geometrias, pés-direitos, lista de esquadrias (portas/janelas) e áreas.
 - FormAmbiente (multistep) — criação/atualização de ambiente: dados básicos, geometrias, pés-direitos, esquadrias, informação adicional.
 - ModalConfirmacao — confirmações para deletar, publicar/privar, duplicar.
+- ModalFormulario — shell padrão dos modais de edição (UC07–UC17): Dialog + validação Zod + tratamento de erro via useAsyncAction; montagem condicional na página de detalhe.
+- ModalGeometrias / ModalPesDireitos / ModalEsquadrias — modais genéricos de lista editável (inclusão/edição, UC08–UC13), configurados por UC na página de detalhe (`modo`, `titulo`, `inicial`, `onSubmit`).
 - AcoesLote — ações em lote (ex: deletar, enviar para validação e publicar/privar) com checagem de permissões.
+- AcoesAmbiente — barra de ações do detalhe (select + ações críticas).
 - Toast/Snackbar — mensagens de sucesso/erro.
 - PaginaLogin — página de login com logo/descrição do sistema, botão "Entrar com Google" e mensagens de erro.
 - TabelaUsuarios — exibe ID, Email, Nome, Ativo, CriadoEm, Perfis; suporte a paginação e ações individuais.
 - PesquisaBarUsuarios — input para filtrar usuários por `nome`.
 - ModalEditarPerfis — modal com checkboxes para selecionar roles (COLABORADOR, VALIDADOR, GESTOR_SISTEMA, ADMINISTRADOR).
-- ModalConfirmacaoDesativar — confirmação para desativar/ativar usuário.
+- ModalConfirmacaoStatusUsuario — confirmação para desativar/ativar usuário.
 
 ---
 
@@ -56,17 +59,16 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - Pré-condições: Usuário logado com role `validador`.
 - Fluxo principal (UI):
   1. O usuário acessa a rota `/ambientes/validacao`, é exibido o componente `TabelaPadrao` com os ambientes cujo `status = AGUARDANDO_VALIDACAO` (chamada GET `/api/ambientes/validacao`).
-  2. Uma barra de pesquisa (`PesquisaBar`) também é exibida para filtrar os ambientes por `nome`, `localizacao` e `tipo`. Cada filtro utiliza endpoints específicos do backend: `/api/ambientes/validacao/nome?nome={nome}`, `/api/ambientes/validacao/localizacao?bloco={bloco}&unidade={unidade}&andar={andar}` e `/api/ambientes/validacao/tipo?tipo={tipo}` (debounce 300ms).
-  3. Um botão de seleção também está disponível para execução de ações em lote (`AcoesLote`).
-  4. A Tabela exibida possui paginação e o usuário pode definir quantos registros serão exibidos até o máximo de 100. 
-  5. O usuário também pode ordenar os resultados por qualquer uma das colunas da tabela.
-  6. Cada item tem um botão para visualizar seus detalhes (`DetalheAmbiente`) e checkboxes para seleção múltipla.
+  2. Uma barra de pesquisa (`PesquisaBarAmbientes`) também é exibida para filtrar os ambientes por `nome`, `localizacao` e `tipo`. Cada filtro utiliza endpoints específicos do backend: `/api/ambientes/validacao/nome?nome={nome}`, `/api/ambientes/validacao/localizacao?bloco={bloco}&unidade={unidade}&andar={andar}` e `/api/ambientes/validacao/tipo?tipo={tipo}` — filtro aplicado via botão "Aplicar", sem debounce, estado na URL.
+  3. A Tabela exibida possui paginação e o usuário pode definir quantos registros serão exibidos até o máximo de 100. 
+  4. O usuário também pode ordenar os resultados por qualquer uma das colunas da tabela.
+  5. Cada item tem um botão para visualizar seus detalhes (`DetalheAmbiente`).
 - Estados e erros:
   - Se não houver itens, mostrar callout informativo.
   - Em erro de rede, show toast com opção `Tentar novamente`.
 - Critérios de aceitação:
   - Filtros retornam apenas itens com `status = AGUARDANDO_VALIDACAO`.
-  - O debounce de 300ms é aplicado corretamente nos filtros.
+  - Os filtros são aplicados via botão "Aplicar" (sem debounce) e o estado (filtro/página) fica na URL.
   - Paginação funciona e mantém filtros no estado da URL (query params).
 
 ### UC02-FE: Detalhes de um Ambiente Aguardando Validação
@@ -107,6 +109,8 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - Tela: `Ambientes > NãoPublicados` (rota `/ambientes/nao-publicados`) (semelhante ao UC01-FE). Filtragem, paginação e seleção múltipla.
 - Pré-condições: Usuário logado com role `gestor`.
 - Fluxo principal (UI): Similar ao UC01-FE, mas chamando GET `/api/ambientes/nao-publicados` e possuindo um botão `Criar Novo` para criação de novos ambientes. Os filtros utilizam endpoints específicos: `/api/ambientes/nao-publicados/nome?nome={nome}`, `/api/ambientes/nao-publicados/localizacao?bloco={bloco}&unidade={unidade}&andar={andar}` e `/api/ambientes/nao-publicados/tipo?tipo={tipo}`.
+  1. Cada item tem um checkbox para seleção múltipla, além do botão para visualizar seus detalhes (`DetalheAmbiente`).
+  2. Um botão de seleção também está disponível para execução de ações em lote (`AcoesLote`): `Deletar` (UC15-FE) e `Enviar p/ Validação` (UC18-FE).
 - Estados e erros: Os mesmos do UC01-FE.
 - Critérios de aceitação: Os mesmos do UC01-FE, mas para `status = NAO_PUBLICADO`.
 
@@ -128,11 +132,13 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
     2. Geometrias: lista editável com `tipo`, `repetição`, `comprimento` e `largura` ou `base` e `altura`.
     3. Pés-direitos: lista editável com alturas.
     4. Esquadrias: lista com `tipo`, `repetição`, `largura`, `altura`, `material`, `peitoril`, `info adicional`.
-    5. Exibir erros inline para cada etapa conforme validações.
-    6. Botão `Salvar` para submeter o formulário completo. (requisição POST para `/api/ambientes/nao-publicados`).
-    7. Desabilitar botão `Salvar` e mostrar estado de loading durante a submissão.
+    5. Informação Adicional: campo de texto opcional (`informacaoAdicional` do ambiente), máx. 255 caracteres. Pode ser deixado vazio e preenchido depois via UC14-FE (`ModalInfoAdicional` no detalhe).
+    6. Exibir erros inline para cada etapa conforme validações.
+    7. Botão `Salvar` para submeter o formulário completo. (requisição POST para `/api/ambientes/nao-publicados`).
+    8. Desabilitar botão `Salvar` e mostrar estado de loading durante a submissão.
 - Validações client-side:
   - Campos obrigatórios (dados básicos, pelo menos uma geometria, pelo menos uma porta nas esquadrias).
+  - Informação adicional do ambiente: opcional; quando preenchida, máx. 255 caracteres (espelha `@Size(max = 255)` de `AmbienteReq.kt`).
   - Regras RN-1.6 / RN-1.7 aplicadas no cliente quando possível.
 - Estados e erros:
   - Durante submissão, mostrar loading e desabilitar botões.
@@ -159,7 +165,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 
 ### UC08-FE: Incluir Geometrias
 
-- Modal: Modal acionado por meio de um botão com ícone referente a inclusão de Geometrias em `DetalheAmbiente` (rota `/ambientes/nao-publicados/{id}`).
+- Modal: acionado pela ação correspondente no componente `AcoesAmbiente` (select de ações no topo) da página de detalhes (rota `/ambientes/nao-publicados/{id}`).
 - Pré-condições: Usuário logado com role `gestor` e ambiente com `status = NAO_PUBLICADO`.
 - Fluxo principal (UI):
   1. O usuário clica no ícone de inclusão de geometrias.
@@ -177,7 +183,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 
 ### UC09-FE: Atualizar / Remover Geometrias
 
-- Modal: Modal acionado por meio de um botão com ícone referente a edição de Geometrias em `DetalheAmbiente` (rota `/ambientes/nao-publicados/{id}`).
+- Modal: acionado pela ação correspondente no componente `AcoesAmbiente` (select de ações no topo) da página de detalhes (rota `/ambientes/nao-publicados/{id}`).
 - Pré-condições: Usuário logado com role `gestor` e ambiente com `status = NAO_PUBLICADO`.
 - Fluxo principal (UI):
   1. O usuário clica no ícone de edição de geometrias.
@@ -195,7 +201,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 
 ### UC10-FE: Incluir Pés-direitos
 
-- Modal: Modal acionado por meio de um botão com ícone referente a inclusão de Pés-direitos em `DetalheAmbiente` (rota `/ambientes/nao-publicados/{id}`).
+- Modal: acionado pela ação correspondente no componente `AcoesAmbiente` (select de ações no topo) da página de detalhes (rota `/ambientes/nao-publicados/{id}`).
 - Pré-condições: Usuário logado com role `gestor` e ambiente com `status = NAO_PUBLICADO`.
 - Fluxo principal (UI):
   1. Usuário clica no ícone de inclusão de pés-direitos.
@@ -212,7 +218,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 
 ### UC11-FE: Atualizar / Remover Pés-direitos
 
-- Modal: Modal acionado por meio de um botão com ícone referente a edição de Pés-direitos em `DetalheAmbiente` (rota `/ambientes/nao-publicados/{id}`).
+- Modal: acionado pela ação correspondente no componente `AcoesAmbiente` (select de ações no topo) da página de detalhes (rota `/ambientes/nao-publicados/{id}`).
 - Pré-condições: Usuário logado com role `gestor` e ambiente com `status = NAO_PUBLICADO`.
 - Fluxo principal (UI):
   1. O usuário clica no ícone de edição de pés-direitos.
@@ -230,7 +236,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 
 ### UC12-FE: Incluir Esquadrias
 
-- Modal: Modal acionado por meio de um botão com ícone referente a inclusão de Esquadrias em `DetalheAmbiente` (rota `/ambientes/nao-publicados/{id}`).
+- Modal: acionado pela ação correspondente no componente `AcoesAmbiente` (select de ações no topo) da página de detalhes (rota `/ambientes/nao-publicados/{id}`).
 - Pré-condições: Usuário logado com role `gestor` e ambiente com `status = NAO_PUBLICADO`.
 - Fluxo principal (UI):
   1. O usuário clica no ícone de inclusão de esquadrias.
@@ -248,7 +254,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 
 ### UC13-FE: Atualizar / Remover Esquadrias
 
-- Modal: Modal acionado por meio de um botão com ícone referente a edição de Esquadrias em `DetalheAmbiente` (rota `/ambientes/nao-publicados/{id}`).
+- Modal: acionado pela ação correspondente no componente `AcoesAmbiente` (select de ações no topo) da página de detalhes (rota `/ambientes/nao-publicados/{id}`).
 - Pré-condições: Usuário logado com role `gestor` e ambiente com `status = NAO_PUBLICADO`.
 - Fluxo principal (UI):
   1. O usuário clica no ícone de edição de esquadrias.
@@ -266,7 +272,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 
 ### UC14-FE: Atualizar Informação Adicional
 
-- Componente: Input acionado por meio de um botão com ícone referente a edição de Informação Adicional em `DetalheAmbiente` (rota `/ambientes/nao-publicados/{id}`).
+- Componente: acionado pela ação correspondente no componente `AcoesAmbiente` (select de ações no topo) da página de detalhes (rota `/ambientes/nao-publicados/{id}`).
 - Pré-condições: Usuário logado com role `gestor` e ambiente com `status = NAO_PUBLICADO`.
 - Fluxo principal (UI):
   1. Usuário clica no ícone de edição das informações adicionais e clica em ícone de salvar.
@@ -294,7 +300,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 
 ### UC16-FE: Alterar Tipo e Dados de Ambientes Não Publicados
 
-- Modal: Ação acionada por botão `Alterar tipo` em `DetalheAmbiente` (rota `/ambientes/nao-publicados/{id}`).
+- Modal: acionado pela ação correspondente no componente `AcoesAmbiente` (select de ações no topo) da página de detalhes (rota `/ambientes/nao-publicados/{id}`).
 - Pré-condições: Usuário logado com role `gestor` e ambiente com `status = NAO_PUBLICADO`.
 - Fluxo principal (UI):
   1. Usuário fornece novo `tipo` e dados complementares no formulário exibido.
@@ -308,7 +314,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 
 ### UC17-FE: Duplicar Ambiente Não Publicados
 
-- Modal: Ação acionada por botão `Duplicar` em `DetalheAmbiente` (rota `/ambientes/nao-publicados/{id}`) que abre modal para `nome` e `localizacao` do novo ambiente.
+- Modal: acionado pela ação correspondente no componente `AcoesAmbiente` (select de ações no topo) da página de detalhes (rota `/ambientes/nao-publicados/{id}`), que abre modal para `nome` e `localizacao` do novo ambiente.
 - Pré-condições: Usuário logado com role `gestor` e ambiente com `status = NAO_PUBLICADO`.
 - Fluxo principal (UI):
   1. Usuário fornece `nome`/`localizacao` no modal e confirma.
@@ -377,7 +383,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 
 ### UC21-FE: Listar Ambientes Publicados
 
-- Tela: `Ambientes > Publicados` (semelhante ao UC01-FE). Filtragem, paginação e seleção múltipla.
+- Tela: `Ambientes > Publicados` (semelhante ao UC01-FE). Filtragem e paginação.
 - Pré-condições: Acesso público (não autenticado).
 - Fluxo principal (UI): Similar ao UC01-FE, mas chamando GET `/api/ambientes/publicados` e não possuindo botões de ação ou seleção. Os filtros utilizam endpoints específicos: `/api/ambientes/publicados/nome?nome={nome}`, `/api/ambientes/publicados/localizacao?bloco={bloco}&unidade={unidade}&andar={andar}` e `/api/ambientes/publicados/tipo?tipo={tipo}`.
 - Estados e erros: Os mesmos do UC01-FE.
@@ -393,8 +399,8 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - Pré-condições: Usuário logado com role `administrador`.
 - Fluxo principal (UI):
   1. O usuário acessa a rota `/usuarios`, é exibido o componente `TabelaUsuarios` com a lista de usuários do sistema (chamada GET `/api/usuarios`).
-  2. Uma barra de pesquisa (`PesquisaBarUsuarios`) é exibida para filtrar usuários por `nome` (endpoint `/api/usuarios/nomes/{nome}` com debounce 300ms).
-  3. A tabela possui paginação (máximo 100 registros por página) e exibe as colunas: ID, Email, Nome, Ativo, CriadoEm, Perfis.
+  2. Uma barra de pesquisa (`PesquisaBarUsuarios`) é exibida para filtrar usuários por `nome` (endpoint `/api/usuarios/nomes/{nome}`; filtro aplicado via botão "Buscar", sem debounce; filtro e página compartilháveis pela URL).
+  3. A tabela possui paginação com seletor de tamanho de página (10/20/50/100 registros, default 20) e exibe as colunas: ID, Email, Nome, Ativo, CriadoEm, Perfis.
   4. Cada linha possui botões de ação individual: `Editar Perfis`, `Desativar`/`Ativar`.
 - Estados e erros:
   - Se não houver usuários, mostrar callout informativo.
@@ -428,7 +434,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - Estados e erros:
   - Se nenhum usuário encontrado, mostrar callout informativo.
 - Critérios de aceitação:
-  - Busca por nome funciona com debounce de 300ms.
+  - Busca por nome é aplicada via botão "Buscar" (Enter também) — sem debounce; filtro e página ficam na URL.
   - Resultados são paginados corretamente.
 
 ### UC25-FE: Atualizar Perfis de um Usuário
@@ -457,7 +463,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - Pré-condições: Usuário logado com role `administrador`.
 - Fluxo principal (UI):
   1. O usuário clica em `Desativar` (para usuário ativo) ou `Ativar` (para usuário inativo) na linha do usuário desejado.
-  2. Um `ModalConfirmacaoDesativar` é aberto para confirmação.
+  2. Um `ModalConfirmacaoStatusUsuario` é aberto para confirmação.
   3. Ao confirmar:
      - Para desativar: requisição PATCH para `/api/usuarios/{id}/desativar`.
      - Para ativar: requisição PATCH para `/api/usuarios/{id}/ativar`.
