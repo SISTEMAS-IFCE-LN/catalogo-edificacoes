@@ -159,7 +159,9 @@ Antes do primeiro deploy, o operador **deve** definir a env var `BOOTSTRAP_ADMIN
       headers na construção do `baseUrl` do template `{baseUrl}/login/oauth2/code/{registrationId}`.
 - [ ] Redirect URI resolvido registrado no Google Cloud Console para o ambiente (dev: `http://localhost:8080/login/oauth2/code/google`,
       prod: `https://<domínio>/login/oauth2/code/google`).
-- [ ] CORS configurado com origens permitidas (atualmente `*` em dev; ajustar em prod).
+- [ ] `CORS_ALLOWED_ORIGINS` definido com as origens cross-origin legítimas (ex.: `https://catalogo.ifce.edu.br`).
+      Vazio = nega cross-origin; no modo integrado (Nginx) o SPA é a mesma origem e não passa por CORS.
+      Nunca usar `*` com `allowCredentials=true`.
 
 ### 4.2. Primeiro boot
 

@@ -6,6 +6,7 @@ import br.edu.ifce.common.config.ApiPaths.AMBIENTES_VALIDACAO_PATH
 import br.edu.ifce.common.config.ApiPaths.AUTH_PATH
 import br.edu.ifce.common.config.ApiPaths.USUARIOS_PATH
 import br.edu.ifce.security.config.properties.BootstrapProperties
+import br.edu.ifce.security.config.properties.CorsProperties
 import br.edu.ifce.security.config.properties.FrontendProperties
 import br.edu.ifce.security.config.properties.JwtProperties
 import br.edu.ifce.security.config.properties.RsaKeyProperties
@@ -37,12 +38,14 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource
     RsaKeyProperties::class,
     JwtProperties::class,
     BootstrapProperties::class,
-    FrontendProperties::class
+    FrontendProperties::class,
+    CorsProperties::class
 )
 class SecurityConfig(
     private val customOAuth2UserService: CustomOAuth2UserService,
     private val oAuth2LoginSuccessHandler: OAuth2LoginSuccessHandler,
-    private val frontendProperties: FrontendProperties
+    private val frontendProperties: FrontendProperties,
+    private val corsProperties: CorsProperties
 ) {
 
     private val oauth2Endpoints = listOf(
@@ -163,11 +166,14 @@ class SecurityConfig(
     @Bean
     fun corsConfigurationSource(): CorsConfigurationSource {
         val configuration = CorsConfiguration()
-        // TODO: restringir origens antes de ir para produção.
-        // Manter "*" apenas durante o desenvolvimento para simplificar testes locais.
-        configuration.allowedOriginPatterns = listOf("*")
+        // Origens cross-origin permitidas (CORS_ALLOWED_ORIGINS, lista por vírgula).
+        // Default vazio = nenhuma origem cross-origin: no modo integrado (Nginx)
+        // o SPA é a mesma origem e não passa por CORS. Ver docs/operacao.md.
+        configuration.allowedOrigins = corsProperties.allowedOrigins
         configuration.allowedMethods = listOf("GET", "POST", "PATCH", "DELETE", "OPTIONS")
-        configuration.allowedHeaders = listOf("*")
+        // Apenas os headers usados pelo SPA: Authorization (Bearer),
+        // Content-Type (JSON) e X-XSRF-TOKEN (CSRF nas rotas /auth/**).
+        configuration.allowedHeaders = listOf("Authorization", "Content-Type", "X-XSRF-TOKEN")
         configuration.allowCredentials = true
         configuration.exposedHeaders = listOf("Authorization")
 
