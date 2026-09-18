@@ -50,6 +50,9 @@ services:
       - JWT_PUBLIC_KEY_PATH=file:./.keys/public.pem
       - JWT_PRIVATE_KEY_PATH=file:./.keys/private_pkcs8.pem
       - JWT_COOKIE_SECURE=${JWT_COOKIE_SECURE}
+      - JWT_COOKIE_SAME_SITE=${JWT_COOKIE_SAME_SITE}
+      - FRONTEND_CALLBACK_SUCCESS_URL=${FRONTEND_CALLBACK_SUCCESS_URL}
+      - FRONTEND_CALLBACK_ERROR_URL=${FRONTEND_CALLBACK_ERROR_URL}
     volumes:
       - ./apis/.keys:/app/.keys:ro
     ports:
@@ -70,3 +73,25 @@ services:
         limits:
           cpus: "0.5"
           memory: 1G
+
+  frontend:
+    container_name: catalogo-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Origem do backend embutida no bundle (vazio = mesma origem via Nginx)
+        VITE_BACKEND_URL: ${BACKEND_URL}
+    restart: unless-stopped
+    ports:
+      - "80:8000"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - catalogo-net
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
