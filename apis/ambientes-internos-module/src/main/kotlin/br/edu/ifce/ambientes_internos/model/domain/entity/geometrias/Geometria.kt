@@ -18,6 +18,7 @@ import jakarta.persistence.JoinColumn
 import jakarta.persistence.ManyToOne
 import java.math.BigDecimal
 import java.math.RoundingMode
+import org.hibernate.annotations.ColumnDefault
 
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
@@ -31,13 +32,16 @@ abstract class Geometria(
     @Column(name = "tipo", nullable = false, insertable = false, updatable = false)
     var tipo: TipoGeometria,
 
-    @Column(nullable = false, columnDefinition = "DECIMAL(9, 2) DEFAULT 0.00")
+    @Column(nullable = false, precision = 9, scale = 2)
+    @ColumnDefault("0.00")
     var base: BigDecimal,
 
-    @Column(nullable = false, columnDefinition = "DECIMAL(9, 2) DEFAULT 0.00")
+    @Column(nullable = false, precision = 9, scale = 2)
+    @ColumnDefault("0.00")
     var altura: BigDecimal,
 
-    @Column(nullable = false, columnDefinition = "INT DEFAULT 1")
+    @Column(nullable = false)
+    @ColumnDefault("1")
     var repeticao: Int
 ) {
 

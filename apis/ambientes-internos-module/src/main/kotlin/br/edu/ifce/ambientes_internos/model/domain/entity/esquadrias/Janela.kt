@@ -7,6 +7,7 @@ import jakarta.persistence.Column
 import jakarta.persistence.DiscriminatorValue
 import jakarta.persistence.Entity
 import java.math.BigDecimal
+import org.hibernate.annotations.ColumnDefault
 
 @Entity
 @DiscriminatorValue("JANELA")
@@ -14,7 +15,8 @@ class Janela(
     geometria: Geometria,
     material: MaterialEsquadria,
 
-    @Column(nullable = false, columnDefinition = "DECIMAL(9, 2) DEFAULT 0.00")
+    @Column(nullable = false, precision = 9, scale = 2)
+    @ColumnDefault("0.00")
     var alturaPeitoril: BigDecimal,
 
     informacaoAdicional: String = ""
