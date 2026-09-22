@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { act, render, screen, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NovoAmbientePage } from './page'
 import type { AmbienteInput } from '@/types/ambientes/request'
@@ -57,7 +57,9 @@ describe('NovoAmbientePage', () => {
     render(<NovoAmbientePage />)
     expect(screen.getByText('Novo Ambiente')).toBeInTheDocument()
 
-    await captured.submit!(AMBIENTE_VALIDO)
+    await act(async () => {
+      await captured.submit!(AMBIENTE_VALIDO)
+    })
 
     await waitFor(() => expect(mockCriarAmbiente).toHaveBeenCalledWith(AMBIENTE_VALIDO))
     expect(toast.success).toHaveBeenCalledWith('Ambiente criado.')
@@ -68,7 +70,9 @@ describe('NovoAmbientePage', () => {
     mockCriarAmbiente.mockRejectedValue(new Error('boom'))
     render(<NovoAmbientePage />)
 
-    await captured.submit!(AMBIENTE_VALIDO)
+    await act(async () => {
+      await captured.submit!(AMBIENTE_VALIDO)
+    })
 
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Erro ao criar ambiente.'))
     expect(mockNavigate).not.toHaveBeenCalled()
