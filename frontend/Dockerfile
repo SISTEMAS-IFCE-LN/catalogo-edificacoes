@@ -24,6 +24,7 @@ FROM nginx:1.30.4-alpine3.24-slim AS release
 
 COPY nginx/nginx.conf /etc/nginx/nginx.conf
 COPY nginx/frontend.conf /etc/nginx/conf.d/default.conf
+COPY nginx/security-headers.conf /etc/nginx/security-headers.conf
 COPY --from=build /app/dist /var/www/catalogo-frontend/dist
 
 # Usuário não-root: cache de arquivos temporários e conf.d precisam ser graváveis
