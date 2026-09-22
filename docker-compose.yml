@@ -1,6 +1,8 @@
 networks:
   catalogo-net:
     driver: bridge
+  catalogo-internal-net:
+    driver: bridge
 
 volumes:
   pgdata:
@@ -15,6 +17,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     environment:
+      - TZ=America/Fortaleza
       - POSTGRES_DB=${DB_NAME}
       - POSTGRES_USER=${DB_USERNAME}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
@@ -25,7 +28,7 @@ services:
       timeout: 10s
       retries: 10
     networks:
-      - catalogo-net
+      - catalogo-internal-net
     deploy:
       resources:
         limits:
@@ -39,6 +42,7 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     environment:
+      - TZ=America/Fortaleza
       - PROFILE_ACTIVE=${PROFILE_ACTIVE}
       - DB_HOST=${DB_HOST}
       - DB_NAME=${DB_NAME}
@@ -69,6 +73,7 @@ services:
         condition: service_healthy
     networks:
       - catalogo-net
+      - catalogo-internal-net
     deploy:
       resources:
         limits:
@@ -84,6 +89,8 @@ services:
         # Origem do backend embutida no bundle (vazio = mesma origem via Nginx)
         VITE_BACKEND_URL: ${BACKEND_URL}
     restart: unless-stopped
+    environment:
+      - TZ=America/Fortaleza
     ports:
       - "80:8000"
     depends_on:
