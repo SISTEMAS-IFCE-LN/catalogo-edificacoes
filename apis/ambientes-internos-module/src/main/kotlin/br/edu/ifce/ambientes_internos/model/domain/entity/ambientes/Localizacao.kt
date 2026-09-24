@@ -3,6 +3,7 @@ package br.edu.ifce.ambientes_internos.model.domain.entity.ambientes
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Bloco
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Unidade
 import jakarta.persistence.*
+import org.hibernate.annotations.ColumnDefault
 
 @Entity
 @Table(
@@ -17,7 +18,8 @@ class Localizacao(
     @Column(nullable = false)
     var unidade: Unidade,
 
-    @Column(nullable = false, columnDefinition = "INT DEFAULT 0")
+    @Column(nullable = false)
+    @ColumnDefault("0")
     var andar: Int = 0,
 
     @Id

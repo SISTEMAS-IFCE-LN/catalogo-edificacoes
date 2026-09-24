@@ -1,10 +1,20 @@
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 networks:
   catalogo-net:
+    name: catalogo-net
+    driver: bridge
+  catalogo-internal-net:
+    name: catalogo-internal-net
     driver: bridge
 
 volumes:
-  pgdata:
-    name: pgdata
+  catalogo-data:
+    name: catalogo-data
 
 services:
   db:
@@ -12,9 +22,11 @@ services:
     image: postgres:17-trixie
     user: postgres
     restart: unless-stopped
+    logging: *default-logging
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - catalogo-data:/var/lib/postgresql/data
     environment:
+      - TZ=America/Fortaleza
       - POSTGRES_DB=${DB_NAME}
       - POSTGRES_USER=${DB_USERNAME}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
@@ -25,7 +37,7 @@ services:
       timeout: 10s
       retries: 10
     networks:
-      - catalogo-net
+      - catalogo-internal-net
     deploy:
       resources:
         limits:
@@ -38,7 +50,9 @@ services:
       context: ./apis
       dockerfile: Dockerfile
     restart: unless-stopped
+    logging: *default-logging
     environment:
+      - TZ=America/Fortaleza
       - PROFILE_ACTIVE=${PROFILE_ACTIVE}
       - DB_HOST=${DB_HOST}
       - DB_NAME=${DB_NAME}
@@ -50,10 +64,12 @@ services:
       - JWT_PUBLIC_KEY_PATH=file:./.keys/public.pem
       - JWT_PRIVATE_KEY_PATH=file:./.keys/private_pkcs8.pem
       - JWT_COOKIE_SECURE=${JWT_COOKIE_SECURE}
+      - JWT_COOKIE_SAME_SITE=${JWT_COOKIE_SAME_SITE}
+      - FRONTEND_CALLBACK_SUCCESS_URL=${FRONTEND_CALLBACK_SUCCESS_URL}
+      - FRONTEND_CALLBACK_ERROR_URL=${FRONTEND_CALLBACK_ERROR_URL}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
     volumes:
       - ./apis/.keys:/app/.keys:ro
-    ports:
-      - "8080:8080"
     healthcheck:
       test: ["CMD", "java", "-cp", "/app", "HealthCheck"]
       start_period: 2m
@@ -65,8 +81,34 @@ services:
         condition: service_healthy
     networks:
       - catalogo-net
+      - catalogo-internal-net
     deploy:
       resources:
         limits:
           cpus: "0.5"
           memory: 1G
+
+  frontend:
+    container_name: catalogo-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # Origem do backend embutida no bundle (vazio = mesma origem via Nginx)
+        VITE_BACKEND_URL: ${BACKEND_URL}
+    restart: unless-stopped
+    logging: *default-logging
+    environment:
+      - TZ=America/Fortaleza
+    ports:
+      - "8000:8000"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - catalogo-net
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
