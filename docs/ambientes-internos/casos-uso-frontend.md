@@ -7,7 +7,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - Público-alvo: Validador, Gestor do Sistema, Colaborador, Público Externo, Administrador.
 - Objetivo: mapear cada caso de uso do backend para telas, componentes e interações no frontend.
 - Regras gerais de UI:
-  - Paginação padrão: 100 itens por página (conforme backend), com opções de navegação e busca por texto.
+  - Paginação padrão: 20 itens por página, com seletor 10/20/50/100 (máximo 100), com opções de navegação e busca por texto. A tela de esquadrias (UC20-FE) usa 100 registros fixos por página.
   - Filtros e buscas aplicam-se client-side quando possível; senão, por chamadas à API acionadas por botão (padrão `PesquisaBarAmbientes`) — sem debounce.
   - Todos os formulários mostram erros inline e mensagens de sucesso via snackbar/toast.
   - Acessibilidade: formulários navegáveis por teclado, rótulos (`label`) para campos e contrastes adequados.
@@ -16,8 +16,8 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 
 ## Componentes
 
-- TabelaPadrao — exibe Nome, Localização, Tipo, Capacidade, Área; suporte a paginação, ordenação e seleção múltipla.
-- AguadandoValidacao - tela específica para listar ambientes aguardando validação.
+- TabelaPadrao — exibe Nome, Localização, Tipo, Capacidade, Área; suporte a paginação e seleção múltipla.
+- AguardandoValidacao - tela específica para listar ambientes aguardando validação.
 - NaoPublicados - tela específica para listar ambientes não publicados.
 - Publicados - tela específica para listar ambientes publicados.
 - PesquisaBarAmbientes — inputs para filtrar ambientes por `nome`, `localizacao`, `tipo` e botão para limpar filtros.
@@ -61,8 +61,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
   1. O usuário acessa a rota `/ambientes/validacao`, é exibido o componente `TabelaPadrao` com os ambientes cujo `status = AGUARDANDO_VALIDACAO` (chamada GET `/api/ambientes/validacao`).
   2. Uma barra de pesquisa (`PesquisaBarAmbientes`) também é exibida para filtrar os ambientes por `nome`, `localizacao` e `tipo`. Cada filtro utiliza endpoints específicos do backend: `/api/ambientes/validacao/nome?nome={nome}`, `/api/ambientes/validacao/localizacao?bloco={bloco}&unidade={unidade}&andar={andar}` e `/api/ambientes/validacao/tipo?tipo={tipo}` — filtro aplicado via botão "Aplicar", sem debounce, estado na URL.
   3. A Tabela exibida possui paginação e o usuário pode definir quantos registros serão exibidos até o máximo de 100. 
-  4. O usuário também pode ordenar os resultados por qualquer uma das colunas da tabela.
-  5. Cada item tem um botão para visualizar seus detalhes (`DetalheAmbiente`).
+  4. Cada item tem um botão para visualizar seus detalhes (`DetalheAmbiente`).
 - Estados e erros:
   - Se não houver itens, mostrar callout informativo.
   - Em erro de rede, show toast com opção `Tentar novamente`.
@@ -190,8 +189,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
   2. Um formulario pré-preenchido com as informações atuais é exibido.
   3. O usuário pode optar por editar as geometrias ou removê-las.
   4. Para finalizar a edição, o usuário clica em `Salvar` e uma requisição PATCH é enviada para `/api/ambientes/nao-publicados/{id}/geometrias/atualizar`.
-  5. Um `ModalConfirmacao` é exibido para confirmar a edição/ remoção.
-  6. Ao sucesso, a lista de geometrias e suas áreas são atualizadas e um toast de sucesso é exibido.
+  5. Ao sucesso, a lista de geometrias e suas áreas são atualizadas e um toast de sucesso é exibido.
 - Estados e erros:
   - Não permitir remoção se resultaria em zero geometrias (cliente valida e bloqueia ação).
   - Em caso de erro do backend, exibir mensagem com indicação do item que falhou.
@@ -225,8 +223,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
   2. Um formulario pré-preenchido com as informações atuais é exibido.
   3. O usuário pode optar por editar os pés-direitos ou removê-los.
   4. Para finalizar a edição, o usuário clica em `Salvar` e uma requisição PATCH é enviada para `/api/ambientes/nao-publicados/{id}/pes-direitos/atualizar`.
-  5. Um `ModalConfirmacao` é exibido para confirmar a edição/ remoção.
-  6. Ao sucesso, lista de pés-direitos é atualizada e toast de sucesso é exibido.
+  5. Ao sucesso, lista de pés-direitos é atualizada e toast de sucesso é exibido.
 - Estados e erros:
   - Não permitir submissão com valores inválidos; mostrar erros inline (cliente valida).
   - Em erro de backend, mostrar mensagem especificando o problema.
@@ -261,8 +258,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
   2. Um formulario pré-preenchido com as informações atuais é exibido.
   3. O usuário pode optar por editar as esquadrias ou removê-las.
   4. Para finalizar a edição, o usuário clica em `Salvar` e uma requisição PATCH é enviada para `/api/ambientes/nao-publicados/{id}/esquadrias/atualizar`.
-  5. Um `ModalConfirmacao` é exibido para confirmar a edição/ remoção.
-  6. Ao sucesso, a lista das esquadrias e suas áreas são atualizadas e um toast de sucesso é exibido.
+  5. Ao sucesso, a lista das esquadrias e suas áreas são atualizadas e um toast de sucesso é exibido.
 - Estados e erros:
   - Não permitir remoção se resultaria em zero esquadrias (cliente valida e bloqueia ação).
   - Em caso de erro do backend, exibir mensagem com indicação do item que falhou.
@@ -349,7 +345,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 
 - Tela: `DetalheAmbiente` (rota `/ambientes/publicados/{id}`).
 - Pré-condições: selecionou um ambiente da lista e está logado com role `colaborador` (autenticado, RN-4.5).
-- Fluxo principal (UI): Similar ao UC02-FE, mas sem ações adicionais.
+- Fluxo principal (UI): Similar ao UC02-FE. O detalhe de ambiente publicado exibe a ação **`Privar`** para usuários `VALIDADOR` (mesmo fluxo do UC03-FE: `ModalConfirmacao` + `PATCH /api/ambientes/validacao/{id}/privar`), habilitada somente quando `status = PUBLICADO`; usuários apenas `COLABORADOR` não veem ações.
 - Estados e erros: Os mesmos do UC02-FE.
 - Critérios de aceitação: Os mesmos do UC02-FE.
 
@@ -505,13 +501,13 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - Componente: Hook/serviço de autenticação (não visual).
 - Pré-condições: Usuário autenticado com refresh token válido em cookie.
 - Fluxo principal (UI):
-  1. O frontend monitora a expiração do access token (JWT).
-  2. Antes da expiração, o frontend envia POST `/auth/refresh` automaticamente.
+  1. O frontend **não decodifica o JWT nem observa sua expiração** — o access token é uma string opaca mantida em memória.
+  2. Qualquer resposta `401` de rota não-`/auth/*` dispara `POST /auth/refresh` de forma **reativa**, com lock compartilhado para chamadas concorrentes (uma rajada de `401` gera um único refresh).
   3. O backend retorna novo access token (`LoginRes`: accessToken, tokenType, expiresIn).
-  4. O frontend armazena o novo token e continua as requisições normalmente.
-  5. O refresh token permanece o mesmo (não é renovado no refresh, apenas no login).
+  4. O frontend armazena o novo token e **repete a requisição original** com ele.
+  5. A rotação do refresh token é **condicional**: o access token é sempre renovado; o refresh token só é renovado quando a vida restante é menor que a expiração do access token — caso contrário, o mesmo refresh token é reutilizado (`seguranca.md` §3). A rotação completa ocorre no login.
 - Estados e erros:
-  - Se o cookie `refreshToken` não estiver presente ou for inválido, redirecionar para `/login`.
+  - Se o cookie `refreshToken` não estiver presente ou for inválido, o `POST /auth/refresh` retorna `401`; o interceptor limpa o access token em memória e despacha `auth:logout`, e os guards redirecionam para `/login`.
   - Em erro de rede, tentar novamente ou redirecionar para `/login`.
 - Critérios de aceitação:
   - Renovação ocorre automaticamente sem interrupção do usuário.
@@ -525,7 +521,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
   1. O usuário clica no botão `Sair` no Header.
   2. O frontend envia POST `/auth/logout`.
   3. O backend invalida o refresh token e limpa o cookie.
-  4. O frontend limpa o access token local e redireciona para `/login`.
+  4. O frontend limpa o access token local; o redirecionamento para `/login` é delegado aos guards (não há `navigate` explícito no logout — ver `arquitetura-frontend.md` §3.6).
 - Estados e erros:
   - Mesmo em caso de erro na requisição, o frontend deve limpar o estado local e redirecionar para `/login`.
 - Critérios de aceitação:
