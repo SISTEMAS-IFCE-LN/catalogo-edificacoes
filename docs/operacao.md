@@ -219,7 +219,7 @@ O repositório inclui um `docker-compose.yml` na **raiz** que sobe a aplicação
 
 | Arquivo | Localização | Função |
 |---|---|---|
-| `docker-compose.yml` | raiz | Define os serviços `db` (Postgres) e `api` (build local). |
+| `docker-compose.yml` | raiz | Define os serviços `db` (Postgres), `api` (build local) e `frontend` (Nginx + build local). |
 | `.env` | raiz | Alimenta a interpolação `${...}` do Compose. **Não commitar.** |
 | `.env.example` | raiz | Espelho commitado com placeholders. |
 | `apis/Dockerfile` | `apis/` | Multi-stage build (Maven 3.9 + distroless java21). |
@@ -245,6 +245,10 @@ docker compose down -v
 **Sobre o `pgdata` volume:**
 
 A imagem oficial `postgres:17-trixie` só lê `POSTGRES_USER`/`POSTGRES_DB`/`POSTGRES_PASSWORD` na **primeira inicialização** (quando o data dir está vazio). Em boots subsequentes, essas variáveis são ignoradas. Se o volume `pgdata` foi inicializado com credenciais erradas (ex.: variáveis vazias), o `db` sempre sobe com o usuário default `postgres`. Para corrigir, use `docker compose down -v` para remover o volume e re-inicializar.
+
+**Sobre os logs dos containers:**
+
+Os três serviços (`db`, `api` e `frontend`) usam o anchor `x-logging` definido no topo do `docker-compose.yml`: driver `json-file` com rotação em `max-size: "10m"` e `max-file: "3"` (até ~30 MB por container). Sem essa configuração, o driver default acumula logs indefinidamente e pode esgotar o disco do host. Para ajustar os limites, edite o anchor `x-logging`. A rotação é aplicada na **criação** do container — após alterar o bloco `logging`, rode `docker compose up -d` para recriar os containers. O `docker compose logs` continua funcionando normalmente.
 
 ---
 
