@@ -60,7 +60,6 @@ export function PublicadosPage() {
     if (error) {
         return (
             <div className="space-y-4">
-                <h1 className="text-2xl font-bold">Ambientes Publicados</h1>
                 <ErrorLista onTentarNovamente={() => refetch()}/>
             </div>
         )
