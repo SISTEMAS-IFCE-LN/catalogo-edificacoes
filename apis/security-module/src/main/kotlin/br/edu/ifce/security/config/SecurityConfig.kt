@@ -76,9 +76,7 @@ class SecurityConfig(
                     userInfo.userService(customOAuth2UserService)
                 }
                 oauth2.successHandler(oAuth2LoginSuccessHandler)
-
-                val errorTarget = frontendProperties.callbackErrorUrl?.takeIf { it.isNotBlank() } ?: "/failure.html"
-                oauth2.failureUrl(errorTarget)
+                oauth2.failureHandler(OAuth2LoginFailureHandler(frontendProperties))
             }
         return http.build()
     }
