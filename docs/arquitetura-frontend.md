@@ -153,18 +153,18 @@ Para popular `User` no `AuthContext`, o **backend implementa** `GET /api/usuario
 
 | Camada | Tecnologia | Versão | Justificativa |
 |---|---|---|---|
-| Build/Dev | Vite | 5+ | Build estático otimizado, hot reload instantâneo, config TS-first |
-| Framework UI | React | 18+ | Ecossistema maduro, alinhado a shadcn/ui |
+| Build/Dev | Vite | 8+ | Build estático otimizado, hot reload instantâneo, config TS-first |
+| Framework UI | React | 19+ | Ecossistema maduro, alinhado a shadcn/ui |
 | Roteamento | React Router | 8+ (data routers) | Guards via `<RequireAuth>`/`<RequireRole>`, loaders, safe navigation |
-| Linguagem | TypeScript | 5+ | Type safety para permissões, contracts com backend |
+| Linguagem | TypeScript | 6+ | Type safety para permissões, contracts com backend |
 | HTTP Client | Axios | 1+ | Interceptores (auth, CSRF, refresh 401), retry transparente |
 | Estado servidor | TanStack Query | 5+ | Cache, refetch inteligente, optimistic updates, paginação |
 | Auth state | React Context | — | Simples, integrado ao React, suficiente para escopo |
 | Estilização | Tailwind CSS | 4+ | Utility-first, plugin Vite nativo (`@tailwindcss/vite`), tema via `@theme` em `globals.css`, tree-shaking automático |
 | UI Components | shadcn/ui (inclui `Drawer`, `Sheet`, `Avatar`, `Dialog`, `DropdownMenu`, `Accordion`) | — | Acessível (Base UI embutido), sem lock-in, copiado para o repo. |
 | Formulários | React Hook Form | 7+ | Performance, integração com Zod e shadcn |
-| Validação | Zod | 3+ | Type inference, validação runtime, schemas próximos do backend |
-| Testes | Vitest + Testing Library | — | Coerente com Vite, mesma API do Jest |
+| Validação | Zod | 4+ | Type inference, validação runtime, schemas próximos do backend |
+| Testes | Vitest + Testing Library | 4+ | Coerente com Vite, mesma API do Jest |
 
 ### Justificativa da escolha Vite + React Router
 
@@ -1556,7 +1556,7 @@ Cobertura mínima recomendada: `lib/security/permissions.ts` 100%, `lib/security
 
 ## 18. Tarefas de implementação (enfileiramento sugerido)
 
-1. **Scaffold Vite + React + TS + Tailwind + shadcn/ui**; configurar `vite-tsconfig-paths` para alias `@/`. Tailwind v4 via plugin `@tailwindcss/vite` em `vite.config.ts` (não PostCSS); `@import "tailwindcss"` em `globals.css`. Instalar via shadcn CLI: `button input dialog dropdown-menu avatar sheet drawer accordion table badge card form sonner`.
+1. **Scaffold Vite + React + TS + Tailwind + shadcn/ui**; configurar o alias `@/` em `resolve.alias` no `vite.config.ts`. Tailwind v4 via plugin `@tailwindcss/vite` em `vite.config.ts` (não PostCSS); `@import "tailwindcss"` em `globals.css`. Instalar via shadcn CLI: `button input dialog dropdown-menu avatar sheet drawer accordion table badge card form sonner`.
 2. **Backend**: `GET /api/usuarios/me` em `UsuarioController` já implementado, retornando `UsuarioRes` a partir do `@AuthenticationPrincipal jwt: Jwt` (`jwt.subject` = `Usuario.id`). Authority: qualquer autenticado. O `SecurityConfig.apiFilterChain` abre `GET /api/usuarios/me` para `authenticated()` antes da regra `ROLE_ADMINISTRADOR` para `/api/usuarios/**`.
 3. **`lib/security/auth.ts` + `lib/api/api.ts`**: variável de módulo (apenas `set/get/clear` do token string), interceptores de request (auth + CSRF) e response (refresh 401).
 4. **`lib/security/csrf.ts`**: token CSRF mascarado em memória + `ensureCsrfToken()` + `clearCsrfToken()`.
