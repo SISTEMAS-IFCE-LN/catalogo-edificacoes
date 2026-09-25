@@ -8,7 +8,7 @@ Este documento contém as instruções práticas para rodar o Catálogo de Edifi
 
 | Ferramenta | Versão | Verificação |
 |---|---|---|
-| JDK | 21 (Microsoft, Adoptium, Zulu ou OpenJDK) | `java -version` |
+| JDK | 25 (Microsoft, Adoptium, Zulu ou OpenJDK) | `java -version` |
 | Maven | 3.9+ (ou usar `mvnw` que vem no projeto) | `mvn -v` |
 | Git | qualquer | `git --version` |
 | OpenSSL | qualquer (apenas para gerar chaves RSA) | `openssl version` |

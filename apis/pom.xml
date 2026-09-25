@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.16</version>
+        <version>4.1.1</version>
         <relativePath/>
     </parent>
 
@@ -24,8 +24,15 @@
     </modules>
 
     <properties>
-        <java.version>21</java.version>
-        <kotlin.version>2.2.20</kotlin.version>
+        <java.version>25</java.version>
+        <kotlin.version>2.4.20</kotlin.version>
+        <!--
+          H2 2.4.240 (gerenciado pelo Boot 4.1.1) tem regressão na avaliação de CHECK constraints
+          de colunas ENUM/discriminador quando a conexão que as criou é fechada (h2database#4291,
+          #4323, #4342). 2.5.250 contém a correção. Remover este override quando o Boot passar a
+          gerenciar uma versão corrigida.
+        -->
+        <h2.version>2.5.250</h2.version>
     </properties>
 
     <dependencyManagement>
@@ -51,6 +58,21 @@
     <build>
         <pluginManagement>
             <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <configuration>
+                        <!--
+                          Mockito inline mock maker: carrega o byte-buddy-agent como agente na JVM de testes.
+                          O self-attach dinâmico falha no JDK 21+ (JEP 451) e em caminhos com espaço/acento no
+                          Windows (perfil local); o -javaagent elimina a necessidade de attach em runtime.
+                        -->
+                        <argLine>
+                            -javaagent:"${settings.localRepository}/net/bytebuddy/byte-buddy-agent/${byte-buddy.version}/byte-buddy-agent-${byte-buddy.version}.jar"
+                            -XX:+EnableDynamicAgentLoading -Djdk.attach.allowAttachSelf=true
+                        </argLine>
+                    </configuration>
+                </plugin>
                 <plugin>
                     <groupId>org.jetbrains.kotlin</groupId>
                     <artifactId>kotlin-maven-plugin</artifactId>

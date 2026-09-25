@@ -17,8 +17,12 @@ data class RsaKeyProperties(
     var privateKeyPath: String? = null,
 ) {
 
-    val publicKey: RSAPublicKey? by lazy { loadPublicKey() }
-    val privateKey: RSAPrivateKey? by lazy { loadPrivateKey() }
+    val publicKey: RSAPublicKey by lazy {
+        requireNotNull(loadPublicKey()) { "Chave pública RSA não configurada (rsa.public-key-path)." }
+    }
+    val privateKey: RSAPrivateKey by lazy {
+        requireNotNull(loadPrivateKey()) { "Chave privada RSA não configurada (rsa.private-key-path)." }
+    }
 
     private fun loadPublicKey(): RSAPublicKey? {
         val path = publicKeyPath ?: return null

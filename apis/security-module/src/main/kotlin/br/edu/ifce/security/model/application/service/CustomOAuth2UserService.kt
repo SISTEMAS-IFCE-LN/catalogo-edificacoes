@@ -1,9 +1,5 @@
 package br.edu.ifce.security.model.application.service
 
-import br.edu.ifce.security.model.domain.Perfil
-import br.edu.ifce.security.model.domain.Usuario
-import br.edu.ifce.security.model.repository.UsuarioRepository
-import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException
@@ -11,14 +7,20 @@ import org.springframework.security.oauth2.core.OAuth2Error
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User
 import org.springframework.security.oauth2.core.user.OAuth2User
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 
+/**
+ * Carrega o usuário no provedor OAuth2 e delega a sincronização com o banco para
+ * [UsuarioOAuth2Service] (transação curta, somente banco).
+ *
+ * Importante: esta classe não deve receber anotações que disparem proxy AOP (ex.: @Transactional).
+ * `DefaultOAuth2UserService` possui setters finais herdados, e o proxy CGLIB emitiria avisos de
+ * que eles não podem ser proxiados; além disso a transação envolveria a chamada HTTP ao provedor.
+ */
 @Service
 class CustomOAuth2UserService(
-    private val usuarioRepository: UsuarioRepository
+    private val usuarioOAuth2Service: UsuarioOAuth2Service
 ) : DefaultOAuth2UserService() {
 
-    @Transactional
     override fun loadUser(userRequest: OAuth2UserRequest): OAuth2User {
         val oAuth2User = super.loadUser(userRequest)
         val email = oAuth2User.attributes["email"] as String?
@@ -26,27 +28,7 @@ class CustomOAuth2UserService(
         val nome = oAuth2User.attributes["name"] as String?
             ?: throw OAuth2AuthenticationException(OAuth2Error("missing_name"), "Nome não fornecido pelo provedor Google.")
 
-        var usuario = usuarioRepository.findByEmail(email)
-
-        if (usuario == null) {
-            if (email.endsWith("@ifce.edu.br")) {
-                usuario = Usuario(
-                    email = email,
-                    nome = nome
-                )
-                usuario.perfis.add(Perfil.ROLE_COLABORADOR)
-                usuarioRepository.save(usuario)
-            } else {
-                throw OAuth2AuthenticationException(OAuth2Error("unauthorized_domain"), "Acesso Negado: Usuário externo não cadastrado.")
-            }
-        } else if (usuario.nome != nome) {
-            usuario.nome = nome
-            usuarioRepository.save(usuario)
-        }
-
-        if (!usuario.ativo) throw OAuth2AuthenticationException(OAuth2Error("user_inactive"), "Acesso Negado: Usuário inativo.")
-
-        val authorities = usuario.perfis.map { SimpleGrantedAuthority(it.name) }
+        val authorities = usuarioOAuth2Service.sincronizar(email, nome)
 
         return DefaultOAuth2User(authorities, oAuth2User.attributes, "email")
     }
