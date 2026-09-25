@@ -12,7 +12,8 @@ Componentes centrais:
 
 | Componente | Caminho | Responsabilidade |
 |---|---|---|
-| `CustomOAuth2UserService` | `br.edu.ifce.security.model.application.service` | Provisiona/ativa o `Usuario` a partir dos atributos do Google. |
+| `CustomOAuth2UserService` | `br.edu.ifce.security.model.application.service` | Carrega o usuário no Google e delega a sincronização do `Usuario` (transação curta, somente banco) ao `UsuarioOAuth2Service`. |
+| `UsuarioOAuth2Service` | `br.edu.ifce.security.model.application.service` | Provisiona/atualiza o `Usuario` e devolve as autoridades; não envolve a chamada HTTP do handshake OAuth2. |
 | `JwtService` | `br.edu.ifce.security.model.application.service` | Emite e valida o JWT próprio. |
 | `RefreshTokenService` | `br.edu.ifce.security.model.application.service` | Persiste e rotaciona refresh tokens. |
 | `AuthService` | `br.edu.ifce.security.model.application.service` | Orquestra login/refresh/logout. |
@@ -465,11 +466,11 @@ Todas as respostas de erro tratadas pelo `GlobalExceptionHandler` seguem o forma
 |---|---|---|
 | Cookie de refresh ausente | `401` | `AuthController.refresh` retorna `ResponseEntity.status(UNAUTHORIZED)` direto (não passa pelo handler). |
 | Cookie de refresh inválido/expirado/revogado | `401` | `RefreshTokenService` retorna `null` → `AuthController.refresh` converte. |
-| Login com Google de e-mail `@ifce.edu.br` mas inativo | redireciona para `/failure.html` | `CustomOAuth2UserService` lança `OAuth2AuthenticationException` → `.failureUrl()` na chain 1. |
-| Login com e-mail externo não pré-cadastrado | redireciona para `/failure.html` | `CustomOAuth2UserService` lança `OAuth2AuthenticationException` → `.failureUrl()` na chain 1. |
+| Login com Google de e-mail `@ifce.edu.br` mas inativo | redireciona para `/failure.html` | `UsuarioOAuth2Service` lança `OAuth2AuthenticationException` → `.failureUrl()` na chain 1. |
+| Login com e-mail externo não pré-cadastrado | redireciona para `/failure.html` | `UsuarioOAuth2Service` lança `OAuth2AuthenticationException` → `.failureUrl()` na chain 1. |
 | Endpoint protegido sem `Authorization: Bearer <jwt>` | `401` | `oauth2ResourceServer.jwt()` falha (Spring Security, não passa pelo handler). |
 | Endpoint protegido com `Authority` insuficiente | `403` | `SecurityConfig` — regra de autoridade (Spring Security). |
 
 > **Nota:** o `GlobalExceptionHandler` é um `@RestControllerAdvice` que atua apenas no `DispatcherServlet` da API (chain 3). As exceções lançadas no handshake OAuth2 (chain 1) e na camada de filtros do Spring Security são tratadas pelo próprio Spring Security, fora do escopo do handler global.
 >
-> A partir do refactor de segurança, as falhas de negócio no `CustomOAuth2UserService` (domínio não autorizado, usuário inativo, email não fornecido) disparam `OAuth2AuthenticationException`, que o Spring Security captura e redireciona o navegador para a URL configurada em `oauth2.failureUrl()` (default local: `/failure.html`).
+> A partir do refactor de segurança, as falhas de negócio do fluxo de provisionamento (domínio não autorizado e usuário inativo em `UsuarioOAuth2Service`; e-mail/nome ausente em `CustomOAuth2UserService`) disparam `OAuth2AuthenticationException`, que o Spring Security captura e redireciona o navegador para a URL configurada em `oauth2.failureUrl()` (default local: `/failure.html`).
