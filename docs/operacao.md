@@ -222,7 +222,7 @@ O repositório inclui um `docker-compose.yml` na **raiz** que sobe a aplicação
 | `docker-compose.yml` | raiz | Define os serviços `db` (Postgres), `api` (build local) e `frontend` (Nginx + build local). |
 | `.env` | raiz | Alimenta a interpolação `${...}` do Compose. **Não commitar.** |
 | `.env.example` | raiz | Espelho commitado com placeholders. |
-| `apis/Dockerfile` | `apis/` | Multi-stage build (Maven 3.9 + distroless java21). |
+| `apis/Dockerfile` | `apis/` | Multi-stage build (Maven 3.9 + distroless java25). |
 | `apis/.keys/` | `apis/` | Bind mount no container (`/app/.keys:ro`) para as chaves RSA. |
 
 **Comandos:**

@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RequestParam
 
 @Validated
-abstract class BaseController<RES>(protected val useCases: IAmbienteUseCases<RES>) {
+abstract class BaseController<RES : Any>(protected val useCases: IAmbienteUseCases<RES>) {
 
     @GetMapping
     fun listarAmbientes(pageable: Pageable): ResponseEntity<AmbientesBasicosPaginadosRes> {

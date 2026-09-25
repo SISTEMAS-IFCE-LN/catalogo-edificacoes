@@ -1,5 +1,5 @@
 # ============== Estágio de build ==============
-FROM maven:3.9.11-eclipse-temurin-21 AS build
+FROM maven:3.9.16-eclipse-temurin-25 AS build
 WORKDIR /build
 
 # Copia SOMENTE a árvore de POMs do reator (mantém o cache de dependências
@@ -30,7 +30,7 @@ COPY HealthCheck.java ./HealthCheck.java
 RUN javac HealthCheck.java
 
 # ============== Estágio de release ==============
-FROM gcr.io/distroless/java21-debian13:nonroot AS release
+FROM gcr.io/distroless/java25-debian13:nonroot AS release
 WORKDIR /app
 COPY --from=build /build/app.jar ./app.jar
 COPY --from=build /build/HealthCheck.class ./HealthCheck.class

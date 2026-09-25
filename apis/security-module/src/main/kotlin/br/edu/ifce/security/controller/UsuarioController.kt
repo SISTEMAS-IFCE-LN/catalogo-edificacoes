@@ -9,11 +9,13 @@ import br.edu.ifce.security.model.dto.UsuarioRes
 import br.edu.ifce.security.model.dto.UsuariosPaginadosRes
 import jakarta.validation.constraints.*
 import org.springframework.data.domain.Pageable
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.server.ResponseStatusException
 
 @Validated
 @RestController
@@ -47,7 +49,9 @@ class UsuarioController(private val service: IUsuarioService) {
 
     @GetMapping("/me")
     fun obterUsuarioAtual(@AuthenticationPrincipal jwt: Jwt): ResponseEntity<UsuarioRes> {
-        val usuario = service.obterPorId(jwt.subject.toLong())
+        val subject = jwt.subject
+            ?: throw ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token sem claim 'sub'.")
+        val usuario = service.obterPorId(subject.toLong())
         return ResponseEntity.ok(usuario)
     }
 

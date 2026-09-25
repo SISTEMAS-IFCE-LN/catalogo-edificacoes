@@ -13,9 +13,10 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.annotation.Import
+import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
@@ -75,7 +76,11 @@ class AuthControllerIntegrationTest {
         return refreshTokenRepository.save(token).token
     }
 
+    // spring-security#17082: .with(csrf()) substitui globalmente o CsrfTokenRepository do
+    // CsrfFilter por um repositório de teste baseado em sessão. Este teste valida o cookie
+    // XSRF-TOKEN do CookieCsrfTokenRepository, então precisa de um contexto sem essa troca.
     @Nested
+    @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_CLASS)
     @DisplayName("GET /auth/csrf-token")
     inner class CsrfTokenTests {
 
