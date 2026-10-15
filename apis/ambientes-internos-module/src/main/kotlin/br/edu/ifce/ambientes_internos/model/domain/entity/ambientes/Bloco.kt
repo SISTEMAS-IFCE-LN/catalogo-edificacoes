@@ -28,23 +28,12 @@ class Bloco(
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (javaClass != other?.javaClass) return false
+        if (other !is Bloco) return false
 
-        other as Bloco
-
-        if (id != other.id) return false
-        if (unidade != other.unidade) return false
-        if (nome != other.nome) return false
-
-        return true
+        return unidade == other.unidade && nome == other.nome
     }
 
-    override fun hashCode(): Int {
-        var result = id.hashCode()
-        result = 31 * result + unidade.hashCode()
-        result = 31 * result + nome.hashCode()
-        return result
-    }
+    override fun hashCode(): Int = 31 * unidade.hashCode() + nome.hashCode()
 
     companion object {
         private val MARCAS = Regex("\\p{Mn}+")

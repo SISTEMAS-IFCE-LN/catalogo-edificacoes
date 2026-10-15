@@ -67,4 +67,26 @@ class BlocoTest {
         )
     }
 
+    @Test
+    fun `Deve ignorar o id na igualdade e no hashCode`() {
+        val semId = Bloco(Unidade.SEDE, "BLOCO 1")
+        val comId = Bloco(Unidade.SEDE, "BLOCO 1").apply { id = 42L }
+
+        assertEquals(
+            "Falha ao comparar blocos com mesmo nome e unidade e ids diferentes",
+            semId,
+            comId
+        )
+        assertEquals(
+            "Falha ao comparar blocos com mesmo nome e unidade e ids diferentes (ordem inversa)",
+            comId,
+            semId
+        )
+        assertEquals(
+            "Falha ao comparar hashCode de blocos com mesmo nome e unidade e ids diferentes",
+            semId.hashCode(),
+            comId.hashCode()
+        )
+    }
+
 }
