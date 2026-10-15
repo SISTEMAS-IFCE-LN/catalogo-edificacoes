@@ -12,7 +12,8 @@ import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.test.context.ActiveProfiles
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
@@ -37,13 +38,12 @@ class BlocoRepositoryIntegrationTest {
     fun `Deve buscar bloco por unidade e nome com escopo por unidade`() {
         repository.saveAndFlush(Bloco(Unidade.SEDE, "BLOCO 1"))
 
-        val naSede = repository.findByUnidadeAndNome(Unidade.SEDE, "BLOCO 1")
+        val naSede = assertNotNull(repository.findByUnidadeAndNome(Unidade.SEDE, "BLOCO 1"))
         val naCidadeAlta = repository.findByUnidadeAndNome(Unidade.CIDADE_ALTA, "BLOCO 1")
 
-        assertTrue(naSede.isPresent)
-        assertEquals("BLOCO 1", naSede.get().nome)
-        assertEquals(Unidade.SEDE, naSede.get().unidade)
-        assertTrue(naCidadeAlta.isEmpty)
+        assertEquals("BLOCO 1", naSede.nome)
+        assertEquals(Unidade.SEDE, naSede.unidade)
+        assertNull(naCidadeAlta)
     }
 
     @Test
