@@ -6,6 +6,7 @@ import com.nimbusds.jose.jwk.RSAKey
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet
 import com.nimbusds.jose.proc.SecurityContext
 import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.http.HttpMethod
 import org.springframework.boot.test.context.TestConfiguration
 import org.springframework.context.annotation.Bean
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -36,6 +37,7 @@ class TestSecurityConfig {
                 auth.requestMatchers("/api/ambientes/publicados/**").permitAll()
                 auth.requestMatchers("/api/ambientes/nao-publicados/**").hasAuthority("ROLE_GESTOR_SISTEMA")
                 auth.requestMatchers("/api/ambientes/validacao/**").hasAuthority("ROLE_VALIDADOR")
+                auth.requestMatchers(HttpMethod.GET, "/api/blocos").permitAll()
                 auth.requestMatchers("/auth/**").permitAll()
                 auth.requestMatchers("/health").permitAll()
                 auth.anyRequest().authenticated()
