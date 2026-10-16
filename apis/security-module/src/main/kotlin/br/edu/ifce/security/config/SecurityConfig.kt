@@ -4,6 +4,7 @@ import br.edu.ifce.common.config.ApiPaths.AMBIENTES_NAO_PUBLICADOS_PATH
 import br.edu.ifce.common.config.ApiPaths.AMBIENTES_PUBLICADOS_PATH
 import br.edu.ifce.common.config.ApiPaths.AMBIENTES_VALIDACAO_PATH
 import br.edu.ifce.common.config.ApiPaths.AUTH_PATH
+import br.edu.ifce.common.config.ApiPaths.BLOCOS_PATH
 import br.edu.ifce.common.config.ApiPaths.USUARIOS_PATH
 import br.edu.ifce.security.config.properties.BootstrapProperties
 import br.edu.ifce.security.config.properties.CorsProperties
@@ -138,7 +139,8 @@ class SecurityConfig(
                     HttpMethod.GET,
                     "/callback.html",
                     "/failure.html",
-                    "/actuator/health"
+                    "/actuator/health",
+                    BLOCOS_PATH
                 ).permitAll()
                 auth.anyRequest().denyAll()
             }

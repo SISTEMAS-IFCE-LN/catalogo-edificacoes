@@ -9,4 +9,6 @@ object ApiPaths {
     const val USUARIOS_PATH = "/api/usuarios"
 
     const val AUTH_PATH = "/auth"
+
+    const val BLOCOS_PATH = "/api/blocos"
 }

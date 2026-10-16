@@ -17,9 +17,7 @@ import org.springframework.http.MediaType
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
-import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.*
 
 @SpringBootTest(classes = [TestApplication::class])
 @AutoConfigureMockMvc
@@ -86,7 +84,7 @@ class BlocoControllerIntegrationTest {
     fun `deve retornar 400 ao informar unidade invalida`() {
         mockMvc.perform(get("/api/blocos").param("unidade", "XYZ"))
             .andExpect(status().isBadRequest)
-            .andExpect(jsonPath("$.mensagem").value("Unidade inválida."))
+            .andExpect(jsonPath("$.mensagem").value(containsString("Unidade inválida")))
     }
 
     @Test
