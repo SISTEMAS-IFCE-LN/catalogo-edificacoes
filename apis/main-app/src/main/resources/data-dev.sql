@@ -1,24 +1,27 @@
--- Seed de desenvolvimento: 120 ambientes
+-- Seed de desenvolvimento: 24 blocos, 96 localizacoes e 120 ambientes
 
-INSERT INTO localizacao (bloco, unidade, andar)
+INSERT INTO bloco (unidade, nome)
 SELECT
-    CASE MOD(x - 1, 8)
-        WHEN 0 THEN 'BLOCO_1'
-        WHEN 1 THEN 'BLOCO_2'
-        WHEN 2 THEN 'BLOCO_3'
-        WHEN 3 THEN 'BLOCO_4'
-        WHEN 4 THEN 'BLOCO_5'
-        WHEN 5 THEN 'BLOCO_6'
-        WHEN 6 THEN 'BLOCO_7'
-        ELSE 'BLOCO_8'
-    END,
     CASE MOD(FLOOR((x - 1) / 8), 3)
         WHEN 0 THEN 'SEDE'
         WHEN 1 THEN 'CIDADE_ALTA'
         ELSE 'UEPE'
     END,
+    CONCAT('BLOCO ', MOD(x - 1, 8) + 1)
+FROM SYSTEM_RANGE(1, 24);
+
+INSERT INTO localizacao (bloco_id, andar)
+SELECT
+    b.id,
     MOD(FLOOR((x - 1) / 24), 4)
-FROM SYSTEM_RANGE(1, 96);
+FROM SYSTEM_RANGE(1, 96) x
+JOIN bloco b
+    ON b.nome = CONCAT('BLOCO ', MOD(x - 1, 8) + 1)
+    AND b.unidade = CASE MOD(FLOOR((x - 1) / 8), 3)
+        WHEN 0 THEN 'SEDE'
+        WHEN 1 THEN 'CIDADE_ALTA'
+        ELSE 'UEPE'
+    END;
 
 INSERT INTO ambiente (nome, localizacao_id, capacidade, tipo, informacao_adicional, status)
 SELECT
@@ -77,22 +80,15 @@ SELECT
     'NAO_PUBLICADO'
 FROM SYSTEM_RANGE(1, 120) r
 JOIN localizacao l
-    ON l.bloco = CASE MOD(MOD(r.x - 1, 96), 8)
-        WHEN 0 THEN 'BLOCO_1'
-        WHEN 1 THEN 'BLOCO_2'
-        WHEN 2 THEN 'BLOCO_3'
-        WHEN 3 THEN 'BLOCO_4'
-        WHEN 4 THEN 'BLOCO_5'
-        WHEN 5 THEN 'BLOCO_6'
-        WHEN 6 THEN 'BLOCO_7'
-        ELSE 'BLOCO_8'
-    END
-    AND l.unidade = CASE MOD(FLOOR(MOD(r.x - 1, 96) / 8), 3)
+    ON l.andar = MOD(FLOOR(MOD(r.x - 1, 96) / 24), 4)
+JOIN bloco b
+    ON b.id = l.bloco_id
+    AND b.nome = CONCAT('BLOCO ', MOD(MOD(r.x - 1, 96), 8) + 1)
+    AND b.unidade = CASE MOD(FLOOR(MOD(r.x - 1, 96) / 8), 3)
         WHEN 0 THEN 'SEDE'
         WHEN 1 THEN 'CIDADE_ALTA'
         ELSE 'UEPE'
-    END
-    AND l.andar = MOD(FLOOR(MOD(r.x - 1, 96) / 24), 4);
+    END;
 
 INSERT INTO geometria (tipo, base, altura, repeticao, ambiente_id)
 SELECT
