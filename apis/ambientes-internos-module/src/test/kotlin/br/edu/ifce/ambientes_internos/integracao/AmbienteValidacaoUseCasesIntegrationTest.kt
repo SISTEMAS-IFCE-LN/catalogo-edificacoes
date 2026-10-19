@@ -2,10 +2,10 @@ package br.edu.ifce.ambientes_internos.integracao
 
 import br.edu.ifce.ambientes_internos.model.application.interfaces.IAmbienteValidacaoUseCases
 import br.edu.ifce.ambientes_internos.model.application.usecases.AmbienteValidacaoUseCases
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Bloco
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.LaboratorioInformatica
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Localizacao
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.SalaAula
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Bloco
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.StatusAmbiente
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.TipoAmbiente
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Unidade
@@ -13,6 +13,7 @@ import br.edu.ifce.ambientes_internos.model.domain.entity.geometrias.Geometria
 import br.edu.ifce.ambientes_internos.model.domain.entity.geometrias.Retangular
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.LocalizacaoPesquisaReq
 import br.edu.ifce.ambientes_internos.model.repository.AmbienteRepository
+import br.edu.ifce.ambientes_internos.model.repository.BlocoRepository
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
@@ -38,13 +39,20 @@ class AmbienteValidacaoUseCasesIntegrationTest {
     @Autowired
     lateinit var repoAmb: AmbienteRepository
 
+    @Autowired
+    lateinit var repoBloco: BlocoRepository
+
+    private fun criarBloco(unidade: Unidade, nome: String): Bloco =
+        repoBloco.findByUnidadeAndNome(unidade, nome)
+            ?: repoBloco.saveAndFlush(Bloco(unidade, nome))
+
     // -------------------------------------------------------------------------
     // Helpers de criação de entidades
     // -------------------------------------------------------------------------
 
     private fun criarSalaAula(
         nome: String,
-        bloco: Bloco,
+        bloco: String,
         unidade: Unidade,
         andar: Int,
         capacidade: Int,
@@ -56,8 +64,7 @@ class AmbienteValidacaoUseCasesIntegrationTest {
         val ambiente = SalaAula(
             nome = nome,
             localizacao = Localizacao(
-                bloco = bloco,
-                unidade = unidade,
+                bloco = criarBloco(unidade, bloco),
                 andar = andar
             ),
             capacidade = capacidade,
@@ -73,7 +80,7 @@ class AmbienteValidacaoUseCasesIntegrationTest {
 
     private fun criarLaboratorioInformatica(
         nome: String,
-        bloco: Bloco,
+        bloco: String,
         unidade: Unidade,
         andar: Int,
         capacidade: Int,
@@ -85,8 +92,7 @@ class AmbienteValidacaoUseCasesIntegrationTest {
         val ambiente = LaboratorioInformatica(
             nome = nome,
             localizacao = Localizacao(
-                bloco = bloco,
-                unidade = unidade,
+                bloco = criarBloco(unidade, bloco),
                 andar = andar
             ),
             capacidade = capacidade,
@@ -108,7 +114,7 @@ class AmbienteValidacaoUseCasesIntegrationTest {
     fun `Deve obter ambiente em validacao por id`() {
         val ambienteSalvo = criarSalaAula(
             nome = "Sala em validação",
-            bloco = Bloco.BLOCO_10,
+            bloco = "BLOCO 10",
             unidade = Unidade.CIDADE_ALTA,
             andar = 1,
             capacidade = 30,
@@ -129,7 +135,7 @@ class AmbienteValidacaoUseCasesIntegrationTest {
     fun `Deve lancar excecao ao obter ambiente fora de validacao por id`() {
         val ambienteSalvo = criarSalaAula(
             nome = "Sala não publicada",
-            bloco = Bloco.BLOCO_11,
+            bloco = "BLOCO 11",
             unidade = Unidade.CIDADE_ALTA,
             andar = 1,
             capacidade = 25,
@@ -147,7 +153,7 @@ class AmbienteValidacaoUseCasesIntegrationTest {
     fun `Deve listar ambientes em validacao com paginacao`() {
         criarSalaAula(
             nome = "Sala em validação 1",
-            bloco = Bloco.BLOCO_10,
+            bloco = "BLOCO 10",
             unidade = Unidade.CIDADE_ALTA,
             andar = 1,
             capacidade = 30,
@@ -156,7 +162,7 @@ class AmbienteValidacaoUseCasesIntegrationTest {
         )
         criarSalaAula(
             nome = "Sala em validação 2",
-            bloco = Bloco.BLOCO_11,
+            bloco = "BLOCO 11",
             unidade = Unidade.CIDADE_ALTA,
             andar = 2,
             capacidade = 35,
@@ -165,7 +171,7 @@ class AmbienteValidacaoUseCasesIntegrationTest {
         )
         criarSalaAula(
             nome = "Sala publicada",
-            bloco = Bloco.BLOCO_12,
+            bloco = "BLOCO 12",
             unidade = Unidade.CIDADE_ALTA,
             andar = 3,
             capacidade = 40,
@@ -189,7 +195,7 @@ class AmbienteValidacaoUseCasesIntegrationTest {
     fun `Deve listar ambientes em validacao por tipo`() {
         criarSalaAula(
             nome = "Sala em validação",
-            bloco = Bloco.BLOCO_10,
+            bloco = "BLOCO 10",
             unidade = Unidade.CIDADE_ALTA,
             andar = 1,
             capacidade = 30,
@@ -198,7 +204,7 @@ class AmbienteValidacaoUseCasesIntegrationTest {
         )
         criarLaboratorioInformatica(
             nome = "Laboratório em validação",
-            bloco = Bloco.BLOCO_11,
+            bloco = "BLOCO 11",
             unidade = Unidade.CIDADE_ALTA,
             andar = 2,
             capacidade = 25,
@@ -207,7 +213,7 @@ class AmbienteValidacaoUseCasesIntegrationTest {
         )
         criarSalaAula(
             nome = "Sala publicada",
-            bloco = Bloco.BLOCO_12,
+            bloco = "BLOCO 12",
             unidade = Unidade.CIDADE_ALTA,
             andar = 3,
             capacidade = 40,
@@ -224,14 +230,14 @@ class AmbienteValidacaoUseCasesIntegrationTest {
         assertEquals(1, resultado.ambientes.size)
         assertEquals(1, resultado.dadosPaginacao.totalElements)
         assertEquals("Sala em validação", resultado.ambientes.first().nome)
-        assertEquals(Bloco.BLOCO_10.nome, resultado.ambientes.first().localizacao.bloco)
+        assertEquals("BLOCO 10", resultado.ambientes.first().localizacao.bloco)
     }
 
     @Test
     fun `Deve listar ambientes em validacao por nome`() {
         criarSalaAula(
             nome = "Sala de Aula em validação",
-            bloco = Bloco.BLOCO_10,
+            bloco = "BLOCO 10",
             unidade = Unidade.CIDADE_ALTA,
             andar = 1,
             capacidade = 30,
@@ -240,7 +246,7 @@ class AmbienteValidacaoUseCasesIntegrationTest {
         )
         criarSalaAula(
             nome = "Laboratório de Química",
-            bloco = Bloco.BLOCO_11,
+            bloco = "BLOCO 11",
             unidade = Unidade.CIDADE_ALTA,
             andar = 2,
             capacidade = 20,
@@ -262,7 +268,7 @@ class AmbienteValidacaoUseCasesIntegrationTest {
     fun `Deve listar ambientes em validacao por localizacao`() {
         criarSalaAula(
             nome = "Sala no bloco 10",
-            bloco = Bloco.BLOCO_10,
+            bloco = "BLOCO 10",
             unidade = Unidade.CIDADE_ALTA,
             andar = 1,
             capacidade = 30,
@@ -271,7 +277,7 @@ class AmbienteValidacaoUseCasesIntegrationTest {
         )
         criarSalaAula(
             nome = "Sala no bloco 11",
-            bloco = Bloco.BLOCO_11,
+            bloco = "BLOCO 11",
             unidade = Unidade.CIDADE_ALTA,
             andar = 2,
             capacidade = 35,
@@ -280,7 +286,7 @@ class AmbienteValidacaoUseCasesIntegrationTest {
         )
         criarSalaAula(
             nome = "Sala fora da validação",
-            bloco = Bloco.BLOCO_10,
+            bloco = "BLOCO 10",
             unidade = Unidade.CIDADE_ALTA,
             andar = 3,
             capacidade = 28,
@@ -290,7 +296,11 @@ class AmbienteValidacaoUseCasesIntegrationTest {
         )
 
         val resultado = ambientesVUseCases.listarAmbientesPorLocalizacao(
-            LocalizacaoPesquisaReq(bloco = "BLOCO_10", unidade = null, andar = null),
+            LocalizacaoPesquisaReq(
+                blocoId = repoBloco.findByUnidadeAndNome(Unidade.CIDADE_ALTA, "BLOCO 10")!!.id!!,
+                unidade = null,
+                andar = null
+            ),
             PageRequest.of(0, 10)
         )
 
@@ -304,7 +314,7 @@ class AmbienteValidacaoUseCasesIntegrationTest {
         (1..120).forEach { indice ->
             criarSalaAula(
                 nome = "Sala validacao $indice",
-                bloco = Bloco.BLOCO_10,
+                bloco = "BLOCO 10",
                 unidade = Unidade.CIDADE_ALTA,
                 andar = indice,
                 capacidade = 30,
@@ -324,7 +334,7 @@ class AmbienteValidacaoUseCasesIntegrationTest {
     fun `Deve publicar ambiente em validacao`() {
         val ambienteSalvo = criarSalaAula(
             nome = "Sala pronta para publicação",
-            bloco = Bloco.BLOCO_10,
+            bloco = "BLOCO 10",
             unidade = Unidade.CIDADE_ALTA,
             andar = 1,
             capacidade = 30,
@@ -345,7 +355,7 @@ class AmbienteValidacaoUseCasesIntegrationTest {
     fun `Deve privar ambiente em validacao`() {
         val ambienteSalvo = criarSalaAula(
             nome = "Sala para retornar a não publicado",
-            bloco = Bloco.BLOCO_10,
+            bloco = "BLOCO 10",
             unidade = Unidade.CIDADE_ALTA,
             andar = 1,
             capacidade = 30,
@@ -366,7 +376,7 @@ class AmbienteValidacaoUseCasesIntegrationTest {
     fun `Deve privar ambiente publicado`() {
         val ambienteSalvo = criarSalaAula(
             nome = "Sala publicada para privar",
-            bloco = Bloco.BLOCO_10,
+            bloco = "BLOCO 10",
             unidade = Unidade.CIDADE_ALTA,
             andar = 1,
             capacidade = 30,

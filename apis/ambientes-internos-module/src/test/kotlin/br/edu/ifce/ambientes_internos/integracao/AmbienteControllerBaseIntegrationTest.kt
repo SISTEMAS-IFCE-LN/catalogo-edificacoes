@@ -115,12 +115,11 @@ class AmbienteControllerBaseIntegrationTest {
     // ========== Validações para listarAmbientesPorLocalizacao ==========
 
     @Test
-    fun `deve retornar 400 ao listar ambientes por localizacao com bloco maior que 50 caracteres`() {
-        val blocoLongo = "B".repeat(51)
+    fun `deve retornar 400 ao listar ambientes por localizacao com blocoId invalido`() {
         assertBadRequestOrValidationError {
             mockMvc.perform(
             get("/api/ambientes/nao-publicados/localizacao")
-                .param("bloco", blocoLongo)
+                .param("blocoId", "0")
                 .param("page", "0")
                 .param("size", "20")
             ).andExpect(status().isBadRequest)
@@ -150,6 +149,17 @@ class AmbienteControllerBaseIntegrationTest {
                 .param("size", "20")
             ).andExpect(status().isBadRequest)
         }
+    }
+
+    @Test
+    fun `deve listar ambientes por localizacao com blocoId e unidade`() {
+        mockMvc.perform(
+        get("/api/ambientes/nao-publicados/localizacao")
+            .param("blocoId", "1")
+            .param("unidade", "SEDE")
+            .param("page", "0")
+            .param("size", "20")
+        ).andExpect(status().isOk)
     }
 
     // ========== Validações para obterAmbientePorId ==========

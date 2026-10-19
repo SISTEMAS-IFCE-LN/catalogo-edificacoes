@@ -83,7 +83,7 @@ class AmbienteNaoPublicadoControllerIntegrationTest {
               "tipo": "SALA_AULA",
               "nome": "   ",
               "localizacao": {
-                "bloco": "BLOCO_10",
+                "bloco": "BLOCO 10",
                 "unidade": "CIDADE_ALTA",
                 "andar": 1
               },
@@ -128,7 +128,7 @@ class AmbienteNaoPublicadoControllerIntegrationTest {
               "tipo": "SALA_AULA",
               "nome": null,
               "localizacao": {
-                "bloco": "BLOCO_10",
+                "bloco": "BLOCO 10",
                 "unidade": "CIDADE_ALTA",
                 "andar": 1
               },
@@ -176,7 +176,7 @@ class AmbienteNaoPublicadoControllerIntegrationTest {
               "tipo": "SALA_AULA",
               "nome": "$nomeLongo",
               "localizacao": {
-                "bloco": "BLOCO_10",
+                "bloco": "BLOCO 10",
                 "unidade": "CIDADE_ALTA",
                 "andar": 1
               },
@@ -361,7 +361,7 @@ class AmbienteNaoPublicadoControllerIntegrationTest {
             {
               "nome": "Sala Atualizada",
               "localizacao": {
-                "bloco": "BLOCO_10",
+                "bloco": "BLOCO 10",
                 "unidade": "CIDADE_ALTA",
                 "andar": 2
               },
@@ -488,7 +488,7 @@ class AmbienteNaoPublicadoControllerIntegrationTest {
               "tipo": "SALA_AULA",
               "nome": "$nomeUnico",
               "localizacao": {
-                "bloco": "BLOCO_10",
+                "bloco": "BLOCO 10",
                 "unidade": "CIDADE_ALTA",
                 "andar": 1
               },
@@ -564,7 +564,7 @@ class AmbienteNaoPublicadoControllerIntegrationTest {
               "tipo": "SALA_AULA",
               "nome": "$nomeUnico",
               "localizacao": {
-                "bloco": "BLOCO_10",
+                "bloco": "BLOCO 10",
                 "unidade": "CIDADE_ALTA",
                 "andar": 1
               },

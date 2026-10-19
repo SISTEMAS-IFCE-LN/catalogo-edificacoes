@@ -2,6 +2,17 @@ package br.edu.ifce.ambientes_internos.integracao
 
 import br.edu.ifce.ambientes_internos.TestApplication
 import br.edu.ifce.ambientes_internos.TestSecurityConfig
+import br.edu.ifce.ambientes_internos.model.application.interfaces.IAmbienteNaoPublicadoUseCases
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.TipoAmbiente
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Unidade
+import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.enums.MaterialEsquadria
+import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.enums.TipoEsquadria
+import br.edu.ifce.ambientes_internos.model.domain.entity.geometrias.enums.TipoGeometria
+import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbienteReq
+import br.edu.ifce.ambientes_internos.model.dto.ambiente.LocalizacaoReq
+import br.edu.ifce.ambientes_internos.model.dto.esquadria.EsquadriaReq
+import br.edu.ifce.ambientes_internos.model.dto.geometria.GeometriaAmbienteReq
+import br.edu.ifce.ambientes_internos.model.dto.geometria.GeometriaEsquadriaReq
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -13,9 +24,13 @@ import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.springframework.transaction.annotation.Transactional
 import jakarta.servlet.ServletException
 import jakarta.validation.ConstraintViolationException
+import java.math.BigDecimal
+import java.util.UUID
 import kotlin.test.assertTrue
 
 @SpringBootTest(classes = [TestApplication::class])
@@ -28,6 +43,9 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
 
     @Autowired
     lateinit var mockMvc: MockMvc
+
+    @Autowired
+    lateinit var ambientesNPUseCases: IAmbienteNaoPublicadoUseCases
 
     private fun assertBadRequestOrValidationError(block: () -> Unit) {
         try {
@@ -45,7 +63,7 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
             {
               "nome": "Sala Atualizada",
               "localizacao": {
-                "bloco": "BLOCO_10",
+                "bloco": "BLOCO 10",
                 "unidade": "CIDADE_ALTA",
                 "andar": 2
               },
@@ -68,7 +86,7 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
             {
               "nome": "Sala Atualizada",
               "localizacao": {
-                "bloco": "BLOCO_10",
+                "bloco": "BLOCO 10",
                 "unidade": "CIDADE_ALTA",
                 "andar": 2
               },
@@ -91,7 +109,7 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
             {
               "nome": "   ",
               "localizacao": {
-                "bloco": "BLOCO_10",
+                "bloco": "BLOCO 10",
                 "unidade": "CIDADE_ALTA",
                 "andar": 2
               },
@@ -114,7 +132,7 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
             {
               "nome": null,
               "localizacao": {
-                "bloco": "BLOCO_10",
+                "bloco": "BLOCO 10",
                 "unidade": "CIDADE_ALTA",
                 "andar": 2
               },
@@ -138,7 +156,7 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
             {
               "nome": "$nomeLongo",
               "localizacao": {
-                "bloco": "BLOCO_10",
+                "bloco": "BLOCO 10",
                 "unidade": "CIDADE_ALTA",
                 "andar": 2
               },
@@ -161,7 +179,7 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
             {
               "nome": "Sala Atualizada",
               "localizacao": {
-                "bloco": "BLOCO_10",
+                "bloco": "BLOCO 10",
                 "unidade": "CIDADE_ALTA",
                 "andar": 2
               },
@@ -184,7 +202,7 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
             {
               "nome": "Sala Atualizada",
               "localizacao": {
-                "bloco": "BLOCO_10",
+                "bloco": "BLOCO 10",
                 "unidade": "CIDADE_ALTA",
                 "andar": 2
               },
@@ -232,7 +250,7 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
             {
               "nome": "Sala Atualizada",
               "localizacao": {
-                "bloco": "BLOCO_10",
+                "bloco": "BLOCO 10",
                 "unidade": "$unidadeLonga",
                 "andar": 2
               },
@@ -255,7 +273,7 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
             {
               "nome": "Sala Atualizada",
               "localizacao": {
-                "bloco": "BLOCO_10",
+                "bloco": "BLOCO 10",
                 "unidade": "CIDADE_ALTA",
                 "andar": -1
               },
@@ -663,6 +681,86 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
                     .content(payloadValidacao)
             ).andExpect(status().isBadRequest)
         }
+    }
+
+    // ========== Caso do UC16 (POST /{id}): alterar tipo e dados com troca de bloco ==========
+
+    // Transacional de propósito: o contexto Spring/H2 é compartilhado entre as classes de
+    // teste e os dados criados aqui não podem vazar (o BlocoControllerIntegrationTest, por
+    // exemplo, limpa todos os blocos com repoBloco.deleteAll()).
+    @Transactional
+    @Test
+    fun `deve alterar tipo e dados de ambiente nao publicado com troca de bloco`() {
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(
+            AmbienteReq(
+                tipo = TipoAmbiente.SALA_AULA,
+                nome = "Sala UC16 ${UUID.randomUUID().toString().take(8)}",
+                localizacao = LocalizacaoReq(unidade = Unidade.CIDADE_ALTA, bloco = "BLOCO 10", andar = 1),
+                capacidade = 30,
+                geometrias = setOf(
+                    GeometriaAmbienteReq(
+                        tipo = TipoGeometria.RETANGULAR,
+                        base = BigDecimal("6.0"),
+                        altura = BigDecimal("3.0")
+                    )
+                ),
+                pesDireitos = setOf(BigDecimal("3.0")),
+                esquadrias = setOf(
+                    EsquadriaReq(
+                        tipo = TipoEsquadria.PORTA,
+                        geometria = GeometriaEsquadriaReq(base = BigDecimal("0.9"), altura = BigDecimal("2.1")),
+                        material = MaterialEsquadria.MADEIRA_FICHA,
+                        informacaoAdicional = "Porta de abrir"
+                    )
+                ),
+                informacaoAdicional = "Ambiente para alteração de tipo"
+            )
+        )
+
+        val payloadPost = """
+            {
+              "tipo": "LABORATORIO_INFORMATICA",
+              "nome": "Sala UC16 Alterada ${UUID.randomUUID().toString().take(8)}",
+              "localizacao": {
+                "bloco": "BLOCO 11",
+                "unidade": "SEDE",
+                "andar": 2
+              },
+              "capacidade": 25,
+              "geometrias": [
+                {
+                  "tipo": "RETANGULAR",
+                  "base": 8.00,
+                  "altura": 4.00,
+                  "repeticao": 1
+                }
+              ],
+              "pesDireitos": [3.50],
+              "esquadrias": [
+                {
+                  "tipo": "PORTA",
+                  "geometria": {
+                    "base": 0.80,
+                    "altura": 2.10,
+                    "repeticao": 1
+                  },
+                  "material": "ALUMINIO",
+                  "informacaoAdicional": "Porta de abrir"
+                }
+              ],
+              "informacaoAdicional": "Ambiente alterado para laboratório"
+            }
+        """.trimIndent()
+
+        // Quando o tipo e dados do ambiente forem alterados com troca de bloco/unidade
+        mockMvc.perform(
+            MockMvcRequestBuilders.post("/api/ambientes/nao-publicados/${ambienteSalvo.id}")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(payloadPost)
+        ).andExpect(status().isCreated)
+            .andExpect(jsonPath("$.localizacao.bloco").value("BLOCO 11"))
+            .andExpect(jsonPath("$.localizacao.unidade").value("Sede"))
+            .andExpect(jsonPath("$.localizacao.andar").value(2))
     }
 }
 

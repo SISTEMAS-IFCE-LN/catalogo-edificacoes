@@ -1,20 +1,23 @@
 package br.edu.ifce.ambientes_internos.integracao
 
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Auditorio
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Bloco
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Localizacao
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.SalaAdministrativa
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.SalaAula
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Bloco
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.StatusAmbiente
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Unidade
 import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.Janela
 import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.Porta
 import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.enums.MaterialEsquadria
 import br.edu.ifce.ambientes_internos.model.domain.entity.geometrias.Retangular
 import br.edu.ifce.ambientes_internos.model.repository.AmbienteRepository
+import br.edu.ifce.ambientes_internos.model.repository.BlocoRepository
 import org.junit.jupiter.api.DisplayName
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest
+import org.springframework.data.domain.PageRequest
 import org.springframework.test.context.ActiveProfiles
 import java.math.BigDecimal
 import kotlin.test.Test
@@ -31,12 +34,19 @@ class AmbienteRepositoryIntegrationTest {
     @Autowired
     lateinit var repository: AmbienteRepository
 
+    @Autowired
+    lateinit var repoBloco: BlocoRepository
+
+    private fun criarBloco(unidade: Unidade, nome: String): Bloco =
+        repoBloco.findByUnidadeAndNome(unidade, nome)
+            ?: repoBloco.saveAndFlush(Bloco(unidade, nome))
+
     @Test
     fun `Deve salvar tres ambientes distintos e retornar id e tipo corretos`() {
         // Dados
         val salaAula = SalaAula(
             nome = "Sala A 101",
-            localizacao = Localizacao(Bloco.BLOCO_PRINCIPAL, Unidade.CIDADE_ALTA),
+            localizacao = Localizacao(criarBloco(Unidade.CIDADE_ALTA, "BLOCO PRINCIPAL"), 0),
             capacidade = 30
         )
 
@@ -55,13 +65,13 @@ class AmbienteRepositoryIntegrationTest {
 
         val salaAdm = SalaAdministrativa(
             nome = "Sala Adm 1",
-            localizacao = Localizacao(Bloco.BLOCO_4, Unidade.SEDE),
+            localizacao = Localizacao(criarBloco(Unidade.SEDE, "BLOCO 4"), 0),
             capacidade = 4
         )
 
         val auditorio = Auditorio(
             nome = "Auditório Central",
-            localizacao = Localizacao(Bloco.BLOCO_5, Unidade.SEDE),
+            localizacao = Localizacao(criarBloco(Unidade.SEDE, "BLOCO 5"), 0),
             capacidade = 200
         )
 
@@ -93,7 +103,7 @@ class AmbienteRepositoryIntegrationTest {
         // Dados
         val salaAula = SalaAula(
             nome = "Sala A 102",
-            localizacao = Localizacao(Bloco.BLOCO_PRINCIPAL, Unidade.CIDADE_ALTA),
+            localizacao = Localizacao(criarBloco(Unidade.CIDADE_ALTA, "BLOCO PRINCIPAL"), 0),
             capacidade = 25
         )
 
@@ -105,13 +115,13 @@ class AmbienteRepositoryIntegrationTest {
 
         val salaAdm = SalaAdministrativa(
             nome = "Sala Adm 2",
-            localizacao = Localizacao(Bloco.BLOCO_4, Unidade.SEDE),
+            localizacao = Localizacao(criarBloco(Unidade.SEDE, "BLOCO 4"), 0),
             capacidade = 3
         )
 
         val auditorio = Auditorio(
             nome = "Auditório Secundário",
-            localizacao = Localizacao(Bloco.BLOCO_5, Unidade.SEDE),
+            localizacao = Localizacao(criarBloco(Unidade.SEDE, "BLOCO 5"), 0),
             capacidade = 120
         )
 
@@ -133,6 +143,71 @@ class AmbienteRepositoryIntegrationTest {
         assertEquals(salaAula, found1)
         assertEquals(salaAdm, found2)
         assertEquals(auditorio, found3)
+    }
+
+    @Test
+    fun `Deve filtrar ambientes por bloco unidade e andar na consulta por localizacao`() {
+        // Dados - blocos distintos (unidade derivada do bloco)
+        val blocoPrincipal = criarBloco(Unidade.CIDADE_ALTA, "BLOCO PRINCIPAL")
+        val bloco4 = criarBloco(Unidade.SEDE, "BLOCO 4")
+
+        repository.save(
+            SalaAula(
+                nome = "Sala Cidade Alta",
+                localizacao = Localizacao(blocoPrincipal, 1),
+                capacidade = 30
+            )
+        )
+        repository.save(
+            SalaAula(
+                nome = "Sala Sede",
+                localizacao = Localizacao(bloco4, 2),
+                capacidade = 20
+            )
+        )
+
+        val pageable = PageRequest.of(0, 10)
+
+        // Filtro por bloco
+        val porBloco = repository.findByLocalizacaoAndStatus(
+            blocoId = blocoPrincipal.id,
+            unidades = Unidade.entries.toSet(),
+            filtrarBloco = true,
+            filtrarUnidades = false,
+            andar = null,
+            status = StatusAmbiente.NAO_PUBLICADO,
+            pageable = pageable
+        )
+        assertEquals(1, porBloco.totalElements)
+        assertEquals("Sala Cidade Alta", porBloco.content.first().nome)
+        assertEquals("BLOCO PRINCIPAL", porBloco.content.first().localizacao.bloco.nome)
+        assertEquals(Unidade.CIDADE_ALTA, porBloco.content.first().localizacao.bloco.unidade)
+
+        // Filtro por unidade - derivada de localizacao.bloco.unidade
+        val porUnidade = repository.findByLocalizacaoAndStatus(
+            blocoId = null,
+            unidades = setOf(Unidade.SEDE),
+            filtrarBloco = false,
+            filtrarUnidades = true,
+            andar = null,
+            status = StatusAmbiente.NAO_PUBLICADO,
+            pageable = pageable
+        )
+        assertEquals(1, porUnidade.totalElements)
+        assertEquals("Sala Sede", porUnidade.content.first().nome)
+
+        // Filtro por andar
+        val porAndar = repository.findByLocalizacaoAndStatus(
+            blocoId = null,
+            unidades = Unidade.entries.toSet(),
+            filtrarBloco = false,
+            filtrarUnidades = false,
+            andar = 2,
+            status = StatusAmbiente.NAO_PUBLICADO,
+            pageable = pageable
+        )
+        assertEquals(1, porAndar.totalElements)
+        assertEquals("Sala Sede", porAndar.content.first().nome)
     }
 
 }

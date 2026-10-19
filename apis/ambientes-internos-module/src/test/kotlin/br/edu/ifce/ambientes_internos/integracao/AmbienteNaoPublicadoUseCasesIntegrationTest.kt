@@ -2,7 +2,8 @@ package br.edu.ifce.ambientes_internos.integracao
 
 import br.edu.ifce.ambientes_internos.model.application.interfaces.IAmbienteNaoPublicadoUseCases
 import br.edu.ifce.ambientes_internos.model.application.usecases.AmbienteNaoPublicadoUseCases
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Bloco
+import br.edu.ifce.ambientes_internos.model.application.usecases.BlocoUseCases
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Bloco
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.StatusAmbiente
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.TipoAmbiente
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Unidade
@@ -14,7 +15,7 @@ import br.edu.ifce.ambientes_internos.model.dto.esquadria.EsquadriaReq
 import br.edu.ifce.ambientes_internos.model.dto.geometria.GeometriaAmbienteReq
 import br.edu.ifce.ambientes_internos.model.dto.geometria.GeometriaEsquadriaReq
 import br.edu.ifce.ambientes_internos.model.repository.AmbienteRepository
-import br.edu.ifce.ambientes_internos.model.repository.LocalizacaoRepository
+import br.edu.ifce.ambientes_internos.model.repository.BlocoRepository
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
@@ -33,11 +34,12 @@ import java.math.RoundingMode
 import java.util.stream.Stream
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 
 @DataJpaTest
-@Import(AmbienteNaoPublicadoUseCases::class)
+@Import(AmbienteNaoPublicadoUseCases::class, BlocoUseCases::class)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.ANY)
 @ActiveProfiles("test")
 @DisplayName("Testes de integração para os Casos de Uso dos Ambientes Não Publicados")
@@ -50,18 +52,18 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
     lateinit var repoAmb: AmbienteRepository
 
     @Autowired
-    lateinit var repoLoc: LocalizacaoRepository
+    lateinit var repoBloco: BlocoRepository
 
     @Autowired
     lateinit var jdbcTemplate: JdbcTemplate
 
-    private fun blocoPorNome(nome: String): Bloco =
-        Bloco.entries.firstOrNull { it.nome == nome }
-            ?: throw IllegalArgumentException("Bloco inválido para teste: $nome")
-
     private fun unidadePorNome(nome: String): Unidade =
         Unidade.entries.firstOrNull { it.nome == nome }
             ?: throw IllegalArgumentException("Unidade inválida para teste: $nome")
+
+    private fun idDoBloco(nome: String, unidade: Unidade): Long =
+        repoBloco.findByUnidadeAndNome(unidade, Bloco.normalizar(nome))?.id
+            ?: throw IllegalArgumentException("Bloco não encontrado para teste: $nome/$unidade")
 
     // -------------------------------------------------------------------------
     // Helpers de criação de entidades
@@ -69,7 +71,7 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
 
     private fun criarSalaAula(
         nome: String = "Sala de Aula Exemplo",
-        bloco: Bloco = Bloco.BLOCO_10,
+        bloco: String = "BLOCO 10",
         unidade: Unidade = Unidade.CIDADE_ALTA,
         andar: Int = 1,
         capacidade: Int = 30,
@@ -109,7 +111,7 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
 
     private fun criarLaboratorioInformatica(
         nome: String = "Laboratório de Informática Exemplo",
-        bloco: Bloco = Bloco.BLOCO_10,
+        bloco: String = "BLOCO 10",
         unidade: Unidade = Unidade.CIDADE_ALTA,
         andar: Int = 1,
         capacidade: Int = 25,
@@ -175,7 +177,7 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
 
         val ambienteBasicoReq = AmbienteBasicoReq(
             nome = "Sala de Aula Atualizada",
-            localizacao = LocalizacaoReq(unidade = Unidade.CIDADE_ALTA, bloco = Bloco.BLOCO_10, andar = 2),
+            localizacao = LocalizacaoReq(unidade = Unidade.CIDADE_ALTA, bloco = "BLOCO 11", andar = 2),
             capacidade = 35
         )
 
@@ -186,6 +188,8 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
         // Então os dados atualizados devem ser retornados ao usuário
         assertEquals(ambienteBasicoReq.nome, ambienteBasicoAtualizado.nome)
         assertEquals(ambienteBasicoReq.capacidade, ambienteBasicoAtualizado.capacidade)
+        assertEquals(ambienteBasicoReq.localizacao.bloco, ambienteBasicoAtualizado.localizacao.bloco)
+        assertEquals(ambienteBasicoReq.localizacao.unidade.nome, ambienteBasicoAtualizado.localizacao.unidade)
         assertEquals(ambienteBasicoReq.localizacao.andar, ambienteBasicoAtualizado.localizacao.andar)
     }
 
@@ -355,13 +359,43 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
     }
 
     @Test
+    fun `Deve honrar a localizacao do request ao alterar tipo e dados`() {
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(
+            criarSalaAula(nome = "Sala Troca Localizacao", bloco = "BLOCO 10", unidade = Unidade.CIDADE_ALTA, andar = 1)
+        )
+        val localizacaoAntigaId = ambienteSalvo.localizacao.id
+
+        val reqAlteracao = criarLaboratorioInformatica(
+            nome = "Laboratorio Alterado",
+            bloco = "BLOCO 11",
+            unidade = Unidade.SEDE,
+            andar = 2
+        )
+
+        // Quando o tipo e dados forem alterados com nova localização
+        val ambienteAlterado = ambientesNPUseCases.alterarTipoDadosAmbiente(ambienteSalvo.id, reqAlteracao)
+
+        // Então a localização do request deve ser honrada
+        assertEquals(reqAlteracao.localizacao.bloco, ambienteAlterado.localizacao.bloco)
+        assertEquals(reqAlteracao.localizacao.unidade.nome, ambienteAlterado.localizacao.unidade)
+        assertEquals(reqAlteracao.localizacao.andar, ambienteAlterado.localizacao.andar)
+
+        // E o bloco novo deve ter sido resolvido/criado para a unidade informada
+        assertNotNull(repoBloco.findByUnidadeAndNome(Unidade.SEDE, "BLOCO 11"))
+
+        // E a localização antiga (órfã) deve ser removida
+        repoAmb.flush()
+        assertEquals(0, contarPorId("localizacao", localizacaoAntigaId))
+    }
+
+    @Test
     fun `Deve duplicar um ambiente cadastrado`() {
         val req = criarSalaAula()
         val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(req)
 
         val ambienteNomeLocalizacaoReq = AmbienteNomeLocalizacaoReq(
             nome = "Sala de Aula Duplicada",
-            localizacao = LocalizacaoReq(unidade = Unidade.CIDADE_ALTA, bloco = Bloco.BLOCO_11, andar = 1)
+            localizacao = LocalizacaoReq(unidade = Unidade.CIDADE_ALTA, bloco = "BLOCO 11", andar = 1)
         )
 
         // Quando o ambiente for duplicado
@@ -369,10 +403,15 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
 
         // Então os dados copiados devem corresponder ao original, exceto nome e localização
         assertEquals(ambienteNomeLocalizacaoReq.nome, ambienteDuplicado.nome)
-        assertEquals(ambienteNomeLocalizacaoReq.localizacao.bloco.nome, ambienteDuplicado.localizacao.bloco)
+        assertEquals(ambienteNomeLocalizacaoReq.localizacao.bloco, ambienteDuplicado.localizacao.bloco)
+        assertEquals(ambienteNomeLocalizacaoReq.localizacao.unidade.nome, ambienteDuplicado.localizacao.unidade)
+        assertEquals(ambienteNomeLocalizacaoReq.localizacao.andar, ambienteDuplicado.localizacao.andar)
         assertEquals(ambienteSalvo.capacidade, ambienteDuplicado.capacidade)
         assertEquals(ambienteSalvo.tipo, ambienteDuplicado.tipo)
         assertEquals(StatusAmbiente.NAO_PUBLICADO, ambienteDuplicado.status)
+
+        // E o bloco novo deve ter sido resolvido/criado para a unidade informada
+        assertNotNull(repoBloco.findByUnidadeAndNome(Unidade.CIDADE_ALTA, "BLOCO 11"))
     }
 
     @Test
@@ -413,7 +452,7 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
             ambientesNPUseCases.cadastrarAmbiente(
                 criarSalaAula(
                     nome = "Sala NP $indice",
-                    bloco = Bloco.BLOCO_10,
+                    bloco = "BLOCO 10",
                     unidade = Unidade.CIDADE_ALTA,
                     andar = indice,
                     capacidade = 30
@@ -439,7 +478,7 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
             criarSalaAula(nome = "Sala de Aula Exemplo")
         )
         ambientesNPUseCases.cadastrarAmbiente(
-            criarSalaAula(nome = "Sala de Estudos", bloco = Bloco.BLOCO_11)
+            criarSalaAula(nome = "Sala de Estudos", bloco = "BLOCO 11")
         )
 
         val ambientesPorNome = ambientesNPUseCases.listarAmbientesPorNome(filtroNome, PageRequest.of(0, 10))
@@ -453,82 +492,131 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
         }
     }
 
-    @ParameterizedTest(name = "Filtro por localizacao ''{0}'' deve retornar {1} item(ns)")
-    @MethodSource("filtrosLocalizacaoNaoPublicados")
-    fun `Deve filtrar ambientes nao publicados por localizacao em cenarios relevantes`(
-        filtroLocalizacao: LocalizacaoPesquisaReq,
-        totalEsperado: Int,
-        nomeEsperado: String
-    ) {
-        val ambiente1 = ambientesNPUseCases.cadastrarAmbiente(
-            criarSalaAula(nome = "Sala de Aula Exemplo", bloco = Bloco.BLOCO_10)
-        )
+    @Test
+    fun `Deve filtrar ambientes nao publicados por id de bloco e andar`() {
         ambientesNPUseCases.cadastrarAmbiente(
-            criarSalaAula(nome = "Sala em Outro Bloco", bloco = Bloco.BLOCO_11)
+            criarSalaAula(nome = "Sala de Aula Exemplo", bloco = "BLOCO 10", andar = 1)
         )
+        val ambienteOutroAndar = ambientesNPUseCases.cadastrarAmbiente(
+            criarSalaAula(nome = "Sala em Outro Andar", bloco = "BLOCO 10", andar = 2)
+        )
+        val blocoId = idDoBloco("BLOCO 10", Unidade.CIDADE_ALTA)
 
-        val ambientesPorLocalizacao = ambientesNPUseCases.listarAmbientesPorLocalizacao(
-            filtroLocalizacao,
+        val porBloco = ambientesNPUseCases.listarAmbientesPorLocalizacao(
+            LocalizacaoPesquisaReq(blocoId = blocoId, unidade = null, andar = null),
             PageRequest.of(0, 10)
         )
+        assertEquals(2, porBloco.dadosPaginacao.totalElements)
 
-        assertEquals(totalEsperado.toLong(), ambientesPorLocalizacao.dadosPaginacao.totalElements)
-        if (totalEsperado == 0) {
-            assertTrue(ambientesPorLocalizacao.ambientes.isEmpty())
-        } else {
-            assertEquals(nomeEsperado, ambientesPorLocalizacao.ambientes.first().nome)
-            assertTrue(ambientesPorLocalizacao.ambientes.any { it.id == ambiente1.id || it.nome == nomeEsperado })
-        }
+        val porBlocoEAndar = ambientesNPUseCases.listarAmbientesPorLocalizacao(
+            LocalizacaoPesquisaReq(blocoId = blocoId, unidade = null, andar = 2),
+            PageRequest.of(0, 10)
+        )
+        assertEquals(1, porBlocoEAndar.dadosPaginacao.totalElements)
+        assertEquals(ambienteOutroAndar.nome, porBlocoEAndar.ambientes.first().nome)
+
+        val andarInexistente = ambientesNPUseCases.listarAmbientesPorLocalizacao(
+            LocalizacaoPesquisaReq(blocoId = blocoId, unidade = null, andar = 99),
+            PageRequest.of(0, 10)
+        )
+        assertEquals(0, andarInexistente.dadosPaginacao.totalElements)
+        assertTrue(andarInexistente.ambientes.isEmpty())
     }
 
     @Test
-    fun `Deve filtrar ambientes nao publicados por unidade parcial`() {
+    fun `Deve filtrar ambientes nao publicados por unidade com match exato normalizado`() {
         val ambiente1 = ambientesNPUseCases.cadastrarAmbiente(
             criarSalaAula(nome = "Sala Cidade Alta", unidade = Unidade.CIDADE_ALTA)
         )
         ambientesNPUseCases.cadastrarAmbiente(
-            criarSalaAula(nome = "Sala UEPE", unidade = Unidade.UEPE, bloco = Bloco.BLOCO_11)
+            criarSalaAula(nome = "Sala UEPE", unidade = Unidade.UEPE, bloco = "BLOCO 11")
         )
 
-        val ambientesPorLocalizacao = ambientesNPUseCases.listarAmbientesPorLocalizacao(
-            LocalizacaoPesquisaReq(bloco = null, unidade = "alta", andar = null),
+        // Exato: aceita o nome técnico e o nome de exibição, normalizados
+        val porNomeTecnico = ambientesNPUseCases.listarAmbientesPorLocalizacao(
+            LocalizacaoPesquisaReq(blocoId = null, unidade = "CIDADE_ALTA", andar = null),
             PageRequest.of(0, 10)
         )
+        assertEquals(1, porNomeTecnico.dadosPaginacao.totalElements)
+        assertEquals(ambiente1.nome, porNomeTecnico.ambientes.first().nome)
 
-        assertEquals(1, ambientesPorLocalizacao.dadosPaginacao.totalElements)
-        assertEquals(ambiente1.nome, ambientesPorLocalizacao.ambientes.first().nome)
+        val porNomeExibicao = ambientesNPUseCases.listarAmbientesPorLocalizacao(
+            LocalizacaoPesquisaReq(blocoId = null, unidade = "Cidade Alta", andar = null),
+            PageRequest.of(0, 10)
+        )
+        assertEquals(1, porNomeExibicao.dadosPaginacao.totalElements)
+        assertEquals(ambiente1.nome, porNomeExibicao.ambientes.first().nome)
+
+        // Parcial não casa: o select do frontend envia a unidade completa
+        val parcial = ambientesNPUseCases.listarAmbientesPorLocalizacao(
+            LocalizacaoPesquisaReq(blocoId = null, unidade = "alta", andar = null),
+            PageRequest.of(0, 10)
+        )
+        assertEquals(0, parcial.dadosPaginacao.totalElements)
+        assertTrue(parcial.ambientes.isEmpty())
     }
 
     @Test
-    fun `Deve filtrar ambientes por bloco parcial case-insensitive - ex BIBLIOTECA`() {
+    fun `Deve filtrar ambientes nao publicados por id de bloco`() {
         val ambienteBiblioteca = ambientesNPUseCases.cadastrarAmbiente(
-            criarSalaAula(nome = "Sala na Biblioteca", bloco = Bloco.BIBLIOTECA_ACADEMICA)
+            criarSalaAula(nome = "Sala na Biblioteca", bloco = "biblioteca academica")
         )
         ambientesNPUseCases.cadastrarAmbiente(
-            criarSalaAula(nome = "Sala no Bloco 1", bloco = Bloco.BLOCO_1, andar = 1)
+            criarSalaAula(nome = "Sala no Bloco 1", bloco = "Bloco 1", andar = 1)
         )
+        val blocoId = idDoBloco("biblioteca academica", Unidade.CIDADE_ALTA)
 
-        // Test 1: Partial lowercase search "bibli" should match "BIBLIOTECA_ACADEMICA"
-        val resultado1 = ambientesNPUseCases.listarAmbientesPorLocalizacao(
-            LocalizacaoPesquisaReq(bloco = "bibli", unidade = null, andar = null),
+        val resultado = ambientesNPUseCases.listarAmbientesPorLocalizacao(
+            LocalizacaoPesquisaReq(blocoId = blocoId, unidade = null, andar = null),
             PageRequest.of(0, 10)
         )
-        assertEquals(1, resultado1.dadosPaginacao.totalElements)
-        assertEquals(ambienteBiblioteca.nome, resultado1.ambientes.first().nome)
+        assertEquals(1, resultado.dadosPaginacao.totalElements)
+        assertEquals(ambienteBiblioteca.nome, resultado.ambientes.first().nome)
 
-        // Test 2: Uppercase partial search "BIBLIO" should also work
-        val resultado2 = ambientesNPUseCases.listarAmbientesPorLocalizacao(
-            LocalizacaoPesquisaReq(bloco = "BIBLIO", unidade = null, andar = null),
+        val inexistente = ambientesNPUseCases.listarAmbientesPorLocalizacao(
+            LocalizacaoPesquisaReq(blocoId = Long.MAX_VALUE, unidade = null, andar = null),
             PageRequest.of(0, 10)
         )
-        assertEquals(1, resultado2.dadosPaginacao.totalElements)
+        assertEquals(0, inexistente.dadosPaginacao.totalElements)
+        assertTrue(inexistente.ambientes.isEmpty())
+    }
 
-        // Test 3: Mixed case "BiBlIo TeCA" should normalize and match
-        val resultado3 = ambientesNPUseCases.listarAmbientesPorLocalizacao(
-            LocalizacaoPesquisaReq(bloco = "BiBlIo TeCA", unidade = null, andar = null),
+    @Test
+    fun `Deve escopar filtro por id de bloco pela unidade`() {
+        val ambienteCidadeAlta = ambientesNPUseCases.cadastrarAmbiente(
+            criarSalaAula(nome = "Sala Biblioteca Cidade Alta", bloco = "BIBLIOTECA", unidade = Unidade.CIDADE_ALTA)
+        )
+        val ambienteSede = ambientesNPUseCases.cadastrarAmbiente(
+            criarSalaAula(nome = "Sala Biblioteca Sede", bloco = "BIBLIOTECA", unidade = Unidade.SEDE)
+        )
+
+        // Bloco homônimo criado em duas unidades distintas (unique composto unidade+nome)
+        assertEquals(2, repoBloco.findAllByNome("BIBLIOTECA").size)
+        val blocoCidadeAltaId = idDoBloco("BIBLIOTECA", Unidade.CIDADE_ALTA)
+        val blocoSedeId = idDoBloco("BIBLIOTECA", Unidade.SEDE)
+
+        // O id já identifica o bloco; a unidade confirma o escopo
+        val somenteSede = ambientesNPUseCases.listarAmbientesPorLocalizacao(
+            LocalizacaoPesquisaReq(blocoId = blocoSedeId, unidade = "SEDE", andar = null),
             PageRequest.of(0, 10)
         )
-        assertEquals(1, resultado3.dadosPaginacao.totalElements)
+        assertEquals(1, somenteSede.dadosPaginacao.totalElements)
+        assertEquals(ambienteSede.nome, somenteSede.ambientes.first().nome)
+
+        val somenteCidadeAlta = ambientesNPUseCases.listarAmbientesPorLocalizacao(
+            LocalizacaoPesquisaReq(blocoId = blocoCidadeAltaId, unidade = "CIDADE_ALTA", andar = null),
+            PageRequest.of(0, 10)
+        )
+        assertEquals(1, somenteCidadeAlta.dadosPaginacao.totalElements)
+        assertEquals(ambienteCidadeAlta.nome, somenteCidadeAlta.ambientes.first().nome)
+
+        // Unidade divergente do bloco: página vazia
+        val divergente = ambientesNPUseCases.listarAmbientesPorLocalizacao(
+            LocalizacaoPesquisaReq(blocoId = blocoSedeId, unidade = "CIDADE_ALTA", andar = null),
+            PageRequest.of(0, 10)
+        )
+        assertEquals(0, divergente.dadosPaginacao.totalElements)
+        assertTrue(divergente.ambientes.isEmpty())
     }
 
     companion object {
@@ -537,21 +625,6 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
             Arguments.of("Sala de Aula", 1, "Sala de Aula Exemplo"),
             Arguments.of("sala de aula", 1, "Sala de Aula Exemplo"),
             Arguments.of("Nome Inexistente", 0, "")
-        )
-
-        @JvmStatic
-        fun filtrosLocalizacaoNaoPublicados(): Stream<Arguments> = Stream.of(
-            Arguments.of(
-                LocalizacaoPesquisaReq(bloco = "BLOCO_10", unidade = null, andar = null),
-                1,
-                "Sala de Aula Exemplo"
-            ),
-            Arguments.of(
-                LocalizacaoPesquisaReq(bloco = "bloco 10", unidade = null, andar = null),
-                1,
-                "Sala de Aula Exemplo"
-            ),
-            Arguments.of(LocalizacaoPesquisaReq(bloco = "LOCALIZACAO_INEXISTENTE", unidade = null, andar = null), 0, "")
         )
     }
 
@@ -571,10 +644,10 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
     fun `Deve deletar múltiplos ambientes com sucesso`() {
         val ambiente1 = ambientesNPUseCases.cadastrarAmbiente(criarSalaAula())
         val ambiente2 = ambientesNPUseCases.cadastrarAmbiente(
-            criarSalaAula(nome = "Sala de Aula 2", bloco = Bloco.BLOCO_11, informacaoAdicional = "Segunda sala.")
+            criarSalaAula(nome = "Sala de Aula 2", bloco = "BLOCO 11", informacaoAdicional = "Segunda sala.")
         )
         val ambiente3 = ambientesNPUseCases.cadastrarAmbiente(
-            criarLaboratorioInformatica(bloco = Bloco.BLOCO_12, andar = 2)
+            criarLaboratorioInformatica(bloco = "BLOCO 12", andar = 2)
         )
 
         // Quando todos os ambientes forem deletados
@@ -638,7 +711,7 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
     fun `Deve lancar excecao ao atualizar dados basicos para nome e localizacao ja existentes`() {
         val ambiente1 = ambientesNPUseCases.cadastrarAmbiente(criarSalaAula())
         val ambiente2 = ambientesNPUseCases.cadastrarAmbiente(
-            criarSalaAula(nome = "Sala Distinta", bloco = Bloco.BLOCO_11, andar = 2, capacidade = 20)
+            criarSalaAula(nome = "Sala Distinta", bloco = "BLOCO 11", andar = 2, capacidade = 20)
         )
 
         // Quando tentar atualizar o segundo para nome/localização do primeiro
@@ -646,7 +719,7 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
             nome = ambiente1.nome,
             localizacao = LocalizacaoReq(
                 unidade = unidadePorNome(ambiente1.localizacao.unidade),
-                bloco = blocoPorNome(ambiente1.localizacao.bloco),
+                bloco = ambiente1.localizacao.bloco,
                 andar = ambiente1.localizacao.andar
             ),
             capacidade = ambiente2.capacidade
@@ -764,7 +837,7 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
     @Test
     fun `Deve deletar ambiente removendo filhos e localizacao orfa`() {
         val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(
-            criarSalaAula(nome = "Sala Excluir", bloco = Bloco.BLOCO_12, unidade = Unidade.SEDE, andar = 8)
+            criarSalaAula(nome = "Sala Excluir", bloco = "BLOCO 12", unidade = Unidade.SEDE, andar = 8)
         )
         val antes = repoAmb.findById(ambienteSalvo.id).get()
         val localizacaoId = antes.localizacao.id!!

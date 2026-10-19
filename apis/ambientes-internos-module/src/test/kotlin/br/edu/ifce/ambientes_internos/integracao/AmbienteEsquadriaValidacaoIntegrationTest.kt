@@ -239,7 +239,7 @@ class AmbienteEsquadriaValidacaoIntegrationTest {
               "tipo": "SALA_AULA",
               "nome": "$nomeUnico",
               "localizacao": {
-                "bloco": "BLOCO_10",
+                "bloco": "BLOCO 10",
                 "unidade": "CIDADE_ALTA",
                 "andar": 1
               },
@@ -292,7 +292,7 @@ class AmbienteEsquadriaValidacaoIntegrationTest {
               "tipo": "SALA_AULA",
               "nome": "$nomeUnico",
               "localizacao": {
-                "bloco": "BLOCO_10",
+                "bloco": "BLOCO 10",
                 "unidade": "CIDADE_ALTA",
                 "andar": 1
               },
