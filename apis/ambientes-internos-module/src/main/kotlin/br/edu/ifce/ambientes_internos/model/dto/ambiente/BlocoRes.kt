@@ -1,4 +1,4 @@
-package br.edu.ifce.ambientes_internos.model.dto.bloco
+package br.edu.ifce.ambientes_internos.model.dto.ambiente
 
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Bloco
 

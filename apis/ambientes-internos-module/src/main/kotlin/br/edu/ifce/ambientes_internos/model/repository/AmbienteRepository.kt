@@ -1,7 +1,6 @@
 package br.edu.ifce.ambientes_internos.model.repository
 
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Ambiente
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Bloco
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.StatusAmbiente
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.TipoAmbiente
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Unidade
@@ -19,6 +18,7 @@ interface AmbienteRepository : JpaRepository<Ambiente, Long> {
         """
             select a from Ambiente a
             left join fetch a.localizacao
+            left join fetch a.localizacao.bloco
             left join fetch a.geometrias
             left join fetch a.pesDireitos
             left join fetch a.esquadrias
@@ -45,13 +45,13 @@ interface AmbienteRepository : JpaRepository<Ambiente, Long> {
         @Param("id") id: Long
     ): Boolean
 
-    @EntityGraph(attributePaths = ["localizacao"])
+    @EntityGraph(attributePaths = ["localizacao", "localizacao.bloco"])
     fun findByStatus(
         @Param("status") status: StatusAmbiente,
         pageable: Pageable
     ): Page<Ambiente>
 
-    @EntityGraph(attributePaths = ["localizacao"])
+    @EntityGraph(attributePaths = ["localizacao", "localizacao.bloco"])
     @Query(
         """
             select a from Ambiente a
@@ -65,27 +65,27 @@ interface AmbienteRepository : JpaRepository<Ambiente, Long> {
         pageable: Pageable
     ): Page<Ambiente>
 
-    @EntityGraph(attributePaths = ["localizacao"])
+    @EntityGraph(attributePaths = ["localizacao", "localizacao.bloco"])
     @Query(
         """
             select a from Ambiente a
             where a.status = :status
-            and (:filtrarBlocos = false or a.localizacao.bloco in :blocos)
-            and (:filtrarUnidades = false or a.localizacao.unidade in :unidades)
+            and (:filtrarBloco = false or a.localizacao.bloco.id = :blocoId)
+            and (:filtrarUnidades = false or a.localizacao.bloco.unidade in :unidades)
             and (:andar is null or a.localizacao.andar = :andar)
         """
     )
     fun findByLocalizacaoAndStatus(
-        @Param("blocos") blocos: Set<Bloco>,
+        @Param("blocoId") blocoId: Long?,
         @Param("unidades") unidades: Set<Unidade>,
-        @Param("filtrarBlocos") filtrarBlocos: Boolean,
+        @Param("filtrarBloco") filtrarBloco: Boolean,
         @Param("filtrarUnidades") filtrarUnidades: Boolean,
         @Param("andar") andar: Int?,
         @Param("status") status: StatusAmbiente,
         pageable: Pageable
     ): Page<Ambiente>
 
-    @EntityGraph(attributePaths = ["localizacao"])
+    @EntityGraph(attributePaths = ["localizacao", "localizacao.bloco"])
     @Query(
         """
             select a from Ambiente a

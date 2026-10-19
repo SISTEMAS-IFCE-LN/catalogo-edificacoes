@@ -1,8 +1,6 @@
 package br.edu.ifce.ambientes_internos.model.dto.ambiente
 
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Localizacao
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Bloco
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Unidade
 
 data class LocalizacaoRes(
     val id: Long,
@@ -15,7 +13,7 @@ data class LocalizacaoRes(
             return LocalizacaoRes(
                 id = localizacao.id!!,
                 bloco = localizacao.bloco.nome,
-                unidade = localizacao.unidade.nome,
+                unidade = localizacao.bloco.unidade.nome,
                 andar = localizacao.andar
             )
         }

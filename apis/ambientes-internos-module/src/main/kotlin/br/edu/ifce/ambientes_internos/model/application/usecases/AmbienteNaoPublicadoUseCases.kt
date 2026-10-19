@@ -1,6 +1,7 @@
 package br.edu.ifce.ambientes_internos.model.application.usecases
 
 import br.edu.ifce.ambientes_internos.model.application.interfaces.IAmbienteNaoPublicadoUseCases
+import br.edu.ifce.ambientes_internos.model.application.interfaces.IBlocoUseCases
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Ambiente
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Localizacao
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.StatusAmbiente
@@ -23,10 +24,13 @@ import java.math.BigDecimal
 @Service
 class AmbienteNaoPublicadoUseCases(
     repoAmb: AmbienteRepository,
-    private val repoLoc: LocalizacaoRepository
+    private val repoLoc: LocalizacaoRepository,
+    private val blocoUC: IBlocoUseCases
 ) : IAmbienteNaoPublicadoUseCases, BaseUseCases(StatusAmbiente.NAO_PUBLICADO, repoAmb) {
 
     private fun verificarNomeLocalizacaoCadastro(ambiente: Ambiente) {
+        ambiente.localizacao = resolverBloco(ambiente.localizacao)
+
         repoLoc.findByLocalizacao(ambiente.localizacao).ifPresent { localizacao ->
             if (repoAmb.existsByNomeAndLocalizacaoId(ambiente.nome, localizacao.id!!)) {
                 throw IllegalArgumentException("Já existe um ambiente com esse nome nessa localização")
@@ -37,6 +41,8 @@ class AmbienteNaoPublicadoUseCases(
 
     private fun verificarNomeLocalizacaoAlteracao(ambiente: Ambiente, localizacaoCandidata: Localizacao) {
         if (localizacaoCandidata == ambiente.localizacao) return
+
+        resolverBloco(localizacaoCandidata)
 
         repoLoc.findByLocalizacao(localizacaoCandidata).ifPresentOrElse(
             { localizacao ->
@@ -65,6 +71,19 @@ class AmbienteNaoPublicadoUseCases(
         }
     }
 
+    private fun resolverLocalizacao(localizacaoReq: LocalizacaoReq): Localizacao =
+        Localizacao(
+            bloco = blocoUC.resolverOuCriar(localizacaoReq.unidade, localizacaoReq.bloco),
+            andar = localizacaoReq.andar
+        )
+
+    private fun resolverBloco(localizacao: Localizacao): Localizacao {
+        if (localizacao.bloco.id == null) {
+            localizacao.bloco = blocoUC.resolverOuCriar(localizacao.bloco.unidade, localizacao.bloco.nome)
+        }
+        return localizacao
+    }
+
     @Transactional
     override fun cadastrarAmbiente(ambienteReq: AmbienteReq): AmbienteRes {
         val ambiente = AmbienteFactory.criar(ambienteReq)
@@ -82,11 +101,7 @@ class AmbienteNaoPublicadoUseCases(
     ): AmbienteBasicoRes {
         val ambienteExistente = obterAmbiente(id)
         val localizacaoExistenteId = ambienteExistente.localizacao.id
-        val localizacaoCandidata = Localizacao(
-            bloco = ambienteBasicoReq.localizacao.bloco,
-            unidade = ambienteBasicoReq.localizacao.unidade,
-            andar = ambienteBasicoReq.localizacao.andar
-        )
+        val localizacaoCandidata = resolverLocalizacao(ambienteBasicoReq.localizacao)
         ambienteExistente.nome = ambienteBasicoReq.nome
         ambienteExistente.capacidade = ambienteBasicoReq.capacidade
         verificarNomeLocalizacaoAlteracao(ambienteExistente, localizacaoCandidata)
@@ -201,11 +216,13 @@ class AmbienteNaoPublicadoUseCases(
         ambiente: AmbienteReq
     ): AmbienteRes {
         val ambienteExistente = obterAmbiente(id)
+        val localizacaoExistenteId = ambienteExistente.localizacao.id
         val ambienteAtualizado = AmbienteFactory.criar(ambiente)
-        ambienteAtualizado.localizacao = ambienteExistente.localizacao
         verificarNomeLocalizacaoCadastro(ambienteAtualizado)
         val ambienteSalvo = repoAmb.save(ambienteAtualizado)
         repoAmb.delete(ambienteExistente)
+        repoAmb.flush()
+        deletarLocalizacaoOrfao(localizacaoExistenteId, ambienteSalvo.localizacao.id)
         return AmbienteRes.from(ambienteSalvo)
     }
 
@@ -216,14 +233,10 @@ class AmbienteNaoPublicadoUseCases(
     ): AmbienteRes {
         val ambienteExistente = obterAmbiente(id)
         val ambienteDuplicado = AmbienteFactory.clonar(ambienteExistente)
-        val novaLocalizacao = Localizacao(
-            bloco = dados.localizacao.bloco,
-            unidade = dados.localizacao.unidade,
-            andar = dados.localizacao.andar
-        )
+
         ambienteDuplicado.id = null
         ambienteDuplicado.nome = dados.nome
-        ambienteDuplicado.localizacao = novaLocalizacao
+        ambienteDuplicado.localizacao = resolverLocalizacao(dados.localizacao)
         verificarNomeLocalizacaoCadastro(ambienteDuplicado)
         return AmbienteRes.from(repoAmb.save(ambienteDuplicado))
     }

@@ -1,26 +1,9 @@
 package br.edu.ifce.ambientes_internos.model.domain.factory
 
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Academia
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Ambiente
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Auditorio
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Banheiro
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Biblioteca
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Cantina
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Circulacao
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Cozinha
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Deposito
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Ginasio
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Laboratorio
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.LaboratorioInformatica
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Localizacao
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.SalaAdministrativa
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.SalaAula
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.SalaCoordenacao
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.SalaProfessores
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.SalaReuniao
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.SalaServidorTi
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Vestiario
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.*
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.TipoAmbiente
+import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.Esquadria
+import br.edu.ifce.ambientes_internos.model.domain.entity.geometrias.Geometria
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbienteReq
 import java.math.BigDecimal
 
@@ -28,13 +11,13 @@ object AmbienteFactory {
 
     private val AMBIENTES_MAP = mapOf<TipoAmbiente, (
         String,
-        br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Localizacao,
+        Localizacao,
         Int,
-        MutableSet<br.edu.ifce.ambientes_internos.model.domain.entity.geometrias.Geometria>,
+        MutableSet<Geometria>,
         MutableSet<BigDecimal>,
-        MutableSet<br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.Esquadria>,
+        MutableSet<Esquadria>,
         String
-    ) -> br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Ambiente>(
+    ) -> Ambiente>(
         TipoAmbiente.SALA_AULA to ::SalaAula,
         TipoAmbiente.LABORATORIO to ::Laboratorio,
         TipoAmbiente.LABORATORIO_INFORMATICA to ::LaboratorioInformatica,
@@ -58,13 +41,17 @@ object AmbienteFactory {
     fun criar(ambienteReq: AmbienteReq): Ambiente {
         val construtor = AMBIENTES_MAP[ambienteReq.tipo]
             ?: throw IllegalArgumentException("O tipo de ambiente é inválido.")
+        val bloco = Bloco(
+            unidade = ambienteReq.localizacao.unidade,
+            nomeInicial = ambienteReq.localizacao.bloco
+        )
+        val localizacao = Localizacao(
+            bloco = bloco,
+            andar = ambienteReq.localizacao.andar
+        )
         return construtor(
             ambienteReq.nome,
-            Localizacao(
-                unidade = ambienteReq.localizacao.unidade,
-                bloco = ambienteReq.localizacao.bloco,
-                andar = ambienteReq.localizacao.andar
-            ),
+            localizacao,
             ambienteReq.capacidade,
             ambienteReq.geometrias.map { GeometriaFactory.criar(it) }.toMutableSet(),
             ambienteReq.pesDireitos.toMutableSet(),
@@ -79,7 +66,6 @@ object AmbienteFactory {
         return construtor(
             ambiente.nome,
             Localizacao(
-                unidade = ambiente.localizacao.unidade,
                 bloco = ambiente.localizacao.bloco,
                 andar = ambiente.localizacao.andar
             ),

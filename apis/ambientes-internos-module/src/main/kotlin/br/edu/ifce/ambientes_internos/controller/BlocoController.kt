@@ -1,7 +1,7 @@
 package br.edu.ifce.ambientes_internos.controller
 
 import br.edu.ifce.ambientes_internos.model.application.interfaces.IBlocoUseCases
-import br.edu.ifce.ambientes_internos.model.dto.bloco.BlocoRes
+import br.edu.ifce.ambientes_internos.model.dto.ambiente.BlocoRes
 import br.edu.ifce.common.config.ApiPaths.BLOCOS_PATH
 import br.edu.ifce.common.config.MsgsSpringValidation.MSG_MAX_CARACTERES
 import jakarta.validation.constraints.Size

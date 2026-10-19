@@ -3,7 +3,7 @@ package br.edu.ifce.ambientes_internos.model.application.usecases
 import br.edu.ifce.ambientes_internos.model.application.interfaces.IBlocoUseCases
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Bloco
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Unidade
-import br.edu.ifce.ambientes_internos.model.dto.bloco.BlocoRes
+import br.edu.ifce.ambientes_internos.model.dto.ambiente.BlocoRes
 import br.edu.ifce.ambientes_internos.model.repository.BlocoRepository
 import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.stereotype.Service
