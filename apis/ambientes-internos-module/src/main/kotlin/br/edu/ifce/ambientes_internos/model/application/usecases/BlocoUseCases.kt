@@ -40,31 +40,9 @@ class BlocoUseCases(
     }
 
     companion object {
-        private val TOKENS = Regex("\\d+|\\D+")
-
-        // Ordem natural: "BLOCO 2" < "BLOCO 2A" < "BLOCO 10" < "CASA".
-        // `ORDER BY nome` é lexicográfico ("BLOCO 10" antes de "BLOCO 2"), por isso a
-        // ordenação acontece em memória e não na consulta.
-        val COMPARADOR_NATURAL = Comparator<Bloco> { a, b -> compararNatural(a.nome, b.nome) }
-
-        private fun compararNatural(a: String, b: String): Int {
-            val tokensA = TOKENS.findAll(a).map { it.value }.toList()
-            val tokensB = TOKENS.findAll(b).map { it.value }.toList()
-
-            for (i in 0 until minOf(tokensA.size, tokensB.size)) {
-                val comparacao = compararToken(tokensA[i], tokensB[i])
-                if (comparacao != 0) return comparacao
-            }
-            return tokensA.size - tokensB.size
+        val COMPARADOR_NATURAL = Comparator<Bloco> { a, b ->
+            ComparadorNatural.comparar(a.nome, b.nome)
         }
-
-        private fun compararToken(a: String, b: String): Int =
-            if (a.first().isDigit() && b.first().isDigit()) compararNumerico(a, b)
-            else a.compareTo(b)
-
-        private fun compararNumerico(a: String, b: String): Int =
-            if (a.length != b.length) a.length - b.length
-            else a.compareTo(b)
     }
 
 }
