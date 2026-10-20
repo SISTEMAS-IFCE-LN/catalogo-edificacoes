@@ -81,4 +81,15 @@ class BlocoUseCasesIntegrationTest {
         assertEquals(0L, repoBloco.count())
     }
 
+    @Test
+    fun `Deve listar blocos da unidade em ordem natural`() {
+        listOf("CASA", "BLOCO 10", "BLOCO 2A", "BLOCO 2").forEach {
+            blocoUseCases.resolverOuCriar(Unidade.SEDE, it)
+        }
+
+        val nomes = blocoUseCases.listarPorUnidade("SEDE").map { it.nome }
+
+        assertEquals(listOf("BLOCO 2", "BLOCO 2A", "BLOCO 10", "CASA"), nomes)
+    }
+
 }
