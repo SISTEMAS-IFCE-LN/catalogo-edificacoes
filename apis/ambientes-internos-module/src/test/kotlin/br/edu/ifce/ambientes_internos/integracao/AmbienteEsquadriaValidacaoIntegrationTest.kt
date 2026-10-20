@@ -239,8 +239,9 @@ class AmbienteEsquadriaValidacaoIntegrationTest {
               "tipo": "SALA_AULA",
               "nome": "$nomeUnico",
               "localizacao": {
-                "bloco": "BLOCO 10",
-                "unidade": "CIDADE_ALTA",
+                "campus": {"nome": "LIMOEIRO DO NORTE"},
+                "unidade": {"nome": "CIDADE ALTA"},
+                "bloco": {"nome": "BLOCO 10"},
                 "andar": 1
               },
               "capacidade": 30,
@@ -292,8 +293,9 @@ class AmbienteEsquadriaValidacaoIntegrationTest {
               "tipo": "SALA_AULA",
               "nome": "$nomeUnico",
               "localizacao": {
-                "bloco": "BLOCO 10",
-                "unidade": "CIDADE_ALTA",
+                "campus": {"nome": "LIMOEIRO DO NORTE"},
+                "unidade": {"nome": "CIDADE ALTA"},
+                "bloco": {"nome": "BLOCO 10"},
                 "andar": 1
               },
               "capacidade": 30,

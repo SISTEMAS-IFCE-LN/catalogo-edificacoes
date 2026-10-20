@@ -2,8 +2,11 @@ package br.edu.ifce.ambientes_internos.integracao
 
 import br.edu.ifce.ambientes_internos.model.application.interfaces.IBlocoUseCases
 import br.edu.ifce.ambientes_internos.model.application.usecases.BlocoUseCases
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Unidade
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Unidade
 import br.edu.ifce.ambientes_internos.model.repository.BlocoRepository
+import br.edu.ifce.ambientes_internos.model.repository.CampusRepository
+import br.edu.ifce.ambientes_internos.model.repository.UnidadeRepository
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
@@ -29,13 +32,28 @@ class BlocoUseCasesIntegrationTest {
     @Autowired
     lateinit var repoBloco: BlocoRepository
 
+    @Autowired
+    lateinit var repoCampus: CampusRepository
+
+    @Autowired
+    lateinit var repoUnidade: UnidadeRepository
+
+    private lateinit var sede: Unidade
+    private lateinit var cidadeAlta: Unidade
+
+    @BeforeEach
+    fun setUp() {
+        sede = criarUnidade(repoCampus, repoUnidade, unidadeNome = "SEDE")
+        cidadeAlta = criarUnidade(repoCampus, repoUnidade, unidadeNome = "CIDADE ALTA")
+    }
+
     @Test
     fun `Deve criar bloco quando nao existe`() {
-        val bloco = blocoUseCases.resolverOuCriar(Unidade.SEDE, " ginásio ")
+        val bloco = blocoUseCases.resolverOuCriar(sede, " ginásio ")
 
         assertNotNull(bloco.id)
         assertEquals("GINASIO", bloco.nome)
-        assertEquals(Unidade.SEDE, bloco.unidade)
+        assertEquals(sede, bloco.unidade)
 
         val persistido = repoBloco.findById(bloco.id!!).orElseThrow()
         assertEquals("GINASIO", persistido.nome)
@@ -43,8 +61,8 @@ class BlocoUseCasesIntegrationTest {
 
     @Test
     fun `Deve reusar bloco existente com variacao do nome`() {
-        val primeiro = blocoUseCases.resolverOuCriar(Unidade.SEDE, "Ginásio")
-        val segundo = blocoUseCases.resolverOuCriar(Unidade.SEDE, "ginasio")
+        val primeiro = blocoUseCases.resolverOuCriar(sede, "Ginásio")
+        val segundo = blocoUseCases.resolverOuCriar(sede, "ginasio")
 
         assertEquals(primeiro.id, segundo.id)
         assertEquals(1L, repoBloco.count())
@@ -52,8 +70,8 @@ class BlocoUseCasesIntegrationTest {
 
     @Test
     fun `Deve separar blocos por unidade com o mesmo nome`() {
-        val naSede = blocoUseCases.resolverOuCriar(Unidade.SEDE, "BLOCO 1")
-        val naCidadeAlta = blocoUseCases.resolverOuCriar(Unidade.CIDADE_ALTA, "bloco 1")
+        val naSede = blocoUseCases.resolverOuCriar(sede, "BLOCO 1")
+        val naCidadeAlta = blocoUseCases.resolverOuCriar(cidadeAlta, "bloco 1")
 
         assertNotNull(naSede.id)
         assertNotNull(naCidadeAlta.id)
@@ -63,9 +81,9 @@ class BlocoUseCasesIntegrationTest {
 
     @Test
     fun `Deve ser idempotente em chamadas repetidas`() {
-        val primeiro = blocoUseCases.resolverOuCriar(Unidade.SEDE, "BLOCO 1")
-        val segundo = blocoUseCases.resolverOuCriar(Unidade.SEDE, "BLOCO 1")
-        val terceiro = blocoUseCases.resolverOuCriar(Unidade.SEDE, " BLOCO  01 ")
+        val primeiro = blocoUseCases.resolverOuCriar(sede, "BLOCO 1")
+        val segundo = blocoUseCases.resolverOuCriar(sede, "BLOCO 1")
+        val terceiro = blocoUseCases.resolverOuCriar(sede, " BLOCO  01 ")
 
         assertEquals(primeiro.id, segundo.id)
         assertEquals(primeiro.id, terceiro.id)
@@ -75,7 +93,7 @@ class BlocoUseCasesIntegrationTest {
     @Test
     fun `Deve lancar excecao para nome em branco`() {
         assertThrows<IllegalArgumentException> {
-            blocoUseCases.resolverOuCriar(Unidade.SEDE, "   ")
+            blocoUseCases.resolverOuCriar(sede, "   ")
         }
 
         assertEquals(0L, repoBloco.count())
@@ -84,12 +102,39 @@ class BlocoUseCasesIntegrationTest {
     @Test
     fun `Deve listar blocos da unidade em ordem natural`() {
         listOf("CASA", "BLOCO 10", "BLOCO 2A", "BLOCO 2").forEach {
-            blocoUseCases.resolverOuCriar(Unidade.SEDE, it)
+            blocoUseCases.resolverOuCriar(sede, it)
         }
 
-        val nomes = blocoUseCases.listarPorUnidade("SEDE").map { it.nome }
+        val nomes = blocoUseCases.listarPorUnidade(sede.id!!).map { it.nome }
 
         assertEquals(listOf("BLOCO 2", "BLOCO 2A", "BLOCO 10", "CASA"), nomes)
+    }
+
+    @Test
+    fun `Deve lançar excecao ao listar blocos de unidade inexistente`() {
+        assertThrows<IllegalArgumentException> {
+            blocoUseCases.listarPorUnidade(Long.MAX_VALUE)
+        }
+    }
+
+    @Test
+    fun `Deve obter bloco validando a unidade`() {
+        val bloco = blocoUseCases.resolverOuCriar(sede, "BLOCO 1")
+
+        val encontrado = blocoUseCases.obterPorIdEValidarUnidade(bloco.id!!, sede.id!!)
+
+        assertEquals(bloco.id, encontrado.id)
+    }
+
+    @Test
+    fun `Deve lancar excecao ao validar bloco de outra unidade`() {
+        val bloco = blocoUseCases.resolverOuCriar(sede, "BLOCO 1")
+
+        val erro = assertThrows<IllegalArgumentException> {
+            blocoUseCases.obterPorIdEValidarUnidade(bloco.id!!, cidadeAlta.id!!)
+        }
+
+        assertEquals("O bloco não pertence à unidade informada.", erro.message)
     }
 
 }

@@ -63,8 +63,9 @@ class AmbienteSegurancaRotasIntegrationTest {
     fun `deve permitir acesso aos ambientes publicados por localizacao com jwt de colaborador`() {
         mockMvc.perform(
             get("/api/ambientes/publicados/localizacao")
+                .param("campusId", "1")
+                .param("unidadeId", "1")
                 .param("blocoId", "1")
-                .param("unidade", "CIDADE_ALTA")
                 .param("andar", "1")
                 .param("page", "0")
                 .param("size", "20")
@@ -110,8 +111,9 @@ class AmbienteSegurancaRotasIntegrationTest {
     fun `deve negar acesso aos ambientes nao publicados por localizacao com jwt de colaborador`() {
         mockMvc.perform(
             get("/api/ambientes/nao-publicados/localizacao")
+                .param("campusId", "1")
+                .param("unidadeId", "1")
                 .param("blocoId", "1")
-                .param("unidade", "CIDADE_ALTA")
                 .param("andar", "1")
                 .param("page", "0")
                 .param("size", "20")
@@ -157,8 +159,9 @@ class AmbienteSegurancaRotasIntegrationTest {
     fun `deve permitir acesso aos ambientes nao publicados por localizacao com jwt de gestor`() {
         mockMvc.perform(
             get("/api/ambientes/nao-publicados/localizacao")
+                .param("campusId", "1")
+                .param("unidadeId", "1")
                 .param("blocoId", "1")
-                .param("unidade", "CIDADE_ALTA")
                 .param("andar", "1")
                 .param("page", "0")
                 .param("size", "20")
@@ -204,8 +207,9 @@ class AmbienteSegurancaRotasIntegrationTest {
     fun `deve negar acesso aos ambientes em validacao por localizacao com jwt de colaborador`() {
         mockMvc.perform(
             get("/api/ambientes/validacao/localizacao")
+                .param("campusId", "1")
+                .param("unidadeId", "1")
                 .param("blocoId", "1")
-                .param("unidade", "CIDADE_ALTA")
                 .param("andar", "1")
                 .param("page", "0")
                 .param("size", "20")
@@ -251,8 +255,9 @@ class AmbienteSegurancaRotasIntegrationTest {
     fun `deve permitir acesso aos ambientes em validacao por localizacao com jwt de validador`() {
         mockMvc.perform(
             get("/api/ambientes/validacao/localizacao")
+                .param("campusId", "1")
+                .param("unidadeId", "1")
                 .param("blocoId", "1")
-                .param("unidade", "CIDADE_ALTA")
                 .param("andar", "1")
                 .param("page", "0")
                 .param("size", "20")

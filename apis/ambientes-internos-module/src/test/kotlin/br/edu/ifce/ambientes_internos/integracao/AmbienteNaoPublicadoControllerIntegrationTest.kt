@@ -83,8 +83,9 @@ class AmbienteNaoPublicadoControllerIntegrationTest {
               "tipo": "SALA_AULA",
               "nome": "   ",
               "localizacao": {
-                "bloco": "BLOCO 10",
-                "unidade": "CIDADE_ALTA",
+                "campus": {"nome": "LIMOEIRO DO NORTE"},
+                "unidade": {"nome": "CIDADE ALTA"},
+                "bloco": {"nome": "BLOCO 10"},
                 "andar": 1
               },
               "capacidade": 30,
@@ -128,8 +129,9 @@ class AmbienteNaoPublicadoControllerIntegrationTest {
               "tipo": "SALA_AULA",
               "nome": null,
               "localizacao": {
-                "bloco": "BLOCO 10",
-                "unidade": "CIDADE_ALTA",
+                "campus": {"nome": "LIMOEIRO DO NORTE"},
+                "unidade": {"nome": "CIDADE ALTA"},
+                "bloco": {"nome": "BLOCO 10"},
                 "andar": 1
               },
               "capacidade": 30,
@@ -176,8 +178,9 @@ class AmbienteNaoPublicadoControllerIntegrationTest {
               "tipo": "SALA_AULA",
               "nome": "$nomeLongo",
               "localizacao": {
-                "bloco": "BLOCO 10",
-                "unidade": "CIDADE_ALTA",
+                "campus": {"nome": "LIMOEIRO DO NORTE"},
+                "unidade": {"nome": "CIDADE ALTA"},
+                "bloco": {"nome": "BLOCO 10"},
                 "andar": 1
               },
               "capacidade": 30,
@@ -361,8 +364,9 @@ class AmbienteNaoPublicadoControllerIntegrationTest {
             {
               "nome": "Sala Atualizada",
               "localizacao": {
-                "bloco": "BLOCO 10",
-                "unidade": "CIDADE_ALTA",
+                "campus": {"nome": "LIMOEIRO DO NORTE"},
+                "unidade": {"nome": "CIDADE ALTA"},
+                "bloco": {"nome": "BLOCO 10"},
                 "andar": 2
               },
               "capacidade": 0
@@ -477,21 +481,127 @@ class AmbienteNaoPublicadoControllerIntegrationTest {
         }
     }
 
+    // ========== Validações do contrato de referência (id ou nome) ==========
+
+    @Test
+    fun `deve retornar 400 ao cadastrar ambiente com campus informando id e nome juntos`() {
+        val payload = payloadCadastroAmbiente(
+            localizacao = """
+                {
+                  "campus": {"id": 1, "nome": "LIMOEIRO DO NORTE"},
+                  "unidade": {"nome": "CIDADE ALTA"},
+                  "bloco": {"nome": "BLOCO 10"},
+                  "andar": 1
+                }
+            """.trimIndent()
+        )
+
+        mockMvc.perform(
+            post("/api/ambientes/nao-publicados")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(payload)
+        ).andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun `deve retornar 400 ao cadastrar ambiente sem id nem nome no campus`() {
+        val payload = payloadCadastroAmbiente(
+            localizacao = """
+                {
+                  "campus": {},
+                  "unidade": {"nome": "CIDADE ALTA"},
+                  "bloco": {"nome": "BLOCO 10"},
+                  "andar": 1
+                }
+            """.trimIndent()
+        )
+
+        mockMvc.perform(
+            post("/api/ambientes/nao-publicados")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(payload)
+        ).andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun `deve retornar 400 ao cadastrar ambiente sem id nem nome na unidade`() {
+        val payload = payloadCadastroAmbiente(
+            localizacao = """
+                {
+                  "campus": {"nome": "LIMOEIRO DO NORTE"},
+                  "unidade": {"nome": "   "},
+                  "bloco": {"nome": "BLOCO 10"},
+                  "andar": 1
+                }
+            """.trimIndent()
+        )
+
+        mockMvc.perform(
+            post("/api/ambientes/nao-publicados")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(payload)
+        ).andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun `deve retornar 400 ao cadastrar ambiente sem id nem nome no bloco`() {
+        val payload = payloadCadastroAmbiente(
+            localizacao = """
+                {
+                  "campus": {"nome": "LIMOEIRO DO NORTE"},
+                  "unidade": {"nome": "CIDADE ALTA"},
+                  "bloco": {"id": null, "nome": null},
+                  "andar": 1
+                }
+            """.trimIndent()
+        )
+
+        mockMvc.perform(
+            post("/api/ambientes/nao-publicados")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(payload)
+        ).andExpect(status().isBadRequest)
+    }
+
+    @Test
+    fun `deve retornar 400 ao cadastrar ambiente com nome de campus maior que 50 caracteres`() {
+        val payload = payloadCadastroAmbiente(
+            localizacao = """
+                {
+                  "campus": {"nome": "${"C".repeat(51)}"},
+                  "unidade": {"nome": "CIDADE ALTA"},
+                  "bloco": {"nome": "BLOCO 10"},
+                  "andar": 1
+                }
+            """.trimIndent()
+        )
+
+        mockMvc.perform(
+            post("/api/ambientes/nao-publicados")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(payload)
+        ).andExpect(status().isBadRequest)
+    }
+
     private fun payloadCadastroAmbiente(
         baseGeometria: String = "6.00",
         peDireito: String = "3.00",
-        alturaPeitoril: String = "0.90"
+        alturaPeitoril: String = "0.90",
+        localizacao: String = """
+            {
+              "campus": {"nome": "LIMOEIRO DO NORTE"},
+              "unidade": {"nome": "CIDADE ALTA"},
+              "bloco": {"nome": "BLOCO 10"},
+              "andar": 1
+            }
+        """.trimIndent()
     ): String {
         val nomeUnico = "SalaInt-${UUID.randomUUID().toString().take(8)}"
         return """
             {
               "tipo": "SALA_AULA",
               "nome": "$nomeUnico",
-              "localizacao": {
-                "bloco": "BLOCO 10",
-                "unidade": "CIDADE_ALTA",
-                "andar": 1
-              },
+              "localizacao": $localizacao,
               "capacidade": 30,
               "geometrias": [
                 {
@@ -564,8 +674,9 @@ class AmbienteNaoPublicadoControllerIntegrationTest {
               "tipo": "SALA_AULA",
               "nome": "$nomeUnico",
               "localizacao": {
-                "bloco": "BLOCO 10",
-                "unidade": "CIDADE_ALTA",
+                "campus": {"nome": "LIMOEIRO DO NORTE"},
+                "unidade": {"nome": "CIDADE ALTA"},
+                "bloco": {"nome": "BLOCO 10"},
                 "andar": 1
               },
               "capacidade": 30,

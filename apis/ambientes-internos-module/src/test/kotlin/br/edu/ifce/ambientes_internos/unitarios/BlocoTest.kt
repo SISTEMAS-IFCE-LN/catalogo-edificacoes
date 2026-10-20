@@ -1,7 +1,8 @@
 package br.edu.ifce.ambientes_internos.unitarios
 
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Bloco
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Unidade
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Campus
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Unidade
 import org.junit.jupiter.api.DisplayName
 import kotlin.test.DefaultAsserter.assertEquals
 import kotlin.test.DefaultAsserter.assertNotEquals
@@ -9,6 +10,8 @@ import kotlin.test.Test
 
 @DisplayName("Testes para a classe Bloco")
 class BlocoTest {
+
+    private fun unidade(nome: String): Unidade = Unidade(Campus("LIMOEIRO DO NORTE"), nome)
 
     private val inputCases: Map<String, String> = hashMapOf(
         " ginásio " to "GINASIO",
@@ -24,14 +27,17 @@ class BlocoTest {
 
     @Test
     fun `Deve normalizar corretamente os nomes dos blocos`() {
+        val sede = unidade("SEDE")
+        val cidadeAlta = unidade("CIDADE ALTA")
+
         inputCases.forEach { (input, expected) ->
-            val blocoInput1 = Bloco(Unidade.SEDE, input)
-            val blocoInput2 = Bloco(Unidade.SEDE, expected)
+            val blocoInput1 = Bloco(sede, input)
+            val blocoInput2 = Bloco(sede, expected)
 
-            val blocoExpected1 = Bloco(Unidade.SEDE, expected)
-            val blocoExpected2 = Bloco(Unidade.CIDADE_ALTA, expected)
+            val blocoExpected1 = Bloco(sede, expected)
+            val blocoExpected2 = Bloco(cidadeAlta, expected)
 
-            val blocoAny = Bloco(Unidade.SEDE, "Qualquer")
+            val blocoAny = Bloco(sede, "Qualquer")
             blocoAny.nome = input
 
             assertEquals(
@@ -62,15 +68,17 @@ class BlocoTest {
         }
         assertNotEquals(
             "Falha ao comparar blocos diferentes com nomes diferentes",
-            Bloco(Unidade.SEDE, "BLOCO 1"),
-            Bloco(Unidade.SEDE, "BLOCO 2")
+            Bloco(sede, "BLOCO 1"),
+            Bloco(sede, "BLOCO 2")
         )
     }
 
     @Test
     fun `Deve ignorar o id na igualdade e no hashCode`() {
-        val semId = Bloco(Unidade.SEDE, "BLOCO 1")
-        val comId = Bloco(Unidade.SEDE, "BLOCO 1").apply { id = 42L }
+        val sede = unidade("SEDE")
+
+        val semId = Bloco(sede, "BLOCO 1")
+        val comId = Bloco(sede, "BLOCO 1").apply { id = 42L }
 
         assertEquals(
             "Falha ao comparar blocos com mesmo nome e unidade e ids diferentes",

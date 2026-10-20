@@ -127,12 +127,23 @@ class AmbienteControllerBaseIntegrationTest {
     }
 
     @Test
-    fun `deve retornar 400 ao listar ambientes por localizacao com unidade maior que 50 caracteres`() {
-        val unidadeLonga = "U".repeat(51)
+    fun `deve retornar 400 ao listar ambientes por localizacao com unidadeId invalido`() {
         assertBadRequestOrValidationError {
             mockMvc.perform(
             get("/api/ambientes/nao-publicados/localizacao")
-                .param("unidade", unidadeLonga)
+                .param("unidadeId", "-1")
+                .param("page", "0")
+                .param("size", "20")
+            ).andExpect(status().isBadRequest)
+        }
+    }
+
+    @Test
+    fun `deve retornar 400 ao listar ambientes por localizacao com campusId invalido`() {
+        assertBadRequestOrValidationError {
+            mockMvc.perform(
+            get("/api/ambientes/nao-publicados/localizacao")
+                .param("campusId", "0")
                 .param("page", "0")
                 .param("size", "20")
             ).andExpect(status().isBadRequest)
@@ -152,11 +163,12 @@ class AmbienteControllerBaseIntegrationTest {
     }
 
     @Test
-    fun `deve listar ambientes por localizacao com blocoId e unidade`() {
+    fun `deve listar ambientes por localizacao com campus unidade e bloco`() {
         mockMvc.perform(
         get("/api/ambientes/nao-publicados/localizacao")
+            .param("campusId", "1")
+            .param("unidadeId", "1")
             .param("blocoId", "1")
-            .param("unidade", "SEDE")
             .param("page", "0")
             .param("size", "20")
         ).andExpect(status().isOk)

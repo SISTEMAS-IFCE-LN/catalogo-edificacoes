@@ -2,10 +2,11 @@ package br.edu.ifce.ambientes_internos.unitarios
 
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Ambiente
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Bloco
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Campus
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Localizacao
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Unidade
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.StatusAmbiente
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.TipoAmbiente
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Unidade
 import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.Janela
 import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.Porta
 import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.enums.MaterialEsquadria
@@ -32,7 +33,13 @@ class AmbienteTest {
         ambiente = object : Ambiente(
             id = null,
             nome = "Ambiente de Teste",
-            localizacao = Localizacao(Bloco(Unidade.CIDADE_ALTA, "BLOCO PRINCIPAL"), 0),
+            localizacao = Localizacao(
+                Bloco(
+                    Unidade(Campus("LIMOEIRO DO NORTE"), "CIDADE ALTA"),
+                    "BLOCO PRINCIPAL"
+                ),
+                0
+            ),
             capacidade = 50,
             tipo = TipoAmbiente.SALA_AULA,
             geometrias = mutableSetOf(ambienteGeometria1, ambienteGeometria2),

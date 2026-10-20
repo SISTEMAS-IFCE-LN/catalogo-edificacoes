@@ -8,7 +8,6 @@ import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Localizacao
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.SalaAula
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.StatusAmbiente
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.TipoAmbiente
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Unidade
 import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.Esquadria
 import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.Janela
 import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.Porta
@@ -19,6 +18,8 @@ import br.edu.ifce.ambientes_internos.model.domain.entity.geometrias.Retangular
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.LocalizacaoPesquisaReq
 import br.edu.ifce.ambientes_internos.model.repository.AmbienteRepository
 import br.edu.ifce.ambientes_internos.model.repository.BlocoRepository
+import br.edu.ifce.ambientes_internos.model.repository.CampusRepository
+import br.edu.ifce.ambientes_internos.model.repository.UnidadeRepository
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.params.ParameterizedTest
@@ -53,9 +54,18 @@ class AmbientePublicadoUseCasesIntegrationTest {
     @Autowired
     lateinit var repoBloco: BlocoRepository
 
-    private fun criarBloco(unidade: Unidade, nome: String): Bloco =
-        repoBloco.findByUnidadeAndNome(unidade, nome)
-            ?: repoBloco.saveAndFlush(Bloco(unidade, nome))
+    @Autowired
+    lateinit var repoCampus: CampusRepository
+
+    @Autowired
+    lateinit var repoUnidade: UnidadeRepository
+
+    private fun criarBloco(unidade: String, nome: String): Bloco =
+        criarUnidade(repoCampus, repoUnidade, "LIMOEIRO DO NORTE", unidade)
+            .let { unidadeResolvida -> criarBloco(repoBloco, unidadeResolvida, nome) }
+
+    private fun localizacao(unidade: String, bloco: String, andar: Int): Localizacao =
+        Localizacao(bloco = criarBloco(unidade, bloco), andar = andar)
 
     // -------------------------------------------------------------------------
     // Helpers de criação de entidades
@@ -64,7 +74,7 @@ class AmbientePublicadoUseCasesIntegrationTest {
     private fun criarSalaAula(
         nome: String,
         bloco: String,
-        unidade: Unidade,
+        unidade: String,
         andar: Int,
         capacidade: Int,
         base: String,
@@ -74,7 +84,7 @@ class AmbientePublicadoUseCasesIntegrationTest {
     ): SalaAula {
         val sala = SalaAula(
             nome = nome,
-            localizacao = Localizacao(bloco = criarBloco(unidade, bloco), andar = andar),
+            localizacao = localizacao(unidade, bloco, andar),
             capacidade = capacidade,
             geometrias = mutableSetOf(Retangular(base = BigDecimal(base), altura = BigDecimal(altura)) as Geometria),
             pesDireitos = mutableSetOf(BigDecimal("3.0")),
@@ -88,7 +98,7 @@ class AmbientePublicadoUseCasesIntegrationTest {
     private fun criarLaboratorioInformatica(
         nome: String,
         bloco: String,
-        unidade: Unidade,
+        unidade: String,
         andar: Int,
         capacidade: Int,
         base: String,
@@ -97,7 +107,7 @@ class AmbientePublicadoUseCasesIntegrationTest {
     ): LaboratorioInformatica {
         val lab = LaboratorioInformatica(
             nome = nome,
-            localizacao = Localizacao(bloco = criarBloco(unidade, bloco), andar = andar),
+            localizacao = localizacao(unidade, bloco, andar),
             capacidade = capacidade,
             geometrias = mutableSetOf(Retangular(base = BigDecimal(base), altura = BigDecimal(altura)) as Geometria),
             esquadrias = mutableSetOf(),
@@ -116,7 +126,7 @@ class AmbientePublicadoUseCasesIntegrationTest {
     fun `Deve obter ambiente publicado por id`() {
         val ambienteSalvo = criarSalaAula(
             nome = "Sala de Aula Publicada",
-            bloco = "BLOCO 10", unidade = Unidade.CIDADE_ALTA, andar = 1,
+            bloco = "BLOCO 10", unidade = "CIDADE ALTA", andar = 1,
             capacidade = 30, base = "6.0", altura = "3.0",
             esquadrias = mutableSetOf(
                 Janela(
@@ -142,7 +152,7 @@ class AmbientePublicadoUseCasesIntegrationTest {
     fun `Deve lancar excecao ao obter ambiente nao publicado por id`() {
         val ambienteNaoPublicado = SalaAula(
             nome = "Sala Não Publicada",
-            localizacao = Localizacao(bloco = criarBloco(Unidade.CIDADE_ALTA, "BLOCO 10"), andar = 1),
+            localizacao = localizacao("CIDADE ALTA", "BLOCO 10", 1),
             capacidade = 30,
             geometrias = mutableSetOf(Retangular(base = BigDecimal("6.0"), altura = BigDecimal("3.0"))),
             esquadrias = mutableSetOf(),
@@ -160,11 +170,11 @@ class AmbientePublicadoUseCasesIntegrationTest {
     @Test
     fun `Deve listar ambientes publicados com paginacao`() {
         criarSalaAula(
-            nome = "Sala 1", bloco = "BLOCO 10", unidade = Unidade.CIDADE_ALTA, andar = 1,
+            nome = "Sala 1", bloco = "BLOCO 10", unidade = "CIDADE ALTA", andar = 1,
             capacidade = 30, base = "6.0", altura = "3.0"
         )
         criarSalaAula(
-            nome = "Sala 2", bloco = "BLOCO 11", unidade = Unidade.CIDADE_ALTA, andar = 2,
+            nome = "Sala 2", bloco = "BLOCO 11", unidade = "CIDADE ALTA", andar = 2,
             capacidade = 35, base = "7.0", altura = "4.0"
         )
 
@@ -194,11 +204,11 @@ class AmbientePublicadoUseCasesIntegrationTest {
     @Test
     fun `Deve listar ambientes publicados por tipo com paginacao`() {
         criarSalaAula(
-            nome = "Sala de Aula 1", bloco = "BLOCO 10", unidade = Unidade.CIDADE_ALTA, andar = 1,
+            nome = "Sala de Aula 1", bloco = "BLOCO 10", unidade = "CIDADE ALTA", andar = 1,
             capacidade = 30, base = "6.0", altura = "3.0", informacaoAdicional = "Sala de aula"
         )
         criarLaboratorioInformatica(
-            nome = "Laboratório 1", bloco = "BLOCO 11", unidade = Unidade.CIDADE_ALTA, andar = 2,
+            nome = "Laboratório 1", bloco = "BLOCO 11", unidade = "CIDADE ALTA", andar = 2,
             capacidade = 40, base = "8.0", altura = "4.0", informacaoAdicional = "Laboratório"
         )
 
@@ -213,7 +223,7 @@ class AmbientePublicadoUseCasesIntegrationTest {
     @Test
     fun `Deve retornar lista vazia ao listar ambientes publicados por tipo sem correspondencia`() {
         criarSalaAula(
-            nome = "Sala Publicada", bloco = "BLOCO 12", unidade = Unidade.CIDADE_ALTA, andar = 1,
+            nome = "Sala Publicada", bloco = "BLOCO 12", unidade = "CIDADE ALTA", andar = 1,
             capacidade = 30, base = "6.0", altura = "3.0"
         )
 
@@ -232,11 +242,11 @@ class AmbientePublicadoUseCasesIntegrationTest {
     @Test
     fun `Deve listar ambientes publicados por tipo informando rotulo`() {
         criarSalaAula(
-            nome = "Sala de Aula 1", bloco = "BLOCO 10", unidade = Unidade.CIDADE_ALTA, andar = 1,
+            nome = "Sala de Aula 1", bloco = "BLOCO 10", unidade = "CIDADE ALTA", andar = 1,
             capacidade = 30, base = "6.0", altura = "3.0", informacaoAdicional = "Sala de aula"
         )
         criarLaboratorioInformatica(
-            nome = "Laboratório 1", bloco = "BLOCO 11", unidade = Unidade.CIDADE_ALTA, andar = 2,
+            nome = "Laboratório 1", bloco = "BLOCO 11", unidade = "CIDADE ALTA", andar = 2,
             capacidade = 40, base = "8.0", altura = "4.0", informacaoAdicional = "Laboratório"
         )
 
@@ -254,7 +264,7 @@ class AmbientePublicadoUseCasesIntegrationTest {
     @Test
     fun `Deve retornar lista vazia ao listar por tipo com rotulo sem correspondencia`() {
         criarSalaAula(
-            nome = "Sala Publicada", bloco = "BLOCO 12", unidade = Unidade.CIDADE_ALTA, andar = 1,
+            nome = "Sala Publicada", bloco = "BLOCO 12", unidade = "CIDADE ALTA", andar = 1,
             capacidade = 30, base = "6.0", altura = "3.0"
         )
 
@@ -272,15 +282,15 @@ class AmbientePublicadoUseCasesIntegrationTest {
     @Test
     fun `Deve calcular area total ao filtrar ambientes publicados por tipo`() {
         criarSalaAula(
-            nome = "Sala 1", bloco = "BLOCO 10", unidade = Unidade.CIDADE_ALTA, andar = 1,
+            nome = "Sala 1", bloco = "BLOCO 10", unidade = "CIDADE ALTA", andar = 1,
             capacidade = 30, base = "5.0", altura = "4.0", informacaoAdicional = "Sala 1"
         )
         criarSalaAula(
-            nome = "Sala 2", bloco = "BLOCO 11", unidade = Unidade.CIDADE_ALTA, andar = 2,
+            nome = "Sala 2", bloco = "BLOCO 11", unidade = "CIDADE ALTA", andar = 2,
             capacidade = 35, base = "3.0", altura = "3.0", informacaoAdicional = "Sala 2"
         )
         criarLaboratorioInformatica(
-            nome = "Laboratório", bloco = "BLOCO 3", unidade = Unidade.CIDADE_ALTA, andar = 1,
+            nome = "Laboratório", bloco = "BLOCO 3", unidade = "CIDADE ALTA", andar = 1,
             capacidade = 20, base = "10.0", altura = "2.0", informacaoAdicional = "Laboratório"
         )
 
@@ -300,11 +310,11 @@ class AmbientePublicadoUseCasesIntegrationTest {
         nomeEsperado: String
     ) {
         criarSalaAula(
-            nome = "Sala de Aula Publicada", bloco = "BLOCO 10", unidade = Unidade.CIDADE_ALTA, andar = 1,
+            nome = "Sala de Aula Publicada", bloco = "BLOCO 10", unidade = "CIDADE ALTA", andar = 1,
             capacidade = 30, base = "6.0", altura = "3.0"
         )
         criarSalaAula(
-            nome = "Sala de Laboratório", bloco = "BLOCO 11", unidade = Unidade.CIDADE_ALTA, andar = 2,
+            nome = "Sala de Laboratório", bloco = "BLOCO 11", unidade = "CIDADE ALTA", andar = 2,
             capacidade = 25, base = "5.0", altura = "3.0", informacaoAdicional = "Sala de laboratório"
         )
 
@@ -321,24 +331,24 @@ class AmbientePublicadoUseCasesIntegrationTest {
     @Test
     fun `Deve filtrar ambientes publicados por id de bloco`() {
         val ambiente = criarSalaAula(
-            nome = "Sala de Aula Publicada", bloco = "BLOCO 10", unidade = Unidade.CIDADE_ALTA, andar = 1,
+            nome = "Sala de Aula Publicada", bloco = "BLOCO 10", unidade = "CIDADE ALTA", andar = 1,
             capacidade = 30, base = "6.0", altura = "3.0"
         )
         criarSalaAula(
-            nome = "Sala de Aula em Outro Bloco", bloco = "BLOCO 11", unidade = Unidade.CIDADE_ALTA, andar = 2,
+            nome = "Sala de Aula em Outro Bloco", bloco = "BLOCO 11", unidade = "CIDADE ALTA", andar = 2,
             capacidade = 35, base = "7.0", altura = "4.0", informacaoAdicional = "Sala em outro bloco"
         )
-        val blocoId = repoBloco.findByUnidadeAndNome(Unidade.CIDADE_ALTA, "BLOCO 10")!!.id!!
+        val blocoId = criarBloco("CIDADE ALTA", "BLOCO 10")!!.id!!
 
         val resultado = ambientesPUseCases.listarAmbientesPorLocalizacao(
-            LocalizacaoPesquisaReq(blocoId = blocoId, unidade = null, andar = null),
+            LocalizacaoPesquisaReq(campusId = null, unidadeId = null, blocoId = blocoId, andar = null),
             PageRequest.of(0, 10)
         )
         assertEquals(1, resultado.dadosPaginacao.totalElements)
         assertEquals(ambiente.nome, resultado.ambientes.first().nome)
 
         val inexistente = ambientesPUseCases.listarAmbientesPorLocalizacao(
-            LocalizacaoPesquisaReq(blocoId = Long.MAX_VALUE, unidade = null, andar = null),
+            LocalizacaoPesquisaReq(campusId = null, unidadeId = null, blocoId = Long.MAX_VALUE, andar = null),
             PageRequest.of(0, 10)
         )
         assertEquals(0, inexistente.dadosPaginacao.totalElements)
@@ -357,11 +367,11 @@ class AmbientePublicadoUseCasesIntegrationTest {
     @Test
     fun `Deve incluir area total nos resultados de listagem`() {
         criarSalaAula(
-            nome = "Sala 1", bloco = "BLOCO 10", unidade = Unidade.CIDADE_ALTA, andar = 1,
+            nome = "Sala 1", bloco = "BLOCO 10", unidade = "CIDADE ALTA", andar = 1,
             capacidade = 30, base = "6.0", altura = "3.0"
         )
         criarSalaAula(
-            nome = "Sala 2", bloco = "BLOCO 11", unidade = Unidade.CIDADE_ALTA, andar = 2,
+            nome = "Sala 2", bloco = "BLOCO 11", unidade = "CIDADE ALTA", andar = 2,
             capacidade = 35, base = "4.0", altura = "3.0", informacaoAdicional = "Segunda sala"
         )
 
@@ -375,11 +385,11 @@ class AmbientePublicadoUseCasesIntegrationTest {
     @Test
     fun `Deve incluir area total em filtro por tipo`() {
         criarSalaAula(
-            nome = "Sala 1", bloco = "BLOCO 10", unidade = Unidade.CIDADE_ALTA, andar = 1,
+            nome = "Sala 1", bloco = "BLOCO 10", unidade = "CIDADE ALTA", andar = 1,
             capacidade = 30, base = "5.0", altura = "4.0", informacaoAdicional = "Sala 1"
         )
         criarLaboratorioInformatica(
-            nome = "Laboratório 2", bloco = "BLOCO 11", unidade = Unidade.CIDADE_ALTA, andar = 2,
+            nome = "Laboratório 2", bloco = "BLOCO 11", unidade = "CIDADE ALTA", andar = 2,
             capacidade = 35, base = "3.0", altura = "3.0", informacaoAdicional = "Lab"
         )
 
@@ -398,7 +408,7 @@ class AmbientePublicadoUseCasesIntegrationTest {
     fun `Deve validar paginacao em listagem por nome`() {
         for (i in 1..15) {
             criarSalaAula(
-                nome = "Sala de Aula $i", bloco = "BLOCO 1", unidade = Unidade.SEDE, andar = i,
+                nome = "Sala de Aula $i", bloco = "BLOCO 1", unidade = "SEDE", andar = i,
                 capacidade = 30, base = "6.0", altura = "3.0", informacaoAdicional = "Sala $i"
             )
         }
@@ -424,13 +434,13 @@ class AmbientePublicadoUseCasesIntegrationTest {
     @Test
     fun `Deve nao listar ambientes nao publicados em nenhum filtro`() {
         criarSalaAula(
-            nome = "Sala de Aula Publicada", bloco = "BLOCO 10", unidade = Unidade.CIDADE_ALTA, andar = 1,
+            nome = "Sala de Aula Publicada", bloco = "BLOCO 10", unidade = "CIDADE ALTA", andar = 1,
             capacidade = 30, base = "6.0", altura = "3.0"
         )
         repoAmb.save(
             SalaAula(
                 nome = "Sala Não Publicada",
-                localizacao = Localizacao(bloco = criarBloco(Unidade.SEDE, "BLOCO 2"), andar = 1),
+                localizacao = localizacao("SEDE", "BLOCO 2", 1),
                 capacidade = 30,
                 geometrias = mutableSetOf(Retangular(base = BigDecimal("6.0"), altura = BigDecimal("3.0"))),
                 esquadrias = mutableSetOf(),
@@ -440,7 +450,7 @@ class AmbientePublicadoUseCasesIntegrationTest {
         )
 
         val pageable = PageRequest.of(0, 10)
-        val blocoId = repoBloco.findByUnidadeAndNome(Unidade.CIDADE_ALTA, "BLOCO 10")!!.id!!
+        val blocoId = criarBloco("CIDADE ALTA", "BLOCO 10")!!.id!!
 
         // Então não deve incluir ambiente não publicado em nenhum filtro
         assertEquals(1, ambientesPUseCases.listarAmbientes(pageable).dadosPaginacao.totalElements)
@@ -448,7 +458,7 @@ class AmbientePublicadoUseCasesIntegrationTest {
         assertEquals(
             1,
             ambientesPUseCases.listarAmbientesPorLocalizacao(
-                LocalizacaoPesquisaReq(blocoId = blocoId, unidade = null, andar = null),
+                LocalizacaoPesquisaReq(campusId = null, unidadeId = null, blocoId = blocoId, andar = null),
                 pageable
             ).dadosPaginacao.totalElements
         )
@@ -457,7 +467,7 @@ class AmbientePublicadoUseCasesIntegrationTest {
     @Test
     fun `Deve listar esquadrias dos ambientes publicados com paginacao`() {
         val ambiente1 = criarSalaAula(
-            nome = "Ambiente Publicado 1", bloco = "BLOCO 1", unidade = Unidade.CIDADE_ALTA, andar = 1,
+            nome = "Ambiente Publicado 1", bloco = "BLOCO 1", unidade = "CIDADE ALTA", andar = 1,
             capacidade = 20, base = "4.0", altura = "3.0",
             esquadrias = mutableSetOf(
                 Porta(
@@ -472,7 +482,7 @@ class AmbientePublicadoUseCasesIntegrationTest {
             )
         )
         val ambiente2 = criarSalaAula(
-            nome = "Ambiente Publicado 2", bloco = "BLOCO 2", unidade = Unidade.CIDADE_ALTA, andar = 1,
+            nome = "Ambiente Publicado 2", bloco = "BLOCO 2", unidade = "CIDADE ALTA", andar = 1,
             capacidade = 25, base = "5.0", altura = "3.0",
             esquadrias = mutableSetOf(
                 Porta(
@@ -487,7 +497,7 @@ class AmbientePublicadoUseCasesIntegrationTest {
             )
         )
         val ambiente3 = criarSalaAula(
-            nome = "Ambiente Publicado 3", bloco = "BLOCO 3", unidade = Unidade.CIDADE_ALTA, andar = 1,
+            nome = "Ambiente Publicado 3", bloco = "BLOCO 3", unidade = "CIDADE ALTA", andar = 1,
             capacidade = 30, base = "6.0", altura = "3.0",
             esquadrias = mutableSetOf(
                 Porta(
@@ -540,7 +550,7 @@ class AmbientePublicadoUseCasesIntegrationTest {
             criarSalaAula(
                 nome = "Sala Publicada $indice",
                 bloco = "BLOCO 10",
-                unidade = Unidade.CIDADE_ALTA,
+                unidade = "CIDADE ALTA",
                 andar = indice,
                 capacidade = 30,
                 base = "6.0",
@@ -561,7 +571,7 @@ class AmbientePublicadoUseCasesIntegrationTest {
             criarSalaAula(
                 nome = "Sala com esquadria $indice",
                 bloco = "BLOCO 11",
-                unidade = Unidade.CIDADE_ALTA,
+                unidade = "CIDADE ALTA",
                 andar = indice,
                 capacidade = 30,
                 base = "6.0",

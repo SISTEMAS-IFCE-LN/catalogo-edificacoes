@@ -4,12 +4,10 @@ import br.edu.ifce.ambientes_internos.TestApplication
 import br.edu.ifce.ambientes_internos.TestSecurityConfig
 import br.edu.ifce.ambientes_internos.model.application.interfaces.IAmbienteNaoPublicadoUseCases
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.TipoAmbiente
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Unidade
 import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.enums.MaterialEsquadria
 import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.enums.TipoEsquadria
 import br.edu.ifce.ambientes_internos.model.domain.entity.geometrias.enums.TipoGeometria
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbienteReq
-import br.edu.ifce.ambientes_internos.model.dto.ambiente.LocalizacaoReq
 import br.edu.ifce.ambientes_internos.model.dto.esquadria.EsquadriaReq
 import br.edu.ifce.ambientes_internos.model.dto.geometria.GeometriaAmbienteReq
 import br.edu.ifce.ambientes_internos.model.dto.geometria.GeometriaEsquadriaReq
@@ -63,8 +61,9 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
             {
               "nome": "Sala Atualizada",
               "localizacao": {
-                "bloco": "BLOCO 10",
-                "unidade": "CIDADE_ALTA",
+                "campus": {"nome": "LIMOEIRO DO NORTE"},
+                "unidade": {"nome": "CIDADE ALTA"},
+                "bloco": {"nome": "BLOCO 10"},
                 "andar": 2
               },
               "capacidade": 10
@@ -86,8 +85,9 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
             {
               "nome": "Sala Atualizada",
               "localizacao": {
-                "bloco": "BLOCO 10",
-                "unidade": "CIDADE_ALTA",
+                "campus": {"nome": "LIMOEIRO DO NORTE"},
+                "unidade": {"nome": "CIDADE ALTA"},
+                "bloco": {"nome": "BLOCO 10"},
                 "andar": 2
               },
               "capacidade": 10
@@ -109,8 +109,9 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
             {
               "nome": "   ",
               "localizacao": {
-                "bloco": "BLOCO 10",
-                "unidade": "CIDADE_ALTA",
+                "campus": {"nome": "LIMOEIRO DO NORTE"},
+                "unidade": {"nome": "CIDADE ALTA"},
+                "bloco": {"nome": "BLOCO 10"},
                 "andar": 2
               },
               "capacidade": 10
@@ -132,8 +133,9 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
             {
               "nome": null,
               "localizacao": {
-                "bloco": "BLOCO 10",
-                "unidade": "CIDADE_ALTA",
+                "campus": {"nome": "LIMOEIRO DO NORTE"},
+                "unidade": {"nome": "CIDADE ALTA"},
+                "bloco": {"nome": "BLOCO 10"},
                 "andar": 2
               },
               "capacidade": 10
@@ -156,8 +158,9 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
             {
               "nome": "$nomeLongo",
               "localizacao": {
-                "bloco": "BLOCO 10",
-                "unidade": "CIDADE_ALTA",
+                "campus": {"nome": "LIMOEIRO DO NORTE"},
+                "unidade": {"nome": "CIDADE ALTA"},
+                "bloco": {"nome": "BLOCO 10"},
                 "andar": 2
               },
               "capacidade": 10
@@ -179,8 +182,9 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
             {
               "nome": "Sala Atualizada",
               "localizacao": {
-                "bloco": "BLOCO 10",
-                "unidade": "CIDADE_ALTA",
+                "campus": {"nome": "LIMOEIRO DO NORTE"},
+                "unidade": {"nome": "CIDADE ALTA"},
+                "bloco": {"nome": "BLOCO 10"},
                 "andar": 2
               },
               "capacidade": 0
@@ -202,8 +206,9 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
             {
               "nome": "Sala Atualizada",
               "localizacao": {
-                "bloco": "BLOCO 10",
-                "unidade": "CIDADE_ALTA",
+                "campus": {"nome": "LIMOEIRO DO NORTE"},
+                "unidade": {"nome": "CIDADE ALTA"},
+                "bloco": {"nome": "BLOCO 10"},
                 "andar": 2
               },
               "capacidade": -10
@@ -226,8 +231,9 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
             {
               "nome": "Sala Atualizada",
               "localizacao": {
-                "bloco": "$blocoLongo",
-                "unidade": "CIDADE_ALTA",
+                "campus": {"nome": "LIMOEIRO DO NORTE"},
+                "unidade": {"nome": "CIDADE ALTA"},
+                "bloco": {"nome": "$blocoLongo"},
                 "andar": 2
               },
               "capacidade": 10
@@ -250,8 +256,9 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
             {
               "nome": "Sala Atualizada",
               "localizacao": {
-                "bloco": "BLOCO 10",
-                "unidade": "$unidadeLonga",
+                "campus": {"nome": "LIMOEIRO DO NORTE"},
+                "unidade": {"nome": "$unidadeLonga"},
+                "bloco": {"nome": "BLOCO 10"},
                 "andar": 2
               },
               "capacidade": 10
@@ -273,8 +280,9 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
             {
               "nome": "Sala Atualizada",
               "localizacao": {
-                "bloco": "BLOCO 10",
-                "unidade": "CIDADE_ALTA",
+                "campus": {"nome": "LIMOEIRO DO NORTE"},
+                "unidade": {"nome": "CIDADE ALTA"},
+                "bloco": {"nome": "BLOCO 10"},
                 "andar": -1
               },
               "capacidade": 10
@@ -695,7 +703,7 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
             AmbienteReq(
                 tipo = TipoAmbiente.SALA_AULA,
                 nome = "Sala UC16 ${UUID.randomUUID().toString().take(8)}",
-                localizacao = LocalizacaoReq(unidade = Unidade.CIDADE_ALTA, bloco = "BLOCO 10", andar = 1),
+                localizacao = localizacaoReqPorNome(bloco = "BLOCO 10", andar = 1),
                 capacidade = 30,
                 geometrias = setOf(
                     GeometriaAmbienteReq(
@@ -717,13 +725,16 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
             )
         )
 
+        val localizacaoAtual = ambienteSalvo.localizacao
+
         val payloadPost = """
             {
               "tipo": "LABORATORIO_INFORMATICA",
               "nome": "Sala UC16 Alterada ${UUID.randomUUID().toString().take(8)}",
               "localizacao": {
-                "bloco": "BLOCO 11",
-                "unidade": "SEDE",
+                "campus": {"id": ${localizacaoAtual.campus.id}},
+                "unidade": {"id": ${localizacaoAtual.unidade.id}},
+                "bloco": {"nome": "BLOCO 11"},
                 "andar": 2
               },
               "capacidade": 25,
@@ -758,8 +769,9 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payloadPost)
         ).andExpect(status().isCreated)
-            .andExpect(jsonPath("$.localizacao.bloco").value("BLOCO 11"))
-            .andExpect(jsonPath("$.localizacao.unidade").value("Sede"))
+            .andExpect(jsonPath("$.localizacao.campus.nome").value("LIMOEIRO DO NORTE"))
+            .andExpect(jsonPath("$.localizacao.unidade.nome").value("CIDADE ALTA"))
+            .andExpect(jsonPath("$.localizacao.bloco.nome").value("BLOCO 11"))
             .andExpect(jsonPath("$.localizacao.andar").value(2))
     }
 }
