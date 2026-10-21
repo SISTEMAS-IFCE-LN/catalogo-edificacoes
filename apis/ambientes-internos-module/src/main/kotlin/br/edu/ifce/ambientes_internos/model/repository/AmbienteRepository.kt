@@ -3,7 +3,6 @@ package br.edu.ifce.ambientes_internos.model.repository
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Ambiente
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.StatusAmbiente
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.TipoAmbiente
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Unidade
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.EntityGraph
@@ -19,6 +18,8 @@ interface AmbienteRepository : JpaRepository<Ambiente, Long> {
             select a from Ambiente a
             left join fetch a.localizacao
             left join fetch a.localizacao.bloco
+            left join fetch a.localizacao.bloco.unidade
+            left join fetch a.localizacao.bloco.unidade.campus
             left join fetch a.geometrias
             left join fetch a.pesDireitos
             left join fetch a.esquadrias
@@ -27,8 +28,24 @@ interface AmbienteRepository : JpaRepository<Ambiente, Long> {
     )
     fun findByIdAndStatus(id: Long, status: StatusAmbiente): Optional<Ambiente>
 
+    @EntityGraph(
+        attributePaths = [
+            "localizacao",
+            "localizacao.bloco",
+            "localizacao.bloco.unidade",
+            "localizacao.bloco.unidade.campus"
+        ]
+    )
     fun findAllByIdInAndStatus(ids: Set<Long>, status: StatusAmbiente): List<Ambiente>
 
+    @EntityGraph(
+        attributePaths = [
+            "localizacao",
+            "localizacao.bloco",
+            "localizacao.bloco.unidade",
+            "localizacao.bloco.unidade.campus"
+        ]
+    )
     fun findAllByIdInAndStatus(ids: Set<Long>, status: StatusAmbiente, pageable: Pageable): Page<Ambiente>
 
     fun existsByNomeAndLocalizacaoId(nome: String, localizacaoId: Long): Boolean
@@ -45,13 +62,27 @@ interface AmbienteRepository : JpaRepository<Ambiente, Long> {
         @Param("id") id: Long
     ): Boolean
 
-    @EntityGraph(attributePaths = ["localizacao", "localizacao.bloco"])
+    @EntityGraph(
+        attributePaths = [
+            "localizacao",
+            "localizacao.bloco",
+            "localizacao.bloco.unidade",
+            "localizacao.bloco.unidade.campus"
+        ]
+    )
     fun findByStatus(
         @Param("status") status: StatusAmbiente,
         pageable: Pageable
     ): Page<Ambiente>
 
-    @EntityGraph(attributePaths = ["localizacao", "localizacao.bloco"])
+    @EntityGraph(
+        attributePaths = [
+            "localizacao",
+            "localizacao.bloco",
+            "localizacao.bloco.unidade",
+            "localizacao.bloco.unidade.campus"
+        ]
+    )
     @Query(
         """
             select a from Ambiente a
@@ -65,27 +96,44 @@ interface AmbienteRepository : JpaRepository<Ambiente, Long> {
         pageable: Pageable
     ): Page<Ambiente>
 
-    @EntityGraph(attributePaths = ["localizacao", "localizacao.bloco"])
+    @EntityGraph(
+        attributePaths = [
+            "localizacao",
+            "localizacao.bloco",
+            "localizacao.bloco.unidade",
+            "localizacao.bloco.unidade.campus"
+        ]
+    )
     @Query(
         """
             select a from Ambiente a
             where a.status = :status
+            and (:filtrarCampus = false or a.localizacao.bloco.unidade.campus.id = :campusId)
+            and (:filtrarUnidade = false or a.localizacao.bloco.unidade.id = :unidadeId)
             and (:filtrarBloco = false or a.localizacao.bloco.id = :blocoId)
-            and (:filtrarUnidades = false or a.localizacao.bloco.unidade in :unidades)
             and (:andar is null or a.localizacao.andar = :andar)
         """
     )
     fun findByLocalizacaoAndStatus(
+        @Param("campusId") campusId: Long?,
+        @Param("unidadeId") unidadeId: Long?,
         @Param("blocoId") blocoId: Long?,
-        @Param("unidades") unidades: Set<Unidade>,
+        @Param("filtrarCampus") filtrarCampus: Boolean,
+        @Param("filtrarUnidade") filtrarUnidade: Boolean,
         @Param("filtrarBloco") filtrarBloco: Boolean,
-        @Param("filtrarUnidades") filtrarUnidades: Boolean,
         @Param("andar") andar: Int?,
         @Param("status") status: StatusAmbiente,
         pageable: Pageable
     ): Page<Ambiente>
 
-    @EntityGraph(attributePaths = ["localizacao", "localizacao.bloco"])
+    @EntityGraph(
+        attributePaths = [
+            "localizacao",
+            "localizacao.bloco",
+            "localizacao.bloco.unidade",
+            "localizacao.bloco.unidade.campus"
+        ]
+    )
     @Query(
         """
             select a from Ambiente a
