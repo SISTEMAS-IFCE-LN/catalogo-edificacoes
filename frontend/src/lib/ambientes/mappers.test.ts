@@ -1,7 +1,20 @@
 import {describe, it, expect} from 'vitest'
 import {ambienteDeDetalhe, dadosBasicosDeDetalhe, duplicacaoDeDetalhe, esquadriasDeDetalhe, geometriasDeDetalhe} from './mappers'
 import type {AmbienteDetalhe} from '@/types/ambientes/response'
-import {Bloco, MaterialEsquadria, StatusAmbiente, TipoAmbiente, TipoEsquadria, TipoGeometria, Unidade} from '@/types/ambientes/enums'
+import {MaterialEsquadria, StatusAmbiente, TipoAmbiente, TipoEsquadria, TipoGeometria} from '@/types/ambientes/enums'
+
+const CAMPUS = {id: 1, nome: 'LIMOEIRO DO NORTE'}
+const UNIDADE = {id: 1, nome: 'SEDE'}
+const BLOCO = {id: 1, nome: 'BLOCO 1'}
+
+// Payload de localização esperado: IDs existentes e `nome: null` (o backend
+// reusa a entidade; enviar nome junto seria "id + nome" e daria 400).
+const LOCALIZACAO_ESPERADA = {
+    campus: {id: 1, nome: null},
+    unidade: {id: 1, nome: null},
+    bloco: {id: 1, nome: null},
+    andar: 2,
+}
 
 const AMBIENTE: AmbienteDetalhe = {
     id: 7,
@@ -9,8 +22,9 @@ const AMBIENTE: AmbienteDetalhe = {
     tipo: TipoAmbiente.SALA_AULA,
     localizacao: {
         id: 3,
-        bloco: Bloco.BLOCO_1,
-        unidade: Unidade.SEDE,
+        campus: CAMPUS,
+        unidade: UNIDADE,
+        bloco: BLOCO,
         andar: 2,
     },
     capacidade: 30,
@@ -47,11 +61,11 @@ const AMBIENTE: AmbienteDetalhe = {
 }
 
 describe('mappers (resposta → request)', () => {
-    it('dadosBasicosDeDetalhe converte rótulos da localização para nomes técnicos', () => {
+    it('dadosBasicosDeDetalhe devolve os IDs da localização com nome null', () => {
         expect(dadosBasicosDeDetalhe(AMBIENTE)).toEqual({
             nome: 'Sala 101',
             capacidade: 30,
-            localizacao: {bloco: 'BLOCO_1', unidade: 'SEDE', andar: 2},
+            localizacao: LOCALIZACAO_ESPERADA,
         })
     })
 
@@ -59,7 +73,7 @@ describe('mappers (resposta → request)', () => {
         const duplicacao = duplicacaoDeDetalhe(AMBIENTE)
         expect(duplicacao).toEqual({
             nome: 'Sala 101',
-            localizacao: {bloco: 'BLOCO_1', unidade: 'SEDE', andar: 2},
+            localizacao: LOCALIZACAO_ESPERADA,
         })
         expect(duplicacao.nome).not.toContain('cópia')
     })
@@ -94,7 +108,7 @@ describe('mappers (resposta → request)', () => {
             nome: 'Sala 101',
             tipo: 'SALA_AULA',
             capacidade: 30,
-            localizacao: {bloco: 'BLOCO_1', unidade: 'SEDE', andar: 2},
+            localizacao: LOCALIZACAO_ESPERADA,
             geometrias: [{tipo: 'RETANGULAR', base: 4, altura: 3, repeticao: 2}],
             pesDireitos: [3],
             esquadrias: [
@@ -117,12 +131,12 @@ describe('mappers (resposta → request)', () => {
         })
     })
 
-    it('lança erro para rótulo desconhecido (falha rápida, não envia payload inválido)', () => {
+    it('lança erro para rótulo de enum desconhecido (falha rápida, não envia payload inválido)', () => {
         const corrompido = {
             ...AMBIENTE,
-            localizacao: {...AMBIENTE.localizacao, bloco: 'Bloco Inexistente'},
+            tipo: 'Tipo Inexistente',
         } as unknown as AmbienteDetalhe
 
-        expect(() => dadosBasicosDeDetalhe(corrompido)).toThrow('Rótulo desconhecido: Bloco Inexistente')
+        expect(() => ambienteDeDetalhe(corrompido)).toThrow('Rótulo desconhecido: Tipo Inexistente')
     })
 })

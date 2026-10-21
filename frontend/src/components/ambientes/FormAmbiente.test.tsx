@@ -1,6 +1,23 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { FormAmbiente } from './FormAmbiente'
+
+// Cascata de localização estável: os testes não precisam de QueryClient/HTTP.
+vi.mock('@/hooks/useReferencias', () => ({
+  useCampus: () => ({
+    data: [{ id: 1, nome: 'LIMOEIRO DO NORTE' }],
+    isLoading: false,
+  }),
+  useUnidades: () => ({
+    data: [{ id: 1, nome: 'SEDE' }],
+    isLoading: false,
+  }),
+  useBlocos: () => ({
+    data: [{ id: 1, nome: 'BLOCO 1' }],
+    isLoading: false,
+  }),
+}))
 
 // O texto da etapa é dividido entre nós de texto e um <strong> — o matcher por
 // função compara o textContent do wrapper (div), não um nó de texto único.
@@ -21,9 +38,21 @@ describe('FormAmbiente', () => {
     await waitFor(() => expect(buscarEtapa(n, nome)).not.toBeNull())
   }
 
+  /** Seleciona Campus → Unidade → Bloco (cascata obrigatória). */
+  async function preencherLocalizacao() {
+    const user = userEvent.setup()
+    await user.click(screen.getByLabelText('Campus'))
+    await user.click(await screen.findByRole('option', { name: 'LIMOEIRO DO NORTE' }))
+    await user.click(screen.getByLabelText('Unidade'))
+    await user.click(await screen.findByRole('option', { name: 'SEDE' }))
+    await user.click(screen.getByLabelText('Bloco'))
+    await user.click(await screen.findByRole('option', { name: 'BLOCO 1' }))
+  }
+
   /** Preenche as etapas 1–4 com dados válidos e para na 5ª (Informação Adicional). */
   async function ateAInfoAdicional() {
     fireEvent.change(screen.getByLabelText('Nome'), { target: { value: 'Sala 01' } })
+    await preencherLocalizacao()
     await avancar(2, 'Geometrias')
     fireEvent.change(screen.getByLabelText('Base (m)'), { target: { value: '4' } })
     fireEvent.change(screen.getByLabelText('Altura (m)'), { target: { value: '3' } })
@@ -43,7 +72,8 @@ describe('FormAmbiente', () => {
   it('não avança com a etapa atual inválida', async () => {
     render(<FormAmbiente onSubmit={onSubmit} />)
     fireEvent.click(screen.getByRole('button', { name: 'Próximo' }))
-    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
+    // Nome vazio + cada nível da localização sem id/nome → múltiplos erros.
+    await waitFor(() => expect(screen.getAllByRole('alert').length).toBeGreaterThan(0))
     expect(buscarEtapa(2, 'Geometrias')).toBeNull()
   })
 
@@ -86,6 +116,7 @@ describe('FormAmbiente', () => {
   it('adiciona e remove geometrias (useFieldArray)', async () => {
     render(<FormAmbiente onSubmit={onSubmit} />)
     fireEvent.change(screen.getByLabelText('Nome'), { target: { value: 'Sala 01' } })
+    await preencherLocalizacao()
     await avancar(2, 'Geometrias')
 
     fireEvent.click(screen.getByRole('button', { name: 'Adicionar geometria' }))
@@ -98,6 +129,7 @@ describe('FormAmbiente', () => {
   it('adiciona e remove pés-direitos', async () => {
     render(<FormAmbiente onSubmit={onSubmit} />)
     fireEvent.change(screen.getByLabelText('Nome'), { target: { value: 'Sala 01' } })
+    await preencherLocalizacao()
     await avancar(2, 'Geometrias')
     fireEvent.change(screen.getByLabelText('Base (m)'), { target: { value: '4' } })
     fireEvent.change(screen.getByLabelText('Altura (m)'), { target: { value: '3' } })

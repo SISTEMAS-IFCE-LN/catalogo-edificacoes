@@ -31,7 +31,12 @@ vi.mock('sonner', () => ({
 
 const AMBIENTE_VALIDO: AmbienteInput = {
   nome: 'Sala 01',
-  localizacao: { bloco: 'BLOCO_1', unidade: 'SEDE', andar: 0 },
+  localizacao: {
+    campus: { id: 1, nome: null },
+    unidade: { id: 1, nome: null },
+    bloco: { id: 1, nome: null },
+    andar: 0,
+  },
   tipo: 'SALA_AULA',
   capacidade: 1,
   geometrias: [{ tipo: 'RETANGULAR', base: 4, altura: 3, repeticao: 1 }],

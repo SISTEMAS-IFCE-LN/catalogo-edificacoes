@@ -25,7 +25,13 @@ const paginadoVazio = {
 const detalheValido = {
   id: 1,
   nome: 'Sala 1',
-  localizacao: { id: 1, bloco: 'Bloco 1', unidade: 'Sede', andar: 1 },
+  localizacao: {
+    id: 1,
+    campus: { id: 1, nome: 'LIMOEIRO DO NORTE' },
+    unidade: { id: 1, nome: 'SEDE' },
+    bloco: { id: 1, nome: 'BLOCO 1' },
+    andar: 1,
+  },
   tipo: 'Sala de Aula',
   capacidade: 30,
   geometrias: [],

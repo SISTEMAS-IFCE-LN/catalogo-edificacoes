@@ -5,7 +5,10 @@ import { MemoryRouter } from 'react-router'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { PublicadosPage } from './page'
 import type { AmbientesBasicosPaginados } from '@/types/ambientes/response'
-import { Bloco, TipoAmbiente, TipoFiltro, Unidade } from '@/types/ambientes/enums'
+import { TipoAmbiente, TipoFiltro } from '@/types/ambientes/enums'
+
+const CAMPUS = { id: 1, nome: 'LIMOEIRO DO NORTE' }
+const UNIDADE = { id: 1, nome: 'SEDE' }
 import type { User } from '@/types/usuarios/user'
 import { Role } from '@/types/usuarios/user'
 
@@ -43,7 +46,7 @@ const mockData: AmbientesBasicosPaginados = {
             id: 1,
             nome: 'Sala 101',
             tipo: TipoAmbiente.SALA_AULA,
-            localizacao: { id: 1, bloco: Bloco.BLOCO_1, unidade: Unidade.SEDE, andar: 1 },
+            localizacao: { id: 1, campus: CAMPUS, unidade: UNIDADE, bloco: { id: 1, nome: 'BLOCO 1' }, andar: 1 },
             capacidade: 30,
             area: 50,
         },
@@ -51,7 +54,7 @@ const mockData: AmbientesBasicosPaginados = {
             id: 2,
             nome: 'Sala 102',
             tipo: TipoAmbiente.LABORATORIO,
-            localizacao: { id: 2, bloco: Bloco.BLOCO_2, unidade: Unidade.SEDE, andar: 0 },
+            localizacao: { id: 2, campus: CAMPUS, unidade: UNIDADE, bloco: { id: 2, nome: 'BLOCO 2' }, andar: 0 },
             capacidade: 20,
             area: 40,
         },

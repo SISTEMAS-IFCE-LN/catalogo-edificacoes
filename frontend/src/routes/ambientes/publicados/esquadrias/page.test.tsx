@@ -5,7 +5,10 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { EsquadriasPage } from './page'
 import type { EsquadriasResponse } from '@/types/ambientes/esquadrias'
 import { MaterialEsquadria, TipoEsquadria } from '@/types/ambientes/enums'
-import { Bloco, Unidade } from '@/types/ambientes/enums'
+
+const CAMPUS = { id: 1, nome: 'LIMOEIRO DO NORTE' }
+const UNIDADE = { id: 1, nome: 'SEDE' }
+const BLOCO = { id: 1, nome: 'BLOCO 1' }
 import { toast } from 'sonner'
 
 vi.mock('@/lib/api/api-publicados', () => ({
@@ -33,7 +36,7 @@ const mockResponse: EsquadriasResponse = {
             dadosAmbiente: {
                 id: 1,
                 nome: 'Sala 101',
-                localizacao: { id: 1, bloco: Bloco.BLOCO_1, unidade: Unidade.SEDE, andar: 1 },
+                localizacao: { id: 1, campus: CAMPUS, unidade: UNIDADE, bloco: BLOCO, andar: 1 },
             },
             detalhesEsquadrias: {
                 esquadrias: [
@@ -56,7 +59,7 @@ const mockResponse: EsquadriasResponse = {
             dadosAmbiente: {
                 id: 2,
                 nome: 'Sala 102',
-                localizacao: { id: 2, bloco: Bloco.BLOCO_1, unidade: Unidade.SEDE, andar: 0 },
+                localizacao: { id: 2, campus: CAMPUS, unidade: UNIDADE, bloco: BLOCO, andar: 0 },
             },
             detalhesEsquadrias: {
                 esquadrias: [

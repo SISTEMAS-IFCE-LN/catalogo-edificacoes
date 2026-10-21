@@ -22,7 +22,13 @@ const AMBIENTE_DETALHE = {
     id: 1,
     nome: 'Sala 101',
     tipo: 'Sala de Aula',
-    localizacao: {id: 3, bloco: 'Bloco 1', unidade: 'Sede', andar: 2},
+    localizacao: {
+        id: 3,
+        campus: {id: 1, nome: 'LIMOEIRO DO NORTE'},
+        unidade: {id: 1, nome: 'SEDE'},
+        bloco: {id: 1, nome: 'BLOCO 1'},
+        andar: 2,
+    },
     capacidade: 30,
     geometrias: [{id: 10, tipo: 'RETANGULAR', base: 4, altura: 3, repeticao: 2, area: 24}],
     areaAmbiente: 24,
@@ -32,9 +38,16 @@ const AMBIENTE_DETALHE = {
     status: 'AGUARDANDO_VALIDACAO',
 }
 
+const LOCALIZACAO_INPUT: AmbienteInput['localizacao'] = {
+    campus: {id: 1, nome: null},
+    unidade: {id: 1, nome: null},
+    bloco: {id: 1, nome: null},
+    andar: 0,
+}
+
 const AMBIENTE_INPUT: AmbienteInput = {
     nome: 'Sala 01',
-    localizacao: {bloco: 'BLOCO_1', unidade: 'SEDE', andar: 0},
+    localizacao: LOCALIZACAO_INPUT,
     tipo: 'SALA_AULA',
     capacidade: 1,
     geometrias: [{tipo: 'RETANGULAR', base: 4, altura: 3, repeticao: 1}],
@@ -99,7 +112,7 @@ describe('contrato de enums (nomes técnicos, nunca rótulos)', () => {
 
         const corpo = corpoJson(capturado)
         expect(corpo.tipo).toBe('SALA_AULA')
-        expect(corpo.localizacao).toEqual({bloco: 'BLOCO_1', unidade: 'SEDE', andar: 0})
+        expect(corpo.localizacao).toEqual(LOCALIZACAO_INPUT)
         const geometrias = corpo.geometrias as Array<{tipo: string}>
         expect(geometrias[0].tipo).toBe('RETANGULAR')
         const esquadrias = corpo.esquadrias as Array<{tipo: string; material: string}>
@@ -119,7 +132,7 @@ describe('contrato de enums (nomes técnicos, nunca rótulos)', () => {
 
         const corpo = corpoJson(capturado)
         expect(corpo.tipo).toBe('SALA_AULA')
-        expect((corpo.localizacao as {bloco: string}).bloco).toBe('BLOCO_1')
+        expect((corpo.localizacao as {bloco: {id: number}}).bloco).toEqual({id: 1, nome: null})
     })
 
     it('atualizarDadosBasicos faz PATCH /{id}/dados-basicos com localizacao técnica', async () => {
@@ -131,13 +144,13 @@ describe('contrato de enums (nomes técnicos, nunca rótulos)', () => {
 
         await atualizarDadosBasicos(7, {
             nome: 'Sala 102',
-            localizacao: {bloco: 'BLOCO_1', unidade: 'SEDE', andar: 2},
+            localizacao: {...LOCALIZACAO_INPUT, andar: 2},
             capacidade: 30,
         })
 
         expect(corpoJson(capturado)).toEqual({
             nome: 'Sala 102',
-            localizacao: {bloco: 'BLOCO_1', unidade: 'SEDE', andar: 2},
+            localizacao: {...LOCALIZACAO_INPUT, andar: 2},
             capacidade: 30,
         })
     })
@@ -195,13 +208,13 @@ describe('contrato de enums (nomes técnicos, nunca rótulos)', () => {
 
         await duplicarAmbiente(7, {
             nome: 'Sala 101',
-            localizacao: {bloco: 'BLOCO_1', unidade: 'SEDE', andar: 2},
+            localizacao: {...LOCALIZACAO_INPUT, andar: 2},
         })
 
         const corpo = corpoJson(capturado)
         expect(corpo).toEqual({
             nome: 'Sala 101',
-            localizacao: {bloco: 'BLOCO_1', unidade: 'SEDE', andar: 2},
+            localizacao: {...LOCALIZACAO_INPUT, andar: 2},
         })
     })
 })
@@ -236,7 +249,7 @@ describe('validação das respostas 201 com AmbienteDetalheSchema', () => {
     it.each([
         ['criarAmbiente', () => criarAmbiente(AMBIENTE_INPUT)],
         ['alterarTipo', () => alterarTipo(7, AMBIENTE_INPUT)],
-        ['duplicarAmbiente', () => duplicarAmbiente(7, {nome: 'Sala 101', localizacao: {bloco: 'BLOCO_1', unidade: 'SEDE', andar: 2}})],
+        ['duplicarAmbiente', () => duplicarAmbiente(7, {nome: 'Sala 101', localizacao: {...LOCALIZACAO_INPUT, andar: 2}})],
     ])('%s devolve o AmbienteDetalhe normalizado (rótulos padronizados)', async (_nome, chamada) => {
         mockApi.onAny().reply(201, AMBIENTE_DETALHE)
 

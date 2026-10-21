@@ -8,7 +8,11 @@ import {
     temEsquadriasVisiveis,
 } from './esquadrias'
 import type { EsquadriasResponse } from '@/types/ambientes/esquadrias'
-import { Bloco, MaterialEsquadria, TipoEsquadria, Unidade } from '@/types/ambientes/enums'
+import { MaterialEsquadria, TipoEsquadria } from '@/types/ambientes/enums'
+
+const CAMPUS = {id: 1, nome: 'LIMOEIRO DO NORTE'}
+const UNIDADE = {id: 1, nome: 'SEDE'}
+const BLOCO = {id: 1, nome: 'BLOCO 1'}
 
 const dadosPaginacao = {
     totalElements: 2,
@@ -25,7 +29,7 @@ const mockResponse: EsquadriasResponse = {
             dadosAmbiente: {
                 id: 1,
                 nome: 'Sala 101',
-                localizacao: { id: 1, bloco: Bloco.BLOCO_1, unidade: Unidade.SEDE, andar: 1 },
+                localizacao: { id: 1, campus: CAMPUS, unidade: UNIDADE, bloco: BLOCO, andar: 1 },
             },
             detalhesEsquadrias: {
                 esquadrias: [
@@ -58,7 +62,7 @@ const mockResponse: EsquadriasResponse = {
             dadosAmbiente: {
                 id: 2,
                 nome: 'Sala 102',
-                localizacao: { id: 2, bloco: Bloco.BLOCO_1, unidade: Unidade.SEDE, andar: 1 },
+                localizacao: { id: 2, campus: CAMPUS, unidade: UNIDADE, bloco: BLOCO, andar: 1 },
             },
             detalhesEsquadrias: {
                 esquadrias: [

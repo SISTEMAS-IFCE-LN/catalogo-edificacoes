@@ -216,7 +216,13 @@ describe('fetchDetalheAmbiente', () => {
       data: {
         id: 1,
         nome: 'Sala 1',
-        localizacao: { id: 1, bloco: 'Bloco 1', unidade: 'Sede', andar: 1 },
+        localizacao: {
+          id: 1,
+          campus: { id: 1, nome: 'LIMOEIRO DO NORTE' },
+          unidade: { id: 1, nome: 'SEDE' },
+          bloco: { id: 1, nome: 'BLOCO 1' },
+          andar: 1,
+        },
         tipo: 'Sala de Aula',
         capacidade: 30,
         geometrias: [{ id: 1, tipo: 'RETANGULAR', base: 5, altura: 10, repeticao: 1, area: 50 }],
@@ -240,7 +246,13 @@ describe('fetchDetalheAmbiente', () => {
       data: {
         id: 1,
         nome: 'Sala 1',
-        localizacao: { id: 1, bloco: 'Bloco 1', unidade: 'Sede', andar: 1 },
+        localizacao: {
+          id: 1,
+          campus: { id: 1, nome: 'LIMOEIRO DO NORTE' },
+          unidade: { id: 1, nome: 'SEDE' },
+          bloco: { id: 1, nome: 'BLOCO 1' },
+          andar: 1,
+        },
         tipo: 'Sala de Aula',
         capacidade: 30,
         geometrias: [],
@@ -265,7 +277,13 @@ describe('fetchDetalheAmbiente', () => {
       data: {
         id: 1,
         nome: 'Sala 1',
-        localizacao: { id: 1, bloco: 'Bloco 1', unidade: 'Sede', andar: 1 },
+        localizacao: {
+          id: 1,
+          campus: { id: 1, nome: 'LIMOEIRO DO NORTE' },
+          unidade: { id: 1, nome: 'SEDE' },
+          bloco: { id: 1, nome: 'BLOCO 1' },
+          andar: 1,
+        },
         tipo: 'Sala de Aula',
         capacidade: 30,
         geometrias: [{ id: 1, tipo: 'RETANGULAR', base: 5, altura: 10, repeticao: 1, area: 50 }],
@@ -295,7 +313,13 @@ describe('fetchDetalheAmbiente', () => {
       data: {
         id: 'invalid', // deveria ser number
         nome: 'Sala 1',
-        localizacao: { id: 1, bloco: 'Bloco 1', unidade: 'Sede', andar: 1 },
+        localizacao: {
+          id: 1,
+          campus: { id: 1, nome: 'LIMOEIRO DO NORTE' },
+          unidade: { id: 1, nome: 'SEDE' },
+          bloco: { id: 1, nome: 'BLOCO 1' },
+          andar: 1,
+        },
         tipo: 'Sala de Aula',
         capacidade: 30,
         area: 50,

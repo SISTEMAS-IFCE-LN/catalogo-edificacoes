@@ -8,7 +8,10 @@ import {NaoPublicadosPage} from './page'
 import type {AmbientesBasicosPaginados} from '@/types/ambientes/response'
 import type {User} from '@/types/usuarios/user'
 import {Role} from '@/types/usuarios/user'
-import {Bloco, TipoAmbiente, Unidade} from '@/types/ambientes/enums'
+import {TipoAmbiente} from '@/types/ambientes/enums'
+
+const CAMPUS = {id: 1, nome: 'LIMOEIRO DO NORTE'}
+const UNIDADE = {id: 1, nome: 'SEDE'}
 
 vi.mock('@/lib/api/api-naopublicados', () => ({
     fetchNaoPublicados: vi.fn(),
@@ -42,7 +45,7 @@ const PAGINA: AmbientesBasicosPaginados = {
             id: 1,
             nome: 'Sala 101',
             tipo: TipoAmbiente.SALA_AULA,
-            localizacao: {id: 3, bloco: Bloco.BLOCO_1, unidade: Unidade.SEDE, andar: 2},
+            localizacao: {id: 3, campus: CAMPUS, unidade: UNIDADE, bloco: {id: 1, nome: 'BLOCO 1'}, andar: 2},
             capacidade: 30,
             area: 50,
         },
@@ -50,7 +53,7 @@ const PAGINA: AmbientesBasicosPaginados = {
             id: 2,
             nome: 'Laboratório 1',
             tipo: TipoAmbiente.LABORATORIO,
-            localizacao: {id: 4, bloco: Bloco.BLOCO_2, unidade: Unidade.SEDE, andar: 1},
+            localizacao: {id: 4, campus: CAMPUS, unidade: UNIDADE, bloco: {id: 2, nome: 'BLOCO 2'}, andar: 1},
             capacidade: 20,
             area: 40,
         },

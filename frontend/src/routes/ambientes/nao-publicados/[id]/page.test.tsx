@@ -8,13 +8,11 @@ import type {AmbienteDetalhe} from '@/types/ambientes/response'
 import type {User} from '@/types/usuarios/user'
 import {Role} from '@/types/usuarios/user'
 import {
-    Bloco,
     MaterialEsquadria,
     StatusAmbiente,
     TipoAmbiente,
     TipoEsquadria,
     TipoGeometria,
-    Unidade,
 } from '@/types/ambientes/enums'
 
 vi.mock('@/lib/api/api-naopublicados', () => ({
@@ -35,6 +33,22 @@ vi.mock('@/lib/api/api-naopublicados', () => ({
 
 vi.mock('sonner', () => ({
     toast: {success: vi.fn(), error: vi.fn()},
+}))
+
+// Modais de edição renderizam LocalizacaoFields (cascata) — referências fixas.
+vi.mock('@/hooks/useReferencias', () => ({
+    useCampus: () => ({
+        data: [{id: 1, nome: 'LIMOEIRO DO NORTE'}],
+        isLoading: false,
+    }),
+    useUnidades: () => ({
+        data: [{id: 1, nome: 'SEDE'}],
+        isLoading: false,
+    }),
+    useBlocos: () => ({
+        data: [{id: 1, nome: 'BLOCO 1'}],
+        isLoading: false,
+    }),
 }))
 
 vi.mock('@/hooks/useAuth', () => ({
@@ -71,8 +85,9 @@ const AMBIENTE: AmbienteDetalhe = {
     tipo: TipoAmbiente.SALA_AULA,
     localizacao: {
         id: 3,
-        bloco: Bloco.BLOCO_1,
-        unidade: Unidade.SEDE,
+        campus: {id: 1, nome: 'LIMOEIRO DO NORTE'},
+        unidade: {id: 1, nome: 'SEDE'},
+        bloco: {id: 1, nome: 'BLOCO 1'},
         andar: 2,
     },
     capacidade: 30,
@@ -283,7 +298,12 @@ describe('NaoPublicadoDetalhePage', () => {
             await waitFor(() => {
                 expect(duplicarAmbiente).toHaveBeenCalledWith(7, {
                     nome: 'Sala 101',
-                    localizacao: {bloco: 'BLOCO_1', unidade: 'SEDE', andar: 2},
+                    localizacao: {
+                        campus: {id: 1, nome: null},
+                        unidade: {id: 1, nome: null},
+                        bloco: {id: 1, nome: null},
+                        andar: 2,
+                    },
                 })
             })
             const {toast} = await import('sonner')
@@ -353,7 +373,12 @@ describe('NaoPublicadoDetalhePage', () => {
                 expect(atualizarDadosBasicos).toHaveBeenCalledWith(7, {
                     nome: 'Sala 102',
                     capacidade: 30,
-                    localizacao: {bloco: 'BLOCO_1', unidade: 'SEDE', andar: 2},
+                    localizacao: {
+                        campus: {id: 1, nome: null},
+                        unidade: {id: 1, nome: null},
+                        bloco: {id: 1, nome: null},
+                        andar: 2,
+                    },
                 })
             })
             const {toast} = await import('sonner')
@@ -536,7 +561,12 @@ describe('NaoPublicadoDetalhePage', () => {
                     nome: 'Sala 101',
                     tipo: 'SALA_AULA',
                     capacidade: 30,
-                    localizacao: {bloco: 'BLOCO_1', unidade: 'SEDE', andar: 2},
+                    localizacao: {
+                        campus: {id: 1, nome: null},
+                        unidade: {id: 1, nome: null},
+                        bloco: {id: 1, nome: null},
+                        andar: 2,
+                    },
                     geometrias: [{tipo: 'RETANGULAR', base: 4, altura: 3, repeticao: 2}],
                     pesDireitos: [3],
                     esquadrias: [
