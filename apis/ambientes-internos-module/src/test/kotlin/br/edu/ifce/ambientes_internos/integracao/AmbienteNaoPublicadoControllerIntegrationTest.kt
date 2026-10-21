@@ -583,6 +583,28 @@ class AmbienteNaoPublicadoControllerIntegrationTest {
         ).andExpect(status().isBadRequest)
     }
 
+    // ========== Validações do find-or-create de referências ==========
+
+    @Test
+    fun `deve retornar 400 ao cadastrar ambiente com nome de campus que normaliza para vazio`() {
+        val payload = payloadCadastroAmbiente(
+            localizacao = """
+                {
+                  "campus": {"nome": "***"},
+                  "unidade": {"nome": "CIDADE ALTA"},
+                  "bloco": {"nome": "BLOCO 10"},
+                  "andar": 1
+                }
+            """.trimIndent()
+        )
+
+        mockMvc.perform(
+            post("/api/ambientes/nao-publicados")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(payload)
+        ).andExpect(status().isBadRequest)
+    }
+
     private fun payloadCadastroAmbiente(
         baseGeometria: String = "6.00",
         peDireito: String = "3.00",

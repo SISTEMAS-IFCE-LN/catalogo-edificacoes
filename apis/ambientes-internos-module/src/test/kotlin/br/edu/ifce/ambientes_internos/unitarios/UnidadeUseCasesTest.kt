@@ -9,11 +9,15 @@ import org.junit.jupiter.api.DisplayName
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito
 import org.mockito.Mockito.mock
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyNoInteractions
 import org.springframework.dao.DataIntegrityViolationException
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 @DisplayName("Testes unitários do fallback de corrida dos Casos de Uso de Unidade")
 class UnidadeUseCasesTest {
@@ -38,5 +42,17 @@ class UnidadeUseCasesTest {
 
         assertEquals(7L, resultado.id)
         verify(repoUnidade, times(2)).findByCampusAndNome(campus, "SEDE")
+    }
+
+    @ParameterizedTest(name = "Nome ''{0}'' normaliza para vazio e deve ser rejeitado")
+    @ValueSource(strings = ["***", "---", "   "])
+    fun `Deve rejeitar nome que normaliza para vazio`(nomeDigitado: String) {
+        val campus = Campus("LIMOEIRO DO NORTE").apply { id = 1L }
+
+        assertFailsWith<IllegalArgumentException> {
+            unidadeUseCases.resolverOuCriar(campus, nomeDigitado)
+        }
+        // A validação ocorre antes de qualquer acesso ao repositório
+        verifyNoInteractions(repoUnidade)
     }
 }

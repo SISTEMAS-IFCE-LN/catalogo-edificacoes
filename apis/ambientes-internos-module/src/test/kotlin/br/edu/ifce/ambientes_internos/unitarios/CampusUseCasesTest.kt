@@ -9,9 +9,13 @@ import org.mockito.Mockito
 import org.mockito.Mockito.mock
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.verifyNoInteractions
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.dao.DataIntegrityViolationException
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 
 @DisplayName("Testes unitários do fallback de corrida dos Casos de Uso de Campus")
 class CampusUseCasesTest {
@@ -34,5 +38,15 @@ class CampusUseCasesTest {
 
         assertEquals(42L, resultado.id)
         verify(repoCampus, times(2)).findByNome("LIMOEIRO DO NORTE")
+    }
+
+    @ParameterizedTest(name = "Nome ''{0}'' normaliza para vazio e deve ser rejeitado")
+    @ValueSource(strings = ["***", "---", "   "])
+    fun `Deve rejeitar nome que normaliza para vazio`(nomeDigitado: String) {
+        assertFailsWith<IllegalArgumentException> {
+            campusUseCases.resolverOuCriar(nomeDigitado)
+        }
+        // A validação ocorre antes de qualquer acesso ao repositório
+        verifyNoInteractions(repoCampus)
     }
 }
