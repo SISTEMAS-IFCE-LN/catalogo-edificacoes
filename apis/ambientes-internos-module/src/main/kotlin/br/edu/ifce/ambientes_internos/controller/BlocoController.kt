@@ -3,8 +3,8 @@ package br.edu.ifce.ambientes_internos.controller
 import br.edu.ifce.ambientes_internos.model.application.interfaces.IBlocoUseCases
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.BlocoRes
 import br.edu.ifce.common.config.ApiPaths.BLOCOS_PATH
-import br.edu.ifce.common.config.MsgsSpringValidation.MSG_MAX_CARACTERES
-import jakarta.validation.constraints.Size
+import br.edu.ifce.common.config.MsgsSpringValidation.MSG_POSITIVO
+import jakarta.validation.constraints.Positive
 import org.springframework.http.ResponseEntity
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
@@ -20,8 +20,8 @@ class BlocoController(private val useCases: IBlocoUseCases) {
     @GetMapping
     fun listarPorUnidade(
         @RequestParam
-        @Size(max = 50, message = MSG_MAX_CARACTERES)
-        unidade: String
-    ): ResponseEntity<List<BlocoRes>> = ResponseEntity.ok(useCases.listarPorUnidade(unidade))
+        @Positive(message = MSG_POSITIVO)
+        unidadeId: Long
+    ): ResponseEntity<List<BlocoRes>> = ResponseEntity.ok(useCases.listarPorUnidade(unidadeId))
 
 }
