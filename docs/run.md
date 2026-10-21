@@ -264,7 +264,7 @@ A coleção Postman está em `docs/catalogo-edificacoes.postman_collection.json`
 2. Selecionar o arquivo `catalogo-edificacoes.postman_collection.json`.
 3. A coleção já contém os endpoints públicos e protegidos.
 
-Para testar endpoints protegidos, é necessário primeiro fazer login via Google e copiar o `accessToken` retornado para o header `Authorization: Bearer <token>`.
+Para testar endpoints protegidos, faça login via Google, copie o `accessToken` retornado e preencha a variável de coleção `ACCESS_TOKEN`. Os requests protegidos usam `Authorization: Bearer {{ACCESS_TOKEN}}`, sem token hardcoded no arquivo.
 
 ---
 
