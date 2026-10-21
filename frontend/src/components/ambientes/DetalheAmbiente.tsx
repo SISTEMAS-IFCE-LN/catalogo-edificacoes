@@ -42,7 +42,7 @@ export function DetalheAmbiente({ambiente}: { ambiente: AmbienteDetalhe }) {
                     Capacidade: {ambiente.capacidade} Pessoas
                 </p>
                 <p className="text-sm">
-                    Localização: {ambiente.localizacao.unidade} • {ambiente.localizacao.bloco} • {formatarAndar(ambiente.localizacao.andar)}
+                    Localização: {ambiente.localizacao.campus.nome} • {ambiente.localizacao.unidade.nome} • {ambiente.localizacao.bloco.nome} • {formatarAndar(ambiente.localizacao.andar)}
                 </p>
                 {ambiente.informacaoAdicional && <p className="mt-2 text-sm">{ambiente.informacaoAdicional}</p>}
             </div>

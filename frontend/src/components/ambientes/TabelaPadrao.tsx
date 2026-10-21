@@ -52,8 +52,7 @@ export function TabelaPadrao({
                         </TableHead>
                     )}
                     <TableHead>Nome</TableHead>
-                    <TableHead>Bloco</TableHead>
-                    <TableHead>Unidade</TableHead>
+                    <TableHead>Localização</TableHead>
                     <TableHead>Andar</TableHead>
                     <TableHead>Tipo</TableHead>
                     <TableHead>Capacidade</TableHead>
@@ -80,8 +79,9 @@ export function TabelaPadrao({
                                     {a.nome}
                                 </Link>
                             </TableCell>
-                            <TableCell>{a.localizacao.bloco}</TableCell>
-                            <TableCell>{a.localizacao.unidade}</TableCell>
+                            <TableCell>
+                                {a.localizacao.campus.nome} • {a.localizacao.unidade.nome} • {a.localizacao.bloco.nome}
+                            </TableCell>
                             <TableCell>{formatarAndar(a.localizacao.andar)}</TableCell>
                             <TableCell>{a.tipo}</TableCell>
                             <TableCell>{a.capacidade}</TableCell>

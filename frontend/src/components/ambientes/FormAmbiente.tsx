@@ -12,13 +12,12 @@ import {zodResolver} from '@hookform/resolvers/zod'
 import {z} from 'zod'
 import {PlusIcon} from 'lucide-react'
 import {ambienteSchema, type AmbienteInput} from '@/types/ambientes/request'
+import {REFERENCIA_VAZIA} from '@/types/ambientes/referencia'
 import {
-    Bloco,
     MaterialEsquadria,
     TipoAmbiente,
     TipoEsquadria,
     TipoGeometria,
-    Unidade,
 } from '@/types/ambientes/enums'
 import {Button} from '@/components/ui/button'
 import {Input} from '@/components/ui/input'
@@ -26,6 +25,7 @@ import {Label} from '@/components/ui/label'
 import {Textarea} from '@/components/ui/textarea'
 import {CampoEnum} from '@/components/ambientes/CampoEnum'
 import {CampoNumerico} from '@/components/ambientes/CampoNumerico'
+import {LocalizacaoFields} from '@/components/ambientes/LocalizacaoFields'
 import {BotaoRemover} from '@/components/ambientes/BotaoRemover'
 import {ErroCampo} from '@/components/ambientes/ErroCampo'
 
@@ -45,9 +45,9 @@ const CAMPOS_POR_ETAPA: Array<Array<keyof AmbienteInput>> = [
     ['informacaoAdicional'],
 ]
 
-// Valores de `defaultValues`/`append` com NOMES TÉCNICOS de enum ('BLOCO_1',
-// 'RETANGULAR', 'PORTA'...) — a resposta devolve rótulos, o request exige
-// chaves (ver plano 11 §4 e arquitetura §13).
+// Valores de `defaultValues`/`append` com NOMES TÉCNICOS de enum
+// ('RETANGULAR', 'PORTA'...) — a resposta devolve rótulos, o request exige
+// chaves (ver plano 11 §4 e arquitetura §13). Localização não usa mais enum.
 const GEOMETRIA_VAZIA = {tipo: 'RETANGULAR', base: 0, altura: 0, repeticao: 1} as const
 const ESQUADRIA_VAZIA = {
     tipo: 'PORTA',
@@ -62,7 +62,12 @@ type AmbienteFormValues = z.input<typeof ambienteSchema>
 // Defaults do wizard (valores técnicos de enum — ver GEOMETRIA_VAZIA acima).
 const DEFAULT_AMBIENTE_INPUT: AmbienteFormValues = {
     nome: '',
-    localizacao: {bloco: 'BLOCO_1', unidade: 'SEDE', andar: 0},
+    localizacao: {
+        campus: {...REFERENCIA_VAZIA},
+        unidade: {...REFERENCIA_VAZIA},
+        bloco: {...REFERENCIA_VAZIA},
+        andar: 0,
+    },
     tipo: 'SALA_AULA',
     capacidade: 1,
     geometrias: [{...GEOMETRIA_VAZIA}],
@@ -177,15 +182,7 @@ function EtapaDadosBasicos({form}: FormProp) {
                 <Input id="nome" maxLength={50} {...register('nome')} />
                 {errors.nome && <ErroCampo mensagem={String(errors.nome.message)}/>}
             </div>
-            <CampoEnumDeForm label="Bloco" control={control} name="localizacao.bloco" opcoes={Bloco}/>
-            <CampoEnumDeForm label="Unidade" control={control} name="localizacao.unidade" opcoes={Unidade}/>
-            <CampoNumerico
-                label="Andar"
-                id="localizacao.andar"
-                inputMode="numeric"
-                registration={register('localizacao.andar', {valueAsNumber: true})}
-                erro={errors.localizacao?.andar?.message}
-            />
+            <LocalizacaoFields form={form}/>
             <CampoEnumDeForm label="Tipo" control={control} name="tipo" opcoes={TipoAmbiente}/>
             <CampoNumerico
                 label="Capacidade"

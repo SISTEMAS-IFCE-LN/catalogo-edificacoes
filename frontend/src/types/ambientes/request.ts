@@ -1,33 +1,33 @@
 import {z} from 'zod'
 import {
-    Bloco,
     MaterialEsquadria,
     TipoAmbiente,
     TipoEsquadria,
     TipoGeometria,
-    Unidade,
 } from '@/types/ambientes/enums'
+import {ReferenciaInputSchema} from '@/types/ambientes/referencia'
 
 // As chaves dos enums TS espelham os NOMES TÉCNICOS dos enums Kotlin
-// (SALA_AULA, BLOCO_1, PORTA...). O backend desserializa enums pelo NOME —
-// nunca envie os rótulos ('Sala de Aula', 'Bloco 1'): daria 400.
+// (SALA_AULA, RETANGULAR, PORTA...). O backend desserializa enums pelo NOME —
+// nunca envie os rótulos ('Sala de Aula', 'Retangular'): daria 400.
 // (arquitetura-frontend.md §13; ver também plano 07 §11)
 const keysOf = <T extends Record<string, string>>(e: T) =>
     Object.keys(e) as [(keyof T & string), ...(keyof T & string)[]]
 
-// Rótulo (resposta) → nome técnico (request). Necessário porque os DTOs de
-// resposta devolvem rótulos (AmbienteRes.tipo = tipo.nome; LocalizacaoRes.bloco
-// = bloco.nome), enquanto os DTOs de request exigem nomes técnicos.
+// Rótulo (resposta) → nome técnico (request). Necessário para os enums de
+// tipo/geometria/esquadria; localização não usa mais enum (usa referências).
 export function nomeTecnicoDeRotulo<T extends Record<string, string>>(e: T, rotulo: string): string {
     const chave = Object.keys(e).find((k) => e[k] === rotulo)
     if (!chave) throw new Error(`Rótulo desconhecido: ${rotulo}`)
     return chave
 }
 
-// Espelha LocalizacaoReq do backend (NÃO tem `id`)
+// Espelha LocalizacaoReq do backend (NÃO tem `id` de localização).
+// Cada nível é `{id}` (existente) ou `{nome}` (find-or-create).
 export const localizacaoSchema = z.object({
-    bloco: z.enum(keysOf(Bloco)),          // 'BLOCO_1', ... (não 'Bloco 1')
-    unidade: z.enum(keysOf(Unidade)),      // 'SEDE', ...
+    campus: ReferenciaInputSchema,
+    unidade: ReferenciaInputSchema,
+    bloco: ReferenciaInputSchema,
     andar: z.int().min(0),                 // backend @Min(0)
 })
 export type LocalizacaoInput = z.infer<typeof localizacaoSchema>

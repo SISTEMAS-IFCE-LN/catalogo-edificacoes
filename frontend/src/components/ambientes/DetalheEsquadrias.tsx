@@ -47,8 +47,8 @@ function CardEsquadriasAmbiente({ ambiente }: { ambiente: AmbienteEsquadrias }) 
             <div>
                 <h2 className="text-lg font-semibold">{dadosAmbiente.nome}</h2>
                 <p className="text-sm text-muted-foreground">
-                    {dadosAmbiente.localizacao.unidade} • {dadosAmbiente.localizacao.bloco} •{' '}
-                    {formatarAndar(dadosAmbiente.localizacao.andar)}
+                    {dadosAmbiente.localizacao.campus.nome} • {dadosAmbiente.localizacao.unidade.nome} •{' '}
+                    {dadosAmbiente.localizacao.bloco.nome} • {formatarAndar(dadosAmbiente.localizacao.andar)}
                 </p>
             </div>
 
