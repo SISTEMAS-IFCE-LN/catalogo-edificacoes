@@ -37,7 +37,12 @@ class TestSecurityConfig {
                 auth.requestMatchers("/api/ambientes/publicados/**").permitAll()
                 auth.requestMatchers("/api/ambientes/nao-publicados/**").hasAuthority("ROLE_GESTOR_SISTEMA")
                 auth.requestMatchers("/api/ambientes/validacao/**").hasAuthority("ROLE_VALIDADOR")
-                auth.requestMatchers(HttpMethod.GET, "/api/blocos").permitAll()
+                auth.requestMatchers(
+                    HttpMethod.GET,
+                    "/api/campus",
+                    "/api/unidades",
+                    "/api/blocos"
+                ).permitAll()
                 auth.requestMatchers("/auth/**").permitAll()
                 auth.requestMatchers("/health").permitAll()
                 auth.anyRequest().authenticated()
