@@ -1,14 +1,35 @@
--- Seed de desenvolvimento: 24 blocos, 96 localizacoes e 120 ambientes
+-- Seed de desenvolvimento: 1 campus, 3 unidades, 24 blocos,
+-- 96 localizacoes e 120 ambientes.
 
-INSERT INTO bloco (unidade, nome)
+INSERT INTO campus (nome) VALUES ('LIMOEIRO DO NORTE');
+
+INSERT INTO unidade (campus_id, nome)
+SELECT c.id, 'SEDE'
+FROM campus c
+WHERE c.nome = 'LIMOEIRO DO NORTE';
+
+INSERT INTO unidade (campus_id, nome)
+SELECT c.id, 'CIDADE ALTA'
+FROM campus c
+WHERE c.nome = 'LIMOEIRO DO NORTE';
+
+INSERT INTO unidade (campus_id, nome)
+SELECT c.id, 'UEPE'
+FROM campus c
+WHERE c.nome = 'LIMOEIRO DO NORTE';
+
+INSERT INTO bloco (unidade_id, nome)
 SELECT
-    CASE MOD(FLOOR((x - 1) / 8), 3)
-        WHEN 0 THEN 'SEDE'
-        WHEN 1 THEN 'CIDADE_ALTA'
-        ELSE 'UEPE'
-    END,
+    u.id,
     CONCAT('BLOCO ', MOD(x - 1, 8) + 1)
-FROM SYSTEM_RANGE(1, 24);
+FROM SYSTEM_RANGE(1, 24)
+JOIN unidade u
+    ON u.nome = CASE MOD(FLOOR((x - 1) / 8), 3)
+        WHEN 0 THEN 'SEDE'
+        WHEN 1 THEN 'CIDADE ALTA'
+        ELSE 'UEPE'
+    END
+    AND u.campus_id = (SELECT id FROM campus WHERE nome = 'LIMOEIRO DO NORTE');
 
 INSERT INTO localizacao (bloco_id, andar)
 SELECT
@@ -17,11 +38,14 @@ SELECT
 FROM SYSTEM_RANGE(1, 96) x
 JOIN bloco b
     ON b.nome = CONCAT('BLOCO ', MOD(x - 1, 8) + 1)
-    AND b.unidade = CASE MOD(FLOOR((x - 1) / 8), 3)
+JOIN unidade u
+    ON u.id = b.unidade_id
+    AND u.nome = CASE MOD(FLOOR((x - 1) / 8), 3)
         WHEN 0 THEN 'SEDE'
-        WHEN 1 THEN 'CIDADE_ALTA'
+        WHEN 1 THEN 'CIDADE ALTA'
         ELSE 'UEPE'
-    END;
+    END
+    AND u.campus_id = (SELECT id FROM campus WHERE nome = 'LIMOEIRO DO NORTE');
 
 INSERT INTO ambiente (nome, localizacao_id, capacidade, tipo, informacao_adicional, status)
 SELECT
@@ -84,11 +108,14 @@ JOIN localizacao l
 JOIN bloco b
     ON b.id = l.bloco_id
     AND b.nome = CONCAT('BLOCO ', MOD(MOD(r.x - 1, 96), 8) + 1)
-    AND b.unidade = CASE MOD(FLOOR(MOD(r.x - 1, 96) / 8), 3)
+JOIN unidade u
+    ON u.id = b.unidade_id
+    AND u.nome = CASE MOD(FLOOR(MOD(r.x - 1, 96) / 8), 3)
         WHEN 0 THEN 'SEDE'
-        WHEN 1 THEN 'CIDADE_ALTA'
+        WHEN 1 THEN 'CIDADE ALTA'
         ELSE 'UEPE'
-    END;
+    END
+    AND u.campus_id = (SELECT id FROM campus WHERE nome = 'LIMOEIRO DO NORTE');
 
 INSERT INTO geometria (tipo, base, altura, repeticao, ambiente_id)
 SELECT
