@@ -1,15 +1,21 @@
 package br.edu.ifce.ambientes_internos.model.domain.entity.ambientes
 
 import br.edu.ifce.ambientes_internos.model.domain.NormalizadorNome
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Unidade
 import jakarta.persistence.*
 
 @Entity
-@Table(uniqueConstraints = [UniqueConstraint(name = "uk_bloco_unidade_nome", columnNames = ["unidade", "nome"])])
+@Table(
+    uniqueConstraints = [
+        UniqueConstraint(
+            name = "uk_bloco_unidade_nome",
+            columnNames = ["unidade_id", "nome"]
+        )
+    ]
+)
 class Bloco(
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "unidade_id", nullable = false)
     var unidade: Unidade,
 
     nomeInicial: String,
