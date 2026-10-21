@@ -56,10 +56,13 @@ describe('fetchValidacao', () => {
 
   it('chama /localizacao quando tipoFiltro é LOCALIZACAO', async () => {
     vi.mocked(api.get).mockResolvedValueOnce({ data: paginadoVazio })
-    await fetchValidacao({ page: 0, size: 20, bloco: 'Bloco 1', unidade: 'Sede', andar: 2, tipoFiltro: TipoFiltro.LOCALIZACAO })
+    await fetchValidacao({ page: 0, size: 20, campusId: 1, unidadeId: 2, blocoId: 3, andar: 2, tipoFiltro: TipoFiltro.LOCALIZACAO })
     expect(api.get).toHaveBeenCalledWith('/api/ambientes/validacao/localizacao', expect.objectContaining({
-      params: expect.objectContaining({ page: 0, size: 20, bloco: 'Bloco 1', unidade: 'Sede', andar: 2 }),
+      params: expect.objectContaining({ page: 0, size: 20, campusId: 1, unidadeId: 2, blocoId: 3, andar: 2 }),
     }))
+    const params = vi.mocked(api.get).mock.calls[0][1]?.params
+    expect(params).not.toHaveProperty('bloco')
+    expect(params).not.toHaveProperty('unidade')
   })
 })
 

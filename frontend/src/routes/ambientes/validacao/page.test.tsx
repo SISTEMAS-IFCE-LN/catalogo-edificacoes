@@ -23,6 +23,22 @@ vi.mock('@/hooks/useIsMobile', () => ({
     useIsMobile: () => false,
 }))
 
+// O filtro de localização consulta as referências — sem HTTP nos testes de página.
+vi.mock('@/hooks/useReferencias', () => ({
+    useCampus: () => ({
+        data: [{ id: 1, nome: 'LIMOEIRO DO NORTE' }],
+        isLoading: false,
+    }),
+    useUnidades: () => ({
+        data: [{ id: 1, nome: 'SEDE' }],
+        isLoading: false,
+    }),
+    useBlocos: () => ({
+        data: [{ id: 1, nome: 'BLOCO 1' }],
+        isLoading: false,
+    }),
+}))
+
 import { fetchValidacao } from '@/lib/api/api-validacao'
 
 const mockData: AmbientesBasicosPaginados = {
@@ -133,6 +149,38 @@ describe('ValidacaoPage (UC01-FE)', () => {
                 expect.anything(),
             )
         })
+    })
+
+    it('envia campusId/unidadeId/blocoId da URL ao buscar', async () => {
+        vi.mocked(fetchValidacao).mockResolvedValue(mockData)
+        renderPage(['/ambientes/validacao?campusId=1&unidadeId=1&blocoId=1&andar=2'])
+        await waitFor(() => {
+            expect(fetchValidacao).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    campusId: 1,
+                    unidadeId: 1,
+                    blocoId: 1,
+                    andar: 2,
+                    tipoFiltro: TipoFiltro.LOCALIZACAO,
+                }),
+                expect.anything(),
+            )
+        })
+    })
+
+    it('ignora blocoId sem unidade e inicia sem filtro', async () => {
+        vi.mocked(fetchValidacao).mockResolvedValue(mockData)
+        renderPage(['/ambientes/validacao?blocoId=1'])
+        await waitFor(() => {
+            expect(fetchValidacao).toHaveBeenCalledWith(
+                expect.objectContaining({ tipoFiltro: TipoFiltro.NENHUM }),
+                expect.anything(),
+            )
+        })
+        const [query] = vi.mocked(fetchValidacao).mock.calls[0]
+        expect(query.campusId).toBeUndefined()
+        expect(query.unidadeId).toBeUndefined()
+        expect(query.blocoId).toBeUndefined()
     })
 
     it('aplica filtro por tipo enviando o nome do enum', async () => {

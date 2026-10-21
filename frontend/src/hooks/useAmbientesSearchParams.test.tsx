@@ -5,6 +5,15 @@ import { MemoryRouter, useSearchParams } from 'react-router'
 import { type ReactNode } from 'react'
 import { TipoFiltro } from '@/types/ambientes/enums'
 
+const FILTROS_VAZIOS = {
+  nome: '',
+  campusId: null,
+  unidadeId: null,
+  blocoId: null,
+  andar: null,
+  tipo: '',
+}
+
 // Wrapper para fornecer contexto do router
 function createWrapper(initialEntries: string[] = ['/']) {
   return function Wrapper({ children }: { children: ReactNode }) {
@@ -24,24 +33,22 @@ describe('useAmbientesSearchParams', () => {
 
     expect(result.current.page).toBe(0)
     expect(result.current.size).toBe(20)
-    expect(result.current.filtros).toEqual({
-      nome: '',
-      bloco: '',
-      unidade: '',
-      andar: null,
-      tipo: '',
-    })
+    expect(result.current.filtros).toEqual(FILTROS_VAZIOS)
   })
 
   it('lê parâmetros da URL corretamente', () => {
     const { result } = renderHook(() => useAmbientesSearchParams(), {
-      wrapper: createWrapper(['/?nome=sala&bloco=A&andar=2&page=1&size=50']),
+      wrapper: createWrapper([
+        '/?nome=sala&campusId=1&unidadeId=2&blocoId=3&andar=2&page=1&size=50',
+      ]),
     })
 
     expect(result.current.page).toBe(1)
     expect(result.current.size).toBe(50)
     expect(result.current.filtros.nome).toBe('sala')
-    expect(result.current.filtros.bloco).toBe('A')
+    expect(result.current.filtros.campusId).toBe(1)
+    expect(result.current.filtros.unidadeId).toBe(2)
+    expect(result.current.filtros.blocoId).toBe(3)
     expect(result.current.filtros.andar).toBe(2)
   })
 
@@ -53,16 +60,94 @@ describe('useAmbientesSearchParams', () => {
     act(() => {
       result.current.handleFiltrosChange({
         nome: 'sala',
-        bloco: '',
-        unidade: '',
+        campusId: 1,
+        unidadeId: 2,
+        blocoId: 3,
         andar: null,
         tipo: '',
       })
     })
 
-    // Verificar se a URL foi atualizada (page deve ser 0)
     expect(result.current.filtros.nome).toBe('sala')
+    expect(result.current.filtros.campusId).toBe(1)
+    expect(result.current.filtros.unidadeId).toBe(2)
+    expect(result.current.filtros.blocoId).toBe(3)
     expect(result.current.page).toBe(0)
+  })
+
+  it('handleFiltrosChange descarta unidade sem campus', () => {
+    const { result } = renderHook(() => useAmbientesSearchParams(), {
+      wrapper: createWrapper(['/']),
+    })
+
+    act(() => {
+      result.current.handleFiltrosChange({
+        ...FILTROS_VAZIOS,
+        unidadeId: 2,
+      })
+    })
+
+    expect(result.current.filtros.unidadeId).toBeNull()
+  })
+
+  it('handleFiltrosChange descarta bloco sem unidade', () => {
+    const { result } = renderHook(() => useAmbientesSearchParams(), {
+      wrapper: createWrapper(['/']),
+    })
+
+    act(() => {
+      result.current.handleFiltrosChange({
+        ...FILTROS_VAZIOS,
+        campusId: 1,
+        blocoId: 3,
+      })
+    })
+
+    expect(result.current.filtros.campusId).toBe(1)
+    expect(result.current.filtros.blocoId).toBeNull()
+  })
+
+  it('descarta unidadeId da URL quando não há campusId', () => {
+    const { result } = renderHook(() => useAmbientesSearchParams(), {
+      wrapper: createWrapper(['/?nome=sala&unidadeId=2']),
+    })
+
+    expect(result.current.filtros.nome).toBe('sala')
+    expect(result.current.filtros.unidadeId).toBeNull()
+  })
+
+  it('descarta blocoId da URL quando não há unidadeId', () => {
+    const { result } = renderHook(() => useAmbientesSearchParams(), {
+      wrapper: createWrapper(['/?campusId=1&blocoId=3']),
+    })
+
+    expect(result.current.filtros.campusId).toBe(1)
+    expect(result.current.filtros.blocoId).toBeNull()
+  })
+
+  it('descarta blocoId da URL quando o pai também foi descartado', () => {
+    const { result } = renderHook(() => useAmbientesSearchParams(), {
+      wrapper: createWrapper(['/?unidadeId=2&blocoId=3']),
+    })
+
+    expect(result.current.filtros.unidadeId).toBeNull()
+    expect(result.current.filtros.blocoId).toBeNull()
+  })
+
+  it.each([
+    ['campusId', '/?campusId=0'],
+    ['campusId', '/?campusId=-1'],
+    ['campusId', '/?campusId=abc'],
+    ['unidadeId', '/?campusId=1&unidadeId=0'],
+    ['unidadeId', '/?campusId=1&unidadeId=abc'],
+    ['blocoId', '/?campusId=1&unidadeId=2&blocoId=-3'],
+    ['blocoId', '/?campusId=1&unidadeId=2&blocoId=1.5'],
+  ])('rejeita %s inválido e usa fallback', (campo, url) => {
+    const { result } = renderHook(() => useAmbientesSearchParams(), {
+      wrapper: createWrapper([url]),
+    })
+
+    expect(result.current.filtros[campo as 'campusId' | 'unidadeId' | 'blocoId']).toBeNull()
   })
 
   it('handleSizeChange atualiza tamanho e reseta página', () => {
@@ -177,24 +262,6 @@ describe('useAmbientesSearchParams', () => {
     expect(result.current.filtros.andar).toBe(0)
   })
 
-  it('rejeita bloco com mais de 50 caracteres e usa fallback', () => {
-    const longBloco = 'b'.repeat(51)
-    const { result } = renderHook(() => useAmbientesSearchParams(), {
-      wrapper: createWrapper([`/?bloco=${longBloco}`]),
-    })
-
-    expect(result.current.filtros.bloco).toBe('')
-  })
-
-  it('aceita bloco com exatamente 50 caracteres', () => {
-    const exactBloco = 'b'.repeat(50)
-    const { result } = renderHook(() => useAmbientesSearchParams(), {
-      wrapper: createWrapper([`/?bloco=${exactBloco}`]),
-    })
-
-    expect(result.current.filtros.bloco).toBe(exactBloco)
-  })
-
   it('rejeita tipo com mais de 50 caracteres e usa fallback', () => {
     const longTipo = 't'.repeat(51)
     const { result } = renderHook(() => useAmbientesSearchParams(), {
@@ -202,15 +269,6 @@ describe('useAmbientesSearchParams', () => {
     })
 
     expect(result.current.filtros.tipo).toBe('')
-  })
-
-  it('rejeita unidade com mais de 50 caracteres e usa fallback', () => {
-    const longUnidade = 'u'.repeat(51)
-    const { result } = renderHook(() => useAmbientesSearchParams(), {
-      wrapper: createWrapper([`/?unidade=${longUnidade}`]),
-    })
-
-    expect(result.current.filtros.unidade).toBe('')
   })
 
   it('deriva tipoFiltro como NENHUM quando filtros estão vazios', () => {
@@ -237,17 +295,25 @@ describe('useAmbientesSearchParams', () => {
     expect(result.current.tipoFiltro).toBe(TipoFiltro.TIPO)
   })
 
-  it('deriva tipoFiltro como LOCALIZACAO quando bloco está presente', () => {
+  it('deriva tipoFiltro como LOCALIZACAO quando campusId está presente', () => {
     const { result } = renderHook(() => useAmbientesSearchParams(), {
-      wrapper: createWrapper(['/?bloco=Bloco%201']),
+      wrapper: createWrapper(['/?campusId=1']),
     })
 
     expect(result.current.tipoFiltro).toBe(TipoFiltro.LOCALIZACAO)
   })
 
-  it('deriva tipoFiltro como LOCALIZACAO quando unidade está presente', () => {
+  it('deriva tipoFiltro como LOCALIZACAO quando unidadeId está presente', () => {
     const { result } = renderHook(() => useAmbientesSearchParams(), {
-      wrapper: createWrapper(['/?unidade=Sede']),
+      wrapper: createWrapper(['/?campusId=1&unidadeId=2']),
+    })
+
+    expect(result.current.tipoFiltro).toBe(TipoFiltro.LOCALIZACAO)
+  })
+
+  it('deriva tipoFiltro como LOCALIZACAO quando blocoId está presente', () => {
+    const { result } = renderHook(() => useAmbientesSearchParams(), {
+      wrapper: createWrapper(['/?campusId=1&unidadeId=2&blocoId=3']),
     })
 
     expect(result.current.tipoFiltro).toBe(TipoFiltro.LOCALIZACAO)
@@ -259,5 +325,13 @@ describe('useAmbientesSearchParams', () => {
     })
 
     expect(result.current.tipoFiltro).toBe(TipoFiltro.LOCALIZACAO)
+  })
+
+  it('blocoId órfão na URL não ativa filtro de localização', () => {
+    const { result } = renderHook(() => useAmbientesSearchParams(), {
+      wrapper: createWrapper(['/?blocoId=3']),
+    })
+
+    expect(result.current.tipoFiltro).toBe(TipoFiltro.NENHUM)
   })
 })

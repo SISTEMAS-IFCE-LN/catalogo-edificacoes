@@ -54,8 +54,9 @@ describe('fetchPublicados', () => {
     }))
     const callParams = vi.mocked(api.get).mock.calls[0][1]?.params
     expect(callParams).not.toHaveProperty('nome')
-    expect(callParams).not.toHaveProperty('bloco')
-    expect(callParams).not.toHaveProperty('unidade')
+    expect(callParams).not.toHaveProperty('campusId')
+    expect(callParams).not.toHaveProperty('unidadeId')
+    expect(callParams).not.toHaveProperty('blocoId')
     expect(callParams).not.toHaveProperty('andar')
     expect(callParams).not.toHaveProperty('tipo')
   })
@@ -199,10 +200,13 @@ describe('fetchPublicados', () => {
         },
       },
     })
-    await fetchPublicados({ page: 0, size: 20, bloco: 'Bloco 1', unidade: 'Sede', andar: 2, tipoFiltro: TipoFiltro.LOCALIZACAO })
+    await fetchPublicados({ page: 0, size: 20, campusId: 1, unidadeId: 2, blocoId: 3, andar: 2, tipoFiltro: TipoFiltro.LOCALIZACAO })
     expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados/localizacao', expect.objectContaining({
-      params: expect.objectContaining({ page: 0, size: 20, bloco: 'Bloco 1', unidade: 'Sede', andar: 2 }),
+      params: expect.objectContaining({ page: 0, size: 20, campusId: 1, unidadeId: 2, blocoId: 3, andar: 2 }),
     }))
+    const params = vi.mocked(api.get).mock.calls[0][1]?.params
+    expect(params).not.toHaveProperty('bloco')
+    expect(params).not.toHaveProperty('unidade')
   })
 })
 

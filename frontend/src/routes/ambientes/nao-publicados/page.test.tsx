@@ -8,7 +8,7 @@ import {NaoPublicadosPage} from './page'
 import type {AmbientesBasicosPaginados} from '@/types/ambientes/response'
 import type {User} from '@/types/usuarios/user'
 import {Role} from '@/types/usuarios/user'
-import {TipoAmbiente} from '@/types/ambientes/enums'
+import {TipoAmbiente, TipoFiltro} from '@/types/ambientes/enums'
 
 const CAMPUS = {id: 1, nome: 'LIMOEIRO DO NORTE'}
 const UNIDADE = {id: 1, nome: 'SEDE'}
@@ -25,6 +25,22 @@ vi.mock('sonner', () => ({
 
 vi.mock('@/hooks/useAuth', () => ({
     useAuth: vi.fn(),
+}))
+
+// O filtro de localização consulta as referências — sem HTTP nos testes de página.
+vi.mock('@/hooks/useReferencias', () => ({
+    useCampus: () => ({
+        data: [{id: 1, nome: 'LIMOEIRO DO NORTE'}],
+        isLoading: false,
+    }),
+    useUnidades: () => ({
+        data: [{id: 1, nome: 'SEDE'}],
+        isLoading: false,
+    }),
+    useBlocos: () => ({
+        data: [{id: 1, nome: 'BLOCO 1'}],
+        isLoading: false,
+    }),
 }))
 
 import {deletarAmbientes, enviarParaValidacao, fetchNaoPublicados} from '@/lib/api/api-naopublicados'
@@ -77,10 +93,13 @@ function createQueryClient() {
     })
 }
 
-function renderPage(client?: QueryClient) {
+function renderPage(
+    client?: QueryClient,
+    initialEntries: string[] = ['/ambientes/nao-publicados'],
+) {
     return render(
         <QueryClientProvider client={client ?? createQueryClient()}>
-            <MemoryRouter initialEntries={['/ambientes/nao-publicados']}>
+            <MemoryRouter initialEntries={initialEntries}>
                 <Routes>
                     <Route path="/ambientes/nao-publicados" element={<NaoPublicadosPage/>}/>
                     <Route path="/ambientes/nao-publicados/:id" element={<div>detalhe-ambiente</div>}/>
@@ -174,6 +193,40 @@ describe('NaoPublicadosPage', () => {
 
         await waitFor(() => expect(deletarAmbientes).toHaveBeenCalledWith([1]))
         expect(toast.success).toHaveBeenCalledWith('Operação concluída.')
+    })
+
+    it('envia campusId/unidadeId/blocoId da URL ao buscar', async () => {
+        vi.mocked(fetchNaoPublicados).mockResolvedValue(PAGINA)
+        renderPage(undefined, ['/ambientes/nao-publicados?campusId=1&unidadeId=1&blocoId=1&andar=2'])
+
+        await waitFor(() => {
+            expect(fetchNaoPublicados).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    campusId: 1,
+                    unidadeId: 1,
+                    blocoId: 1,
+                    andar: 2,
+                    tipoFiltro: TipoFiltro.LOCALIZACAO,
+                }),
+                expect.anything(),
+            )
+        })
+    })
+
+    it('ignora blocoId sem unidade e inicia sem filtro', async () => {
+        vi.mocked(fetchNaoPublicados).mockResolvedValue(PAGINA)
+        renderPage(undefined, ['/ambientes/nao-publicados?blocoId=1'])
+
+        await waitFor(() => {
+            expect(fetchNaoPublicados).toHaveBeenCalledWith(
+                expect.objectContaining({tipoFiltro: TipoFiltro.NENHUM}),
+                expect.anything(),
+            )
+        })
+        const [query] = vi.mocked(fetchNaoPublicados).mock.calls[0]
+        expect(query.campusId).toBeUndefined()
+        expect(query.unidadeId).toBeUndefined()
+        expect(query.blocoId).toBeUndefined()
     })
 
     it('no erro do lote mostra a mensagem do backend e mantém o modal aberto', async () => {
