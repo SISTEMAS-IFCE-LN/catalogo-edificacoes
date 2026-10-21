@@ -2,6 +2,8 @@ package br.edu.ifce.ambientes_internos.model.application.usecases
 
 import br.edu.ifce.ambientes_internos.model.application.interfaces.IAmbienteNaoPublicadoUseCases
 import br.edu.ifce.ambientes_internos.model.application.interfaces.IBlocoUseCases
+import br.edu.ifce.ambientes_internos.model.application.interfaces.ICampusUseCases
+import br.edu.ifce.ambientes_internos.model.application.interfaces.IUnidadeUseCases
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Ambiente
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Localizacao
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.StatusAmbiente
@@ -9,6 +11,7 @@ import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.enums.TipoE
 import br.edu.ifce.ambientes_internos.model.domain.factory.AmbienteFactory
 import br.edu.ifce.ambientes_internos.model.domain.factory.EsquadriaFactory
 import br.edu.ifce.ambientes_internos.model.domain.factory.GeometriaFactory
+import br.edu.ifce.ambientes_internos.model.domain.factory.LocalizacaoFactory
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.*
 import br.edu.ifce.ambientes_internos.model.dto.esquadria.EsquadriaReq
 import br.edu.ifce.ambientes_internos.model.dto.esquadria.EsquadriasDetalhesRes
@@ -25,11 +28,13 @@ import java.math.BigDecimal
 class AmbienteNaoPublicadoUseCases(
     repoAmb: AmbienteRepository,
     private val repoLoc: LocalizacaoRepository,
+    private val campusUC: ICampusUseCases,
+    private val unidadeUC: IUnidadeUseCases,
     private val blocoUC: IBlocoUseCases
 ) : IAmbienteNaoPublicadoUseCases, BaseUseCases(StatusAmbiente.NAO_PUBLICADO, repoAmb) {
 
     private fun verificarNomeLocalizacaoCadastro(ambiente: Ambiente) {
-        ambiente.localizacao = resolverBloco(ambiente.localizacao)
+        ambiente.localizacao = resolverLocalizacao(ambiente.localizacao)
 
         repoLoc.findByLocalizacao(ambiente.localizacao).ifPresent { localizacao ->
             if (repoAmb.existsByNomeAndLocalizacaoId(ambiente.nome, localizacao.id!!)) {
@@ -40,11 +45,10 @@ class AmbienteNaoPublicadoUseCases(
     }
 
     private fun verificarNomeLocalizacaoAlteracao(ambiente: Ambiente, localizacaoCandidata: Localizacao) {
-        if (localizacaoCandidata == ambiente.localizacao) return
+        val localizacaoResolvida = resolverLocalizacao(localizacaoCandidata)
+        if (localizacaoResolvida == ambiente.localizacao) return
 
-        resolverBloco(localizacaoCandidata)
-
-        repoLoc.findByLocalizacao(localizacaoCandidata).ifPresentOrElse(
+        repoLoc.findByLocalizacao(localizacaoResolvida).ifPresentOrElse(
             { localizacao ->
                 if (repoAmb.existsByNomeAndLocalizacaoIdAndIdNot(ambiente.nome, localizacao.id!!, ambiente.id!!)) {
                     throw IllegalArgumentException("Já existe um ambiente com esse nome nessa localização")
@@ -52,7 +56,7 @@ class AmbienteNaoPublicadoUseCases(
                 ambiente.localizacao = localizacao
             },
             {
-                ambiente.localizacao = localizacaoCandidata
+                ambiente.localizacao = localizacaoResolvida
             }
         )
     }
@@ -71,17 +75,21 @@ class AmbienteNaoPublicadoUseCases(
         }
     }
 
-    private fun resolverLocalizacao(localizacaoReq: LocalizacaoReq): Localizacao =
-        Localizacao(
-            bloco = blocoUC.resolverOuCriar(localizacaoReq.unidade, localizacaoReq.bloco),
-            andar = localizacaoReq.andar
-        )
+    private fun resolverLocalizacao(localizacao: Localizacao): Localizacao {
+        val blocoRef = localizacao.bloco
+        val unidadeRef = blocoRef.unidade
+        val campusRef = unidadeRef.campus
 
-    private fun resolverBloco(localizacao: Localizacao): Localizacao {
-        if (localizacao.bloco.id == null) {
-            localizacao.bloco = blocoUC.resolverOuCriar(localizacao.bloco.unidade, localizacao.bloco.nome)
-        }
-        return localizacao
+        val campus = campusRef.id?.let { campusUC.obterPorId(it) }
+            ?: campusUC.resolverOuCriar(campusRef.nome)
+
+        val unidade = unidadeRef.id?.let { unidadeUC.obterPorIdEValidarCampus(it, campus.id!!) }
+            ?: unidadeUC.resolverOuCriar(campus, unidadeRef.nome)
+
+        val bloco = blocoRef.id?.let { blocoUC.obterPorIdEValidarUnidade(it, unidade.id!!) }
+            ?: blocoUC.resolverOuCriar(unidade, blocoRef.nome)
+
+        return Localizacao(bloco = bloco, andar = localizacao.andar)
     }
 
     @Transactional
@@ -101,7 +109,7 @@ class AmbienteNaoPublicadoUseCases(
     ): AmbienteBasicoRes {
         val ambienteExistente = obterAmbiente(id)
         val localizacaoExistenteId = ambienteExistente.localizacao.id
-        val localizacaoCandidata = resolverLocalizacao(ambienteBasicoReq.localizacao)
+        val localizacaoCandidata = LocalizacaoFactory.criar(ambienteBasicoReq.localizacao)
         ambienteExistente.nome = ambienteBasicoReq.nome
         ambienteExistente.capacidade = ambienteBasicoReq.capacidade
         verificarNomeLocalizacaoAlteracao(ambienteExistente, localizacaoCandidata)
@@ -236,7 +244,7 @@ class AmbienteNaoPublicadoUseCases(
 
         ambienteDuplicado.id = null
         ambienteDuplicado.nome = dados.nome
-        ambienteDuplicado.localizacao = resolverLocalizacao(dados.localizacao)
+        ambienteDuplicado.localizacao = LocalizacaoFactory.criar(dados.localizacao)
         verificarNomeLocalizacaoCadastro(ambienteDuplicado)
         return AmbienteRes.from(repoAmb.save(ambienteDuplicado))
     }
