@@ -17,6 +17,9 @@ const API_AMBIENTES_PATH = `${API_BASE_PATH}/ambientes`
 
 export const API_ROUTES = {
     AUTH: '/auth',
+    CAMPUS: `${API_BASE_PATH}/campus`,
+    UNIDADES: `${API_BASE_PATH}/unidades`,
+    BLOCOS: `${API_BASE_PATH}/blocos`,
     PUBLICADOS: `${API_AMBIENTES_PATH}/publicados`,
     VALIDACAO: `${API_AMBIENTES_PATH}/validacao`,
     NAO_PUBLICADOS: `${API_AMBIENTES_PATH}/nao-publicados`,
