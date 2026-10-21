@@ -92,10 +92,11 @@ class BlocoUseCasesIntegrationTest {
 
     @Test
     fun `Deve lancar excecao para nome em branco`() {
-        assertThrows<IllegalArgumentException> {
+        val erro = assertThrows<IllegalArgumentException> {
             blocoUseCases.resolverOuCriar(sede, "   ")
         }
 
+        assertEquals("O nome do bloco é inválido.", erro.message)
         assertEquals(0L, repoBloco.count())
     }
 

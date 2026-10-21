@@ -77,10 +77,11 @@ class UnidadeUseCasesIntegrationTest {
     fun `Deve lancar excecao para nome em branco`() {
         val campus = criarCampus()
 
-        assertThrows<IllegalArgumentException> {
+        val erro = assertThrows<IllegalArgumentException> {
             unidadeUseCases.resolverOuCriar(campus, "   ")
         }
 
+        assertEquals("O nome da unidade é inválido.", erro.message)
         assertEquals(0L, repoUnidade.count())
     }
 
@@ -100,9 +101,34 @@ class UnidadeUseCasesIntegrationTest {
         val outro = criarCampus("Outro Campus")
         val unidade = unidadeUseCases.resolverOuCriar(limoeiro, "SEDE")
 
-        assertThrows<IllegalArgumentException> {
+        val erro = assertThrows<IllegalArgumentException> {
             unidadeUseCases.obterPorIdEValidarCampus(unidade.id!!, outro.id!!)
         }
+
+        assertEquals("A unidade não pertence ao campus informado.", erro.message)
+    }
+
+    @Test
+    fun `Deve lancar excecao ao validar unidade inexistente`() {
+        val campus = criarCampus()
+
+        val erro = assertThrows<IllegalArgumentException> {
+            unidadeUseCases.obterPorIdEValidarCampus(999L, campus.id!!)
+        }
+
+        assertEquals("Unidade inválida: 999.", erro.message)
+    }
+
+    @Test
+    fun `Deve lancar excecao ao validar campus inexistente`() {
+        val campus = criarCampus()
+        val unidade = unidadeUseCases.resolverOuCriar(campus, "SEDE")
+
+        val erro = assertThrows<IllegalArgumentException> {
+            unidadeUseCases.obterPorIdEValidarCampus(unidade.id!!, 999L)
+        }
+
+        assertEquals("Campus inválido: 999.", erro.message)
     }
 
     @Test

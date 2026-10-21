@@ -532,9 +532,10 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
                 andar = 1
             )
         )
-        assertThrows<IllegalArgumentException> {
+        val erroCampus = assertThrows<IllegalArgumentException> {
             ambientesNPUseCases.cadastrarAmbiente(campusInexistente)
         }
+        assertEquals("Campus inválido: ${Long.MAX_VALUE}.", erroCampus.message)
 
         val unidadeInexistente = criarSalaAula(nome = "Sala Unidade Inexistente").copy(
             localizacao = LocalizacaoReq(
@@ -544,9 +545,10 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
                 andar = 1
             )
         )
-        assertThrows<IllegalArgumentException> {
+        val erroUnidade = assertThrows<IllegalArgumentException> {
             ambientesNPUseCases.cadastrarAmbiente(unidadeInexistente)
         }
+        assertEquals("Unidade inválida: ${Long.MAX_VALUE}.", erroUnidade.message)
     }
 
     @Test

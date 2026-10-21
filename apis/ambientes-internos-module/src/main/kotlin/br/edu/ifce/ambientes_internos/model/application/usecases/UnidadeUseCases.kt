@@ -37,10 +37,13 @@ class UnidadeUseCases(
         if (!repoCampus.existsById(campusId)) {
             throw IllegalArgumentException("Campus inválido: $campusId.")
         }
-        repoUnidade.findById(unidadeId)
-            .orElseThrow { IllegalArgumentException("Unidade inválida: $unidadeId.") }
-        return repoUnidade.findByIdAndCampusId(unidadeId, campusId)
-            ?: throw IllegalArgumentException("A unidade não pertence ao campus informado.")
+
+        repoUnidade.findByIdAndCampusId(unidadeId, campusId)?.let { return it }
+
+        if (repoUnidade.existsById(unidadeId)) {
+            throw IllegalArgumentException("A unidade não pertence ao campus informado.")
+        }
+        throw IllegalArgumentException("Unidade inválida: $unidadeId.")
     }
 
     @Transactional(readOnly = true)

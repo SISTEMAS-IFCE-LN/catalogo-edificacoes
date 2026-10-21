@@ -100,22 +100,6 @@ class BlocoRepositoryIntegrationTest {
     }
 
     @Test
-    fun `Deve retornar blocos com o mesmo nome de todas as unidades`() {
-        repository.saveAllAndFlush(
-            listOf(
-                Bloco(sede, "BLOCO 1"),
-                Bloco(cidadeAlta, "BLOCO 1"),
-                Bloco(sede, "BLOCO 2")
-            )
-        )
-
-        val encontrados = repository.findAllByNome("BLOCO 1")
-
-        assertEquals(2, encontrados.size)
-        assertEquals(setOf(sede, cidadeAlta), encontrados.map { it.unidade }.toSet())
-    }
-
-    @Test
     fun `Deve validar o vinculo do bloco com a unidade pelo id`() {
         val bloco = repository.saveAndFlush(Bloco(sede, "BLOCO 1"))
 

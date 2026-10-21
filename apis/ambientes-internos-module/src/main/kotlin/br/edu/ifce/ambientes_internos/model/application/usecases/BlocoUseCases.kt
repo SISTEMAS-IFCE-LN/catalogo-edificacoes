@@ -19,7 +19,7 @@ class BlocoUseCases(
     @Transactional
     override fun resolverOuCriar(unidade: Unidade, nomeDigitado: String): Bloco {
         val nome = Bloco.normalizar(nomeDigitado)
-        require(nome.isNotBlank()) { "O nome do bloco é invalido." }
+        require(nome.isNotBlank()) { "O nome do bloco é inválido." }
 
         repoBloco.findByUnidadeAndNome(unidade, nome)?.let { return it }
 

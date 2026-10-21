@@ -49,10 +49,11 @@ class CampusUseCasesIntegrationTest {
 
     @Test
     fun `Deve lancar excecao para nome em branco`() {
-        assertThrows<IllegalArgumentException> {
+        val erro = assertThrows<IllegalArgumentException> {
             campusUseCases.resolverOuCriar("   ")
         }
 
+        assertEquals("O nome do campus é inválido.", erro.message)
         assertEquals(0L, repoCampus.count())
     }
 

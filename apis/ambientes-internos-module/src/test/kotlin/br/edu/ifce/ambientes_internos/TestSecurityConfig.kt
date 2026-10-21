@@ -45,7 +45,7 @@ class TestSecurityConfig {
                 ).permitAll()
                 auth.requestMatchers("/auth/**").permitAll()
                 auth.requestMatchers("/health").permitAll()
-                auth.anyRequest().authenticated()
+                auth.anyRequest().denyAll()
             }
             .oauth2ResourceServer { rs ->
                 rs.jwt { jwt ->
