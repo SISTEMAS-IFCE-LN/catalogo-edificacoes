@@ -41,14 +41,7 @@ object AmbienteFactory {
     fun criar(ambienteReq: AmbienteReq): Ambiente {
         val construtor = AMBIENTES_MAP[ambienteReq.tipo]
             ?: throw IllegalArgumentException("O tipo de ambiente é inválido.")
-        val bloco = Bloco(
-            unidade = ambienteReq.localizacao.unidade,
-            nomeInicial = ambienteReq.localizacao.bloco
-        )
-        val localizacao = Localizacao(
-            bloco = bloco,
-            andar = ambienteReq.localizacao.andar
-        )
+        val localizacao = LocalizacaoFactory.criar(ambienteReq.localizacao)
         return construtor(
             ambienteReq.nome,
             localizacao,
