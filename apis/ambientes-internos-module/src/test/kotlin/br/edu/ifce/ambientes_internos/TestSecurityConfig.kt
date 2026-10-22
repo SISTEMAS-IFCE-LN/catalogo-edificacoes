@@ -44,7 +44,7 @@ class TestSecurityConfig {
                     "/api/blocos"
                 ).permitAll()
                 auth.requestMatchers("/auth/**").permitAll()
-                auth.requestMatchers("/health").permitAll()
+                auth.requestMatchers("/actuator/health").permitAll()
                 auth.anyRequest().denyAll()
             }
             .oauth2ResourceServer { rs ->
