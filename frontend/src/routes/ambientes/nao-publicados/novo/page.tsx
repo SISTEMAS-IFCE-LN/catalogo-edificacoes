@@ -1,4 +1,5 @@
 import {useNavigate} from 'react-router'
+import {useQueryClient} from '@tanstack/react-query'
 import {FormAmbiente} from '@/components/ambientes/FormAmbiente'
 import {criarAmbiente} from '@/lib/api/api-naopublicados'
 import type {AmbienteInput} from '@/types/ambientes/request'
@@ -7,6 +8,7 @@ import {toast} from 'sonner'
 
 export function NovoAmbientePage() {
     const navigate = useNavigate()
+    const queryCliente = useQueryClient()
 
     // Erros de criação (ex.: RN-1.7, nome duplicado) exibem ErroRes.mensagem
     // via useAsyncAction — padrão da parte 09 (sem toast genérico).
@@ -18,6 +20,9 @@ export function NovoAmbientePage() {
     async function onSubmit(values: AmbienteInput) {
         await executar(async () => {
             const novo = await criarAmbiente(values)
+            // Find-or-create pode criar campus/unidade/bloco → invalida o prefixo
+            // inteiro para os selects refletirem os novos registros (plano 11 §4.3).
+            void queryCliente.invalidateQueries({ queryKey: ['referencias'] })
             toast.success('Ambiente criado.')
             navigate(`/ambientes/nao-publicados/${novo.id}`)
         })

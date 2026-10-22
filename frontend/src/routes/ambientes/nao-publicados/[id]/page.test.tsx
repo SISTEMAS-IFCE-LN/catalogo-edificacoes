@@ -309,6 +309,8 @@ describe('NaoPublicadoDetalhePage', () => {
             const {toast} = await import('sonner')
             expect(toast.success).toHaveBeenCalledWith('Ambiente duplicado.')
             expect(invalidateSpy).toHaveBeenCalledWith({queryKey: ['ambientes', 'nao-publicados']})
+            // UC17: a duplicação pode criar campus/unidade/bloco novos
+            expect(invalidateSpy).toHaveBeenCalledWith({queryKey: ['referencias']})
             expect(await screen.findByText('detalhe-duplicado')).toBeInTheDocument()
         })
 
@@ -386,6 +388,8 @@ describe('NaoPublicadoDetalhePage', () => {
             expect(invalidateSpy).toHaveBeenCalledWith({
                 queryKey: ['ambientes', 'nao-publicados', 'detalhe', '7'],
             })
+            // UC07 altera a localização → referências também precisam ser revalidadas
+            expect(invalidateSpy).toHaveBeenCalledWith({queryKey: ['referencias']})
         })
 
         it('mantém o modal aberto em erro do backend (mensagem corrigível)', async () => {
@@ -585,6 +589,8 @@ describe('NaoPublicadoDetalhePage', () => {
             expect(toast.success).toHaveBeenCalledWith('Tipo alterado.')
             // UC16: ambiente antigo deixa de existir → invalida a LISTA e navega
             expect(invalidateSpy).toHaveBeenCalledWith({queryKey: ['ambientes', 'nao-publicados']})
+            // UC16 pode criar campus/unidade/bloco novos
+            expect(invalidateSpy).toHaveBeenCalledWith({queryKey: ['referencias']})
             expect(await screen.findByText('detalhe-duplicado')).toBeInTheDocument()
         })
     })

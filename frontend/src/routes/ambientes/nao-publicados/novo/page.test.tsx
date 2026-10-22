@@ -1,5 +1,6 @@
 import { act, render, screen, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { NovoAmbientePage } from './page'
 import type { AmbienteInput } from '@/types/ambientes/request'
 import { toast } from 'sonner'
@@ -51,15 +52,33 @@ const AMBIENTE_VALIDO: AmbienteInput = {
   informacaoAdicional: 'Sala com ar-condicionado',
 }
 
+function createQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: { retry: false, gcTime: 0, staleTime: 0, refetchOnWindowFocus: false },
+    },
+  })
+}
+
+function renderPage(client: QueryClient = createQueryClient()) {
+  return render(
+    <QueryClientProvider client={client}>
+      <NovoAmbientePage />
+    </QueryClientProvider>,
+  )
+}
+
 describe('NovoAmbientePage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     captured.submit = null
   })
 
-  it('cria o ambiente e navega para o detalhe', async () => {
+  it('cria o ambiente, invalida as referências e navega para o detalhe', async () => {
     mockCriarAmbiente.mockResolvedValue({ id: 42 })
-    render(<NovoAmbientePage />)
+    const queryClient = createQueryClient()
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
+    renderPage(queryClient)
     expect(screen.getByText('Novo Ambiente')).toBeInTheDocument()
 
     await act(async () => {
@@ -68,12 +87,14 @@ describe('NovoAmbientePage', () => {
 
     await waitFor(() => expect(mockCriarAmbiente).toHaveBeenCalledWith(AMBIENTE_VALIDO))
     expect(toast.success).toHaveBeenCalledWith('Ambiente criado.')
+    // O find-or-create pode criar campus/unidade/bloco → invalida o prefixo inteiro.
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['referencias'] })
     expect(mockNavigate).toHaveBeenCalledWith('/ambientes/nao-publicados/42')
   })
 
   it('exibe mensagem do backend e não navega em erro de criação', async () => {
     mockCriarAmbiente.mockRejectedValue(new Error('boom'))
-    render(<NovoAmbientePage />)
+    renderPage()
 
     await act(async () => {
       await captured.submit!(AMBIENTE_VALIDO)

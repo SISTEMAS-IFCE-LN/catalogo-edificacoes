@@ -72,6 +72,7 @@ export function NaoPublicadoDetalhePage() {
     // em erro (RN-1.7, ex.: duplicar 2×) o usuário corrige no próprio modal.
     function aoDuplicar(novoId: number) {
         void queryCliente.invalidateQueries({ queryKey: ['ambientes', 'nao-publicados'] })
+        void queryCliente.invalidateQueries({ queryKey: ['referencias'] })
         navigate(`/ambientes/nao-publicados/${novoId}`)
     }
 
@@ -79,7 +80,15 @@ export function NaoPublicadoDetalhePage() {
     // LISTA e navegar para o registro novo (casos-uso-frontend.md UC16, passo 3).
     function aoAlterarTipo(novoId: number) {
         void queryCliente.invalidateQueries({ queryKey: ['ambientes', 'nao-publicados'] })
+        void queryCliente.invalidateQueries({ queryKey: ['referencias'] })
         navigate(`/ambientes/nao-publicados/${novoId}`)
+    }
+
+    // UC07-FE: editar dados básicos altera a localização (find-or-create de
+    // campus/unidade/bloco) → invalida o detalhe E as referências dos selects.
+    function aoSalvarDadosBasicos() {
+        invalidarDetalhe()
+        void queryCliente.invalidateQueries({ queryKey: ['referencias'] })
     }
 
     async function confirmar() {
@@ -171,7 +180,7 @@ export function NaoPublicadoDetalhePage() {
                     open
                     ambiente={ambiente}
                     onOpenChange={(o) => !o && setModal(null)}
-                    onSalvou={invalidarDetalhe}
+                    onSalvou={aoSalvarDadosBasicos}
                 />
             )}
             {modal === 'incluir-geometrias' && (
