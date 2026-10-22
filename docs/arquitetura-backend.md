@@ -36,7 +36,7 @@ segurança e as diferentes regras de negócio de domínio coexistam sem gerar de
     * Consolidar `security-module`, `common-module` e `ambientes-internos-module` em uma única unidade executável final.
     * Conter a classe `CatalogoEdificacoesApp` anotada com
       `@SpringBootApplication(scanBasePackages = ["br.edu.ifce.ambientes_internos", "br.edu.ifce.security"])`.
-    * Centralizar `application.yml`, `application-dev.yml` e `data-dev.sql` (carga de 120 ambientes fake para dev).
+    * Centralizar `application.yml`, `application-dev.yml` e `data-dev.sql` (seed de dev: 1 campus, 3 unidades, 24 blocos, localizações e 120 ambientes fake).
     * Definir as propriedades globais de OAuth2 (Google), das chaves RSA para JWT, das configurações de cookie
       (`HttpOnly`, `Secure`, `SameSite`) e das regras de CORS para SPA/mobile.
     * Expor o pacote executável de entrada do sistema (ponto único de inicialização).
@@ -97,8 +97,12 @@ de testes do projeto.
   sem depender de todo o `SecurityConfig` real.
 * **Testes que validam erros de validação por parâmetros** continuam cobrindo `400 Bad Request`, mas apenas depois
   de satisfazer os requisitos de autenticação quando o endpoint estiver protegido.
-* **Endpoints públicos** (notadamente as listagens e detalhes de ambientes publicados — ver RN-4.4) continuam
-  sendo testados sem autenticação, para garantir que a regra de acesso público não se torne regressiva.
+* **Endpoints públicos** — as listagens e pesquisas de ambientes publicados (RN-4.4) e as referências de localização
+  (`/api/campus`, `/api/unidades`, `/api/blocos`) — continuam sendo testados sem autenticação, para garantir que a
+  regra de acesso público não se torne regressiva (os testes de referência rodam sem `@WithMockUser` de propósito).
+  O detalhe de um ambiente publicado (`GET /api/ambientes/publicados/{id}`) e o conjunto de esquadrias, que na cadeia
+  real exigem `ROLE_COLABORADOR` (`seguranca.md §7.2`), são exercitados com
+  `@WithMockUser(authorities = ["ROLE_COLABORADOR"])`.
 * O `TestApplication` do `ambientes-internos-module` foi atualizado para escanear tanto `br.edu.ifce.ambientes_internos`
   quanto `br.edu.ifce.security` (entidades, repositórios JPA, services) **mas exclui** os componentes de runtime do
   `security-module` (controllers, services de auth, `BootstrapAdminRunner`, properties) que não fazem sentido em
@@ -119,12 +123,15 @@ Em resumo:
 
 Definido em `SecurityConfig.apiFilterChain` (chain 3, com `@Order(3)`). Endpoints públicos (`permitAll`):
 
-| Path                           | Descrição                                      |
-|--------------------------------|------------------------------------------------|
-| `/api/ambientes/publicados/**` | Listagens e detalhes de ambientes publicados.  |
-| `/auth/**`                     | Refresh, logout.                               |
-| `/health`                      | Health check.                                  |
-| `/oauth2/**` e `/login/**`     | Handshake OAuth2 (chain 1, com `IF_REQUIRED`). |
+| Path                           | Descrição                                                                         |
+|--------------------------------|-----------------------------------------------------------------------------------|
+| `/api/ambientes/publicados/**` | Listagens de ambientes publicados (detalhe/esquadrias exigem `ROLE_COLABORADOR`). |
+| `/api/campus`                  | Lista de campi (público).                                                         |
+| `/api/unidades?campusId=`      | Unidades de um campus (público).                                                  |
+| `/api/blocos?unidadeId=`       | Blocos de uma unidade (público).                                                  |
+| `/auth/**`                     | Refresh, logout.                                                                  |
+| `/actuator/health`             | Health check (endpoint do Actuator).                                              |
+| `/oauth2/**` e `/login/**`     | Handshake OAuth2 (chain 1, com `IF_REQUIRED`).                                    |
 
 Endpoints protegidos por `SecurityConfig`:
 
@@ -146,7 +153,7 @@ configurável externamente:
 | Property                      | Env var                       | Default        |
 |-------------------------------|-------------------------------|----------------|
 | `jwt.access-token-expiration` | `JWT_ACCESS_TOKEN_EXPIRATION` | `900` (15 min) |
-| `jwt.refresh-expiration`      | `JWT_REFRESH_EXPIRATION`      | `3600` (1 h) |
+| `jwt.refresh-expiration`      | `JWT_REFRESH_EXPIRATION`      | `3600` (1 h)   |
 | `jwt.cookie-secure`           | `JWT_COOKIE_SECURE`           | `true`         |
 | `jwt.same-site`               | `JWT_COOKIE_SAME_SITE`        | `Lax`          |
 
@@ -169,3 +176,26 @@ de serviço lida com autenticação, tokens e gestão de identidade em vez de re
    consultas ao banco de dados.
 4. **Camada de Domínio (Entidades):** Representação pura dos modelos conceituais do sistema, contendo seus atributos e
    comportamentos fundamentais.
+
+### 2.1. Hierarquia de localização no `ambientes-internos-module`
+
+`Campus`, `Unidade`, `Bloco` e `Localizacao` são entidades JPA em
+`model/domain/entity/ambientes`, com a hierarquia `Campus 1—N Unidade 1—N Bloco 1—N Localizacao`:
+
+- `Unidade.campus` e `Bloco.unidade` são `ManyToOne` LAZY e unidirecionais — não há `Unidade.blocos` nem
+  `Campus.unidades`; a listagem de filhos usa `UnidadeRepository.findByCampus` e `BlocoRepository.findByUnidade`.
+  Essa ausência de coleções inversas é intencional, não um esquecimento.
+- `Localizacao` armazena apenas `(bloco, andar)`; `campus` e `unidade` não são colunas — são derivados de
+  `bloco.unidade.campus` ao montar `LocalizacaoRes`.
+- Unicidade garantida por unique constraints: `Campus.nome`; `(campus_id, nome)` em `Unidade`;
+  `(unidade_id, nome)` em `Bloco`; `(bloco_id, andar)` em `Localizacao` (RN-1.15/RN-1.16).
+- Os nomes são normalizados por `NormalizadorNome` (fonte única) no construtor e no setter — o valor persistido e
+  exibido é sempre a forma normalizada (RN-1.17).
+- `CampusUseCases.resolverOuCriar`, `UnidadeUseCases.resolverOuCriar` e `BlocoUseCases.resolverOuCriar` fazem
+  find-or-create no fluxo de escrita de ambiente (UC06/UC07/UC16/UC17): normalizam, buscam no escopo do pai,
+  salvam quando não existe e re-leitam em corrida (`DataIntegrityViolationException`) (RN-1.18).
+- As queries que montam `LocalizacaoRes` usam `@EntityGraph` aninhado
+  (`localizacao.bloco.unidade.campus`) para evitar N+1; as listagens de referência ordenam os nomes em memória com
+  `ComparadorNatural` (ordem natural, não lexicográfica).
+- Os controllers `CampusController`, `UnidadeController` e `BlocoController` são somente leitura (`GET`); a criação
+  dos três níveis acontece exclusivamente dentro dos casos de uso de ambiente.

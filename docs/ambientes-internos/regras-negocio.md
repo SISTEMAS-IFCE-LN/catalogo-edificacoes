@@ -7,7 +7,7 @@ As regras a seguir detalham os invariantes e comportamentos do subdomínio de Am
 ### 1. Regras Gerais do Ambiente
 
 * **RN-1.1:** Cada ambiente possui um identificador único no sistema para garantir sua integridade e facilitar a gestão.
-* **RN-1.2:** Todo ambiente deve ter um nome descritivo e uma localização associada a uma edificação ou bloco do campus.
+* **RN-1.2:** Todo ambiente deve ter um nome descritivo e uma localização associada a um bloco, que pertence a uma unidade, que pertence a um campus.
 * **RN-1.3:** O sistema deve permitir a geração de um identificador físico (QR Code) para cada ambiente, que ao ser lido direcionará o usuário para a tela de consulta com as informações daquele local.
 * **RN-1.4:** Cada ambiente deve ser classificado em um tipo específico (sala de aula, auditório, sala administrativa, etc.).
 * **RN-1.5:** Um ambiente deve conter listas de pisos, paredes (podendo ser externas ou internas), tetos, esquadrias e componentes, a fim de detalhar suas características construtivas e funcionais.
@@ -20,6 +20,10 @@ As regras a seguir detalham os invariantes e comportamentos do subdomínio de Am
 * **RN-1.12:** Todas as dimensões que representam medidas lineares devem ser expressas em metros (m) e as áreas em metros quadrados (m²), respeitando a precisão de duas casas decimais.
 * **RN-1.13:** O sistema deve fornecer mecanismos para calcular automaticamente a área total de um ou mais ambientes, seus elementos construtivos e esquadrias, com base nas geometrias associadas. No caso dos elementos construtivos e esquadrias, deve ser possível calcular a área por tipo.
 * **RN-1.14:** O sistema deve fornecer mecanismos para calcular a potência total instalada em um ou mais ambientes, considerando os componentes que consomem energia.
+* **RN-1.15:** O campus possui nome único no sistema; a unidade possui nome único dentro do campus; o bloco possui nome único dentro da unidade.
+* **RN-1.16:** A localização é identificada pelo par `(bloco, andar)`; o andar é um inteiro maior ou igual a zero.
+* **RN-1.17:** Nomes de campus, unidade e bloco são normalizados (trim, remoção de acentos, separadores colapsados, caixa alta, dígitos sem zeros à esquerda) antes da comparação e da persistência; o valor armazenado e exibido é sempre a forma normalizada.
+* **RN-1.18:** Um campus, unidade ou bloco pode ser criado no fluxo de cadastro/edição de ambiente (find-or-create) quando o nome ainda não existir no escopo do pai; a criação implícita de referência é uma decisão de produto e não há endpoint próprio de cadastro desses níveis.
 
 ### 2. Regras sobre Elementos Construtivos e Esquadrias
 
@@ -63,7 +67,7 @@ As regras a seguir detalham os invariantes e comportamentos do subdomínio de Am
 
 * **RN-4.4:** Usuários identificados como **Público Externo** podem apenas consultar informações simplificadas dos ambientes que estão publicados. Suas ações incluem:
     * Listar informações básicas de todos os ambientes publicados, podendo pesquisá-los por nome, localização ou tipo.
-    * O acesso a esta listagem e aos respectivos detalhes ocorre sem autenticação (rota pública), não exigindo login.
+    * O acesso a esta listagem e às pesquisas ocorre sem autenticação (rota pública), não exigindo login; a consulta detalhada de um ambiente publicado e o conjunto paginado de esquadrias exigem autenticação com perfil **Colaborador** (RN-4.3).
 
 * **RN-4.5:** E-mails com domínio institucional configuram o acesso institucional: no primeiro login, o usuário é provisionado automaticamente com o perfil de Colaborador, desde que a conta esteja válida.
 

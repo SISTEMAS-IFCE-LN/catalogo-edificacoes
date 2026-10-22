@@ -34,7 +34,7 @@ A arquitetura frontend é determinada, em grande parte, pelo contrato estabeleci
 - A API (chain 3, `STATELESS`) valida JWT via `Authorization: Bearer <jwt>` e não exige CSRF.
 - O JWT (RSA, 15 min) contém claims `iss`, `sub` (= `Usuario.id`), `roles` (com prefixo `ROLE_`), `jti`, `iat`, `exp`. O frontend não decodifica o JWT — apenas o transporta no header `Authorization: Bearer`. `User` completo (com `nome`, `email`, `ativo`, `criadoEm`, `perfis`) vem de `GET /api/usuarios/me`.
 - Perfis são **cumulativos** e `UsuarioService.atualizarPerfis` sempre adiciona `ROLE_COLABORADOR`. Logo, todo usuário autenticado tem ao menos esse perfil.
-- Endpoints públicos: `/api/ambientes/publicados/**` (listagens e detalhes, este último com `permitAll` mas autoridade interna exige `ROLE_COLABORADOR` — ver abaixo), `/auth/**`, `/health`, `/oauth2/**`, `/login/**`.
+- Endpoints públicos: `/api/ambientes/publicados/**` (listagens e detalhes, este último com `permitAll` mas autoridade interna exige `ROLE_COLABORADOR` — ver abaixo), `/auth/**`, `/actuator/health`, `/oauth2/**`, `/login/**`.
 - Proteção por autoridade (chain 3):
 
 | Path | Authority exigida |
@@ -235,7 +235,8 @@ frontend/
 │   │   │   └── Footer.tsx
 │   │   ├── ambientes/                # TabelaPadrao, DetalheAmbiente, FormAmbiente, PesquisaBarAmbientes,
 │   │   │                              # ModalFormulario (shell dos modais UC07–UC17), LocalizacaoFields,
-│   │   │                              # CampoEnum, CampoNumerico, BotaoRemover, ErroCampo,
+│   │   │                              # CampoReferencia (select de referência campus/unidade/bloco com
+│   │   │                              # `permitirCadastro`/`somenteCadastro`), CampoEnum, CampoNumerico, BotaoRemover, ErroCampo,
 │   │   │                              # ModalGeometrias, ModalPesDireitos, ModalEsquadrias (genéricos de lista),
 │   │   │                              # ModalEditarDadosBasicos, ModalInfoAdicional, ModalAlterarTipo,
 │   │   │                              # ModalDuplicar, ModalConfirmacao, AcoesLote, AcoesAmbiente, PaginacaoFooter, ErrorLista
@@ -254,7 +255,8 @@ frontend/
 │   │   │   ├── api-publicados.ts     # wrappers UC21-FE → api-ambientes (fetchPublicados, fetchDetalhePublicados, fetchEsquadriasPublicados)
 │   │   │   ├── api-usuarios.ts       # UC22–UC26-FE
 │   │   │   ├── api-validacao.ts      # UC01–UC03-FE (fetchValidacao, fetchDetalheValidacao, publicarAmbiente, privarAmbiente)
-│   │   │   └── api-naopublicados.ts  # UC05–UC18-FE
+│   │   │   ├── api-naopublicados.ts  # UC05–UC18-FE
+│   │   │   └── api-referencia.ts     # GET públicos /api/campus, /api/unidades?campusId=, /api/blocos?unidadeId=
 │   │   ├── ambientes/
 │   │   │   ├── esquadrias.ts         # filtro/resumo de esquadrias (lógica pura)
 │   │   │   └── mappers.ts            # conversão resposta→request (rótulos → nomes técnicos) UC07–UC17
@@ -266,6 +268,7 @@ frontend/
 │   │   ├── useFiltroLocal.ts         # rascunho local sincronizado com a URL (PesquisaBarAmbientes/Usuarios + hooks de search params)
 │   │   ├── usePaginationParams.ts    # núcleo genérico: page/size + handlePageChange/handleSizeChange/updateSearchParams
 │   │   ├── useAmbientesSearchParams.ts # adaptador fino: usePaginationParams + Zod (filtros) + tipoFiltro
+│   │   ├── useReferencias.ts         # useCampus/useUnidades(campusId)/useBlocos(unidadeId) — queries de referência
 │   │   ├── useSelecaoAmbientes.ts    # seleção múltipla por página das listas de ambientes (publicados/nao-publicados)
 │   │   ├── usePermission.ts          # canDo(action), canAccess(route), hasRole(roles)
 │   │   └── useUsuariosSearchParams.ts # adaptador fino: usePaginationParams + nome/email + tipoFiltro
@@ -276,9 +279,10 @@ frontend/
 │   │   │   ├── user.ts               # Role, User, AuthState, StatusAcao
 │   │   │   └── filtros.ts            # TipoFiltroUsuarios, FiltrosUsuarios, FILTROS_USUARIOS_VAZIOS
 │   │   └── ambientes/
-│   │       ├── enums.ts              # enums espelhados do backend + transforms de resposta de enum
-│   │       ├── filtros.ts            # Filtros, FILTROS_VAZIOS, UrlFiltrosSchema
-│   │       ├── localizacao.ts        # LocalizacaoSchema (resposta; usado por response/esquadrias)
+│   │       ├── enums.ts              # enums espelhados do backend (tipo/geometria/esquadria/status/filtro) + transforms de resposta de enum; localização não tem enum (usa referências)
+│   │       ├── filtros.ts            # Filtros (nome, tipo, campusId/unidadeId/blocoId/andar), FILTROS_VAZIOS, UrlFiltrosSchema
+│   │       ├── referencia.ts         # ReferenciaSchema/ReferenciaInputSchema, ReferenciaRes/ReferenciaInput, REFERENCIA_VAZIA
+│   │       ├── localizacao.ts        # LocalizacaoSchema (resposta: campus/unidade/bloco aninhados via ReferenciaSchema; usado por response/esquadrias)
 │   │       ├── query.ts              # AmbientesQuery, EsquadriasQuery
 │   │       ├── request.ts            # schemas de request (AmbienteReq…) + keysOf/nomeTecnicoDeRotulo
 │   │       ├── response.ts           # schemas/tipos de resposta de ambiente (AmbienteBasico, AmbienteDetalhe…)
@@ -1035,6 +1039,7 @@ Convenções:
 - `signal` repassado para cancelamento ao desmontar.
 - `staleTime` 30s para listagens — evita refetch excessivo ao navegar entre detalhe/lista.
 - Mutações (`useMutation`) com `onSuccess`Invalidando queries relacionadas (`queryClient.invalidateQueries({ queryKey: ['ambientes'] })`).
+- Mutações de escrita de ambiente também invalidam `['referencias']`: o find-or-create pode criar novos campus/unidade/bloco, e os selects/filtros precisam ver as novas opções.
 
 ---
 
@@ -1060,28 +1065,51 @@ export default function NovoAmbientePage() {
 ```
 
 ```typescript
+// types/ambientes/referencia.ts — contrato de referência (Resposta: {id, nome}; Request: exatamente um de id/nome)
+export const ReferenciaSchema = z.object({ id: z.number().int().positive(), nome: z.string() })
+
+export const ReferenciaInputSchema = z.object({
+  id: z.number().int().positive().nullable(),
+  nome: z.string().trim().max(50).nullable(),
+}).refine(v => (v.id !== null) !== (v.nome !== null && v.nome.length > 0), {
+  message: 'Informe id ou nome (apenas um).',
+})
+```
+
+```typescript
 // types/ambientes/request.ts
 
 import { z } from 'zod'
 import { TipoEsquadria, TipoGeometria } from '@/types/ambientes/enums'
+import { ReferenciaInputSchema } from '@/types/ambientes/referencia'
 
-// As chaves dos enums TS espelham os NOMES TÉCNICOS dos enums Kotlin.
+// As chaves dos enums TS espelham os NOMES TÉCNICOS dos enums Kotlin
+// (tipo/geometria/esquadria). Localização NÃO usa enum: cada nível é uma
+// referência `{id}` (existente) ou `{nome}` (find-or-create sob o pai).
 const keysOf = <T extends Record<string, string>>(e: T) =>
   Object.keys(e) as [(keyof T & string), ...(keyof T & string)[]]
+
+// Espelha LocalizacaoReq do backend (não tem id de localização)
+export const localizacaoSchema = z.object({
+  campus: ReferenciaInputSchema,   // {id: 1} reusa; {nome: "LIMOEIRO DO NORTE"} cria se não existir
+  unidade: ReferenciaInputSchema,
+  bloco: ReferenciaInputSchema,
+  andar: z.int().min(0),           // backend @Min(0)
+})
 
 // Espelha GeometriaAmbienteReq do backend
 export const geometriaSchema = z.object({
   tipo: z.enum(keysOf(TipoGeometria)),   // 'RETANGULAR', 'TRIANGULAR'
   base: z.number().positive(),
   altura: z.number().positive(),
-  repeticao: z.number().int().positive().default(1),
+  repeticao: z.int().positive().default(1),
 })
 
 // Espelha GeometriaEsquadriaReq do backend
 export const geometriaEsquadriaSchema = z.object({
   base: z.number().positive(),
   altura: z.number().positive(),
-  repeticao: z.number().int().positive().default(1),
+  repeticao: z.int().positive().default(1),
 })
 
 // Espelha EsquadriaReq do backend
@@ -1096,13 +1124,9 @@ export const esquadriaSchema = z.object({
 // Espelha AmbienteReq do backend
 export const ambienteSchema = z.object({
   nome: z.string().min(1).max(50),
-  localizacao: z.object({
-    bloco: z.string().min(1),
-    unidade: z.string().min(1),
-    andar: z.number().int(),
-  }),
+  localizacao: localizacaoSchema,
   tipo: z.enum(['SALA_AULA', 'LABORATORIO', /* ... espelha backend */]),
-  capacidade: z.number().int().positive(),
+  capacidade: z.int().positive(),
   geometrias: z.array(geometriaSchema).min(1, 'Pelo menos uma geometria'),
   pesDireitos: z.array(z.number().positive()).min(1, 'Pelo menos um pé-direito'),
   esquadrias: z.array(esquadriaSchema)
@@ -1114,7 +1138,7 @@ export const ambienteSchema = z.object({
 export type AmbienteInput = z.infer<typeof ambienteSchema>
 ```
 
-> Schemas espelham os DTOs de request do backend (`AmbienteReq`, `GeometriaAmbienteReq`, `EsquadriaReq`). O campo `pesDireitos` é um array de números (não objetos), conforme o backend.
+> Schemas espelham os DTOs de request do backend (`AmbienteReq`, `LocalizacaoReq`, `GeometriaAmbienteReq`, `EsquadriaReq`). O campo `pesDireitos` é um array de números (não objetos), conforme o backend. A assimetria rótulo↔nome técnico vale apenas para tipo/geometria/esquadria (a resposta traz rótulos, o request envia nomes técnicos); para localização ela não se aplica — cada nível é uma referência `{id, nome}` e o nome enviado/exibido é a forma normalizada.
 
 ---
 
@@ -1525,15 +1549,15 @@ Todas as peças usadas pertencem ao catálogo do shadcn: `avatar`, `sheet`, `dra
 
 ## 16. Testes
 
-| Camada | Ferramenta | Alvo |
-|---|---|---|
-| Funções puras de permissão | Vitest | `hasPermission`, `getRequiredRoles`, `matchRoute` |
-| Hooks | `@testing-library/react` + `renderHook` | `usePermission`, `useAuth` |
-| Componentes | `@testing-library/react` | `<RequireRole>` redirect, `<PermissionButton>`, `<UserMenu>` mobile/desktop variants |
-| Interceptor Axios | `axios-mock-adapter`, Vitest | 401 → refresh → retry; falha de refresh → logout |
-| E2E | Playwright | fluxo login → callback → /; UC01, UC06, UC22, UC25 |
-| E2E mobile | Playwright (viewports 375×667, 390×844, 768×1024) | smoke de fluxos críticos em mobile: login → publicados → detalhe; UC22 cards; UC06 multistep |
-| Regressão visual | Playwright `toHaveScreenshot` | `TabelaPadrao` cards; `DetalheAmbiente` mobile; `UserMenu` em ambos viewports |
+| Camada                     | Ferramenta                                        | Alvo                                                                                         |
+|----------------------------|---------------------------------------------------|----------------------------------------------------------------------------------------------|
+| Funções puras de permissão | Vitest                                            | `hasPermission`, `getRequiredRoles`, `matchRoute`                                            |
+| Hooks                      | `@testing-library/react` + `renderHook`           | `usePermission`, `useAuth`                                                                   |
+| Componentes                | `@testing-library/react`                          | `<RequireRole>` redirect, `<PermissionButton>`, `<UserMenu>` mobile/desktop variants         |
+| Interceptor Axios          | `axios-mock-adapter`, Vitest                      | 401 → refresh → retry; falha de refresh → logout                                             |
+| E2E                        | Playwright                                        | fluxo login → callback → /; UC01, UC06, UC22, UC25                                           |
+| E2E mobile                 | Playwright (viewports 375×667, 390×844, 768×1024) | smoke de fluxos críticos em mobile: login → publicados → detalhe; UC22 cards; UC06 multistep |
+| Regressão visual           | Playwright `toHaveScreenshot`                     | `TabelaPadrao` cards; `DetalheAmbiente` mobile; `UserMenu` em ambos viewports                |
 
 Cobertura mínima recomendada: `lib/security/permissions.ts` 100%, `lib/security/auth.ts` 100% (trivial após remoção de `decodeJwt`), guards 100%.
 

@@ -60,6 +60,21 @@ Entidade do subdomínio de Identidade e Controle de Acesso. Representa uma pesso
 
 ---
 
+## Localização
+
+A localização de um ambiente é hierárquica:
+
+- **Campus**: unidade institucional de nível superior; nome único no sistema.
+- **Unidade**: pertence a um campus; nome único dentro do campus.
+- **Bloco**: edificação dentro de uma unidade; nome único dentro da unidade.
+- **Localização**: combinação de bloco + andar; única por `(bloco, andar)`. O andar é um inteiro maior ou igual a zero.
+
+Os nomes de campus, unidade e bloco são normalizados (trim, remoção de acentos, separadores colapsados, caixa alta, dígitos sem zeros à esquerda) antes da comparação e da persistência; a exibição usa a forma normalizada.
+
+O ambiente referencia a localização. Campus e unidade não são atributos armazenados na localização: são derivados de `localizacao.bloco.unidade.campus`.
+
+---
+
 ## Ciclo de Vida do Ambiente
 
 Um ambiente passa por três estados ao longo de seu ciclo de vida:
@@ -158,6 +173,10 @@ Eventos significativos que ocorrem no domínio e podem ser de interesse para out
 ## Glossário de Termos de Negócio
 
 - **Ambiente**: Espaço físico catalogado com características construtivas específicas
+- **Campus**: Instância institucional que agrupa unidades (ex.: `LIMOEIRO DO NORTE`)
+- **Unidade**: Subdivisão do campus (ex.: `SEDE`, `CIDADE ALTA`, `UEPE`)
+- **Bloco**: Edificação dentro de uma unidade (ex.: `BLOCO 1`, `GINASIO`)
+- **Localização**: Par `(bloco, andar)` que identifica o espaço físico do ambiente; os níveis exibidos são a forma normalizada dos nomes
 - **Elemento Construtivo**: Componente estrutural essencial (piso, parede, teto)
 - **Esquadria**: Abertura em elemento construtivo (porta, janela)
 - **Componente**: Item adicional opcional (equipamento, luminária, extintor)

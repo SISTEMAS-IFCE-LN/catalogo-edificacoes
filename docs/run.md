@@ -6,13 +6,13 @@ Este documento contém as instruções práticas para rodar o Catálogo de Edifi
 
 ## 1. Pré-requisitos
 
-| Ferramenta | Versão | Verificação |
-|---|---|---|
-| JDK | 25 (Microsoft, Adoptium, Zulu ou OpenJDK) | `java -version` |
-| Maven | 3.9+ (ou usar `mvnw` que vem no projeto) | `mvn -v` |
-| Git | qualquer | `git --version` |
-| OpenSSL | qualquer (apenas para gerar chaves RSA) | `openssl version` |
-| curl ou Postman | qualquer | — |
+| Ferramenta      | Versão                                    | Verificação       |
+|-----------------|-------------------------------------------|-------------------|
+| JDK             | 25 (Microsoft, Adoptium, Zulu ou OpenJDK) | `java -version`   |
+| Maven           | 3.9+ (ou usar `mvnw` que vem no projeto)  | `mvn -v`          |
+| Git             | qualquer                                  | `git --version`   |
+| OpenSSL         | qualquer (apenas para gerar chaves RSA)   | `openssl version` |
+| curl ou Postman | qualquer                                  | —                 |
 
 ---
 
@@ -63,12 +63,12 @@ rsa:
 
 **Variantes suportadas:**
 
-| Estilo | Exemplo | Quando usar |
-|---|---|---|
-| `file:` relativo | `file:../.keys/public.pem` | Dev local, container sem path fixo. |
+| Estilo           | Exemplo                         | Quando usar                                           |
+|------------------|---------------------------------|-------------------------------------------------------|
+| `file:` relativo | `file:../.keys/public.pem`      | Dev local, container sem path fixo.                   |
 | `file:` absoluto | `file:/etc/catalogo/public.pem` | Produção Linux/Kubernetes (Secret montado em volume). |
-| Caminho puro | `../.keys/public.pem` | Equivalente a `file:../.keys/public.pem`. |
-| `classpath:` | `classpath:.keys/public.pem` | Testes com `src/test/resources/.keys/public.pem`. |
+| Caminho puro     | `../.keys/public.pem`           | Equivalente a `file:../.keys/public.pem`.             |
+| `classpath:`     | `classpath:.keys/public.pem`    | Testes com `src/test/resources/.keys/public.pem`.     |
 
 > **Importante sobre caminhos relativos:** o caminho `../.keys/` é **relativo ao working directory do processo Java**. Quando você executa `./mvnw -pl main-app -am spring-boot:run` a partir do diretório `apis/`, o working directory do Maven é `apis/`, mas o Spring Boot muda o working directory para `apis/main-app/` durante a execução. Portanto o caminho `../.keys/public.pem` resolve para `apis/.keys/public.pem`. Os scripts `run-windows.bat` e `run-linux.sh` já fazem o `cd` correto para `apis/` antes de invocar o `mvnw`.
 
@@ -148,7 +148,7 @@ Para um módulo específico:
 ./mvnw -pl ambientes-internos-module test
 ```
 
-Total atual (julho/2026): **203 testes, 0 falhas, 0 erros**.
+Total atual: **366 testes, 0 falhas, 0 erros** (`common-module` 17, `security-module` 70, `ambientes-internos-module` 279).
 
 ### 3.3. Iniciar a aplicação
 
@@ -156,10 +156,10 @@ Os scripts `run-windows.bat` e `run-linux.sh` já fazem o `cd` correto para o di
 
 #### Configuração do `.env`
 
-| Profile | Variáveis obrigatórias no `.env` |
-|---------|----------------------------------|
-| `dev` (default) | `PROFILE_ACTIVE=dev`, `BOOTSTRAP_ADMIN_EMAIL`, chaves RSA (`JWT_PUBLIC_KEY_PATH`, `JWT_PRIVATE_KEY_PATH`). |
-| `prod` | `PROFILE_ACTIVE=prod`, `BOOTSTRAP_ADMIN_EMAIL`, chaves RSA, `DB_HOST`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`. |
+| Profile         | Variáveis obrigatórias no `.env`                                                                                |
+|-----------------|-----------------------------------------------------------------------------------------------------------------|
+| `dev` (default) | `PROFILE_ACTIVE=dev`, `BOOTSTRAP_ADMIN_EMAIL`, chaves RSA (`JWT_PUBLIC_KEY_PATH`, `JWT_PRIVATE_KEY_PATH`).      |
+| `prod`          | `PROFILE_ACTIVE=prod`, `BOOTSTRAP_ADMIN_EMAIL`, chaves RSA, `DB_HOST`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`. |
 
 #### Modo dev
 
@@ -241,20 +241,24 @@ cd apis
 
 ### 3.5. Endpoints úteis para smoke test
 
-| Endpoint | Método | Auth? | Descrição |
-|---|---|---|---|
-| `/actuator/health` | GET | Não | Health check. |
-| `/h2` | GET (navegador) | Não | Console do H2 in-memory, habilitado em dev. |
-| `/oauth2/authorization/google` | GET (navegador) | Não | Inicia o handshake OAuth2. O callback redireciona para `/callback.html#token=...` com o access token no fragmento da URL. |
-| `/auth/refresh` | POST | Cookie | Renova o access token. |
-| `/auth/logout` | POST | Cookie | Revoga refresh token e limpa cookie. |
-| `/api/ambientes/publicados` | GET | Não | Lista ambientes publicados (público). |
-| `/api/ambientes/publicados/{id}` | GET | Bearer | Detalhe de um ambiente publicado. |
-| `/api/ambientes/publicados/esquadrias?ids=1,2` | GET | Bearer | Esquadrias de um conjunto. |
-| `/api/ambientes/nao-publicados` | GET | Bearer (`GESTOR_SISTEMA`) | Lista não publicados. |
-| `/api/ambientes/validacao` | GET | Bearer (`VALIDADOR`) | Lista em validação. |
-| `/api/usuarios/{id}/perfis` | PATCH | Bearer (`ADMINISTRADOR`) | Atualiza perfis. |
-| `/api/usuarios/{id}/desativar` | PATCH | Bearer (`ADMINISTRADOR`) | Desativa usuário. |
+| Endpoint                                                                         | Método          | Auth?                     | Descrição                                                                                                                 |
+|----------------------------------------------------------------------------------|-----------------|---------------------------|---------------------------------------------------------------------------------------------------------------------------|
+| `/actuator/health`                                                               | GET             | Não                       | Health check.                                                                                                             |
+| `/h2`                                                                            | GET (navegador) | Não                       | Console do H2 in-memory, habilitado em dev.                                                                               |
+| `/oauth2/authorization/google`                                                   | GET (navegador) | Não                       | Inicia o handshake OAuth2. O callback redireciona para `/callback.html#token=...` com o access token no fragmento da URL. |
+| `/auth/refresh`                                                                  | POST            | Cookie                    | Renova o access token.                                                                                                    |
+| `/auth/logout`                                                                   | POST            | Cookie                    | Revoga refresh token e limpa cookie.                                                                                      |
+| `/api/ambientes/publicados`                                                      | GET             | Não                       | Lista ambientes publicados (público).                                                                                     |
+| `/api/ambientes/publicados/{id}`                                                 | GET             | Bearer                    | Detalhe de um ambiente publicado.                                                                                         |
+| `/api/ambientes/publicados/esquadrias?ids=1,2`                                   | GET             | Bearer                    | Esquadrias de um conjunto.                                                                                                |
+| `/api/campus`                                                                    | GET             | Não                       | Lista de campi (referência de localização, pública).                                                                      |
+| `/api/unidades?campusId=1`                                                       | GET             | Não                       | Unidades de um campus (pública).                                                                                          |
+| `/api/blocos?unidadeId=1`                                                        | GET             | Não                       | Blocos de uma unidade (pública).                                                                                          |
+| `/api/ambientes/publicados/localizacao?campusId=1&unidadeId=1&blocoId=1&andar=0` | GET             | Não                       | Listagem por IDs de localização (IDs opcionais; pelo menos um obrigatório).                                               |
+| `/api/ambientes/nao-publicados`                                                  | GET             | Bearer (`GESTOR_SISTEMA`) | Lista não publicados.                                                                                                     |
+| `/api/ambientes/validacao`                                                       | GET             | Bearer (`VALIDADOR`)      | Lista em validação.                                                                                                       |
+| `/api/usuarios/{id}/perfis`                                                      | PATCH           | Bearer (`ADMINISTRADOR`)  | Atualiza perfis.                                                                                                          |
+| `/api/usuarios/{id}/desativar`                                                   | PATCH           | Bearer (`ADMINISTRADOR`)  | Desativa usuário.                                                                                                         |
 
 ### 3.6. Smoke test via Postman
 
@@ -265,6 +269,38 @@ A coleção Postman está em `docs/catalogo-edificacoes.postman_collection.json`
 3. A coleção já contém os endpoints públicos e protegidos.
 
 Para testar endpoints protegidos, faça login via Google, copie o `accessToken` retornado e preencha a variável de coleção `ACCESS_TOKEN`. Os requests protegidos usam `Authorization: Bearer {{ACCESS_TOKEN}}`, sem token hardcoded no arquivo.
+
+Contratos de localização nos requests da coleção:
+
+- Referências públicas (UC31, sem autenticação):
+
+  ```
+  GET /api/campus
+  GET /api/unidades?campusId=1
+  GET /api/blocos?unidadeId=1
+  ```
+
+- Escrita de ambiente (`POST /api/ambientes/nao-publicados`, `POST /{id}`, `POST /{id}/duplicar`,
+  `PATCH /{id}/dados-basicos`) — `localizacao` aninhada com exatamente um de `id` (reuso) ou `nome`
+  (find-or-create sob o pai) por nível:
+
+  ```json
+  "localizacao": {
+    "campus": { "id": 1 },
+    "unidade": { "id": 1 },
+    "bloco": { "nome": "BLOCO 1" },
+    "andar": 0
+  }
+  ```
+
+- Filtro por localização (em `nao-publicados`, `validacao` e `publicados`) — apenas IDs:
+
+  ```
+  GET /api/ambientes/nao-publicados/localizacao?campusId=1&unidadeId=1&blocoId=1&andar=0
+  ```
+
+  Os IDs são opcionais, mas pelo menos um campo de localização deve ser enviado (nenhum campo → `400 Bad Request`); ID inexistente ou
+  unidade/bloco fora do pai retorna página vazia.
 
 ---
 
@@ -292,12 +328,12 @@ http://localhost:8080/h2
 
 Configuração de conexão (preenchida automaticamente):
 
-| Campo | Valor |
-|---|---|
-| Driver Class | `org.h2.Driver` |
-| JDBC URL | `jdbc:h2:mem:testdb` |
-| User Name | `sa` |
-| Password | (vazio) |
+| Campo        | Valor                |
+|--------------|----------------------|
+| Driver Class | `org.h2.Driver`      |
+| JDBC URL     | `jdbc:h2:mem:testdb` |
+| User Name    | `sa`                 |
+| Password     | (vazio)              |
 
 > **Atenção:** o H2 é **in-memory** e some ao reiniciar a aplicação.
 

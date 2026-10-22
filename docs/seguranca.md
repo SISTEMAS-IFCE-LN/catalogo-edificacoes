@@ -10,23 +10,23 @@ O sistema adota o fluxo **OAuth2 Authorization Code com PKCE** com o Google como
 
 Componentes centrais:
 
-| Componente | Caminho | Responsabilidade |
-|---|---|---|
-| `CustomOAuth2UserService` | `br.edu.ifce.security.model.application.service` | Carrega o usuário no Google e delega a sincronização do `Usuario` (transação curta, somente banco) ao `UsuarioOAuth2Service`. |
-| `UsuarioOAuth2Service` | `br.edu.ifce.security.model.application.service` | Provisiona/atualiza o `Usuario` e devolve as autoridades; não envolve a chamada HTTP do handshake OAuth2. |
-| `JwtService` | `br.edu.ifce.security.model.application.service` | Emite e valida o JWT próprio. |
-| `RefreshTokenService` | `br.edu.ifce.security.model.application.service` | Persiste e rotaciona refresh tokens. |
-| `AuthService` | `br.edu.ifce.security.model.application.service` | Orquestra login/refresh/logout. |
-| `OAuth2LoginSuccessHandler` | `br.edu.ifce.security.config` | Gera JWT + refresh token no callback OAuth2 e redireciona para o frontend com `#token=` no fragmento da URL. |
-| `AuthController` | `br.edu.ifce.security.controller` | Adaptador HTTP para refresh e logout. |
-| `UsuarioService` | `br.edu.ifce.security.model.application.service` | Gestão de perfis e desativação (com lockout prevention). |
-| `UsuarioController` | `br.edu.ifce.security.controller` | Endpoints administrativos de perfis. |
-| `SecurityConfig` | `br.edu.ifce.security.config` | `SecurityFilterChain`, `oauth2Login`, `oauth2ResourceServer.jwt()`, CORS. |
-| `JwtConfig` | `br.edu.ifce.security.config` | Beans `JwtEncoder` e `JwtDecoder` (RSA). |
-| `RsaKeyProperties` | `br.edu.ifce.security.config.properties` | Bind de `rsa.public-key` / `rsa.private-key`. |
-| `JwtProperties` | `br.edu.ifce.security.config.properties` | Bind de `jwt.access-token-expiration` / `jwt.refresh-expiration` / `jwt.cookie-secure` / `jwt.same-site`. |
-| `FrontendProperties` | `br.edu.ifce.security.config.properties` | Bind de `frontend.callback-success-url` / `frontend.callback-error-url`. |
-| `BootstrapAdminRunner` | `br.edu.ifce.security.config` | Garante a presença de um administrador institucional conhecido no boot. |
+| Componente                  | Caminho                                          | Responsabilidade                                                                                                              |
+|-----------------------------|--------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------|
+| `CustomOAuth2UserService`   | `br.edu.ifce.security.model.application.service` | Carrega o usuário no Google e delega a sincronização do `Usuario` (transação curta, somente banco) ao `UsuarioOAuth2Service`. |
+| `UsuarioOAuth2Service`      | `br.edu.ifce.security.model.application.service` | Provisiona/atualiza o `Usuario` e devolve as autoridades; não envolve a chamada HTTP do handshake OAuth2.                     |
+| `JwtService`                | `br.edu.ifce.security.model.application.service` | Emite e valida o JWT próprio.                                                                                                 |
+| `RefreshTokenService`       | `br.edu.ifce.security.model.application.service` | Persiste e rotaciona refresh tokens.                                                                                          |
+| `AuthService`               | `br.edu.ifce.security.model.application.service` | Orquestra login/refresh/logout.                                                                                               |
+| `OAuth2LoginSuccessHandler` | `br.edu.ifce.security.config`                    | Gera JWT + refresh token no callback OAuth2 e redireciona para o frontend com `#token=` no fragmento da URL.                  |
+| `AuthController`            | `br.edu.ifce.security.controller`                | Adaptador HTTP para refresh e logout.                                                                                         |
+| `UsuarioService`            | `br.edu.ifce.security.model.application.service` | Gestão de perfis e desativação (com lockout prevention).                                                                      |
+| `UsuarioController`         | `br.edu.ifce.security.controller`                | Endpoints administrativos de perfis.                                                                                          |
+| `SecurityConfig`            | `br.edu.ifce.security.config`                    | `SecurityFilterChain`, `oauth2Login`, `oauth2ResourceServer.jwt()`, CORS.                                                     |
+| `JwtConfig`                 | `br.edu.ifce.security.config`                    | Beans `JwtEncoder` e `JwtDecoder` (RSA).                                                                                      |
+| `RsaKeyProperties`          | `br.edu.ifce.security.config.properties`         | Bind de `rsa.public-key` / `rsa.private-key`.                                                                                 |
+| `JwtProperties`             | `br.edu.ifce.security.config.properties`         | Bind de `jwt.access-token-expiration` / `jwt.refresh-expiration` / `jwt.cookie-secure` / `jwt.same-site`.                     |
+| `FrontendProperties`        | `br.edu.ifce.security.config.properties`         | Bind de `frontend.callback-success-url` / `frontend.callback-error-url`.                                                      |
+| `BootstrapAdminRunner`      | `br.edu.ifce.security.config`                    | Garante a presença de um administrador institucional conhecido no boot.                                                       |
 
 ---
 
@@ -121,11 +121,11 @@ Os endpoints `POST /auth/refresh` e `POST /auth/logout` dependem do cookie `Http
 
 Uma `SecurityFilterChain` dedicada (`authFilterChain`, `@Order(2)`) intercepta `/auth/**` com CSRF habilitado:
 
-| Order | Chain | Matcher | CSRF | Session |
-|---|---|---|---|---|
-| 1 | `oauth2LoginFilterChain` | `/oauth2/**`, `/login/**` | habilitado (default) | `IF_REQUIRED` |
-| 2 | `authFilterChain` | `/auth/**` | habilitado (`CookieCsrfTokenRepository`) | `IF_REQUIRED` |
-| 3 | `apiFilterChain` | demais | desabilitado | `STATELESS` |
+| Order | Chain                    | Matcher                   | CSRF                                     | Session       |
+|-------|--------------------------|---------------------------|------------------------------------------|---------------|
+| 1     | `oauth2LoginFilterChain` | `/oauth2/**`, `/login/**` | habilitado (default)                     | `IF_REQUIRED` |
+| 2     | `authFilterChain`        | `/auth/**`                | habilitado (`CookieCsrfTokenRepository`) | `IF_REQUIRED` |
+| 3     | `apiFilterChain`         | demais                    | desabilitado                             | `STATELESS`   |
 
 ### 4.2. Fluxo CSRF
 
@@ -165,12 +165,12 @@ Uma `SecurityFilterChain` dedicada (`authFilterChain`, `@Order(2)`) intercepta `
 
 Quatro perfis, armazenados no campo `perfis` da tabela `usuario_perfis` como `Set<Perfil>`:
 
-| Perfil | Permissões representadas |
-|---|---|
-| `ROLE_COLABORADOR` | Listar e consultar ambientes publicados. **Obrigatório para todos os usuários.** |
-| `ROLE_VALIDADOR` | Listar e gerenciar ambientes em validação (publicar, privar). |
-| `ROLE_GESTOR_SISTEMA` | CRUD de ambientes não publicados; submeter para validação. |
-| `ROLE_ADMINISTRADOR` | Gerir perfis de outros usuários; desativar contas. |
+| Perfil                | Permissões representadas                                                         |
+|-----------------------|----------------------------------------------------------------------------------|
+| `ROLE_COLABORADOR`    | Listar e consultar ambientes publicados. **Obrigatório para todos os usuários.** |
+| `ROLE_VALIDADOR`      | Listar e gerenciar ambientes em validação (publicar, privar).                    |
+| `ROLE_GESTOR_SISTEMA` | CRUD de ambientes não publicados; submeter para validação.                       |
+| `ROLE_ADMINISTRADOR`  | Gerir perfis de outros usuários; desativar contas.                               |
 
 **Regra universal:** o `UsuarioService.atualizarPerfis` sempre **adiciona** `ROLE_COLABORADOR` ao set final, garantindo que nenhum usuário perca o acesso mínimo.
 
@@ -203,23 +203,26 @@ Definido em `SecurityConfig.apiFilterChain` (chain 3, com `@Order(3)`).
 
 ### 7.1. Endpoints públicos (`permitAll`)
 
-| Path | Método | Observação |
-|---|---|---|
-| `/api/ambientes/publicados/**` | todos | Listagens e detalhes de ambientes publicados. |
-| `/auth/**` | todos | Refresh, logout. |
-| `/health` | todos | Health check. |
-| `/oauth2/**` | todos | Handshake OAuth2 (chain 1, com `IF_REQUIRED`). |
-| `/login/**` | todos | Handshake OAuth2. |
+| Path                           | Método | Observação                                                                                           |
+|--------------------------------|--------|------------------------------------------------------------------------------------------------------|
+| `/api/ambientes/publicados/**` | todos  | Listagens de ambientes publicados; o detalhe `{id}` e `esquadrias` exigem `ROLE_COLABORADOR` (§7.2). |
+| `/api/campus`                  | GET    | Lista de campi (selects e filtros de localização).                                                   |
+| `/api/unidades`                | GET    | Unidades por campus (`?campusId=`).                                                                  |
+| `/api/blocos`                  | GET    | Blocos por unidade (`?unidadeId=`).                                                                  |
+| `/auth/**`                     | todos  | Refresh, logout.                                                                                     |
+| `/actuator/health`             | todos  | Health check (endpoint do Actuator).                                                                 |
+| `/oauth2/**`                   | todos  | Handshake OAuth2 (chain 1, com `IF_REQUIRED`).                                                       |
+| `/login/**`                    | todos  | Handshake OAuth2.                                                                                    |
 
 ### 7.2. Endpoints protegidos por `SecurityConfig`
 
-| Path | Authority exigida |
-|---|---|
+| Path                                                          | Authority exigida     |
+|---------------------------------------------------------------|-----------------------|
 | `/api/ambientes/nao-publicados/**` (GET, POST, PATCH, DELETE) | `ROLE_GESTOR_SISTEMA` |
-| `/api/ambientes/validacao/**` (GET, PATCH) | `ROLE_VALIDADOR` |
-| `/api/ambientes/publicados/{id}` (GET) | `ROLE_COLABORADOR` |
-| `/api/ambientes/publicados/esquadrias` (GET) | `ROLE_COLABORADOR` |
-| `/api/usuarios/**` (GET, PATCH) | `ROLE_ADMINISTRADOR` |
+| `/api/ambientes/validacao/**` (GET, PATCH)                    | `ROLE_VALIDADOR`      |
+| `/api/ambientes/publicados/{id}` (GET)                        | `ROLE_COLABORADOR`    |
+| `/api/ambientes/publicados/esquadrias` (GET)                  | `ROLE_COLABORADOR`    |
+| `/api/usuarios/**` (GET, PATCH)                               | `ROLE_ADMINISTRADOR`  |
 
 ### 7.3. Resposta a acessos não autorizados
 
@@ -243,12 +246,12 @@ data class JwtProperties(
 )
 ```
 
-| Property | Env var | Default | Unidade | Descrição |
-|---|---|---|---|---|
-| `jwt.access-token-expiration` | `JWT_ACCESS_TOKEN_EXPIRATION` | `900` | segundos | Vida do access token. |
-| `jwt.refresh-expiration` | `JWT_REFRESH_EXPIRATION` | `3600` | segundos | Vida do refresh token **e** do cookie que o contém. |
-| `jwt.cookie-secure` | `JWT_COOKIE_SECURE` | `true` | boolean | Se `true`, cookie só é enviado em conexões HTTPS. **Desligar em dev local (HTTP).** |
-| `jwt.same-site` | `JWT_COOKIE_SAME_SITE` | `Lax` | string | Política `SameSite` do cookie de refresh token. Valores válidos: `Strict`, `Lax`, `None`. |
+| Property                      | Env var                       | Default | Unidade  | Descrição                                                                                 |
+|-------------------------------|-------------------------------|---------|----------|-------------------------------------------------------------------------------------------|
+| `jwt.access-token-expiration` | `JWT_ACCESS_TOKEN_EXPIRATION` | `900`   | segundos | Vida do access token.                                                                     |
+| `jwt.refresh-expiration`      | `JWT_REFRESH_EXPIRATION`      | `3600`  | segundos | Vida do refresh token **e** do cookie que o contém.                                       |
+| `jwt.cookie-secure`           | `JWT_COOKIE_SECURE`           | `true`  | boolean  | Se `true`, cookie só é enviado em conexões HTTPS. **Desligar em dev local (HTTP).**       |
+| `jwt.same-site`               | `JWT_COOKIE_SAME_SITE`        | `Lax`   | string   | Política `SameSite` do cookie de refresh token. Valores válidos: `Strict`, `Lax`, `None`. |
 
 ### 8.2. `RsaKeyProperties` (`br.edu.ifce.security.config.properties`)
 
@@ -267,10 +270,10 @@ data class RsaKeyProperties(
 }
 ```
 
-| Property | Env var | Default | Descrição |
-|---|---|---|---|
-| `rsa.public-key-path` | `JWT_PUBLIC_KEY_PATH` | `file:../.keys/public.pem` | Caminho do `.pem` da chave pública. Suporta `file:`, `classpath:` ou caminho relativo/absoluto. |
-| `rsa.private-key-path` | `JWT_PRIVATE_KEY_PATH` | `file:../.keys/private_pkcs8.pem` | Caminho do `.pem` da chave privada (formato PKCS#8). |
+| Property               | Env var                | Default                           | Descrição                                                                                       |
+|------------------------|------------------------|-----------------------------------|-------------------------------------------------------------------------------------------------|
+| `rsa.public-key-path`  | `JWT_PUBLIC_KEY_PATH`  | `file:../.keys/public.pem`        | Caminho do `.pem` da chave pública. Suporta `file:`, `classpath:` ou caminho relativo/absoluto. |
+| `rsa.private-key-path` | `JWT_PRIVATE_KEY_PATH` | `file:../.keys/private_pkcs8.pem` | Caminho do `.pem` da chave privada (formato PKCS#8).                                            |
 
 > **Importante sobre caminhos relativos:** o caminho `../.keys/` é **relativo ao working directory do processo Java**.
 
@@ -279,23 +282,23 @@ evitando custo desnecessário se a aplicação for usada apenas para endpoints p
 
 ### 8.3. `bootstrap.*` (gerido por `BootstrapAdminRunner`)
 
-| Property | Env var | Default | Descrição |
-|---|---|---|---|
-| `bootstrap.admin-email` | `BOOTSTRAP_ADMIN_EMAIL` | (vazio) | Email do admin institucional. **Obrigatório** — aborta o boot se vazio. |
-| `bootstrap.allow-reactivate` | `BOOTSTRAP_ALLOW_REACTIVATE` | `true` | Kill switch geral. Quando `false`, o bootstrap é no-op total. |
+| Property                     | Env var                      | Default | Descrição                                                               |
+|------------------------------|------------------------------|---------|-------------------------------------------------------------------------|
+| `bootstrap.admin-email`      | `BOOTSTRAP_ADMIN_EMAIL`      | (vazio) | Email do admin institucional. **Obrigatório** — aborta o boot se vazio. |
+| `bootstrap.allow-reactivate` | `BOOTSTRAP_ALLOW_REACTIVATE` | `true`  | Kill switch geral. Quando `false`, o bootstrap é no-op total.           |
 
 ### 8.4. `FrontendProperties`
 
-| Property | Env var | Default | Descrição |
-|---|---|---|---|
+| Property                        | Env var                         | Default                             | Descrição                 |
+|---------------------------------|---------------------------------|-------------------------------------|---------------------------|
 | `frontend.callback-success-url` | `FRONTEND_CALLBACK_SUCCESS_URL` | (vazio — fallback `/callback.html`) | URL de sucesso do OAuth2. |
-| `frontend.callback-error-url` | `FRONTEND_CALLBACK_ERROR_URL` | (vazio — fallback `/failure.html`) | URL de erro do OAuth2. |
+| `frontend.callback-error-url`   | `FRONTEND_CALLBACK_ERROR_URL`   | (vazio — fallback `/failure.html`)  | URL de erro do OAuth2.    |
 
 ### 8.5. OAuth2 Google
 
-| Property | Env var | Descrição |
-|---|---|---|
-| `spring.security.oauth2.client.registration.google.client-id` | `GOOGLE_CLIENT_ID` | Client ID do projeto no Google Cloud Console. |
+| Property                                                          | Env var                | Descrição                                         |
+|-------------------------------------------------------------------|------------------------|---------------------------------------------------|
+| `spring.security.oauth2.client.registration.google.client-id`     | `GOOGLE_CLIENT_ID`     | Client ID do projeto no Google Cloud Console.     |
 | `spring.security.oauth2.client.registration.google.client-secret` | `GOOGLE_CLIENT_SECRET` | Client Secret do projeto no Google Cloud Console. |
 
 ### 8.6. Cookies de sessão (geridos pelo Spring)
@@ -351,12 +354,12 @@ rsa:
 
 Variantes suportadas via env var (sobrescreve o default):
 
-| Estilo | Exemplo | Quando usar |
-|---|---|---|
-| `file:` relativo | `file:../.keys/public.pem` | Dev local, container sem path fixo. |
-| `file:` absoluto | `file:/etc/catalogo/public.pem` | Produção Linux (Secret montado em volume). |
-| Caminho puro | `../.keys/public.pem` | Equivalente a `file:../.keys/public.pem`. |
-| `classpath:` | `classpath:.keys/public.pem` | Testes com `src/test/resources/.keys/public.pem`. |
+| Estilo           | Exemplo                         | Quando usar                                       |
+|------------------|---------------------------------|---------------------------------------------------|
+| `file:` relativo | `file:../.keys/public.pem`      | Dev local, container sem path fixo.               |
+| `file:` absoluto | `file:/etc/catalogo/public.pem` | Produção Linux (Secret montado em volume).        |
+| Caminho puro     | `../.keys/public.pem`           | Equivalente a `file:../.keys/public.pem`.         |
+| `classpath:`     | `classpath:.keys/public.pem`    | Testes com `src/test/resources/.keys/public.pem`. |
 
 > **Importante sobre caminhos relativos:** o caminho `../.keys/` é **relativo ao working directory do processo Java**.
 
@@ -370,14 +373,14 @@ Variantes suportadas via env var (sobrescreve o default):
 
 `BootstrapAdminRunner` é um `ApplicationRunner` que roda após o `ApplicationContext` estar pronto. Comportamento:
 
-| Cenário | Resultado |
-|---|---|
-| `BOOTSTRAP_ADMIN_EMAIL` vazia | `IllegalStateException` → boot abortado. |
-| Email não existe no banco | Cria `Usuario` com `ROLE_ADMINISTRADOR` + `ROLE_COLABORADOR`. |
-| Email existe, ativo, já admin | No-op silencioso. |
-| Email existe, ativo, sem admin role | Promove (log `WARN`). |
-| Email existe, inativo, `allow-reactivate=true` | Reativa + garante perfis (log `WARN`). |
-| Email existe, inativo, `allow-reactivate=false` | `IllegalStateException` → boot abortado. |
+| Cenário                                         | Resultado                                                     |
+|-------------------------------------------------|---------------------------------------------------------------|
+| `BOOTSTRAP_ADMIN_EMAIL` vazia                   | `IllegalStateException` → boot abortado.                      |
+| Email não existe no banco                       | Cria `Usuario` com `ROLE_ADMINISTRADOR` + `ROLE_COLABORADOR`. |
+| Email existe, ativo, já admin                   | No-op silencioso.                                             |
+| Email existe, ativo, sem admin role             | Promove (log `WARN`).                                         |
+| Email existe, inativo, `allow-reactivate=true`  | Reativa + garante perfis (log `WARN`).                        |
+| Email existe, inativo, `allow-reactivate=false` | `IllegalStateException` → boot abortado.                      |
 
 **Procedimento recomendado para produção:**
 
@@ -445,31 +448,31 @@ Todas as respostas de erro tratadas pelo `GlobalExceptionHandler` seguem o forma
 
 ### 12.2. Cenários tratados pelo `GlobalExceptionHandler` (chain 3 — API)
 
-| Cenário | HTTP Status | Origem |
-|---|---|---|
-| Body JSON inválido / mal formatado | `400` | `HttpMessageNotReadableException`. |
-| Validação de `@RequestBody @Valid` (ex.: `MethodArgumentNotValidException`) | `400` | Mensagem do primeiro campo com erro. |
-| Validação de `@PathVariable`/`@RequestParam` com `@Validated` | `400` | `ConstraintViolationException`. |
-| Validação de negócio (ex.: "Já existe ambiente com esse nome") | `400` | `IllegalArgumentException` (factories, use cases). |
-| Recurso inexistente (ex.: "Ambiente não encontrado") | `404` | `NoSuchElementException`. |
-| Usuário inexistente | `404` | `NoSuchElementException` (mapeada pelo `GlobalExceptionHandler`). |
-| Lockout prevention | `409` | `UltimoAdminException` (mapeada pelo `GlobalExceptionHandler`). |
-| Parâmetro obrigatório ausente | `400` | `MissingServletRequestParameterException`. |
-| Violação de constraint do banco | `400` | `DataIntegrityViolationException` (mensagem da causa raiz). |
-| Método HTTP não suportado | `405` | `HttpRequestMethodNotSupportedException`. |
-| `Content-Type` não suportado | `415` | `HttpMediaTypeNotSupportedException`. |
-| Erro inesperado do servidor | `500` | `Exception` (fallback, mensagem genérica). |
+| Cenário                                                                     | HTTP Status | Origem                                                            |
+|-----------------------------------------------------------------------------|-------------|-------------------------------------------------------------------|
+| Body JSON inválido / mal formatado                                          | `400`       | `HttpMessageNotReadableException`.                                |
+| Validação de `@RequestBody @Valid` (ex.: `MethodArgumentNotValidException`) | `400`       | Mensagem do primeiro campo com erro.                              |
+| Validação de `@PathVariable`/`@RequestParam` com `@Validated`               | `400`       | `ConstraintViolationException`.                                   |
+| Validação de negócio (ex.: "Já existe ambiente com esse nome")              | `400`       | `IllegalArgumentException` (factories, use cases).                |
+| Recurso inexistente (ex.: "Ambiente não encontrado")                        | `404`       | `NoSuchElementException`.                                         |
+| Usuário inexistente                                                         | `404`       | `NoSuchElementException` (mapeada pelo `GlobalExceptionHandler`). |
+| Lockout prevention                                                          | `409`       | `UltimoAdminException` (mapeada pelo `GlobalExceptionHandler`).   |
+| Parâmetro obrigatório ausente                                               | `400`       | `MissingServletRequestParameterException`.                        |
+| Violação de constraint do banco                                             | `400`       | `DataIntegrityViolationException` (mensagem da causa raiz).       |
+| Método HTTP não suportado                                                   | `405`       | `HttpRequestMethodNotSupportedException`.                         |
+| `Content-Type` não suportado                                                | `415`       | `HttpMediaTypeNotSupportedException`.                             |
+| Erro inesperado do servidor                                                 | `500`       | `Exception` (fallback, mensagem genérica).                        |
 
 ### 12.3. Cenários tratados localmente ou pelo framework
 
-| Cenário | HTTP Status | Origem |
-|---|---|---|
-| Cookie de refresh ausente | `401` | `AuthController.refresh` retorna `ResponseEntity.status(UNAUTHORIZED)` direto (não passa pelo handler). |
-| Cookie de refresh inválido/expirado/revogado | `401` | `RefreshTokenService` retorna `null` → `AuthController.refresh` converte. |
-| Login com Google de e-mail `@ifce.edu.br` mas inativo | redireciona para `/failure.html` | `UsuarioOAuth2Service` lança `OAuth2AuthenticationException` → `.failureUrl()` na chain 1. |
-| Login com e-mail externo não pré-cadastrado | redireciona para `/failure.html` | `UsuarioOAuth2Service` lança `OAuth2AuthenticationException` → `.failureUrl()` na chain 1. |
-| Endpoint protegido sem `Authorization: Bearer <jwt>` | `401` | `oauth2ResourceServer.jwt()` falha (Spring Security, não passa pelo handler). |
-| Endpoint protegido com `Authority` insuficiente | `403` | `SecurityConfig` — regra de autoridade (Spring Security). |
+| Cenário                                               | HTTP Status                      | Origem                                                                                                  |
+|-------------------------------------------------------|----------------------------------|---------------------------------------------------------------------------------------------------------|
+| Cookie de refresh ausente                             | `401`                            | `AuthController.refresh` retorna `ResponseEntity.status(UNAUTHORIZED)` direto (não passa pelo handler). |
+| Cookie de refresh inválido/expirado/revogado          | `401`                            | `RefreshTokenService` retorna `null` → `AuthController.refresh` converte.                               |
+| Login com Google de e-mail `@ifce.edu.br` mas inativo | redireciona para `/failure.html` | `UsuarioOAuth2Service` lança `OAuth2AuthenticationException` → `.failureUrl()` na chain 1.              |
+| Login com e-mail externo não pré-cadastrado           | redireciona para `/failure.html` | `UsuarioOAuth2Service` lança `OAuth2AuthenticationException` → `.failureUrl()` na chain 1.              |
+| Endpoint protegido sem `Authorization: Bearer <jwt>`  | `401`                            | `oauth2ResourceServer.jwt()` falha (Spring Security, não passa pelo handler).                           |
+| Endpoint protegido com `Authority` insuficiente       | `403`                            | `SecurityConfig` — regra de autoridade (Spring Security).                                               |
 
 > **Nota:** o `GlobalExceptionHandler` é um `@RestControllerAdvice` que atua apenas no `DispatcherServlet` da API (chain 3). As exceções lançadas no handshake OAuth2 (chain 1) e na camada de filtros do Spring Security são tratadas pelo próprio Spring Security, fora do escopo do handler global.
 >

@@ -14,14 +14,14 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
         1. O Validador realiza uma requisição `GET` ao endpoint `/api/ambientes/validacao`.
         2. O Sistema recupera a lista de ambientes do banco de dados.
         3. O Sistema retorna a lista ao Validador de forma paginada, limitada a 100 registros por página.
-        4. A lista retornada conterá os seguintes dados: ID, Nome, Localização (Bloco, Unidade e Andar), Tipo, Capacidade e Área. A resposta também incluirá `areaTotal` (soma das áreas dos ambientes da página) e `dadosPaginacao`.
+        4. A lista retornada conterá os seguintes dados: ID, Nome, Localização (Campus, Unidade, Bloco e Andar; cada nível como `{id, nome}` na forma normalizada), Tipo, Capacidade e Área. A resposta também incluirá `areaTotal` (soma das áreas dos ambientes da página) e `dadosPaginacao`.
     * **FP2 - Filtrar por Nome:**
         1. O Validador realiza uma requisição `GET` ao endpoint `/api/ambientes/validacao/nome?nome={nome}`.
         2. O Sistema recupera a lista de ambientes que correspondem ao nome fornecido.
         3. Repete os passos 3 e 4 do FP1.
     * **FP3 - Filtrar por Localização:**
-        1. O Validador realiza uma requisição `GET` ao endpoint `/api/ambientes/validacao/localizacao?bloco={bloco}&unidade={unidade}&andar={andar}`.
-        2. O Sistema recupera a lista de ambientes que correspondem aos parâmetros de localização fornecidos.
+        1. O Validador realiza uma requisição `GET` ao endpoint `/api/ambientes/validacao/localizacao?campusId={campusId}&unidadeId={unidadeId}&blocoId={blocoId}&andar={andar}`.
+        2. O Sistema recupera a lista de ambientes que correspondem aos IDs fornecidos. Os IDs são opcionais, mas pelo menos um campo de localização deve ser enviado; se nenhum campo for enviado, o Sistema retorna `400 Bad Request`. ID inexistente, ou unidade/bloco fora do pai informado, resulta em página vazia — a consulta filtra por IDs através de `bloco.unidade.campus`, pois `Localizacao` não tem colunas `campus`/`unidade`.
         3. Repete os passos 3 e 4 do FP1.
     * **FP4 - Filtrar por Tipo:**
         1. O Validador realiza uma requisição `GET` ao endpoint `/api/ambientes/validacao/tipo?tipo={tipo}`.
@@ -43,7 +43,7 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
         3. Os detalhes incluem as seguintes informações do ambiente:
             * ID;
             * Nome;
-            * Localização (Bloco, Unidade e Andar);
+            * Localização (Campus, Unidade, Bloco e Andar; cada nível como `{id, nome}` na forma normalizada);
             * Tipo;
             * Capacidade;
             * Geometrias do ambiente e suas áreas;
@@ -97,14 +97,14 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
         1. O Gestor realiza uma requisição `GET` ao endpoint `/api/ambientes/nao-publicados`.
         2. O Sistema recupera a lista de ambientes do banco de dados.
         3. O Sistema retorna a lista ao Gestor de forma paginada, limitada a 100 registros por página.
-        4. A lista retornada conterá os seguintes dados: ID, Nome, Localização (Bloco, Unidade e Andar), Tipo, Capacidade e Área. A resposta também incluirá `areaTotal` (soma das áreas dos ambientes da página) e `dadosPaginacao`.
+        4. A lista retornada conterá os seguintes dados: ID, Nome, Localização (Campus, Unidade, Bloco e Andar; cada nível como `{id, nome}` na forma normalizada), Tipo, Capacidade e Área. A resposta também incluirá `areaTotal` (soma das áreas dos ambientes da página) e `dadosPaginacao`.
     * **FP2 - Filtrar por Nome:**
         1. O Gestor realiza uma requisição `GET` ao endpoint `/api/ambientes/nao-publicados/nome?nome={nome}`.
         2. O Sistema recupera a lista de ambientes que correspondem ao nome fornecido.
         3. Repete os passos 3 e 4 do FP1.
     * **FP3 - Filtrar por Localização:**
-        1. O Gestor realiza uma requisição `GET` ao endpoint `/api/ambientes/nao-publicados/localizacao?bloco={bloco}&unidade={unidade}&andar={andar}`.
-        2. O Sistema recupera a lista de ambientes que correspondem aos parâmetros de localização fornecidos.
+        1. O Gestor realiza uma requisição `GET` ao endpoint `/api/ambientes/nao-publicados/localizacao?campusId={campusId}&unidadeId={unidadeId}&blocoId={blocoId}&andar={andar}`.
+        2. O Sistema recupera a lista de ambientes que correspondem aos IDs fornecidos. Os IDs são opcionais, mas pelo menos um campo de localização deve ser enviado; se nenhum campo for enviado, o Sistema retorna `400 Bad Request`. ID inexistente, ou unidade/bloco fora do pai informado, resulta em página vazia — a consulta filtra por IDs através de `bloco.unidade.campus`, pois `Localizacao` não tem colunas `campus`/`unidade`.
         3. Repete os passos 3 e 4 do FP1.
     * **FP4 - Filtrar por Tipo:**
         1. O Gestor realiza uma requisição `GET` ao endpoint `/api/ambientes/nao-publicados/tipo?tipo={tipo}`.
@@ -126,7 +126,7 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
         3. Os detalhes incluem as seguintes informações do ambiente:
             * ID;
             * Nome;
-            * Localização (Bloco, Unidade e Andar);
+            * Localização (Campus, Unidade, Bloco e Andar; cada nível como `{id, nome}` na forma normalizada);
             * Tipo;
             * Capacidade;
             * Geometrias do ambiente e suas áreas;
@@ -151,7 +151,18 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
 * **Ator Primário:** Gestor do Sistema.
 * **Pré-condições:** O Gestor está autenticado e possui permissão para cadastrar ambientes.
 * **Fluxo Principal:**
-    1.  O Gestor preenche o corpo da requisição com os seguintes dados: nome, localização (Bloco, Unidade e Andar), tipo, capacidade, geometrias do ambiente (tipo de geometria, base, altura e repetição), pés-direitos, esquadrias (tipo, geometria com base/altura/repetição, material, altura do peitoril e informação adicional) e informação adicional.
+    1.  O Gestor preenche o corpo da requisição com os seguintes dados: nome, localização, tipo, capacidade, geometrias do ambiente (tipo de geometria, base, altura e repetição), pés-direitos, esquadrias (tipo, geometria com base/altura/repetição, material, altura do peitoril e informação adicional) e informação adicional. A localização é um objeto aninhado que espelha a hierarquia, com um nível por entidade e exatamente um dos campos `id` (reuso de entidade existente) ou `nome` (find-or-create sob o pai já resolvido) por nível (RN-1.18):
+
+        ```json
+        "localizacao": {
+          "campus": { "id": 1 },
+          "unidade": { "id": 1 },
+          "bloco": { "nome": "BLOCO 1" },
+          "andar": 0
+        }
+        ```
+
+        O nome é normalizado antes da comparação e da persistência (RN-1.17) e é único no escopo do pai (RN-1.15); o andar é um inteiro maior ou igual a zero (RN-1.16).
     2.  O Gestor realiza uma requisição `POST` ao endpoint `/api/ambientes/nao-publicados`.
     3.  O Sistema valida os dados da requisição conforme as regras de negócio (RN-1.6 e RN-1.7).
     4.  Se a validação for bem-sucedida, o Sistema persiste o novo ambiente com o atributo `status = NAO_PUBLICADO`, gera um ID e retorna os dados do ambiente criado.
@@ -168,11 +179,11 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
 * **Pré-condições:** O Gestor está autenticado e possui permissão para atualizar ambientes não publicados. O ambiente a ser atualizado existe e tem `status = NAO_PUBLICADO`.
 * **Fluxo Principal:**
     1.  O Gestor obtém os dados atuais do ambiente (UC05).
-    2.  O Gestor preenche o corpo da requisição com os seguintes dados: nome, localização (Bloco, Unidade e Andar) e capacidade.
+    2.  O Gestor preenche o corpo da requisição com os seguintes dados: nome, localização — objeto aninhado `campus`/`unidade`/`bloco`/`andar`, com exatamente um de `id` ou `nome` por nível, conforme UC06 — e capacidade.
     3.  O Gestor realiza uma requisição `PATCH` ao endpoint `/api/ambientes/nao-publicados/{id}/dados-basicos`.
     4.  O Sistema valida os dados da requisição conforme as regras de negócio (RN-1.6 e RN-1.7).
     5.  Se a validação for bem-sucedida, o Sistema atualiza os dados do ambiente no banco de dados e retorna os dados básicos atualizados.
-    6.  O Sistema retorna `200 OK` com os dados básicos do ambiente (`AmbienteBasicoRes`): ID, Nome, Tipo, Localização (Bloco, Unidade e Andar), Capacidade e Área.
+    6.  O Sistema retorna `200 OK` com os dados básicos do ambiente (`AmbienteBasicoRes`): ID, Nome, Tipo, Localização (Campus, Unidade, Bloco e Andar; cada nível como `{id, nome}` na forma normalizada), Capacidade e Área.
 * **Fluxos Alternativos:**
     * **FA01 - Erro de Validação:** Se os dados modificados não passarem na validação, o Sistema exibe mensagens de erro e não salva as alterações.
     * **FA02 - Ambiente Não Encontrado:** Se o ID fornecido não corresponder a um ambiente não publicado, o Sistema exibe uma mensagem de erro.
@@ -329,7 +340,7 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
 * **Pré-condições:** O Gestor está autenticado e possui permissão para alterar ambientes não publicados. Os ambientes a serem alterados existem e têm `status = NAO_PUBLICADO`.
 * **Fluxo Principal:**
     1.  O Gestor obtém o ambiente não publicado que deseja alterar o tipo e os dados (UC05).
-    2.  O Gestor preenche o corpo da requisição com o novo tipo e os novos dados do ambiente: nome, localização (Bloco, Unidade e Andar), capacidade, geometrias (tipo de geometria, base, altura e repetição), pés-direitos, esquadrias (tipo, geometria com base/altura/repetição, material, altura do peitoril e informação adicional) e informação adicional.
+    2.  O Gestor preenche o corpo da requisição com o novo tipo e os novos dados do ambiente: nome, localização — objeto aninhado `campus`/`unidade`/`bloco`/`andar`, com exatamente um de `id` ou `nome` por nível, conforme UC06 —, capacidade, geometrias (tipo de geometria, base, altura e repetição), pés-direitos, esquadrias (tipo, geometria com base/altura/repetição, material, altura do peitoril e informação adicional) e informação adicional.
     3.  O Gestor realiza uma requisição `POST` ao endpoint `/api/ambientes/nao-publicados/{id}`.
     4.  O Sistema verifica se cada ambiente existe e está com `status = NAO_PUBLICADO` e se os novos dados estiverem de acordo com as regras de negócio (RN-1.6).
     5.  Se as verificações forem bem-sucedidas, o Sistema cria um novo ambiente do tipo especificado no banco de dados, remove o ambiente antigo e retorna os dados do novo ambiente.
@@ -347,7 +358,7 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
 * **Pré-condições:** O Gestor está autenticado e possui permissão para duplicar ambientes não publicados. Os ambientes a serem duplicados existem e têm `status = NAO_PUBLICADO`.
 * **Fluxo Principal:**
     1.  O Gestor obtém o ambiente não publicado que deseja duplicar (UC05).
-    2.  O Gestor preenche o corpo da requisição com o novo nome e a nova localização (Bloco, Unidade e Andar) do ambiente.
+    2.  O Gestor preenche o corpo da requisição com o novo nome e a nova localização do ambiente — objeto aninhado `campus`/`unidade`/`bloco`/`andar`, com exatamente um de `id` ou `nome` por nível, conforme UC06.
     3.  O Gestor realiza uma requisição `POST` ao endpoint `/api/ambientes/nao-publicados/{id}/duplicar`.
     4.  O Sistema verifica se o ambiente existe e está com `status = NAO_PUBLICADO` e está de acordo com as regras de negócio (RN-1.6 e RN-1.7).
     5.  Se as verificações forem bem-sucedidas, o Sistema cria um novo ambiente no banco de dados com base nos dados do ambiente especificado.
@@ -390,7 +401,7 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
         3. Os detalhes incluem as seguintes informações do ambiente:
             * ID;
             * Nome;
-            * Localização (Bloco, Unidade e Andar);
+            * Localização (Campus, Unidade, Bloco e Andar; cada nível como `{id, nome}` na forma normalizada);
             * Tipo;
             * Capacidade;
             * Geometrias do ambiente e suas áreas;
@@ -421,7 +432,7 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
         3. O Sistema recupera e exibe, de forma paginada e limitada a 100 registros por página, os detalhes das esquadrias dos ambientes solicitados.
         4. Os detalhes incluem as seguintes informações:
             * Lista de ambientes consultados, cada um com:
-                * Dados do ambiente (ID, Nome e Localização com Bloco, Unidade e Andar);
+                * Dados do ambiente (ID, Nome e Localização com Campus, Unidade, Bloco e Andar);
                 * Detalhes das Esquadrias com:
                     * Lista de Esquadrias com os seguintes dados:
                         * Tipo (Porta, Janela, etc.);
@@ -452,14 +463,14 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
         1. O Público Externo realiza uma requisição `GET` ao endpoint `/api/ambientes/publicados`.
         2. O Sistema recupera a lista de ambientes do banco de dados.
         3. O Sistema retorna a lista ao Público Externo de forma paginada, limitada a 100 registros por página.
-        4. A lista retornada conterá os seguintes dados: ID, Nome, Localização (Bloco, Unidade e Andar), Tipo, Capacidade e Área. A resposta também incluirá `areaTotal` (soma das áreas dos ambientes da página) e `dadosPaginacao`.
+        4. A lista retornada conterá os seguintes dados: ID, Nome, Localização (Campus, Unidade, Bloco e Andar; cada nível como `{id, nome}` na forma normalizada), Tipo, Capacidade e Área. A resposta também incluirá `areaTotal` (soma das áreas dos ambientes da página) e `dadosPaginacao`.
     * **FP2 - Filtrar por Nome:**
         1. O Público Externo realiza uma requisição `GET` ao endpoint `/api/ambientes/publicados/nome?nome={nome}`.
         2. O Sistema recupera a lista de ambientes que correspondem ao nome fornecido.
         3. Repete os passos 3 e 4 do FP1.
     * **FP3 - Filtrar por Localização:**
-        1. O Público Externo realiza uma requisição `GET` ao endpoint `/api/ambientes/publicados/localizacao?bloco={bloco}&unidade={unidade}&andar={andar}`.
-        2. O Sistema recupera a lista de ambientes que correspondem aos parâmetros de localização fornecidos.
+        1. O Público Externo realiza uma requisição `GET` ao endpoint `/api/ambientes/publicados/localizacao?campusId={campusId}&unidadeId={unidadeId}&blocoId={blocoId}&andar={andar}`.
+        2. O Sistema recupera a lista de ambientes que correspondem aos IDs fornecidos. Os IDs são opcionais, mas pelo menos um campo de localização deve ser enviado; se nenhum campo for enviado, o Sistema retorna `400 Bad Request`. ID inexistente, ou unidade/bloco fora do pai informado, resulta em página vazia — a consulta filtra por IDs através de `bloco.unidade.campus`, pois `Localizacao` não tem colunas `campus`/`unidade`.
         3. Repete os passos 3 e 4 do FP1.
     * **FP4 - Filtrar por Tipo:**
         1. O Público Externo realiza uma requisição `GET` ao endpoint `/api/ambientes/publicados/tipo?tipo={tipo}`.
@@ -467,6 +478,22 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
         3. Repete os passos 3 e 4 do FP1.
 * **Fluxos Alternativos:**
     * **FA01 - Nenhum ambiente encontrado:** Se não houver ambientes publicados, o Sistema exibe uma mensagem indicando que a lista está vazia.
+* **Pós-condições:** Nenhuma alteração no estado do sistema.
+
+### **UC31: Consultar Referências de Localização**
+
+* **Descrição:** Permite a qualquer ator (inclusive o não autenticado) listar os níveis da hierarquia de localização (`Campus → Unidade → Bloco`), usados para popular selects e filtros de qualquer tela. Os endpoints são públicos e não exigem autenticação.
+* **Ator Primário:** Qualquer usuário (autenticado ou não autenticado).
+* **Pré-condições:** Nenhuma.
+* **Fluxo Principal:**
+    1. O ator realiza uma requisição `GET` ao endpoint `/api/campus`. O Sistema retorna a lista de campi como `[{id, nome}]`.
+    2. O ator realiza uma requisição `GET` ao endpoint `/api/unidades?campusId={id}`. O Sistema retorna as unidades do campus como `[{id, nome}]`.
+    3. O ator realiza uma requisição `GET` ao endpoint `/api/blocos?unidadeId={id}`. O Sistema retorna os blocos da unidade como `[{id, nome}]`.
+* **Regras:**
+    * Sem paginação; os nomes são retornados na forma normalizada (RN-1.17) e em ordem natural (`BLOCO 2` < `BLOCO 2A` < `BLOCO 10`).
+    * Não há `POST` de campus/unidade/bloco: a criação ocorre no fluxo de escrita do ambiente (UC06/UC07/UC16/UC17, RN-1.18).
+* **Fluxos Alternativos:**
+    * **FA01 - Parâmetro inválido:** `campusId` ou `unidadeId` não positivo ou inexistente resulta em `400 Bad Request`.
 * **Pós-condições:** Nenhuma alteração no estado do sistema.
 
 ---
@@ -563,7 +590,7 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
 
 ---
 
-## Ator: Qualquer Usuário (Autenticação)
+## Ator: Usuário com Permissão de Autenticação
 
 ### **UC28: Realizar Login via Google OAuth2**
 

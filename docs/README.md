@@ -4,17 +4,17 @@ Este diretório concentra toda a documentação técnica e de negócio do projet
 
 ## Índice
 
-| Documento                                                             | Descrição |
-|-----------------------------------------------------------------------|---|
-| [Arquitetura Backend](arquitetura-backend.md)                               | Visão geral da arquitetura modular (multi-módulos Maven) e padrão interno de camadas. |
-| [Arquitetura Frontend](arquitetura-frontend.md)                             | Visão geral da arquitetura do frontend, incluindo componentes e fluxos de navegação. |
-| [Domínio](./dominio.md)                                               | Conceitos de negócio, subdomínios e atores do sistema. |
+| Documento                                                             | Descrição                                                                                                                    |
+|-----------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|
+| [Arquitetura Backend](arquitetura-backend.md)                         | Visão geral da arquitetura modular (multi-módulos Maven) e padrão interno de camadas.                                        |
+| [Arquitetura Frontend](arquitetura-frontend.md)                       | Visão geral da arquitetura do frontend, incluindo componentes e fluxos de navegação.                                         |
+| [Domínio](./dominio.md)                                               | Conceitos de negócio, subdomínios, atores e a hierarquia de localização (Campus/Unidade/Bloco/Localização).                  |
 | [Segurança](./seguranca.md)                                           | Fluxos de autenticação OAuth2 + JWT, perfis cumulativos, lockout prevention, mapeamento de endpoints, env vars de segurança. |
-| [Operação](./operacao.md)                                             | Perfis, comportamento de `data.sql`/`data-dev.sql`, geração de chaves RSA, procedimento de bootstrap em produção. |
-| [Execução](./run.md)                                                  | Comandos para rodar a aplicação e os testes localmente, smoke test via Postman. |
-| [Ambientes Internos](./ambientes-internos/regras-negocio.md)          | Regras de negócio (RN-1.x, RN-2.x, RN-3.x, RN-4.x) do subdomínio de ambientes internos. |
-| [Casos de Uso — Backend](./ambientes-internos/casos-uso-backend.md)   | Especificação dos casos de uso do backend (referência histórica; revisar antes de alterar fluxos). |
-| [Casos de Uso — Frontend](./ambientes-internos/casos-uso-frontend.md) | Especificação dos casos de uso do frontend. |
+| [Operação](./operacao.md)                                             | Perfis, comportamento de `data.sql`/`data-dev.sql`, geração de chaves RSA, procedimento de bootstrap em produção.            |
+| [Execução](./run.md)                                                  | Comandos para rodar a aplicação e os testes localmente, smoke test via Postman.                                              |
+| [Ambientes Internos](./ambientes-internos/regras-negocio.md)          | Regras de negócio (RN-1.x, RN-2.x, RN-3.x, RN-4.x) do subdomínio de ambientes internos.                                      |
+| [Casos de Uso — Backend](./ambientes-internos/casos-uso-backend.md)   | Especificação dos casos de uso do backend (referência histórica; revisar antes de alterar fluxos).                           |
+| [Casos de Uso — Frontend](./ambientes-internos/casos-uso-frontend.md) | Especificação dos casos de uso do frontend.                                                                                  |
 
 ## Estado atual da implementação
 
@@ -22,6 +22,8 @@ Este diretório concentra toda a documentação técnica e de negócio do projet
 - **Autenticação:** OAuth2 Authorization Code com PKCE + Google como provedor; backend como broker; JWT próprio (RSA) para acesso à API; refresh token em cookie HttpOnly.
 - **Perfis:** `ROLE_COLABORADOR` (mínimo obrigatório), `ROLE_VALIDADOR`, `ROLE_GESTOR_SISTEMA`, `ROLE_ADMINISTRADOR` — cumulativos.
 - **Bootstrap do admin:** via `BOOTSTRAP_ADMIN_EMAIL` no `BootstrapAdminRunner`; aborta o boot se a env var não estiver configurada.
+- **Localização:** hierarquia `Campus → Unidade → Bloco → Localização`; nomes normalizados e únicos no escopo do pai; criação por find-or-create dentro do fluxo de escrita de ambiente (não há cadastro próprio desses níveis).
+- **Referências de localização:** endpoints públicos de leitura `GET /api/campus`, `GET /api/unidades?campusId=` e `GET /api/blocos?unidadeId=`; filtros de localização usam apenas IDs (`campusId`/`unidadeId`/`blocoId`/`andar`).
 
 ## Convenções de nomenclatura adotadas
 
@@ -30,3 +32,4 @@ Este diretório concentra toda a documentação técnica e de negócio do projet
 | Usuário do sistema | `Usuario` (classe), `usuarios` (tabela) | Singular consistente em código e SQL. |
 | Ator de negócio "Servidor" | Renomeado para **Gestor do Sistema** | Alinhado com `ROLE_GESTOR_SISTEMA`. |
 | Ator de negócio "Administrador" | `Administrador` (em `dominio.md` e RN-4.x) | Mapeado para `ROLE_ADMINISTRADOR`. |
+| Níveis de localização | `Campus`, `Unidade`, `Bloco`, `Localizacao` (entidades JPA / tabelas SQL) | Nomes normalizados em caixa alta e únicos no escopo do pai; `Localizacao` guarda só `(bloco, andar)`. |
