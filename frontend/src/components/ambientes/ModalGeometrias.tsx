@@ -15,7 +15,7 @@ const listaGeometriasSchema = z.object({
 })
 type ListaGeometrias = z.infer<typeof listaGeometriasSchema>
 
-// Valores técnicos de enum (plano 11 §4) — base/altura 0 falham `positive()`
+// Valores técnicos de enum (arquitetura-frontend.md §13) — base/altura 0 falham `positive()`
 // apenas no submit, obrigando o preenchimento (mesmo padrão do FormAmbiente).
 const GEOMETRIA_VAZIA: GeometriaInput = {tipo: 'RETANGULAR', base: 0, altura: 0, repeticao: 1}
 

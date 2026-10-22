@@ -17,7 +17,7 @@ interface CampoEnumProps {
 }
 
 // Select de enum compartilhado: value = chave técnica ('SALA_AULA'), texto =
-// rótulo ('Sala de Aula') — o backend desserializa enums pelo NOME (plano 11 §4).
+// rótulo ('Sala de Aula') — o backend desserializa enums pelo NOME (arquitetura-frontend.md §13).
 // Apresentacional: a ligação com o RHF fica no chamador (Controller/register).
 export function CampoEnum({label, opcoes, value, onChange, erro}: CampoEnumProps) {
     return (

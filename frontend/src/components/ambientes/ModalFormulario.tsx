@@ -20,7 +20,7 @@ export interface ModalFormularioProps<V extends FieldValues, R = void> {
     schema: z.ZodType<V>
     defaults: V
     // Rejeita em erro → useAsyncAction toasta ErroRes.mensagem e o modal
-    // permanece aberto (padrão da parte 09). O retorno chega ao onSalvou
+    // permanece aberto (padrão de useAsyncAction; arquitetura-frontend.md §15.9). O retorno chega ao onSalvou
     // (R = number nas UC16/UC17; void nas demais).
     onSubmit: (values: V) => Promise<R>
     onSalvou: (resultado: R) => void
@@ -36,7 +36,7 @@ export interface ModalFormularioProps<V extends FieldValues, R = void> {
 // `defaultValues` são relidos a cada abertura — sem reset em efeito (regra
 // react-hooks/set-state-in-effect). O footer fica FORA do <form> (prop do
 // ResponsiveModal): os botões submetem via o atributo form={formId}, mantendo
-// header/footer fixos e apenas o corpo rolante (parte 12 §6–§7).
+// header/footer fixos e apenas o corpo rolante (arquitetura-frontend.md §15.9).
 export function ModalFormulario<V extends FieldValues, R = void>({
                                                                      open,
                                                                      title,

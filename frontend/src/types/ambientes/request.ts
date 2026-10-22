@@ -10,7 +10,7 @@ import {ReferenciaInputSchema} from '@/types/ambientes/referencia'
 // As chaves dos enums TS espelham os NOMES TÉCNICOS dos enums Kotlin
 // (SALA_AULA, RETANGULAR, PORTA...). O backend desserializa enums pelo NOME —
 // nunca envie os rótulos ('Sala de Aula', 'Retangular'): daria 400.
-// (arquitetura-frontend.md §13; ver também plano 07 §11)
+// (arquitetura-frontend.md §13)
 const keysOf = <T extends Record<string, string>>(e: T) =>
     Object.keys(e) as [(keyof T & string), ...(keyof T & string)[]]
 

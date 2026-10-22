@@ -47,7 +47,7 @@ const CAMPOS_POR_ETAPA: Array<Array<keyof AmbienteInput>> = [
 
 // Valores de `defaultValues`/`append` com NOMES TÉCNICOS de enum
 // ('RETANGULAR', 'PORTA'...) — a resposta devolve rótulos, o request exige
-// chaves (ver plano 11 §4 e arquitetura §13). Localização não usa mais enum.
+// chaves (arquitetura-frontend.md §13). Localização não usa mais enum.
 const GEOMETRIA_VAZIA = {tipo: 'RETANGULAR', base: 0, altura: 0, repeticao: 1} as const
 const ESQUADRIA_VAZIA = {
     tipo: 'PORTA',
