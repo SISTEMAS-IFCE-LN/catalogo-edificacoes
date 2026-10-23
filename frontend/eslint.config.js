@@ -19,7 +19,7 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
-  // shadcn/ui exporta variants junto do componente — desabilita react-refresh para components/ui
+  // Componentes locais exportam variants junto do componente — desabilita react-refresh para components/ui
   {
     files: ['src/components/ui/**/*.{ts,tsx}'],
     rules: {

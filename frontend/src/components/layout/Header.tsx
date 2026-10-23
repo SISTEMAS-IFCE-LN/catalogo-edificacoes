@@ -3,7 +3,7 @@ import {HeaderNav} from '@/components/layout/HeaderNav'
 import {useAuth} from '@/hooks/useAuth'
 import {Button, buttonVariants} from '@/components/ui/button'
 import {PAGES_ROUTES} from '@/constants/routes'
-import {cn} from '@/lib/utils/shadcn-helper'
+import {cn} from '@/lib/utils/cn'
 
 export function Header() {
     const {user, logout} = useAuth()

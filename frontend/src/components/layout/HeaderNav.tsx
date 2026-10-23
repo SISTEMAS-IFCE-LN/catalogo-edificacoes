@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router'
 import { useAuth } from '@/hooks/useAuth'
-import { cn } from '@/lib/utils/shadcn-helper'
+import { cn } from '@/lib/utils/cn'
 import { Role } from '@/types/usuarios/user'
 import {
   DropdownMenu,

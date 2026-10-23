@@ -362,3 +362,8 @@ Configuração de conexão (preenchida automaticamente):
 ```
 
 Útil quando há mudança de pacotes e o `target/classes` antigo causa `ConflictingBeanDefinitionException`.
+
+### 6.4. Atualização do design system do frontend
+
+- Atualização manual: `npm install @base-ui/react@^X.Y.Z` e regressão (`npm run audit`, `npm test`, `npm run lint`, `npm run build`).
+- Não há automação de CI nem CLI/gerador de componentes: os wrappers ficam em `src/components/ui/` (convenções no README local).

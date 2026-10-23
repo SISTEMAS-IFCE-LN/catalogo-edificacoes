@@ -14,12 +14,12 @@ Este documento descreve a arquitetura do frontend do sistema Catálogo de Edific
 | Dados do `Usuario` | `GET /api/usuarios/me` (implementado no backend) | JWT não expõe `nome`/`ativo`/`criadoEm`; endpoint necessário para popular `User`. Frontend não decodifica o JWT — apenas o transporta em `Authorization` |
 | Renderização | **CSR puro (SPA)** | Adequado ao JWT entregue em fragmento de URL (`#token=...`, inacessível ao servidor) e aos UCs interativos (multistep, tabelas, seleção múltipla)                 |
 | Framework | **Vite + React Router v8** | Mínimo necessário para CSR; hot reload rápido; build estático simples; guarda de rotas via `<RequireAuth>`/`<RequireRole>`                                |
-| Estilização | **Tailwind CSS 4 + shadcn/ui** | Plugin Vite nativo (`@tailwindcss/vite`), tema via `@theme` em CSS; acessível (Base UI), customizável, alinhado ao padrão declarativo de permissões |
+| Estilização | **Tailwind CSS 4 + Base UI** | Plugin Vite nativo (`@tailwindcss/vite`), tema via `@theme` em CSS; primitivas acessíveis da Base UI com componentes locais em `components/ui` (sem CLI/gerador), alinhado ao padrão declarativo de permissões |
 | Estado servidor/UI | TanStack Query v5 (server) + Context (auth) | Separação clara; cache inteligente; auth isolado                                                                                                          |
 | HTTP Client | **Axios** com interceptores (auth, CSRF, refresh) | Tratamento central de 401, fila de refresh, anexação de `X-XSRF-TOKEN`                                                                                    |
 | Formulários | React Hook Form + Zod | Schemas compartilhados com backend; validação runtime + type inference                                                                                    |
 | Deploy | **Nginx** servindo `dist/` + reverse proxy para backend Spring | Reaproveita reverse proxy já exigido por `X-Forwarded-*` (ver [`operacao.md`](./operacao.md)); menor nº de peças operacionais                             |
-| Responsividade | **Mobile-first**, Tailwind + shadcn `Drawer`/`Sheet`/`Avatar` | App acessível em desktop e celular; tabelas viram cards, modais viram bottom-sheet em mobile (ver §15)                                                     |
+| Responsividade | **Mobile-first**, Tailwind + `Drawer`/`Sheet`/`Avatar` locais (Base UI) | App acessível em desktop e celular; tabelas viram cards, modais viram bottom-sheet em mobile (ver §15)                                                     |
 
 ---
 
@@ -154,15 +154,15 @@ Para popular `User` no `AuthContext`, o **backend implementa** `GET /api/usuario
 | Camada | Tecnologia | Versão | Justificativa |
 |---|---|---|---|
 | Build/Dev | Vite | 8+ | Build estático otimizado, hot reload instantâneo, config TS-first |
-| Framework UI | React | 19+ | Ecossistema maduro, alinhado a shadcn/ui |
+| Framework UI | React | 19+ | Ecossistema maduro, base das primitivas da Base UI e dos componentes locais |
 | Roteamento | React Router | 8+ (data routers) | Guards via `<RequireAuth>`/`<RequireRole>`, loaders, safe navigation |
 | Linguagem | TypeScript | 6+ | Type safety para permissões, contracts com backend |
 | HTTP Client | Axios | 1+ | Interceptores (auth, CSRF, refresh 401), retry transparente |
 | Estado servidor | TanStack Query | 5+ | Cache, refetch inteligente, optimistic updates, paginação |
 | Auth state | React Context | — | Simples, integrado ao React, suficiente para escopo |
 | Estilização | Tailwind CSS | 4+ | Utility-first, plugin Vite nativo (`@tailwindcss/vite`), tema via `@theme` em `globals.css`, tree-shaking automático |
-| UI Components | shadcn/ui (inclui `Drawer`, `Sheet`, `Avatar`, `Dialog`, `DropdownMenu`, `Accordion`) | — | Acessível (Base UI embutido), sem lock-in, copiado para o repo. |
-| Formulários | React Hook Form | 7+ | Performance, integração com Zod e shadcn |
+| Primitivas UI | Base UI (`@base-ui/react` 1.9+) | — | Headless, acessível, sem CLI/gerador; wrappers locais versionados em `src/components/ui`. |
+| Formulários | React Hook Form | 7+ | Performance, integração com Zod e componentes locais |
 | Validação | Zod | 4+ | Type inference, validação runtime, schemas próximos do backend |
 | Testes | Vitest + Testing Library | 4+ | Coerente com Vite, mesma API do Jest |
 
@@ -220,7 +220,7 @@ frontend/
 │   │       └── protected-layout.tsx # Outlet com Header/Sidebar
 │   │
 │   ├── components/
-│   │   ├── ui/                      # shadcn/ui (button, dialog, input, table, ...)
+│   │   ├── ui/                      # design system local sobre Base UI (button, dialog, input, table, ...)
 │   │   ├── auth/
 │   │   │   ├── AuthContext.ts       # createContext(AuthContextValue)
 │   │   │   ├── AuthProvider.tsx     # Provider com user, login, logout, refreshUser
@@ -260,7 +260,7 @@ frontend/
 │   │   ├── ambientes/
 │   │   │   ├── esquadrias.ts         # filtro/resumo de esquadrias (lógica pura)
 │   │   │   └── mappers.ts            # conversão resposta→request (rótulos → nomes técnicos) UC07–UC17
-│   │   └── shadcn-helper.ts                  # cn(), formatadores, helpers
+│   │   └── cn.ts                             # cn() e helpers de classes
 │   │
 │   ├── hooks/
 │   │   ├── useAsyncAction.ts         # executar ação async (loading + fechar no sucesso + toast de erro)
@@ -305,7 +305,7 @@ frontend/
 ### Convenções
 
 - **`routes/`** aloca cada tela em uma pasta; `page.tsx` é o default. Subrotas dinâmicas usam `[id]/` (mantém convenção Next-like para familiaridade).
-- **`components/ui/`** são os componentes base do shadcn/ui (gerados por CLI, copiados não dependidos).
+- **`components/ui/`** são os componentes do design system local, construídos sobre `@base-ui/react` (sem CLI/gerador), versionados e testados como código do projeto.
 - **`lib/`** é infraestrutura (Axios, auth em memória, permissions, csrf), agrupada por domínio (`security/`, `api/`, `ambientes/`).
 - **`hooks/`** contém lógica reutilizável enxuta.
 
@@ -1295,11 +1295,11 @@ A aplicação deve ser plenamente utilizável em desktops e celulares. Esta seç
   ```
 
 - Tema Tailwind v4: configurado via `@theme { ... }` em `src/styles/globals.css`. Defaults cobrem os breakpoints (`sm 640`, `md 768`, `lg 1024`); sem `tailwind.config.ts`/`postcss.config.js`.
-- `shadcn` CLI: instalar `drawer`, `sheet`, `avatar`, `dropdown-menu`, `accordion` (todos parte do catálogo oficial).
+- As primitivas de UI vêm de `@base-ui/react` (sem CLI/gerador). Novos componentes devem ser criados em `src/components/ui/` compondo essas primitivas e reutilizando os tokens de `src/styles/ui-theme.css` + `globals.css`; convenções em `src/components/ui/README.md`.
 
-### 15.3. Componentes `Drawer` / `Sheet` do shadcn
+### 15.3. Componentes `Drawer` / `Sheet` (Base UI)
 
-O `Drawer` do shadcn é a camada visual para bottom-sheets e side-sheets em mobile. A partir da release atual, ele usa **Base UI**. Para bottom-sheets (eixos verticais), use `swipeDirection="down"`. Para side-sheets (eixos horizontais), use `swipeDirection="left"` ou `"right"`.
+O `Drawer` local usa a primitiva `@base-ui/react/drawer` como camada de comportamento e acessibilidade para bottom-sheets e side-sheets em mobile. Para bottom-sheets (eixos verticais), use `swipeDirection="down"`. Para side-sheets (eixos horizontais), use `swipeDirection="left"` ou `"right"`.
 
 ### 15.4. Header unificado (hamburger + dropdown)
 
@@ -1403,7 +1403,7 @@ export function UserMenu() {
 
 ### 15.7. Tabelas — `TabelaPadrao`, `TabelaUsuarios`
 
-- **`≥md`**: `<Table>` shadcn completa (ordenação, checkbox, paginação compacta).
+- **`≥md`**: `<Table>` local completa (ordenação, checkbox, paginação compacta).
 - **`<md`**: **cards empilhados** (`<div className="md:hidden space-y-3">`), cada item virando card com:
   - Nome em destaque (topo do card).
   - Chips (`<Badge>`) para atributos secundários (Tipo, Localização, Capacidade, Perfis…).
@@ -1416,7 +1416,7 @@ export function UserMenu() {
 
 ### 15.8. `FormAmbiente` (UC06-FE) — multistep responsivo
 
-- `<Stepper>` shadcn; em mobile colapsa para "Etapa X de Y" + label da etapa atual (sem números grandes).
+- `<Stepper>` local; em mobile colapsa para "Etapa X de Y" + label da etapa atual (sem números grandes).
 - Botões `Voltar`/`Próximo`/`Salvar`/`Cancelar` em `w-full md:w-auto`.
 - Campos numéricos com `inputMode="numeric"` ou `"decimal"` (abre teclado correto no mobile).
 - Listas editáveis (geometrias, pés-direitos, esquadrias): cada item é um card empilhado, com botão "remover" (`lucide-react` `Trash2` ícone) à direita; novos itens adicionados ao final com animação ease-in.
@@ -1511,7 +1511,7 @@ Em desktop, o corpo rolante é produzido pelo layout `grid-rows-[auto_minmax(0,1
 
 Nota: `DialogContent` (`src/components/ui/dialog.tsx`) carrega uma guarda global `max-h-[calc(100dvh-2rem)] overflow-y-auto` como fallback para modais que não usam o wrapper (ex.: modais de confirmação curtos, `ModalConfirmacao`). O `<ResponsiveModal>` a neutraliza passando `overflow-hidden` — o `tailwind-merge` (via `cn`) resolve o conflito de classes em favor do caller.
 
-Padrão oficial documentado em https://ui.shadcn.com/docs/components/drawer#responsive.
+Padrão responsivo documentado em https://base-ui.com/react/components/drawer.
 
 Os modais de edição são construídos sobre `ModalFormulario` (shell: `Dialog` + React Hook Form + `zodResolver` + `useAsyncAction`), com **montagem condicional** na página de detalhe — os `defaultValues` são relidos a cada abertura, sem efeito de reset (regra `react-hooks/set-state-in-effect`). O genérico `V` do shell é o **output** do schema Zod: `handleSubmit` entrega os valores parseados/transformados (trim, defaults) ao `onSubmit`, cujo retorno chega ao `onSalvou` (`R = number` em UC16/UC17 para navegar ao novo registro; `void` nos demais). Os genéricos de lista (`ModalGeometrias`, `ModalPesDireitos`, `ModalEsquadrias`) recebem `modo`, `titulo`, `inicial` e `onSubmit` da página por UC; as conversões rótulo → nome técnico ficam centralizadas em `lib/ambientes/mappers.ts`. Campos numéricos usam `step="0.01"` nas medidas decimais (espelha `@Digits(integer=7, fraction=2)`) — sem o step, a constraint validation nativa do browser bloqueia o submit antes da validação Zod.
 
@@ -1536,14 +1536,14 @@ Os modais de edição são construídos sobre `ModalFormulario` (shell: `Dialog`
 ### 15.12. Acessibilidade mobile
 
 - Touch targets ≥ 44px em todos botões/links (`min-h-[44px]`).
-- `focus-visible:ring-2` (shadcn já provê).
-- Contraste WCAG AA (tokens shadcn já AA por default).
+- `focus-visible:ring-2` (os componentes locais já proveem).
+- Contraste WCAG AA (tokens do tema já AA por default).
 - `aria-label` em triggers de avatar/hamburger.
-- Suporte a `prefers-color-scheme` é opcional (dark mode do shadcn já disponível — fora do scope deste documento).
+- Suporte a `prefers-color-scheme` é opcional (dark mode dos tokens já disponível — fora do scope deste documento).
 
 ### 15.13. Sem novas deps npm
 
-Todas as peças usadas pertencem ao catálogo do shadcn: `avatar`, `sheet`, `drawer`, `dropdown-menu`, `accordion`, `dialog`, `badge`, `table`, `button`. O hook `useIsMobile` é fornecido automaticamente pela CLI do shadcn em `src/hooks/useIsMobile.ts`.
+Todas as peças são componentes locais em `src/components/ui/`: `avatar`, `sheet`, `drawer`, `dropdown-menu`, `accordion`, `dialog`, `badge`, `table`, `button`. O hook `useIsMobile` é interno em `src/hooks/useIsMobile.ts`.
 
 ---
 
@@ -1580,7 +1580,7 @@ Cobertura mínima recomendada: `lib/security/permissions.ts` 100%, `lib/security
 
 ## 18. Tarefas de implementação (enfileiramento sugerido)
 
-1. **Scaffold Vite + React + TS + Tailwind + shadcn/ui**; configurar o alias `@/` em `resolve.alias` no `vite.config.ts`. Tailwind v4 via plugin `@tailwindcss/vite` em `vite.config.ts` (não PostCSS); `@import "tailwindcss"` em `globals.css`. Instalar via shadcn CLI: `button input dialog dropdown-menu avatar sheet drawer accordion table badge card form sonner`.
+1. **Scaffold Vite + React + TS + Tailwind + Base UI**; configurar o alias `@/` em `resolve.alias` no `vite.config.ts`. Tailwind v4 via plugin `@tailwindcss/vite` em `vite.config.ts` (não PostCSS); `@import "tailwindcss"` em `globals.css`. As primitivas vêm de `@base-ui/react`; os componentes do design system local ficam em `src/components/ui/` (sem CLI/gerador).
 2. **Backend**: `GET /api/usuarios/me` em `UsuarioController` já implementado, retornando `UsuarioRes` a partir do `@AuthenticationPrincipal jwt: Jwt` (`jwt.subject` = `Usuario.id`). Authority: qualquer autenticado. O `SecurityConfig.apiFilterChain` abre `GET /api/usuarios/me` para `authenticated()` antes da regra `ROLE_ADMINISTRADOR` para `/api/usuarios/**`.
 3. **`lib/security/auth.ts` + `lib/api/api.ts`**: variável de módulo (apenas `set/get/clear` do token string), interceptores de request (auth + CSRF) e response (refresh 401).
 4. **`lib/security/csrf.ts`**: token CSRF mascarado em memória + `ensureCsrfToken()` + `clearCsrfToken()`.
@@ -1616,13 +1616,13 @@ Cobertura mínima recomendada: `lib/security/permissions.ts` 100%, `lib/security
 - [Vite](https://vitejs.dev/)
 - [React Router v8](https://reactrouter.com/)
 - [TanStack Query](https://tanstack.com/query/latest)
-- [shadcn/ui](https://ui.shadcn.com/)
+- [Base UI](https://base-ui.com/)
 - [Tailwind CSS](https://tailwindcss.com/)
 - [Axios](https://axios-http.com/)
 - [React Hook Form](https://react-hook-form.com/)
 - [Zod](https://zod.dev/)
-- [shadcn/ui — Drawer (incl. pattern Responsive com Dialog)](https://ui.shadcn.com/docs/components/drawer)
-- [Base UI — Drawer (base do shadcn Drawer)](https://base-ui.com/react/components/drawer)
+- [Base UI — Drawer](https://base-ui.com/react/components/drawer)
+- [Base UI — Releases](https://base-ui.com/react/overview/releases)
 - [Spring Security OAuth2](https://docs.spring.io/spring-security/reference/servlet/oauth2/index.html)
 - Arquitetura do backend: [`arquitetura.md`](./arquitetura.md)
 - Segurança do backend: [`seguranca.md`](./seguranca.md)
