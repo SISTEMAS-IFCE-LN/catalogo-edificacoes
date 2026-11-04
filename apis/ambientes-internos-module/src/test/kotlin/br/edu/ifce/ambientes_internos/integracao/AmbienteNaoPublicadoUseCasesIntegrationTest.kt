@@ -366,6 +366,49 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
     }
 
     @Test
+    fun `Deve limpar informacao adicional do ambiente`() {
+        val req = criarSalaAula(informacaoAdicional = "Sala equipada com projetor.")
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(req)
+
+        // Quando a informação adicional for atualizada para vazio
+        val informacaoAdicionalRetornada =
+            ambientesNPUseCases.atualizarInformacaoAdicionalAmbiente(ambienteSalvo.id, "")
+
+        // Então o campo deve ficar vazio
+        assertEquals("", informacaoAdicionalRetornada)
+        assertEquals("", ambientesNPUseCases.obterAmbientePorId(ambienteSalvo.id).informacaoAdicional)
+    }
+
+    @Test
+    fun `Deve limpar informacao adicional enviando apenas espacos`() {
+        val req = criarSalaAula(informacaoAdicional = "Sala equipada com projetor.")
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(req)
+
+        // Quando a informação adicional for atualizada apenas com espaços
+        val informacaoAdicionalRetornada =
+            ambientesNPUseCases.atualizarInformacaoAdicionalAmbiente(ambienteSalvo.id, "   ")
+
+        // Então o trim deve persistir o campo vazio
+        assertEquals("", informacaoAdicionalRetornada)
+        assertEquals("", ambientesNPUseCases.obterAmbientePorId(ambienteSalvo.id).informacaoAdicional)
+    }
+
+    @Test
+    fun `Deve aceitar informacao adicional igual a atual`() {
+        val informacaoAtual = "Sala equipada com projetor."
+        val req = criarSalaAula(informacaoAdicional = informacaoAtual)
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(req)
+
+        // Quando a informação adicional for atualizada com o mesmo valor
+        val informacaoAdicionalRetornada =
+            ambientesNPUseCases.atualizarInformacaoAdicionalAmbiente(ambienteSalvo.id, informacaoAtual)
+
+        // Então o PATCH deve ser idempotente
+        assertEquals(informacaoAtual, informacaoAdicionalRetornada)
+        assertEquals(informacaoAtual, ambientesNPUseCases.obterAmbientePorId(ambienteSalvo.id).informacaoAdicional)
+    }
+
+    @Test
     fun `Deve alterar tipo e dados do ambiente`() {
         val reqOriginal = criarSalaAula()
         val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(reqOriginal)

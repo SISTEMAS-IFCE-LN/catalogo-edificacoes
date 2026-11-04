@@ -211,8 +211,10 @@ class AmbienteNaoPublicadoUseCases(
     ): String {
         val novaInformacaoAdicional = informacaoAdicional.trim()
         val ambienteExistente = obterAmbiente(id)
-        if (novaInformacaoAdicional == ambienteExistente.informacaoAdicional)
-            throw IllegalArgumentException("A nova informação adicional deve ser diferente da atual.")
+        // PATCH idempotente: repetir o valor atual (inclusive vazio) não é erro.
+        if (novaInformacaoAdicional == ambienteExistente.informacaoAdicional) {
+            return ambienteExistente.informacaoAdicional
+        }
         ambienteExistente.informacaoAdicional = novaInformacaoAdicional
         val ambienteAtualizado = repoAmb.save(ambienteExistente)
         return ambienteAtualizado.informacaoAdicional

@@ -305,7 +305,7 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
 * **Pré-condições:** O Gestor está autenticado e possui permissão para atualizar ambientes não publicados. O ambiente a ser atualizado existe e tem `status = NAO_PUBLICADO`.
 * **Fluxo Principal:**
     1.  O Gestor obtém os dados atuais do ambiente (UC05).
-    2.  O Gestor preenche o corpo da requisição com o ID do ambiente e altera a informação adicional obtida.
+    2.  O Gestor preenche o corpo da requisição (texto puro) com o ID do ambiente e altera a informação adicional obtida; corpo vazio limpa o campo (a informação adicional é opcional, conforme RN-1.6).
     3.  O Gestor realiza uma requisição `PATCH` ao endpoint `/api/ambientes/nao-publicados/{id}/informacao-adicional`.
     4.  O Sistema valida os dados da requisição conforme as regras de negócio (RN-1.6).
     5.  Se a validação for bem-sucedida, o Sistema atualiza a informação adicional do ambiente no banco de dados e retorna os dados atualizados.

@@ -22,6 +22,7 @@ import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
 import org.springframework.transaction.annotation.Transactional
@@ -29,6 +30,7 @@ import jakarta.servlet.ServletException
 import jakarta.validation.ConstraintViolationException
 import java.math.BigDecimal
 import java.util.UUID
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 @SpringBootTest(classes = [TestApplication::class])
@@ -608,6 +610,70 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
             ).andExpect(status().isBadRequest)
         }
     }
+
+    // ========== UC14: atualização de informação adicional (corpo vazio / idempotência) ==========
+
+    @Transactional
+    @Test
+    fun `deve limpar informacao adicional com corpo vazio`() {
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(
+            ambienteComInformacaoAdicional("Sala equipada com projetor.")
+        )
+
+        // Quando o PATCH for enviado com corpo vazio (como o frontend faz ao limpar)
+        mockMvc.perform(
+            MockMvcRequestBuilders.patch("/api/ambientes/nao-publicados/${ambienteSalvo.id}/informacao-adicional")
+                .contentType(MediaType.TEXT_PLAIN)
+        ).andExpect(status().isOk)
+            .andExpect(content().string(""))
+
+        // Então a informação adicional deve ter sido limpa
+        assertEquals("", ambientesNPUseCases.obterAmbientePorId(ambienteSalvo.id).informacaoAdicional)
+    }
+
+    @Transactional
+    @Test
+    fun `deve aceitar informacao adicional igual a atual`() {
+        val informacaoAtual = "Sala equipada com projetor."
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(
+            ambienteComInformacaoAdicional(informacaoAtual)
+        )
+
+        // Quando o PATCH repetir o valor atual
+        mockMvc.perform(
+            MockMvcRequestBuilders.patch("/api/ambientes/nao-publicados/${ambienteSalvo.id}/informacao-adicional")
+                .contentType(MediaType.TEXT_PLAIN)
+                .content(informacaoAtual)
+        ).andExpect(status().isOk)
+            .andExpect(content().string(informacaoAtual))
+
+        // Então o valor deve permanecer o mesmo
+        assertEquals(informacaoAtual, ambientesNPUseCases.obterAmbientePorId(ambienteSalvo.id).informacaoAdicional)
+    }
+
+    private fun ambienteComInformacaoAdicional(informacaoAdicional: String): AmbienteReq =
+        AmbienteReq(
+            tipo = TipoAmbiente.SALA_AULA,
+            nome = "Sala Info Adicional ${UUID.randomUUID().toString().take(8)}",
+            localizacao = localizacaoReqPorNome(bloco = "BLOCO 10", andar = 1),
+            capacidade = 30,
+            geometrias = setOf(
+                GeometriaAmbienteReq(
+                    tipo = TipoGeometria.RETANGULAR,
+                    base = BigDecimal("6.0"),
+                    altura = BigDecimal("3.0")
+                )
+            ),
+            pesDireitos = setOf(BigDecimal("3.0")),
+            esquadrias = setOf(
+                EsquadriaReq(
+                    tipo = TipoEsquadria.PORTA,
+                    geometria = GeometriaEsquadriaReq(base = BigDecimal("0.9"), altura = BigDecimal("2.1")),
+                    material = MaterialEsquadria.MADEIRA_FICHA
+                )
+            ),
+            informacaoAdicional = informacaoAdicional
+        )
 
     // ========== Validações DELETE: deletarAmbientes ==========
 
