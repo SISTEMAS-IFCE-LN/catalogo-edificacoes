@@ -342,7 +342,7 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
     1.  O Gestor obtém o ambiente não publicado que deseja alterar o tipo e os dados (UC05).
     2.  O Gestor preenche o corpo da requisição com o novo tipo e os novos dados do ambiente: nome, localização — objeto aninhado `campus`/`unidade`/`bloco`/`andar`, com exatamente um de `id` ou `nome` por nível, conforme UC06 —, capacidade, geometrias (tipo de geometria, base, altura e repetição), pés-direitos, esquadrias (tipo, geometria com base/altura/repetição, material, altura do peitoril e informação adicional) e informação adicional.
     3.  O Gestor realiza uma requisição `POST` ao endpoint `/api/ambientes/nao-publicados/{id}`.
-    4.  O Sistema verifica se cada ambiente existe e está com `status = NAO_PUBLICADO` e se os novos dados estiverem de acordo com as regras de negócio (RN-1.6).
+    4.  O Sistema verifica se cada ambiente existe e está com `status = NAO_PUBLICADO` e se os novos dados estiverem de acordo com as regras de negócio (RN-1.6 e RN-1.7), excluindo da verificação de unicidade o próprio ambiente que será substituído.
     5.  Se as verificações forem bem-sucedidas, o Sistema cria um novo ambiente do tipo especificado no banco de dados, remove o ambiente antigo e retorna os dados do novo ambiente.
     6.  O Sistema retorna `201 Created` com os dados do novo ambiente (`AmbienteRes`) e o header `Location` apontando para `/api/ambientes/nao-publicados/{id}`.
 * **Fluxos Alternativos:**

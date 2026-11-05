@@ -13,6 +13,7 @@ import br.edu.ifce.ambientes_internos.model.dto.geometria.GeometriaAmbienteReq
 import br.edu.ifce.ambientes_internos.model.dto.geometria.GeometriaEsquadriaReq
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
@@ -839,6 +840,65 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
             .andExpect(jsonPath("$.localizacao.unidade.nome").value("CIDADE ALTA"))
             .andExpect(jsonPath("$.localizacao.bloco.nome").value("BLOCO 11"))
             .andExpect(jsonPath("$.localizacao.andar").value(2))
+    }
+
+    // Regressão: alterar apenas o tipo mantendo nome/localização não é duplicidade;
+    // o próprio ambiente é substituído (RN-1.7).
+    @Transactional
+    @Test
+    fun `deve alterar apenas o tipo mantendo nome e localizacao`() {
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(
+            ambienteComInformacaoAdicional("Sala que vira laboratório")
+        )
+        val localizacao = ambienteSalvo.localizacao
+
+        val payloadPost = """
+            {
+              "tipo": "LABORATORIO_INFORMATICA",
+              "nome": "${ambienteSalvo.nome}",
+              "localizacao": {
+                "campus": {"id": ${localizacao.campus.id}},
+                "unidade": {"id": ${localizacao.unidade.id}},
+                "bloco": {"id": ${localizacao.bloco.id}},
+                "andar": ${localizacao.andar}
+              },
+              "capacidade": ${ambienteSalvo.capacidade},
+              "geometrias": [
+                {
+                  "tipo": "RETANGULAR",
+                  "base": 6.00,
+                  "altura": 3.00,
+                  "repeticao": 1
+                }
+              ],
+              "pesDireitos": [3.00],
+              "esquadrias": [
+                {
+                  "tipo": "PORTA",
+                  "geometria": {"base": 0.90, "altura": 2.10, "repeticao": 1},
+                  "material": "MADEIRA_FICHA",
+                  "informacaoAdicional": ""
+                }
+              ],
+              "informacaoAdicional": "Sala que vira laboratório"
+            }
+        """.trimIndent()
+
+        // Quando apenas o tipo for alterado, mantendo nome e localização
+        mockMvc.perform(
+            MockMvcRequestBuilders.post("/api/ambientes/nao-publicados/${ambienteSalvo.id}")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(payloadPost)
+        ).andExpect(status().isCreated)
+            .andExpect(jsonPath("$.tipo").value(TipoAmbiente.LABORATORIO_INFORMATICA.nome))
+            .andExpect(jsonPath("$.nome").value(ambienteSalvo.nome))
+            .andExpect(jsonPath("$.localizacao.bloco.nome").value(localizacao.bloco.nome))
+            .andExpect(jsonPath("$.localizacao.andar").value(localizacao.andar))
+
+        // E o ambiente antigo não deve mais existir
+        assertThrows<NoSuchElementException> {
+            ambientesNPUseCases.obterAmbientePorId(ambienteSalvo.id)
+        }
     }
 }
 

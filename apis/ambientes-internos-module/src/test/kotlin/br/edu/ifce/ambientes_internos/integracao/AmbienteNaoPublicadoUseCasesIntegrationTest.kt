@@ -29,7 +29,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase
 import org.springframework.context.annotation.Import
-import org.springframework.dao.DataIntegrityViolationException
 import org.springframework.data.domain.PageRequest
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.test.context.ActiveProfiles
@@ -424,6 +423,60 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
 
         // E o ID original não deve mais existir
         assertThrows<NoSuchElementException> { ambientesNPUseCases.obterAmbientePorId(ambienteSalvo.id) }
+    }
+
+    @Test
+    fun `Deve alterar apenas o tipo mantendo nome e localizacao`() {
+        val nomeOriginal = "Sala que vira laboratorio"
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(
+            criarSalaAula(nome = nomeOriginal, bloco = "BLOCO 10", andar = 1)
+        )
+        val localizacaoOriginalId = ambienteSalvo.localizacao.id
+
+        val reqAlteracao = criarLaboratorioInformatica(
+            nome = nomeOriginal,
+            bloco = "BLOCO 10",
+            andar = 1
+        )
+
+        // Quando apenas o tipo for alterado, mantendo nome e localização
+        val ambienteAlterado = ambientesNPUseCases.alterarTipoDadosAmbiente(ambienteSalvo.id, reqAlteracao)
+
+        // Então o novo ambiente deve ter o novo tipo e a mesma localização
+        assertEquals(TipoAmbiente.LABORATORIO_INFORMATICA.nome, ambienteAlterado.tipo)
+        assertEquals(nomeOriginal, ambienteAlterado.nome)
+        assertEquals(localizacaoOriginalId, ambienteAlterado.localizacao.id)
+
+        // E o ID original não deve mais existir
+        assertThrows<NoSuchElementException> { ambientesNPUseCases.obterAmbientePorId(ambienteSalvo.id) }
+    }
+
+    @Test
+    fun `Deve lancar excecao ao alterar tipo para nome e localizacao de outro ambiente`() {
+        val ambiente1 = ambientesNPUseCases.cadastrarAmbiente(
+            criarSalaAula(nome = "Sala Existente", bloco = "BLOCO 10", andar = 1)
+        )
+        val ambiente2 = ambientesNPUseCases.cadastrarAmbiente(
+            criarSalaAula(nome = "Sala a Alterar", bloco = "BLOCO 10", andar = 1, capacidade = 20)
+        )
+
+        val reqAlteracao = criarLaboratorioInformatica(
+            nome = ambiente1.nome,
+            bloco = "BLOCO 10",
+            andar = 1
+        )
+
+        // Quando tentar alterar o tipo do segundo para o nome/localização do primeiro
+        val erro = assertThrows<IllegalArgumentException> {
+            ambientesNPUseCases.alterarTipoDadosAmbiente(ambiente2.id, reqAlteracao)
+        }
+
+        // Então a mensagem amigável de unicidade deve ser retornada
+        assertEquals("Já existe um ambiente com esse nome nessa localização", erro.message)
+
+        // E os dois ambientes originais devem permanecer
+        assertNotNull(ambientesNPUseCases.obterAmbientePorId(ambiente1.id))
+        assertNotNull(ambientesNPUseCases.obterAmbientePorId(ambiente2.id))
     }
 
     @Test
@@ -894,11 +947,38 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
             capacidade = ambiente2.capacidade
         )
 
-        // Então deve falhar por violação de unicidade
-        val erro = assertThrows<Exception> {
+        // Então deve falhar por violação de unicidade com a mensagem amigável
+        val erro = assertThrows<IllegalArgumentException> {
             ambientesNPUseCases.atualizarDadosBasicosAmbiente(ambiente2.id, atualizacaoConflitante)
         }
-        assertTrue(erro is IllegalArgumentException || erro is DataIntegrityViolationException)
+        assertEquals("Já existe um ambiente com esse nome nessa localização", erro.message)
+    }
+
+    @Test
+    fun `Deve lancar excecao ao renomear para nome existente na mesma localizacao`() {
+        val ambiente1 = ambientesNPUseCases.cadastrarAmbiente(
+            criarSalaAula(nome = "Sala Existente", bloco = "BLOCO 10", andar = 1)
+        )
+        val ambiente2 = ambientesNPUseCases.cadastrarAmbiente(
+            criarSalaAula(nome = "Sala a Renomear", bloco = "BLOCO 10", andar = 1, capacidade = 20)
+        )
+
+        // Quando renomear o segundo para o nome do primeiro, mantendo a localização
+        val atualizacaoConflitante = AmbienteBasicoReq(
+            nome = ambiente1.nome,
+            localizacao = LocalizacaoReq(
+                campus = ReferenciaReq(id = ambiente2.localizacao.campus.id),
+                unidade = ReferenciaReq(id = ambiente2.localizacao.unidade.id),
+                bloco = ReferenciaReq(id = ambiente2.localizacao.bloco.id),
+                andar = ambiente2.localizacao.andar
+            ),
+            capacidade = ambiente2.capacidade
+        )
+
+        val erro = assertThrows<IllegalArgumentException> {
+            ambientesNPUseCases.atualizarDadosBasicosAmbiente(ambiente2.id, atualizacaoConflitante)
+        }
+        assertEquals("Já existe um ambiente com esse nome nessa localização", erro.message)
     }
 
     @Test

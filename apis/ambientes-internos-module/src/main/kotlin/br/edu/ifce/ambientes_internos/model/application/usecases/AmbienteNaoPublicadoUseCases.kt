@@ -44,13 +44,30 @@ class AmbienteNaoPublicadoUseCases(
         }
     }
 
-    private fun verificarNomeLocalizacaoAlteracao(ambiente: Ambiente, localizacaoCandidata: Localizacao) {
+    // Na alteração de tipo o ambiente antigo é removido e um novo é criado.
+    // A unicidade (RN-1.7) deve excluir o registro substituído, que ainda
+    // existe no banco no momento da validação.
+    private fun verificarNomeLocalizacaoSubstituicao(ambiente: Ambiente, idSubstituido: Long) {
+        ambiente.localizacao = resolverLocalizacao(ambiente.localizacao)
+
+        repoLoc.findByLocalizacao(ambiente.localizacao).ifPresent { localizacao ->
+            if (repoAmb.existsByNomeAndLocalizacaoIdAndIdNot(ambiente.nome, localizacao.id!!, idSubstituido)) {
+                throw IllegalArgumentException("Já existe um ambiente com esse nome nessa localização")
+            }
+            ambiente.localizacao = localizacao
+        }
+    }
+
+    private fun verificarNomeLocalizacaoAlteracao(
+        ambiente: Ambiente,
+        novoNome: String,
+        localizacaoCandidata: Localizacao
+    ) {
         val localizacaoResolvida = resolverLocalizacao(localizacaoCandidata)
-        if (localizacaoResolvida == ambiente.localizacao) return
 
         repoLoc.findByLocalizacao(localizacaoResolvida).ifPresentOrElse(
             { localizacao ->
-                if (repoAmb.existsByNomeAndLocalizacaoIdAndIdNot(ambiente.nome, localizacao.id!!, ambiente.id!!)) {
+                if (repoAmb.existsByNomeAndLocalizacaoIdAndIdNot(novoNome, localizacao.id!!, ambiente.id!!)) {
                     throw IllegalArgumentException("Já existe um ambiente com esse nome nessa localização")
                 }
                 ambiente.localizacao = localizacao
@@ -110,9 +127,11 @@ class AmbienteNaoPublicadoUseCases(
         val ambienteExistente = obterAmbiente(id)
         val localizacaoExistenteId = ambienteExistente.localizacao.id
         val localizacaoCandidata = LocalizacaoFactory.criar(ambienteBasicoReq.localizacao)
+        // Valida antes de mutar a entidade: a query de unicidade faz auto-flush
+        // e a constraint não pode ser atingida antes da mensagem amigável.
+        verificarNomeLocalizacaoAlteracao(ambienteExistente, ambienteBasicoReq.nome, localizacaoCandidata)
         ambienteExistente.nome = ambienteBasicoReq.nome
         ambienteExistente.capacidade = ambienteBasicoReq.capacidade
-        verificarNomeLocalizacaoAlteracao(ambienteExistente, localizacaoCandidata)
         val ambienteAtualizado = repoAmb.save(ambienteExistente)
         repoAmb.flush()
         deletarLocalizacaoOrfao(localizacaoExistenteId, ambienteAtualizado.localizacao.id)
@@ -228,9 +247,15 @@ class AmbienteNaoPublicadoUseCases(
         val ambienteExistente = obterAmbiente(id)
         val localizacaoExistenteId = ambienteExistente.localizacao.id
         val ambienteAtualizado = AmbienteFactory.criar(ambiente)
-        verificarNomeLocalizacaoCadastro(ambienteAtualizado)
-        val ambienteSalvo = repoAmb.save(ambienteAtualizado)
+        verificarNomeLocalizacaoSubstituicao(ambienteAtualizado, ambienteExistente.id!!)
+
+        // A constraint uk_ambiente_nome_localizacao é checada no INSERT (IDENTITY).
+        // Remove e faz flush do antigo antes de inserir o novo; o @Transactional
+        // desfaz o delete se a inserção falhar.
         repoAmb.delete(ambienteExistente)
+        repoAmb.flush()
+
+        val ambienteSalvo = repoAmb.save(ambienteAtualizado)
         repoAmb.flush()
         deletarLocalizacaoOrfao(localizacaoExistenteId, ambienteSalvo.localizacao.id)
         return AmbienteRes.from(ambienteSalvo)
