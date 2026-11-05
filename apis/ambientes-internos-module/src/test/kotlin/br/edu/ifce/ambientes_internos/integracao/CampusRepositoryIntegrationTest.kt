@@ -1,7 +1,10 @@
 package br.edu.ifce.ambientes_internos.integracao
 
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Campus
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Unidade
 import br.edu.ifce.ambientes_internos.model.repository.CampusRepository
+import br.edu.ifce.ambientes_internos.model.repository.UnidadeRepository
+import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
@@ -22,6 +25,12 @@ class CampusRepositoryIntegrationTest {
 
     @Autowired
     lateinit var repository: CampusRepository
+
+    @Autowired
+    lateinit var repoUnidade: UnidadeRepository
+
+    @Autowired
+    lateinit var entityManager: EntityManager
 
     @Test
     fun `Deve buscar campus pelo nome normalizado`() {
@@ -44,6 +53,27 @@ class CampusRepositoryIntegrationTest {
         assertThrows<DataIntegrityViolationException> {
             repository.saveAndFlush(Campus("LIMOEIRO DO NORTE"))
         }
+    }
+
+    @Test
+    fun `Deve remover campus sem unidades`() {
+        val campus = repository.saveAndFlush(Campus("Campus Temporario"))
+
+        repository.deleteIfOrphan(campus.id!!)
+        entityManager.flush()
+        entityManager.clear()
+
+        assertNull(repository.findById(campus.id!!).orElse(null))
+    }
+
+    @Test
+    fun `Nao deve remover campus com unidade`() {
+        val campus = repository.saveAndFlush(Campus("Campus Temporario"))
+        repoUnidade.saveAndFlush(Unidade(campus, "SEDE"))
+
+        repository.deleteIfOrphan(campus.id!!)
+
+        assertNotNull(repository.findById(campus.id!!).orElse(null))
     }
 
 }

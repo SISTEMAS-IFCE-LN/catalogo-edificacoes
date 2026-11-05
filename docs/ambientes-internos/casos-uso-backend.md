@@ -182,7 +182,7 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
     2.  O Gestor preenche o corpo da requisição com os seguintes dados: nome, localização — objeto aninhado `campus`/`unidade`/`bloco`/`andar`, com exatamente um de `id` ou `nome` por nível, conforme UC06 — e capacidade.
     3.  O Gestor realiza uma requisição `PATCH` ao endpoint `/api/ambientes/nao-publicados/{id}/dados-basicos`.
     4.  O Sistema valida os dados da requisição conforme as regras de negócio (RN-1.6 e RN-1.7).
-    5.  Se a validação for bem-sucedida, o Sistema atualiza os dados do ambiente no banco de dados e retorna os dados básicos atualizados.
+    5.  Se a validação for bem-sucedida, o Sistema atualiza os dados do ambiente no banco de dados, remove localizações e referências (bloco/unidade/campus) que ficarem órfãs (RN-1.19) e retorna os dados básicos atualizados.
     6.  O Sistema retorna `200 OK` com os dados básicos do ambiente (`AmbienteBasicoRes`): ID, Nome, Tipo, Localização (Campus, Unidade, Bloco e Andar; cada nível como `{id, nome}` na forma normalizada), Capacidade e Área.
 * **Fluxos Alternativos:**
     * **FA01 - Erro de Validação:** Se os dados modificados não passarem na validação, o Sistema exibe mensagens de erro e não salva as alterações.
@@ -326,7 +326,7 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
     2.  O Gestor preenche o corpo da requisição com a lista de IDs dos ambientes a serem removidos.
     3.  O Gestor realiza uma requisição `DELETE` ao endpoint `/api/ambientes/nao-publicados`.
     4.  O Sistema verifica se cada ambiente existe e está com `status = NAO_PUBLICADO`.
-    5.  Se todos os ambientes forem encontrados e não estiverem publicados, o Sistema os remove do banco de dados.
+    5.  Se todos os ambientes forem encontrados e não estiverem publicados, o Sistema os remove do banco de dados, junto com as localizações e referências (bloco/unidade/campus) que ficarem órfãs (RN-1.19).
     6.  O Sistema retorna `204 No Content`.
 * **Fluxos Alternativos:**
     * **FA01 - Ambiente Não Encontrado:** Se o ID fornecido não corresponder a um ambiente não publicado, o Sistema exibe uma mensagem de erro.
@@ -343,7 +343,7 @@ A seguir estão descritos os principais casos de uso relacionados ao gerenciamen
     2.  O Gestor preenche o corpo da requisição com o novo tipo e os novos dados do ambiente: nome, localização — objeto aninhado `campus`/`unidade`/`bloco`/`andar`, com exatamente um de `id` ou `nome` por nível, conforme UC06 —, capacidade, geometrias (tipo de geometria, base, altura e repetição), pés-direitos, esquadrias (tipo, geometria com base/altura/repetição, material, altura do peitoril e informação adicional) e informação adicional.
     3.  O Gestor realiza uma requisição `POST` ao endpoint `/api/ambientes/nao-publicados/{id}`.
     4.  O Sistema verifica se cada ambiente existe e está com `status = NAO_PUBLICADO` e se os novos dados estiverem de acordo com as regras de negócio (RN-1.6 e RN-1.7), excluindo da verificação de unicidade o próprio ambiente que será substituído.
-    5.  Se as verificações forem bem-sucedidas, o Sistema cria um novo ambiente do tipo especificado no banco de dados, remove o ambiente antigo e retorna os dados do novo ambiente.
+    5.  Se as verificações forem bem-sucedidas, o Sistema cria um novo ambiente do tipo especificado no banco de dados, remove o ambiente antigo, remove localizações e referências (bloco/unidade/campus) que ficarem órfãs (RN-1.19) e retorna os dados do novo ambiente.
     6.  O Sistema retorna `201 Created` com os dados do novo ambiente (`AmbienteRes`) e o header `Location` apontando para `/api/ambientes/nao-publicados/{id}`.
 * **Fluxos Alternativos:**
     * **FA01 - Erro de Validação:** Se os dados modificados não passarem na validação, o Sistema exibe mensagens de erro e não salva as alterações.

@@ -215,7 +215,9 @@ describe('NaoPublicadoDetalhePage', () => {
         it('deleta o ambiente e volta para a lista', async () => {
             vi.mocked(fetchAmbienteNaoPublicado).mockResolvedValue(AMBIENTE)
             vi.mocked(deletarAmbientes).mockResolvedValueOnce(undefined)
-            renderPage()
+            const queryClient = createQueryClient()
+            const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
+            renderPage(undefined, queryClient)
 
             await waitFor(() => {
                 expect(screen.getByRole('button', {name: 'Deletar'})).toBeEnabled()
@@ -229,6 +231,8 @@ describe('NaoPublicadoDetalhePage', () => {
             })
             const {toast} = await import('sonner')
             expect(toast.success).toHaveBeenCalledWith('Operação concluída.')
+            // A exclusão pode remover bloco/unidade/campus órfãos (RN-1.19)
+            expect(invalidateSpy).toHaveBeenCalledWith({queryKey: ['referencias']})
             expect(await screen.findByText('lista')).toBeInTheDocument()
         })
 

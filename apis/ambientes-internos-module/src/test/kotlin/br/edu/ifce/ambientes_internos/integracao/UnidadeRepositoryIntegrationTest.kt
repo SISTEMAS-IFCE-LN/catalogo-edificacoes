@@ -1,9 +1,12 @@
 package br.edu.ifce.ambientes_internos.integracao
 
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Bloco
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Campus
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Unidade
+import br.edu.ifce.ambientes_internos.model.repository.BlocoRepository
 import br.edu.ifce.ambientes_internos.model.repository.CampusRepository
 import br.edu.ifce.ambientes_internos.model.repository.UnidadeRepository
+import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
@@ -28,6 +31,12 @@ class UnidadeRepositoryIntegrationTest {
 
     @Autowired
     lateinit var repoCampus: CampusRepository
+
+    @Autowired
+    lateinit var repoBloco: BlocoRepository
+
+    @Autowired
+    lateinit var entityManager: EntityManager
 
     private fun criarCampus(nome: String): Campus = repoCampus.saveAndFlush(Campus(nome))
 
@@ -99,6 +108,29 @@ class UnidadeRepositoryIntegrationTest {
 
         assertNull(repository.findByIdAndCampusId(unidade.id!!, outro.id!!))
         assertNotNull(repository.findByIdAndCampusId(unidade.id!!, limoeiro.id!!))
+    }
+
+    @Test
+    fun `Deve remover unidade sem blocos`() {
+        val campus = criarCampus("Limoeiro do Norte")
+        val unidade = repository.saveAndFlush(Unidade(campus, "SEDE"))
+
+        repository.deleteIfOrphan(unidade.id!!)
+        entityManager.flush()
+        entityManager.clear()
+
+        assertNull(repository.findById(unidade.id!!).orElse(null))
+    }
+
+    @Test
+    fun `Nao deve remover unidade com bloco`() {
+        val campus = criarCampus("Limoeiro do Norte")
+        val unidade = repository.saveAndFlush(Unidade(campus, "SEDE"))
+        repoBloco.saveAndFlush(Bloco(unidade, "BLOCO 1"))
+
+        repository.deleteIfOrphan(unidade.id!!)
+
+        assertNotNull(repository.findById(unidade.id!!).orElse(null))
     }
 
 }

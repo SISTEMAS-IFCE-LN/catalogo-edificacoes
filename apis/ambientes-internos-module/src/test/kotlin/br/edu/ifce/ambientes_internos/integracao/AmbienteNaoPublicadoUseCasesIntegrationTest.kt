@@ -485,6 +485,9 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
             criarSalaAula(nome = "Sala Troca Localizacao", bloco = "BLOCO 10", andar = 1)
         )
         val localizacaoAntigaId = ambienteSalvo.localizacao.id
+        val blocoAntigoId = ambienteSalvo.localizacao.bloco.id!!
+        val unidadeAntigaId = ambienteSalvo.localizacao.unidade.id!!
+        val campusAntigoId = ambienteSalvo.localizacao.campus.id!!
 
         val reqAlteracao = criarLaboratorioInformatica(
             nome = "Laboratorio Alterado",
@@ -509,6 +512,104 @@ class AmbienteNaoPublicadoUseCasesIntegrationTest {
         // E a localização antiga (órfã) deve ser removida
         repoAmb.flush()
         assertEquals(0, contarPorId("localizacao", localizacaoAntigaId))
+
+        // E as referências antigas (órfãs) devem ser removidas em cascata
+        assertEquals(0, contarPorId("bloco", blocoAntigoId))
+        assertEquals(0, contarPorId("unidade", unidadeAntigaId))
+        assertEquals(0, contarPorId("campus", campusAntigoId))
+    }
+
+    @Test
+    fun `Deve remover bloco orfao ao mover o ultimo ambiente para outro bloco`() {
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(
+            criarSalaAula(nome = "Sala Move Bloco", bloco = "BLOCO 10", andar = 1)
+        )
+        val blocoAntigoId = ambienteSalvo.localizacao.bloco.id!!
+        val unidadeId = ambienteSalvo.localizacao.unidade.id!!
+        val campusId = ambienteSalvo.localizacao.campus.id!!
+
+        val atualizacao = AmbienteBasicoReq(
+            nome = ambienteSalvo.nome,
+            localizacao = localizacaoReqPorNome(bloco = "BLOCO 1", andar = 1),
+            capacidade = ambienteSalvo.capacidade
+        )
+
+        // Quando o último ambiente do bloco for movido para outro bloco
+        ambientesNPUseCases.atualizarDadosBasicosAmbiente(ambienteSalvo.id, atualizacao)
+
+        // Então o bloco antigo deve ser removido
+        assertEquals(0, contarPorId("bloco", blocoAntigoId))
+
+        // Mas a unidade e o campus (ainda usados pelo novo bloco) devem permanecer
+        assertEquals(1, contarPorId("unidade", unidadeId))
+        assertEquals(1, contarPorId("campus", campusId))
+        assertNotNull(repoBloco.findByUnidadeAndNome(unidade("LIMOEIRO DO NORTE", "CIDADE ALTA"), "BLOCO 1"))
+    }
+
+    @Test
+    fun `Nao deve remover bloco que ainda possui outro ambiente`() {
+        val ambiente1 = ambientesNPUseCases.cadastrarAmbiente(
+            criarSalaAula(nome = "Sala A", bloco = "BLOCO 10", andar = 1)
+        )
+        val ambiente2 = ambientesNPUseCases.cadastrarAmbiente(
+            criarSalaAula(nome = "Sala B", bloco = "BLOCO 10", andar = 2)
+        )
+        val blocoId = ambiente1.localizacao.bloco.id!!
+
+        val atualizacao = AmbienteBasicoReq(
+            nome = ambiente1.nome,
+            localizacao = localizacaoReqPorNome(bloco = "BLOCO 1", andar = 1),
+            capacidade = ambiente1.capacidade
+        )
+
+        // Quando apenas um dos dois ambientes do bloco for movido
+        ambientesNPUseCases.atualizarDadosBasicosAmbiente(ambiente1.id, atualizacao)
+
+        // Então o bloco deve permanecer por causa do segundo ambiente
+        assertEquals(1, contarPorId("bloco", blocoId))
+        assertNotNull(ambientesNPUseCases.obterAmbientePorId(ambiente2.id))
+    }
+
+    @Test
+    fun `Deve remover bloco unidade e campus orfaos ao deletar o ultimo ambiente`() {
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(
+            criarSalaAula(
+                nome = "Sala Unica",
+                campus = "CAMPUS TEMPORARIO",
+                unidade = "UNIDADE TEMPORARIA",
+                bloco = "BLOCO TEMPORARIO",
+                andar = 1
+            )
+        )
+        val blocoId = ambienteSalvo.localizacao.bloco.id!!
+        val unidadeId = ambienteSalvo.localizacao.unidade.id!!
+        val campusId = ambienteSalvo.localizacao.campus.id!!
+
+        // Quando o último ambiente da hierarquia for deletado
+        ambientesNPUseCases.deletarAmbientes(setOf(ambienteSalvo.id))
+
+        // Então bloco, unidade e campus órfãos devem ser removidos
+        assertEquals(0, contarPorId("bloco", blocoId))
+        assertEquals(0, contarPorId("unidade", unidadeId))
+        assertEquals(0, contarPorId("campus", campusId))
+    }
+
+    @Test
+    fun `Nao deve remover bloco ao deletar um de dois ambientes`() {
+        val ambiente1 = ambientesNPUseCases.cadastrarAmbiente(
+            criarSalaAula(nome = "Sala Delete A", bloco = "BLOCO 10", andar = 1)
+        )
+        val ambiente2 = ambientesNPUseCases.cadastrarAmbiente(
+            criarSalaAula(nome = "Sala Delete B", bloco = "BLOCO 10", andar = 2)
+        )
+        val blocoId = ambiente1.localizacao.bloco.id!!
+
+        // Quando apenas um dos dois ambientes do bloco for deletado
+        ambientesNPUseCases.deletarAmbientes(setOf(ambiente1.id))
+
+        // Então o bloco deve permanecer por causa do segundo ambiente
+        assertEquals(1, contarPorId("bloco", blocoId))
+        assertNotNull(ambientesNPUseCases.obterAmbientePorId(ambiente2.id))
     }
 
     @Test

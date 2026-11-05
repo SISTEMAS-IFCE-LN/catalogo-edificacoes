@@ -19,7 +19,10 @@ import br.edu.ifce.ambientes_internos.model.dto.geometria.GeometriaAmbienteReq
 import br.edu.ifce.ambientes_internos.model.dto.geometria.GeometriaAmbienteRes
 import br.edu.ifce.ambientes_internos.model.dto.geometria.ListaGeometriasAmbienteRes
 import br.edu.ifce.ambientes_internos.model.repository.AmbienteRepository
+import br.edu.ifce.ambientes_internos.model.repository.BlocoRepository
+import br.edu.ifce.ambientes_internos.model.repository.CampusRepository
 import br.edu.ifce.ambientes_internos.model.repository.LocalizacaoRepository
+import br.edu.ifce.ambientes_internos.model.repository.UnidadeRepository
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
@@ -28,6 +31,9 @@ import java.math.BigDecimal
 class AmbienteNaoPublicadoUseCases(
     repoAmb: AmbienteRepository,
     private val repoLoc: LocalizacaoRepository,
+    private val repoBloco: BlocoRepository,
+    private val repoUnidade: UnidadeRepository,
+    private val repoCampus: CampusRepository,
     private val campusUC: ICampusUseCases,
     private val unidadeUC: IUnidadeUseCases,
     private val blocoUC: IBlocoUseCases
@@ -87,9 +93,23 @@ class AmbienteNaoPublicadoUseCases(
     }
 
     private fun deletarLocalizacaoOrfao(localizacaoExistenteId: Long?, localizacaoAtualizadaId: Long? = null) {
-        if (localizacaoExistenteId != localizacaoAtualizadaId) {
-            repoLoc.deleteIfOrphan(localizacaoExistenteId ?: return)
-        }
+        if (localizacaoExistenteId == localizacaoAtualizadaId) return
+        val id = localizacaoExistenteId ?: return
+        val localizacao = repoLoc.findById(id).orElse(null) ?: return
+        deletarLocalizacoesOrfasDoBloco(localizacao.bloco.id!!)
+    }
+
+    // Remove, em ordem, as localizações sem ambiente do bloco e as referências
+    // (bloco -> unidade -> campus) que ficarem sem filhos (RN-1.19).
+    private fun deletarLocalizacoesOrfasDoBloco(blocoId: Long) {
+        val bloco = repoBloco.findById(blocoId).orElse(null) ?: return
+        val unidadeId = bloco.unidade.id
+        val campusId = bloco.unidade.campus.id
+
+        repoLoc.deleteOrphansByBloco(blocoId)
+        repoBloco.deleteIfOrphan(blocoId)
+        unidadeId?.let { repoUnidade.deleteIfOrphan(it) }
+        campusId?.let { repoCampus.deleteIfOrphan(it) }
     }
 
     private fun resolverLocalizacao(localizacao: Localizacao): Localizacao {
@@ -286,12 +306,12 @@ class AmbienteNaoPublicadoUseCases(
     @Transactional
     override fun deletarAmbientes(ids: Set<Long>) {
         val ambientes = obterAmbientesPorIds(ids)
-        val localizacoesIds = ambientes.mapNotNull { it.localizacao.id }.toSet()
+        val blocosIds = ambientes.mapNotNull { it.localizacao.bloco.id }.toSet()
 
         repoAmb.deleteAll(ambientes)
         repoAmb.flush()
 
-        localizacoesIds.forEach { repoLoc.deleteIfOrphan(it) }
+        blocosIds.forEach { deletarLocalizacoesOrfasDoBloco(it) }
     }
 
 }

@@ -20,13 +20,13 @@ interface LocalizacaoRepository : JpaRepository<Localizacao, Long> {
     @Query(
         """
             delete from Localizacao l
-            where l.id = :id
+            where l.bloco.id = :blocoId
             and not exists (
                 select 1 from Ambiente a
-                where a.localizacao.id = :id
+                where a.localizacao.id = l.id
             )
         """
     )
-    fun deleteIfOrphan(@Param("id") id: Long)
+    fun deleteOrphansByBloco(@Param("blocoId") blocoId: Long)
 
 }

@@ -194,6 +194,8 @@ de serviço lida com autenticação, tokens e gestão de identidade em vez de re
 - `CampusUseCases.resolverOuCriar`, `UnidadeUseCases.resolverOuCriar` e `BlocoUseCases.resolverOuCriar` fazem
   find-or-create no fluxo de escrita de ambiente (UC06/UC07/UC16/UC17): normalizam, buscam no escopo do pai,
   salvam quando não existe e re-leitam em corrida (`DataIntegrityViolationException`) (RN-1.18).
+- A movimentação/exclusão do último ambiente de um bloco dispara a limpeza em cascata das localizações órfãs e das
+  referências sem filhos (`Bloco` → `Unidade` → `Campus`), via `deleteOrphansByBloco`/`deleteIfOrphan` (RN-1.19).
 - As queries que montam `LocalizacaoRes` usam `@EntityGraph` aninhado
   (`localizacao.bloco.unidade.campus`) para evitar N+1; as listagens de referência ordenam os nomes em memória com
   `ComparadorNatural` (ordem natural, não lexicográfica).

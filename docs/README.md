@@ -22,7 +22,7 @@ Este diretório concentra toda a documentação técnica e de negócio do projet
 - **Autenticação:** OAuth2 Authorization Code com PKCE + Google como provedor; backend como broker; JWT próprio (RSA) para acesso à API; refresh token em cookie HttpOnly.
 - **Perfis:** `ROLE_COLABORADOR` (mínimo obrigatório), `ROLE_VALIDADOR`, `ROLE_GESTOR_SISTEMA`, `ROLE_ADMINISTRADOR` — cumulativos.
 - **Bootstrap do admin:** via `BOOTSTRAP_ADMIN_EMAIL` no `BootstrapAdminRunner`; aborta o boot se a env var não estiver configurada.
-- **Localização:** hierarquia `Campus → Unidade → Bloco → Localização`; nomes normalizados e únicos no escopo do pai; criação por find-or-create dentro do fluxo de escrita de ambiente (não há cadastro próprio desses níveis).
+- **Localização:** hierarquia `Campus → Unidade → Bloco → Localização`; nomes normalizados e únicos no escopo do pai; criação por find-or-create dentro do fluxo de escrita de ambiente (não há cadastro próprio desses níveis); referências que ficam sem ambientes são removidas em cascata ao mover/excluir o último ambiente (RN-1.19).
 - **Referências de localização:** endpoints públicos de leitura `GET /api/campus`, `GET /api/unidades?campusId=` e `GET /api/blocos?unidadeId=`; filtros de localização usam apenas IDs (`campusId`/`unidadeId`/`blocoId`/`andar`).
 
 ## Convenções de nomenclatura adotadas

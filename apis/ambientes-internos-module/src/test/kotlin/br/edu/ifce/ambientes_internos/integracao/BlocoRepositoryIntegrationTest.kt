@@ -1,10 +1,13 @@
 package br.edu.ifce.ambientes_internos.integracao
 
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Bloco
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Localizacao
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Unidade
 import br.edu.ifce.ambientes_internos.model.repository.BlocoRepository
 import br.edu.ifce.ambientes_internos.model.repository.CampusRepository
+import br.edu.ifce.ambientes_internos.model.repository.LocalizacaoRepository
 import br.edu.ifce.ambientes_internos.model.repository.UnidadeRepository
+import jakarta.persistence.EntityManager
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.assertThrows
@@ -32,6 +35,12 @@ class BlocoRepositoryIntegrationTest {
 
     @Autowired
     lateinit var repoUnidade: UnidadeRepository
+
+    @Autowired
+    lateinit var repoLocalizacao: LocalizacaoRepository
+
+    @Autowired
+    lateinit var entityManager: EntityManager
 
     private lateinit var sede: Unidade
     private lateinit var cidadeAlta: Unidade
@@ -105,6 +114,27 @@ class BlocoRepositoryIntegrationTest {
 
         assertNotNull(repository.findByIdAndUnidadeId(bloco.id!!, sede.id!!))
         assertNull(repository.findByIdAndUnidadeId(bloco.id!!, cidadeAlta.id!!))
+    }
+
+    @Test
+    fun `Deve remover bloco sem localizacoes`() {
+        val bloco = repository.saveAndFlush(Bloco(sede, "BLOCO 10"))
+
+        repository.deleteIfOrphan(bloco.id!!)
+        entityManager.flush()
+        entityManager.clear()
+
+        assertNull(repository.findById(bloco.id!!).orElse(null))
+    }
+
+    @Test
+    fun `Nao deve remover bloco com localizacao`() {
+        val bloco = repository.saveAndFlush(Bloco(sede, "BLOCO 10"))
+        repoLocalizacao.saveAndFlush(Localizacao(bloco, 1))
+
+        repository.deleteIfOrphan(bloco.id!!)
+
+        assertNotNull(repository.findById(bloco.id!!).orElse(null))
     }
 
 }

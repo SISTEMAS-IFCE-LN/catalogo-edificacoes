@@ -97,6 +97,8 @@ export function NaoPublicadoDetalhePage() {
         // (toast com ErroRes.mensagem e modal permanece aberto).
         if (modal === 'deletar') {
             await deletarAmbientes([ambiente.id])
+            // A exclusão pode remover bloco/unidade/campus órfãos (RN-1.19).
+            void queryCliente.invalidateQueries({ queryKey: ['referencias'] })
             navigate(PAGES_ROUTES.NAO_PUBLICADOS)
         } else if (modal === 'enviar-validacao') {
             await enviarParaValidacao([ambiente.id])
