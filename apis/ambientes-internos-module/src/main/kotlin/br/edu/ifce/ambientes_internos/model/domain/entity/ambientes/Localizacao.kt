@@ -1,22 +1,17 @@
 package br.edu.ifce.ambientes_internos.model.domain.entity.ambientes
 
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Bloco
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Unidade
 import jakarta.persistence.*
 import org.hibernate.annotations.ColumnDefault
 
 @Entity
 @Table(
-    uniqueConstraints = [UniqueConstraint(name = "uk_localizacao_bloco_unidade_andar", columnNames = ["bloco", "unidade", "andar"]) ]
+    uniqueConstraints = [UniqueConstraint(name = "uk_localizacao_bloco_andar", columnNames = ["bloco_id", "andar"]) ]
 )
 class Localizacao(
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    var bloco: Bloco,
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    var unidade: Unidade,
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "bloco_id", nullable = false)
+    var bloco: Bloco,
 
     @Column(nullable = false)
     @ColumnDefault("0")
@@ -34,7 +29,6 @@ class Localizacao(
 
         if (andar != other.andar) return false
         if (bloco != other.bloco) return false
-        if (unidade != other.unidade) return false
 
         return true
     }
@@ -42,7 +36,6 @@ class Localizacao(
     override fun hashCode(): Int {
         var result = andar
         result = 31 * result + bloco.hashCode()
-        result = 31 * result + unidade.hashCode()
         return result
     }
 }

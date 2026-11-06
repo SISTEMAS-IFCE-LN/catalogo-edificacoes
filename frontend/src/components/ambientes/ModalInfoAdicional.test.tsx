@@ -2,7 +2,7 @@ import {fireEvent, render, screen, waitFor} from '@testing-library/react'
 import {describe, it, expect, vi, beforeEach} from 'vitest'
 import {ModalInfoAdicional} from './ModalInfoAdicional'
 import type {AmbienteDetalhe} from '@/types/ambientes/response'
-import {Bloco, StatusAmbiente, TipoAmbiente, Unidade} from '@/types/ambientes/enums'
+import {StatusAmbiente, TipoAmbiente} from '@/types/ambientes/enums'
 
 vi.mock('sonner', () => ({
     toast: {success: vi.fn(), error: vi.fn()},
@@ -19,8 +19,9 @@ const AMBIENTE: AmbienteDetalhe = {
     tipo: TipoAmbiente.SALA_AULA,
     localizacao: {
         id: 3,
-        bloco: Bloco.BLOCO_1,
-        unidade: Unidade.SEDE,
+        campus: {id: 1, nome: 'LIMOEIRO DO NORTE'},
+        unidade: {id: 1, nome: 'SEDE'},
+        bloco: {id: 1, nome: 'BLOCO 1'},
         andar: 2,
     },
     capacidade: 30,

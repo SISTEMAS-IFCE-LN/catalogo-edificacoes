@@ -2,8 +2,18 @@ package br.edu.ifce.ambientes_internos.integracao
 
 import br.edu.ifce.ambientes_internos.TestApplication
 import br.edu.ifce.ambientes_internos.TestSecurityConfig
+import br.edu.ifce.ambientes_internos.model.application.interfaces.IAmbienteNaoPublicadoUseCases
+import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.TipoAmbiente
+import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.enums.MaterialEsquadria
+import br.edu.ifce.ambientes_internos.model.domain.entity.esquadrias.enums.TipoEsquadria
+import br.edu.ifce.ambientes_internos.model.domain.entity.geometrias.enums.TipoGeometria
+import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbienteReq
+import br.edu.ifce.ambientes_internos.model.dto.esquadria.EsquadriaReq
+import br.edu.ifce.ambientes_internos.model.dto.geometria.GeometriaAmbienteReq
+import br.edu.ifce.ambientes_internos.model.dto.geometria.GeometriaEsquadriaReq
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
@@ -13,9 +23,15 @@ import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.content
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.springframework.transaction.annotation.Transactional
 import jakarta.servlet.ServletException
 import jakarta.validation.ConstraintViolationException
+import java.math.BigDecimal
+import java.util.UUID
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 @SpringBootTest(classes = [TestApplication::class])
@@ -28,6 +44,9 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
 
     @Autowired
     lateinit var mockMvc: MockMvc
+
+    @Autowired
+    lateinit var ambientesNPUseCases: IAmbienteNaoPublicadoUseCases
 
     private fun assertBadRequestOrValidationError(block: () -> Unit) {
         try {
@@ -45,8 +64,9 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
             {
               "nome": "Sala Atualizada",
               "localizacao": {
-                "bloco": "BLOCO_10",
-                "unidade": "CIDADE_ALTA",
+                "campus": {"nome": "LIMOEIRO DO NORTE"},
+                "unidade": {"nome": "CIDADE ALTA"},
+                "bloco": {"nome": "BLOCO 10"},
                 "andar": 2
               },
               "capacidade": 10
@@ -68,8 +88,9 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
             {
               "nome": "Sala Atualizada",
               "localizacao": {
-                "bloco": "BLOCO_10",
-                "unidade": "CIDADE_ALTA",
+                "campus": {"nome": "LIMOEIRO DO NORTE"},
+                "unidade": {"nome": "CIDADE ALTA"},
+                "bloco": {"nome": "BLOCO 10"},
                 "andar": 2
               },
               "capacidade": 10
@@ -91,8 +112,9 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
             {
               "nome": "   ",
               "localizacao": {
-                "bloco": "BLOCO_10",
-                "unidade": "CIDADE_ALTA",
+                "campus": {"nome": "LIMOEIRO DO NORTE"},
+                "unidade": {"nome": "CIDADE ALTA"},
+                "bloco": {"nome": "BLOCO 10"},
                 "andar": 2
               },
               "capacidade": 10
@@ -114,8 +136,9 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
             {
               "nome": null,
               "localizacao": {
-                "bloco": "BLOCO_10",
-                "unidade": "CIDADE_ALTA",
+                "campus": {"nome": "LIMOEIRO DO NORTE"},
+                "unidade": {"nome": "CIDADE ALTA"},
+                "bloco": {"nome": "BLOCO 10"},
                 "andar": 2
               },
               "capacidade": 10
@@ -138,8 +161,9 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
             {
               "nome": "$nomeLongo",
               "localizacao": {
-                "bloco": "BLOCO_10",
-                "unidade": "CIDADE_ALTA",
+                "campus": {"nome": "LIMOEIRO DO NORTE"},
+                "unidade": {"nome": "CIDADE ALTA"},
+                "bloco": {"nome": "BLOCO 10"},
                 "andar": 2
               },
               "capacidade": 10
@@ -161,8 +185,9 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
             {
               "nome": "Sala Atualizada",
               "localizacao": {
-                "bloco": "BLOCO_10",
-                "unidade": "CIDADE_ALTA",
+                "campus": {"nome": "LIMOEIRO DO NORTE"},
+                "unidade": {"nome": "CIDADE ALTA"},
+                "bloco": {"nome": "BLOCO 10"},
                 "andar": 2
               },
               "capacidade": 0
@@ -184,8 +209,9 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
             {
               "nome": "Sala Atualizada",
               "localizacao": {
-                "bloco": "BLOCO_10",
-                "unidade": "CIDADE_ALTA",
+                "campus": {"nome": "LIMOEIRO DO NORTE"},
+                "unidade": {"nome": "CIDADE ALTA"},
+                "bloco": {"nome": "BLOCO 10"},
                 "andar": 2
               },
               "capacidade": -10
@@ -208,8 +234,9 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
             {
               "nome": "Sala Atualizada",
               "localizacao": {
-                "bloco": "$blocoLongo",
-                "unidade": "CIDADE_ALTA",
+                "campus": {"nome": "LIMOEIRO DO NORTE"},
+                "unidade": {"nome": "CIDADE ALTA"},
+                "bloco": {"nome": "$blocoLongo"},
                 "andar": 2
               },
               "capacidade": 10
@@ -232,8 +259,9 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
             {
               "nome": "Sala Atualizada",
               "localizacao": {
-                "bloco": "BLOCO_10",
-                "unidade": "$unidadeLonga",
+                "campus": {"nome": "LIMOEIRO DO NORTE"},
+                "unidade": {"nome": "$unidadeLonga"},
+                "bloco": {"nome": "BLOCO 10"},
                 "andar": 2
               },
               "capacidade": 10
@@ -255,8 +283,9 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
             {
               "nome": "Sala Atualizada",
               "localizacao": {
-                "bloco": "BLOCO_10",
-                "unidade": "CIDADE_ALTA",
+                "campus": {"nome": "LIMOEIRO DO NORTE"},
+                "unidade": {"nome": "CIDADE ALTA"},
+                "bloco": {"nome": "BLOCO 10"},
                 "andar": -1
               },
               "capacidade": 10
@@ -583,6 +612,70 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
         }
     }
 
+    // ========== UC14: atualização de informação adicional (corpo vazio / idempotência) ==========
+
+    @Transactional
+    @Test
+    fun `deve limpar informacao adicional com corpo vazio`() {
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(
+            ambienteComInformacaoAdicional("Sala equipada com projetor.")
+        )
+
+        // Quando o PATCH for enviado com corpo vazio (como o frontend faz ao limpar)
+        mockMvc.perform(
+            MockMvcRequestBuilders.patch("/api/ambientes/nao-publicados/${ambienteSalvo.id}/informacao-adicional")
+                .contentType(MediaType.TEXT_PLAIN)
+        ).andExpect(status().isOk)
+            .andExpect(content().string(""))
+
+        // Então a informação adicional deve ter sido limpa
+        assertEquals("", ambientesNPUseCases.obterAmbientePorId(ambienteSalvo.id).informacaoAdicional)
+    }
+
+    @Transactional
+    @Test
+    fun `deve aceitar informacao adicional igual a atual`() {
+        val informacaoAtual = "Sala equipada com projetor."
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(
+            ambienteComInformacaoAdicional(informacaoAtual)
+        )
+
+        // Quando o PATCH repetir o valor atual
+        mockMvc.perform(
+            MockMvcRequestBuilders.patch("/api/ambientes/nao-publicados/${ambienteSalvo.id}/informacao-adicional")
+                .contentType(MediaType.TEXT_PLAIN)
+                .content(informacaoAtual)
+        ).andExpect(status().isOk)
+            .andExpect(content().string(informacaoAtual))
+
+        // Então o valor deve permanecer o mesmo
+        assertEquals(informacaoAtual, ambientesNPUseCases.obterAmbientePorId(ambienteSalvo.id).informacaoAdicional)
+    }
+
+    private fun ambienteComInformacaoAdicional(informacaoAdicional: String): AmbienteReq =
+        AmbienteReq(
+            tipo = TipoAmbiente.SALA_AULA,
+            nome = "Sala Info Adicional ${UUID.randomUUID().toString().take(8)}",
+            localizacao = localizacaoReqPorNome(bloco = "BLOCO 10", andar = 1),
+            capacidade = 30,
+            geometrias = setOf(
+                GeometriaAmbienteReq(
+                    tipo = TipoGeometria.RETANGULAR,
+                    base = BigDecimal("6.0"),
+                    altura = BigDecimal("3.0")
+                )
+            ),
+            pesDireitos = setOf(BigDecimal("3.0")),
+            esquadrias = setOf(
+                EsquadriaReq(
+                    tipo = TipoEsquadria.PORTA,
+                    geometria = GeometriaEsquadriaReq(base = BigDecimal("0.9"), altura = BigDecimal("2.1")),
+                    material = MaterialEsquadria.MADEIRA_FICHA
+                )
+            ),
+            informacaoAdicional = informacaoAdicional
+        )
+
     // ========== Validações DELETE: deletarAmbientes ==========
 
     @Test
@@ -662,6 +755,149 @@ class AmbienteAtualizacaoPatchPostIntegrationTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(payloadValidacao)
             ).andExpect(status().isBadRequest)
+        }
+    }
+
+    // ========== Caso do UC16 (POST /{id}): alterar tipo e dados com troca de bloco ==========
+
+    // Transacional de propósito: o contexto Spring/H2 é compartilhado entre as classes de
+    // teste e os dados criados aqui não podem vazar (o BlocoControllerIntegrationTest, por
+    // exemplo, limpa todos os blocos com repoBloco.deleteAll()).
+    @Transactional
+    @Test
+    fun `deve alterar tipo e dados de ambiente nao publicado com troca de bloco`() {
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(
+            AmbienteReq(
+                tipo = TipoAmbiente.SALA_AULA,
+                nome = "Sala UC16 ${UUID.randomUUID().toString().take(8)}",
+                localizacao = localizacaoReqPorNome(bloco = "BLOCO 10", andar = 1),
+                capacidade = 30,
+                geometrias = setOf(
+                    GeometriaAmbienteReq(
+                        tipo = TipoGeometria.RETANGULAR,
+                        base = BigDecimal("6.0"),
+                        altura = BigDecimal("3.0")
+                    )
+                ),
+                pesDireitos = setOf(BigDecimal("3.0")),
+                esquadrias = setOf(
+                    EsquadriaReq(
+                        tipo = TipoEsquadria.PORTA,
+                        geometria = GeometriaEsquadriaReq(base = BigDecimal("0.9"), altura = BigDecimal("2.1")),
+                        material = MaterialEsquadria.MADEIRA_FICHA,
+                        informacaoAdicional = "Porta de abrir"
+                    )
+                ),
+                informacaoAdicional = "Ambiente para alteração de tipo"
+            )
+        )
+
+        val localizacaoAtual = ambienteSalvo.localizacao
+
+        val payloadPost = """
+            {
+              "tipo": "LABORATORIO_INFORMATICA",
+              "nome": "Sala UC16 Alterada ${UUID.randomUUID().toString().take(8)}",
+              "localizacao": {
+                "campus": {"id": ${localizacaoAtual.campus.id}},
+                "unidade": {"id": ${localizacaoAtual.unidade.id}},
+                "bloco": {"nome": "BLOCO 11"},
+                "andar": 2
+              },
+              "capacidade": 25,
+              "geometrias": [
+                {
+                  "tipo": "RETANGULAR",
+                  "base": 8.00,
+                  "altura": 4.00,
+                  "repeticao": 1
+                }
+              ],
+              "pesDireitos": [3.50],
+              "esquadrias": [
+                {
+                  "tipo": "PORTA",
+                  "geometria": {
+                    "base": 0.80,
+                    "altura": 2.10,
+                    "repeticao": 1
+                  },
+                  "material": "ALUMINIO",
+                  "informacaoAdicional": "Porta de abrir"
+                }
+              ],
+              "informacaoAdicional": "Ambiente alterado para laboratório"
+            }
+        """.trimIndent()
+
+        // Quando o tipo e dados do ambiente forem alterados com troca de bloco/unidade
+        mockMvc.perform(
+            MockMvcRequestBuilders.post("/api/ambientes/nao-publicados/${ambienteSalvo.id}")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(payloadPost)
+        ).andExpect(status().isCreated)
+            .andExpect(jsonPath("$.localizacao.campus.nome").value("LIMOEIRO DO NORTE"))
+            .andExpect(jsonPath("$.localizacao.unidade.nome").value("CIDADE ALTA"))
+            .andExpect(jsonPath("$.localizacao.bloco.nome").value("BLOCO 11"))
+            .andExpect(jsonPath("$.localizacao.andar").value(2))
+    }
+
+    // Regressão: alterar apenas o tipo mantendo nome/localização não é duplicidade;
+    // o próprio ambiente é substituído (RN-1.7).
+    @Transactional
+    @Test
+    fun `deve alterar apenas o tipo mantendo nome e localizacao`() {
+        val ambienteSalvo = ambientesNPUseCases.cadastrarAmbiente(
+            ambienteComInformacaoAdicional("Sala que vira laboratório")
+        )
+        val localizacao = ambienteSalvo.localizacao
+
+        val payloadPost = """
+            {
+              "tipo": "LABORATORIO_INFORMATICA",
+              "nome": "${ambienteSalvo.nome}",
+              "localizacao": {
+                "campus": {"id": ${localizacao.campus.id}},
+                "unidade": {"id": ${localizacao.unidade.id}},
+                "bloco": {"id": ${localizacao.bloco.id}},
+                "andar": ${localizacao.andar}
+              },
+              "capacidade": ${ambienteSalvo.capacidade},
+              "geometrias": [
+                {
+                  "tipo": "RETANGULAR",
+                  "base": 6.00,
+                  "altura": 3.00,
+                  "repeticao": 1
+                }
+              ],
+              "pesDireitos": [3.00],
+              "esquadrias": [
+                {
+                  "tipo": "PORTA",
+                  "geometria": {"base": 0.90, "altura": 2.10, "repeticao": 1},
+                  "material": "MADEIRA_FICHA",
+                  "informacaoAdicional": ""
+                }
+              ],
+              "informacaoAdicional": "Sala que vira laboratório"
+            }
+        """.trimIndent()
+
+        // Quando apenas o tipo for alterado, mantendo nome e localização
+        mockMvc.perform(
+            MockMvcRequestBuilders.post("/api/ambientes/nao-publicados/${ambienteSalvo.id}")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(payloadPost)
+        ).andExpect(status().isCreated)
+            .andExpect(jsonPath("$.tipo").value(TipoAmbiente.LABORATORIO_INFORMATICA.nome))
+            .andExpect(jsonPath("$.nome").value(ambienteSalvo.nome))
+            .andExpect(jsonPath("$.localizacao.bloco.nome").value(localizacao.bloco.nome))
+            .andExpect(jsonPath("$.localizacao.andar").value(localizacao.andar))
+
+        // E o ambiente antigo não deve mais existir
+        assertThrows<NoSuchElementException> {
+            ambientesNPUseCases.obterAmbientePorId(ambienteSalvo.id)
         }
     }
 }

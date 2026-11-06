@@ -3,14 +3,17 @@ import { describe, it, expect, vi } from 'vitest'
 import { MemoryRouter } from 'react-router'
 import { TabelaPadrao } from './TabelaPadrao'
 import type { AmbienteBasico } from '@/types/ambientes/response'
-import { Bloco, TipoAmbiente, Unidade } from '@/types/ambientes/enums'
+import { TipoAmbiente } from '@/types/ambientes/enums'
+
+const CAMPUS = { id: 1, nome: 'LIMOEIRO DO NORTE' }
+const UNIDADE = { id: 1, nome: 'SEDE' }
 
 const mockItens: AmbienteBasico[] = [
     {
         id: 1,
         nome: 'Sala 101',
         tipo: TipoAmbiente.SALA_AULA,
-        localizacao: { id: 1, bloco: Bloco.BLOCO_1, unidade: Unidade.SEDE, andar: 1 },
+        localizacao: { id: 1, campus: CAMPUS, unidade: UNIDADE, bloco: { id: 1, nome: 'BLOCO 1' }, andar: 1 },
         capacidade: 30,
         area: 50,
     },
@@ -18,7 +21,7 @@ const mockItens: AmbienteBasico[] = [
         id: 2,
         nome: 'Sala 102',
         tipo: TipoAmbiente.LABORATORIO,
-        localizacao: { id: 2, bloco: Bloco.BLOCO_2, unidade: Unidade.SEDE, andar: 0 },
+        localizacao: { id: 2, campus: CAMPUS, unidade: UNIDADE, bloco: { id: 2, nome: 'BLOCO 2' }, andar: 0 },
         capacidade: 20,
         area: 40,
     },
@@ -42,11 +45,17 @@ describe('TabelaPadrao — modo público (sem seleção)', () => {
     it('renderiza colunas padrão e link para detalhe', () => {
         renderWithRouter({ itens: mockItens })
         expect(screen.getByText('Nome')).toBeInTheDocument()
-        expect(screen.getByText('Bloco')).toBeInTheDocument()
+        expect(screen.getByText('Localização')).toBeInTheDocument()
         expect(screen.getByRole('link', { name: 'Sala 101' })).toHaveAttribute(
             'href',
             '/ambientes/publicados/1',
         )
+    })
+
+    it('exibe campus, unidade e bloco na localização', () => {
+        renderWithRouter({ itens: mockItens })
+        expect(screen.getByText('LIMOEIRO DO NORTE • SEDE • BLOCO 1')).toBeInTheDocument()
+        expect(screen.getByText('LIMOEIRO DO NORTE • SEDE • BLOCO 2')).toBeInTheDocument()
     })
 
     it('renderiza andar térreo', () => {

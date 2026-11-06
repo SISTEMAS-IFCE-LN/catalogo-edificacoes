@@ -195,7 +195,7 @@ describe('ModalConfirmacao', () => {
       />
     )
     const button = screen.getByText('Confirmar')
-    // O shadcn/ui aplica classes como 'text-destructive' e 'bg-destructive/10' para variant destructive
+    // O botão aplica classes como 'text-destructive' e 'bg-destructive/10' para variant destructive
     expect(button.className).toMatch(/destructive/)
   })
 })

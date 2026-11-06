@@ -2,10 +2,8 @@ package br.edu.ifce.ambientes_internos.model.application.usecases
 
 import br.edu.ifce.ambientes_internos.model.application.interfaces.IAmbienteUseCases
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.Ambiente
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Bloco
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.StatusAmbiente
 import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.TipoAmbiente
-import br.edu.ifce.ambientes_internos.model.domain.entity.ambientes.enums.Unidade
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbienteRes
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.AmbientesBasicosPaginadosRes
 import br.edu.ifce.ambientes_internos.model.dto.ambiente.LocalizacaoPesquisaReq
@@ -31,22 +29,6 @@ abstract class BaseUseCases(
             return PageRequest.of(0, PAGE_SIZE_MAX)
         }
         return PageRequest.of(pageable.pageNumber, min(pageable.pageSize, PAGE_SIZE_MAX), pageable.sort)
-    }
-
-    protected fun resolverBlocos(filtro: String?): Set<Bloco>? {
-        val textoNormalizado = filtro?.trim()?.takeIf { it.isNotBlank() }?.normalizarTexto() ?: return null
-        return Bloco.entries.filter { bloco ->
-            bloco.name.normalizarTexto().contains(textoNormalizado) ||
-                    bloco.nome.normalizarTexto().contains(textoNormalizado)
-        }.toSet()
-    }
-
-    protected fun resolverUnidades(filtro: String?): Set<Unidade>? {
-        val textoNormalizado = filtro?.trim()?.takeIf { it.isNotBlank() }?.normalizarTexto() ?: return null
-        return Unidade.entries.filter { unidade ->
-            unidade.name.normalizarTexto().contains(textoNormalizado) ||
-                    unidade.nome.normalizarTexto().contains(textoNormalizado)
-        }.toSet()
     }
 
     protected fun resolverTipos(filtro: String?): Set<TipoAmbiente>? {
@@ -115,29 +97,21 @@ abstract class BaseUseCases(
         localizacao: LocalizacaoPesquisaReq,
         pageable: Pageable
     ): AmbientesBasicosPaginadosRes {
-        if (localizacao.bloco.isNullOrBlank() && localizacao.unidade.isNullOrBlank() && localizacao.andar == null) {
+        if (localizacao.campusId == null && localizacao.unidadeId == null &&
+            localizacao.blocoId == null && localizacao.andar == null
+        ) {
             throw IllegalArgumentException("Pelo menos um campo de localização deve ser preenchido")
-        }
-
-        val blocoSolicitado = localizacao.bloco?.trim()?.takeIf { it.isNotBlank() }
-        val unidadeSolicitada = localizacao.unidade?.trim()?.takeIf { it.isNotBlank() }
-        val blocos = resolverBlocos(blocoSolicitado)
-        val unidades = resolverUnidades(unidadeSolicitada)
-
-        if (blocoSolicitado != null && blocos.isNullOrEmpty()) {
-            return AmbientesBasicosPaginadosRes.from(paginaVazia(limitarPageable(pageable)))
-        }
-        if (unidadeSolicitada != null && unidades.isNullOrEmpty()) {
-            return AmbientesBasicosPaginadosRes.from(paginaVazia(limitarPageable(pageable)))
         }
 
         val pageableLimitado = limitarPageable(pageable)
 
         val page = repoAmb.findByLocalizacaoAndStatus(
-            blocos = blocos ?: Bloco.entries.toSet(),
-            unidades = unidades ?: Unidade.entries.toSet(),
-            filtrarBlocos = blocoSolicitado != null,
-            filtrarUnidades = unidadeSolicitada != null,
+            campusId = localizacao.campusId,
+            unidadeId = localizacao.unidadeId,
+            blocoId = localizacao.blocoId,
+            filtrarCampus = localizacao.campusId != null,
+            filtrarUnidade = localizacao.unidadeId != null,
+            filtrarBloco = localizacao.blocoId != null,
             andar = localizacao.andar,
             status = status,
             pageable = pageableLimitado

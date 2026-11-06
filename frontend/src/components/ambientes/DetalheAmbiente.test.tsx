@@ -4,8 +4,6 @@ import { DetalheAmbiente } from './DetalheAmbiente'
 import type { AmbienteDetalhe } from '@/types/ambientes/response'
 import {
   TipoAmbiente,
-  Bloco,
-  Unidade,
   TipoGeometria,
   TipoEsquadria,
   MaterialEsquadria,
@@ -18,8 +16,9 @@ const mockAmbiente: AmbienteDetalhe = {
   tipo: TipoAmbiente.SALA_AULA,
   localizacao: {
     id: 1,
-    bloco: Bloco.BLOCO_1,
-    unidade: Unidade.SEDE,
+    campus: { id: 1, nome: 'LIMOEIRO DO NORTE' },
+    unidade: { id: 1, nome: 'SEDE' },
+    bloco: { id: 1, nome: 'BLOCO 1' },
     andar: 1,
   },
   capacidade: 30,
@@ -71,11 +70,11 @@ describe('DetalheAmbiente', () => {
     expect(screen.getByText('Sala 101')).toBeInTheDocument()
   })
 
-  it('renderiza localização', () => {
+  it('renderiza a localização com campus, unidade, bloco e andar', () => {
     render(<DetalheAmbiente ambiente={mockAmbiente} />)
-    expect(screen.getByText(/Bloco 1/)).toBeInTheDocument()
-    expect(screen.getByText(/Sede/)).toBeInTheDocument()
-    expect(screen.getByText(/1º Andar/)).toBeInTheDocument()
+    expect(
+      screen.getByText(/LIMOEIRO DO NORTE • SEDE • BLOCO 1 • 1º Andar/),
+    ).toBeInTheDocument()
   })
 
   it('renderiza tipo, capacidade e área', () => {

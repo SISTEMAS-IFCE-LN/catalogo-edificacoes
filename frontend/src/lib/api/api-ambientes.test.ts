@@ -25,7 +25,13 @@ const paginadoVazio = {
 const detalheValido = {
   id: 1,
   nome: 'Sala 1',
-  localizacao: { id: 1, bloco: 'Bloco 1', unidade: 'Sede', andar: 1 },
+  localizacao: {
+    id: 1,
+    campus: { id: 1, nome: 'LIMOEIRO DO NORTE' },
+    unidade: { id: 1, nome: 'SEDE' },
+    bloco: { id: 1, nome: 'BLOCO 1' },
+    andar: 1,
+  },
   tipo: 'Sala de Aula',
   capacidade: 30,
   geometrias: [],
@@ -83,10 +89,13 @@ describe('fetchAmbientes', () => {
 
   it('chama /localizacao quando tipoFiltro é LOCALIZACAO', async () => {
     vi.mocked(api.get).mockResolvedValueOnce({ data: paginadoVazio })
-    await fetchAmbientes({ page: 0, size: 20, bloco: 'Bloco 1', unidade: 'Sede', andar: 2, tipoFiltro: TipoFiltro.LOCALIZACAO }, ROTA)
+    await fetchAmbientes({ page: 0, size: 20, campusId: 1, unidadeId: 2, blocoId: 3, andar: 2, tipoFiltro: TipoFiltro.LOCALIZACAO }, ROTA)
     expect(api.get).toHaveBeenCalledWith(`${ROTA}/localizacao`, expect.objectContaining({
-      params: expect.objectContaining({ page: 0, size: 20, bloco: 'Bloco 1', unidade: 'Sede', andar: 2 }),
+      params: expect.objectContaining({ page: 0, size: 20, campusId: 1, unidadeId: 2, blocoId: 3, andar: 2 }),
     }))
+    const params = vi.mocked(api.get).mock.calls[0][1]?.params
+    expect(params).not.toHaveProperty('bloco')
+    expect(params).not.toHaveProperty('unidade')
   })
 
   it('repassa signal ao axios', async () => {

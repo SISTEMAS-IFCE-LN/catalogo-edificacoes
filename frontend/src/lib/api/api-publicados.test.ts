@@ -54,8 +54,9 @@ describe('fetchPublicados', () => {
     }))
     const callParams = vi.mocked(api.get).mock.calls[0][1]?.params
     expect(callParams).not.toHaveProperty('nome')
-    expect(callParams).not.toHaveProperty('bloco')
-    expect(callParams).not.toHaveProperty('unidade')
+    expect(callParams).not.toHaveProperty('campusId')
+    expect(callParams).not.toHaveProperty('unidadeId')
+    expect(callParams).not.toHaveProperty('blocoId')
     expect(callParams).not.toHaveProperty('andar')
     expect(callParams).not.toHaveProperty('tipo')
   })
@@ -199,10 +200,13 @@ describe('fetchPublicados', () => {
         },
       },
     })
-    await fetchPublicados({ page: 0, size: 20, bloco: 'Bloco 1', unidade: 'Sede', andar: 2, tipoFiltro: TipoFiltro.LOCALIZACAO })
+    await fetchPublicados({ page: 0, size: 20, campusId: 1, unidadeId: 2, blocoId: 3, andar: 2, tipoFiltro: TipoFiltro.LOCALIZACAO })
     expect(api.get).toHaveBeenCalledWith('/api/ambientes/publicados/localizacao', expect.objectContaining({
-      params: expect.objectContaining({ page: 0, size: 20, bloco: 'Bloco 1', unidade: 'Sede', andar: 2 }),
+      params: expect.objectContaining({ page: 0, size: 20, campusId: 1, unidadeId: 2, blocoId: 3, andar: 2 }),
     }))
+    const params = vi.mocked(api.get).mock.calls[0][1]?.params
+    expect(params).not.toHaveProperty('bloco')
+    expect(params).not.toHaveProperty('unidade')
   })
 })
 
@@ -216,7 +220,13 @@ describe('fetchDetalheAmbiente', () => {
       data: {
         id: 1,
         nome: 'Sala 1',
-        localizacao: { id: 1, bloco: 'Bloco 1', unidade: 'Sede', andar: 1 },
+        localizacao: {
+          id: 1,
+          campus: { id: 1, nome: 'LIMOEIRO DO NORTE' },
+          unidade: { id: 1, nome: 'SEDE' },
+          bloco: { id: 1, nome: 'BLOCO 1' },
+          andar: 1,
+        },
         tipo: 'Sala de Aula',
         capacidade: 30,
         geometrias: [{ id: 1, tipo: 'RETANGULAR', base: 5, altura: 10, repeticao: 1, area: 50 }],
@@ -240,7 +250,13 @@ describe('fetchDetalheAmbiente', () => {
       data: {
         id: 1,
         nome: 'Sala 1',
-        localizacao: { id: 1, bloco: 'Bloco 1', unidade: 'Sede', andar: 1 },
+        localizacao: {
+          id: 1,
+          campus: { id: 1, nome: 'LIMOEIRO DO NORTE' },
+          unidade: { id: 1, nome: 'SEDE' },
+          bloco: { id: 1, nome: 'BLOCO 1' },
+          andar: 1,
+        },
         tipo: 'Sala de Aula',
         capacidade: 30,
         geometrias: [],
@@ -265,7 +281,13 @@ describe('fetchDetalheAmbiente', () => {
       data: {
         id: 1,
         nome: 'Sala 1',
-        localizacao: { id: 1, bloco: 'Bloco 1', unidade: 'Sede', andar: 1 },
+        localizacao: {
+          id: 1,
+          campus: { id: 1, nome: 'LIMOEIRO DO NORTE' },
+          unidade: { id: 1, nome: 'SEDE' },
+          bloco: { id: 1, nome: 'BLOCO 1' },
+          andar: 1,
+        },
         tipo: 'Sala de Aula',
         capacidade: 30,
         geometrias: [{ id: 1, tipo: 'RETANGULAR', base: 5, altura: 10, repeticao: 1, area: 50 }],
@@ -295,7 +317,13 @@ describe('fetchDetalheAmbiente', () => {
       data: {
         id: 'invalid', // deveria ser number
         nome: 'Sala 1',
-        localizacao: { id: 1, bloco: 'Bloco 1', unidade: 'Sede', andar: 1 },
+        localizacao: {
+          id: 1,
+          campus: { id: 1, nome: 'LIMOEIRO DO NORTE' },
+          unidade: { id: 1, nome: 'SEDE' },
+          bloco: { id: 1, nome: 'BLOCO 1' },
+          andar: 1,
+        },
         tipo: 'Sala de Aula',
         capacidade: 30,
         area: 50,

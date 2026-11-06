@@ -1,9 +1,12 @@
 import {z} from 'zod'
-import {Bloco, Unidade} from '@/types/ambientes/enums'
+import {ReferenciaSchema} from '@/types/ambientes/referencia'
 
+// Resposta de localização (LocalizacaoRes): campus/unidade/bloco aninhados
+// espelham a hierarquia e permitem exibir/editar os três níveis.
 export const LocalizacaoSchema = z.object({
     id: z.number(),
-    bloco: z.enum(Bloco),
-    unidade: z.enum(Unidade),
+    campus: ReferenciaSchema,
+    unidade: ReferenciaSchema,
+    bloco: ReferenciaSchema,
     andar: z.int(),
 })

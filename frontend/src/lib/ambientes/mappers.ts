@@ -9,24 +9,22 @@ import type {
 } from '@/types/ambientes/request'
 import type {AmbienteDetalhe} from '@/types/ambientes/response'
 import {
-    Bloco,
     MaterialEsquadria,
     TipoAmbiente,
     TipoEsquadria,
     TipoGeometria,
-    Unidade,
 } from '@/types/ambientes/enums'
 
-// Conversão resposta → request para os modais de edição (UC07–UC17). Os DTOs
-// de detalhe devolvem RÓTULOS ('Bloco 1', 'Retangular', 'Porta'...), enquanto
-// os DTOs de request exigem NOMES TÉCNICOS ('BLOCO_1', 'RETANGULAR',
-// 'PORTA'...) — ver plano 11 §4 e arquitetura §13. nomeTecnicoDeRotulo devolve
-// string; os casts restringem ao union do enum correspondente.
+// Conversão resposta → request para os modais de edição (UC07–UC17).
+// Localização usa {id, nome: null}: o id pré-preenche os selects; o nome fica
+// nulo para o backend usar a entidade existente. Os demais enums continuam
+// precisando de nomeTecnicoDeRotulo (rótulos na resposta, chaves no request).
 
 function localizacaoDeDetalhe(ambiente: AmbienteDetalhe): LocalizacaoInput {
     return {
-        bloco: nomeTecnicoDeRotulo(Bloco, ambiente.localizacao.bloco) as LocalizacaoInput['bloco'],
-        unidade: nomeTecnicoDeRotulo(Unidade, ambiente.localizacao.unidade) as LocalizacaoInput['unidade'],
+        campus: {id: ambiente.localizacao.campus.id, nome: null},
+        unidade: {id: ambiente.localizacao.unidade.id, nome: null},
+        bloco: {id: ambiente.localizacao.bloco.id, nome: null},
         andar: ambiente.localizacao.andar,
     }
 }

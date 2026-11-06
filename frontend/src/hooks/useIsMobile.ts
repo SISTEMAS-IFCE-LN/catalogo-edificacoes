@@ -4,7 +4,7 @@ const MOBILE_BREAKPOINT = 768
 
 /**
  * Hook que retorna `true` quando a viewport é mobile (< 768px, breakpoint `md`).
- * Padrão da CLI do shadcn. SSR-safe: assume desktop até montar no cliente.
+ * SSR-safe: assume desktop até montar no cliente.
  */
 export function useIsMobile(): boolean {
     const [isMobile, setIsMobile] = React.useState<boolean>(false)

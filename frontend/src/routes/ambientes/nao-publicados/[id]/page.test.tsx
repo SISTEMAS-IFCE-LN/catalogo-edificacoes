@@ -8,13 +8,11 @@ import type {AmbienteDetalhe} from '@/types/ambientes/response'
 import type {User} from '@/types/usuarios/user'
 import {Role} from '@/types/usuarios/user'
 import {
-    Bloco,
     MaterialEsquadria,
     StatusAmbiente,
     TipoAmbiente,
     TipoEsquadria,
     TipoGeometria,
-    Unidade,
 } from '@/types/ambientes/enums'
 
 vi.mock('@/lib/api/api-naopublicados', () => ({
@@ -35,6 +33,22 @@ vi.mock('@/lib/api/api-naopublicados', () => ({
 
 vi.mock('sonner', () => ({
     toast: {success: vi.fn(), error: vi.fn()},
+}))
+
+// Modais de edição renderizam LocalizacaoFields (cascata) — referências fixas.
+vi.mock('@/hooks/useReferencias', () => ({
+    useCampus: () => ({
+        data: [{id: 1, nome: 'LIMOEIRO DO NORTE'}],
+        isLoading: false,
+    }),
+    useUnidades: () => ({
+        data: [{id: 1, nome: 'SEDE'}],
+        isLoading: false,
+    }),
+    useBlocos: () => ({
+        data: [{id: 1, nome: 'BLOCO 1'}],
+        isLoading: false,
+    }),
 }))
 
 vi.mock('@/hooks/useAuth', () => ({
@@ -71,8 +85,9 @@ const AMBIENTE: AmbienteDetalhe = {
     tipo: TipoAmbiente.SALA_AULA,
     localizacao: {
         id: 3,
-        bloco: Bloco.BLOCO_1,
-        unidade: Unidade.SEDE,
+        campus: {id: 1, nome: 'LIMOEIRO DO NORTE'},
+        unidade: {id: 1, nome: 'SEDE'},
+        bloco: {id: 1, nome: 'BLOCO 1'},
         andar: 2,
     },
     capacidade: 30,
@@ -200,7 +215,9 @@ describe('NaoPublicadoDetalhePage', () => {
         it('deleta o ambiente e volta para a lista', async () => {
             vi.mocked(fetchAmbienteNaoPublicado).mockResolvedValue(AMBIENTE)
             vi.mocked(deletarAmbientes).mockResolvedValueOnce(undefined)
-            renderPage()
+            const queryClient = createQueryClient()
+            const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries')
+            renderPage(undefined, queryClient)
 
             await waitFor(() => {
                 expect(screen.getByRole('button', {name: 'Deletar'})).toBeEnabled()
@@ -214,6 +231,8 @@ describe('NaoPublicadoDetalhePage', () => {
             })
             const {toast} = await import('sonner')
             expect(toast.success).toHaveBeenCalledWith('Operação concluída.')
+            // A exclusão pode remover bloco/unidade/campus órfãos (RN-1.19)
+            expect(invalidateSpy).toHaveBeenCalledWith({queryKey: ['referencias']})
             expect(await screen.findByText('lista')).toBeInTheDocument()
         })
 
@@ -283,12 +302,19 @@ describe('NaoPublicadoDetalhePage', () => {
             await waitFor(() => {
                 expect(duplicarAmbiente).toHaveBeenCalledWith(7, {
                     nome: 'Sala 101',
-                    localizacao: {bloco: 'BLOCO_1', unidade: 'SEDE', andar: 2},
+                    localizacao: {
+                        campus: {id: 1, nome: null},
+                        unidade: {id: 1, nome: null},
+                        bloco: {id: 1, nome: null},
+                        andar: 2,
+                    },
                 })
             })
             const {toast} = await import('sonner')
             expect(toast.success).toHaveBeenCalledWith('Ambiente duplicado.')
             expect(invalidateSpy).toHaveBeenCalledWith({queryKey: ['ambientes', 'nao-publicados']})
+            // UC17: a duplicação pode criar campus/unidade/bloco novos
+            expect(invalidateSpy).toHaveBeenCalledWith({queryKey: ['referencias']})
             expect(await screen.findByText('detalhe-duplicado')).toBeInTheDocument()
         })
 
@@ -353,7 +379,12 @@ describe('NaoPublicadoDetalhePage', () => {
                 expect(atualizarDadosBasicos).toHaveBeenCalledWith(7, {
                     nome: 'Sala 102',
                     capacidade: 30,
-                    localizacao: {bloco: 'BLOCO_1', unidade: 'SEDE', andar: 2},
+                    localizacao: {
+                        campus: {id: 1, nome: null},
+                        unidade: {id: 1, nome: null},
+                        bloco: {id: 1, nome: null},
+                        andar: 2,
+                    },
                 })
             })
             const {toast} = await import('sonner')
@@ -361,6 +392,8 @@ describe('NaoPublicadoDetalhePage', () => {
             expect(invalidateSpy).toHaveBeenCalledWith({
                 queryKey: ['ambientes', 'nao-publicados', 'detalhe', '7'],
             })
+            // UC07 altera a localização → referências também precisam ser revalidadas
+            expect(invalidateSpy).toHaveBeenCalledWith({queryKey: ['referencias']})
         })
 
         it('mantém o modal aberto em erro do backend (mensagem corrigível)', async () => {
@@ -536,7 +569,12 @@ describe('NaoPublicadoDetalhePage', () => {
                     nome: 'Sala 101',
                     tipo: 'SALA_AULA',
                     capacidade: 30,
-                    localizacao: {bloco: 'BLOCO_1', unidade: 'SEDE', andar: 2},
+                    localizacao: {
+                        campus: {id: 1, nome: null},
+                        unidade: {id: 1, nome: null},
+                        bloco: {id: 1, nome: null},
+                        andar: 2,
+                    },
                     geometrias: [{tipo: 'RETANGULAR', base: 4, altura: 3, repeticao: 2}],
                     pesDireitos: [3],
                     esquadrias: [
@@ -555,6 +593,8 @@ describe('NaoPublicadoDetalhePage', () => {
             expect(toast.success).toHaveBeenCalledWith('Tipo alterado.')
             // UC16: ambiente antigo deixa de existir → invalida a LISTA e navega
             expect(invalidateSpy).toHaveBeenCalledWith({queryKey: ['ambientes', 'nao-publicados']})
+            // UC16 pode criar campus/unidade/bloco novos
+            expect(invalidateSpy).toHaveBeenCalledWith({queryKey: ['referencias']})
             expect(await screen.findByText('detalhe-duplicado')).toBeInTheDocument()
         })
     })

@@ -44,7 +44,6 @@ class Triangular extends Geometria
 abstract class Ambiente {
   - id: Long?
   - nome: String
-  - localizacao: String
   - tipo: TipoAmbiente
   - capacidade: Int
   - informacaoAdicional: String
@@ -63,6 +62,30 @@ abstract class Ambiente {
   + calcularAreaAmbientePorGeometriaM2(): Map<Geometria, BigDecimal>
   + calcularAreaAmbienteM2(): BigDecimal
 }
+
+
+' ---------- HIERARQUIA DE LOCALIZAÇÃO ----------
+class Campus {
+  - id: Long?
+  - nome: String
+}
+class Unidade {
+  - id: Long?
+  - nome: String
+}
+class Bloco {
+  - id: Long?
+  - nome: String
+}
+class Localizacao {
+  - id: Long?
+  - andar: Int
+}
+
+note right of Campus : uk_campus_nome (nome único)
+note right of Unidade : uk_unidade_campus_nome (nome único no campus)
+note right of Bloco : uk_bloco_unidade_nome (nome único na unidade)
+note right of Localizacao : uk_localizacao_bloco_andar (único) \n andar >= 0 (RN-1.16) \n nomes normalizados por NormalizadorNome (RN-1.17)
 
 
 ' ---------- HIERARQUIA DE ELEMENTOS CONSTRUTIVOS ----------
@@ -201,6 +224,12 @@ Componente <|-- InstalacaoEletrica
 Componente <|-- InstalacaoLogica
 Componente <|-- InstalacaoHidrossanitaria
 Componente <|-- Extintor
+
+' Hierarquia de Localização (associações unidirecionais filho → pai)
+Unidade "0..*" --> "1" Campus : - campus
+Bloco "0..*" --> "1" Unidade : - unidade
+Localizacao "0..*" --> "1" Bloco : - bloco
+Ambiente "0..*" --> "1" Localizacao : - localizacao
 
 ' Ambiente com seus Elementos Construtivos e Componentes
 Ambiente "1" o-- "0..*" Piso : > - pisos

@@ -5,8 +5,9 @@ export interface AmbientesQuery {
     page?: number
     size?: number
     nome?: string
-    bloco?: string
-    unidade?: string
+    campusId?: number
+    unidadeId?: number
+    blocoId?: number
     andar?: number
     tipo?: string
     tipoFiltro: TipoFiltro

@@ -33,8 +33,9 @@ function definirQueryComponents(query: AmbientesQuery, apiRoute: string): QueryC
             queryComponents.params = {
                 page: query.page ?? 0,
                 size: query.size ?? 20,
-                bloco: query.bloco,
-                unidade: query.unidade,
+                campusId: query.campusId,
+                unidadeId: query.unidadeId,
+                blocoId: query.blocoId,
                 andar: query.andar,
             }
             break

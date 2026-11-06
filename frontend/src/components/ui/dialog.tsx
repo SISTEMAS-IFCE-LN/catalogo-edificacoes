@@ -1,7 +1,7 @@
 import * as React from "react"
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog"
 
-import { cn } from "@/lib/utils/shadcn-helper"
+import { cn } from "@/lib/utils/cn"
 import { Button } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
 
@@ -37,10 +37,10 @@ function DialogOverlay({
   )
 }
 
-// Divergência intencional do catálogo shadcn: `max-h-[calc(100dvh-2rem)]` +
+// Escolha intencional do design system local: `max-h-[calc(100dvh-2rem)]` +
 // `overflow-y-auto` na base evitam que modais longos (ex.: ModalGeometrias com
 // muitas geometrias) transbordem a viewport quando usam Dialog cru. O
-// `tailwind-merge` (via `cn` de `@/lib/utils/shadcn-helper`) permite override
+// `tailwind-merge` (via `cn` de `@/lib/utils/cn`) permite override
 // pelo caller — ex.: `<ResponsiveModal>` passa `overflow-hidden` e rola apenas
 // o corpo, mantendo header/footer fixos.
 function DialogContent({

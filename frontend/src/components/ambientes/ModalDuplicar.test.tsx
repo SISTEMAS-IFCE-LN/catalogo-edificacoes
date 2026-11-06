@@ -3,7 +3,7 @@ import {describe, it, expect, vi, beforeEach} from 'vitest'
 import type {ComponentProps} from 'react'
 import {ModalDuplicar} from './ModalDuplicar'
 import type {AmbienteDetalhe} from '@/types/ambientes/response'
-import {Bloco, StatusAmbiente, TipoAmbiente, Unidade} from '@/types/ambientes/enums'
+import {StatusAmbiente, TipoAmbiente} from '@/types/ambientes/enums'
 
 vi.mock('sonner', () => ({
     toast: {success: vi.fn(), error: vi.fn()},
@@ -14,14 +14,30 @@ vi.mock('@/lib/api/api-naopublicados', () => ({
     duplicarAmbiente: (...args: unknown[]) => mockDuplicarAmbiente(...args),
 }))
 
+vi.mock('@/hooks/useReferencias', () => ({
+    useCampus: () => ({
+        data: [{id: 1, nome: 'LIMOEIRO DO NORTE'}],
+        isLoading: false,
+    }),
+    useUnidades: () => ({
+        data: [{id: 1, nome: 'SEDE'}],
+        isLoading: false,
+    }),
+    useBlocos: () => ({
+        data: [{id: 1, nome: 'BLOCO 1'}],
+        isLoading: false,
+    }),
+}))
+
 const AMBIENTE: AmbienteDetalhe = {
     id: 7,
     nome: 'Sala 101',
     tipo: TipoAmbiente.SALA_AULA,
     localizacao: {
         id: 3,
-        bloco: Bloco.BLOCO_1,
-        unidade: Unidade.SEDE,
+        campus: {id: 1, nome: 'LIMOEIRO DO NORTE'},
+        unidade: {id: 1, nome: 'SEDE'},
+        bloco: {id: 1, nome: 'BLOCO 1'},
         andar: 2,
     },
     capacidade: 30,
@@ -71,12 +87,11 @@ describe('ModalDuplicar', () => {
             expect(screen.queryByText(/cópia/i)).not.toBeInTheDocument()
         })
 
-        it('converte rótulos da resposta para nomes técnicos nos selects', () => {
+        it('pré-seleciona campus, unidade e bloco pelos IDs da resposta', () => {
             renderModal()
-            // Trigger exibe o rótulo da chave técnica pré-preenchida no form;
-            // a conversão para técnicos é garantida pelo payload do spec de sucesso
-            expect(screen.getByLabelText('Bloco')).toHaveTextContent('Bloco 1')
-            expect(screen.getByLabelText('Unidade')).toHaveTextContent('Sede')
+            expect(screen.getByLabelText('Campus')).toHaveTextContent('LIMOEIRO DO NORTE')
+            expect(screen.getByLabelText('Unidade')).toHaveTextContent('SEDE')
+            expect(screen.getByLabelText('Bloco')).toHaveTextContent('BLOCO 1')
         })
     })
 
@@ -137,8 +152,12 @@ describe('ModalDuplicar', () => {
             await waitFor(() =>
                 expect(mockDuplicarAmbiente).toHaveBeenCalledWith(7, {
                     nome: 'Sala 102',
-                    // Chaves técnicas convertidas a partir dos rótulos pré-preenchidos
-                    localizacao: {bloco: 'BLOCO_1', unidade: 'SEDE', andar: 2},
+                    localizacao: {
+                        campus: {id: 1, nome: null},
+                        unidade: {id: 1, nome: null},
+                        bloco: {id: 1, nome: null},
+                        andar: 2,
+                    },
                 }),
             )
             const {toast} = await import('sonner')

@@ -8,8 +8,6 @@ import type { User } from '@/types/usuarios/user'
 import { Role } from '@/types/usuarios/user'
 import {
   TipoAmbiente,
-  Bloco,
-  Unidade,
   TipoGeometria,
   StatusAmbiente,
 } from '@/types/ambientes/enums'
@@ -47,8 +45,9 @@ function makeAmbiente(status: StatusAmbiente): AmbienteDetalhe {
     tipo: TipoAmbiente.SALA_AULA,
     localizacao: {
       id: 1,
-      bloco: Bloco.BLOCO_1,
-      unidade: Unidade.SEDE,
+      campus: { id: 1, nome: 'LIMOEIRO DO NORTE' },
+      unidade: { id: 1, nome: 'SEDE' },
+      bloco: { id: 1, nome: 'BLOCO 1' },
       andar: 1,
     },
     capacidade: 30,

@@ -1,8 +1,9 @@
 import {fireEvent, render, screen, waitFor} from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import {describe, it, expect, vi, beforeEach} from 'vitest'
 import {ModalEditarDadosBasicos} from './ModalEditarDadosBasicos'
 import type {AmbienteDetalhe} from '@/types/ambientes/response'
-import {Bloco, StatusAmbiente, TipoAmbiente, Unidade} from '@/types/ambientes/enums'
+import {StatusAmbiente, TipoAmbiente} from '@/types/ambientes/enums'
 
 vi.mock('sonner', () => ({
     toast: {success: vi.fn(), error: vi.fn()},
@@ -13,14 +14,42 @@ vi.mock('@/lib/api/api-naopublicados', () => ({
     atualizarDadosBasicos: (...args: unknown[]) => mockAtualizarDadosBasicos(...args),
 }))
 
+// Referências fixas: o componente não precisa de QueryClient real nestes testes.
+vi.mock('@/hooks/useReferencias', () => ({
+    useCampus: () => ({
+        data: [
+            {id: 1, nome: 'LIMOEIRO DO NORTE'},
+            {id: 2, nome: 'CIDADE ALTA'},
+        ],
+        isLoading: false,
+    }),
+    useUnidades: (campusId: number | null) => ({
+        data: campusId === 2
+            ? [{id: 3, nome: 'UNIDADE NORTE'}]
+            : campusId === 1
+                ? [{id: 1, nome: 'SEDE'}]
+                : [],
+        isLoading: false,
+    }),
+    useBlocos: (unidadeId: number | null) => ({
+        data: unidadeId === 3
+            ? [{id: 4, nome: 'BLOCO A'}]
+            : unidadeId === 1
+                ? [{id: 1, nome: 'BLOCO 1'}]
+                : [],
+        isLoading: false,
+    }),
+}))
+
 const AMBIENTE: AmbienteDetalhe = {
     id: 7,
     nome: 'Sala 101',
     tipo: TipoAmbiente.SALA_AULA,
     localizacao: {
         id: 3,
-        bloco: Bloco.BLOCO_1,
-        unidade: Unidade.SEDE,
+        campus: {id: 1, nome: 'LIMOEIRO DO NORTE'},
+        unidade: {id: 1, nome: 'SEDE'},
+        bloco: {id: 1, nome: 'BLOCO 1'},
         andar: 2,
     },
     capacidade: 30,
@@ -64,12 +93,11 @@ describe('ModalEditarDadosBasicos (UC07-FE)', () => {
             expect(screen.getByLabelText('Andar')).toHaveValue(2)
         })
 
-        it('converte rótulos da resposta para nomes técnicos nos selects', () => {
+        it('pré-seleciona campus, unidade e bloco pelos IDs da resposta', () => {
             renderModal()
-            // Trigger exibe o rótulo da chave técnica pré-preenchida no form;
-            // a conversão para técnicos é garantida pelo payload do spec de sucesso
-            expect(screen.getByLabelText('Bloco')).toHaveTextContent('Bloco 1')
-            expect(screen.getByLabelText('Unidade')).toHaveTextContent('Sede')
+            expect(screen.getByLabelText('Campus')).toHaveTextContent('LIMOEIRO DO NORTE')
+            expect(screen.getByLabelText('Unidade')).toHaveTextContent('SEDE')
+            expect(screen.getByLabelText('Bloco')).toHaveTextContent('BLOCO 1')
         })
     })
 
@@ -109,7 +137,7 @@ describe('ModalEditarDadosBasicos (UC07-FE)', () => {
     })
 
     describe('sucesso', () => {
-        it('chama atualizarDadosBasicos com o payload sem id na localizacao', async () => {
+        it('chama atualizarDadosBasicos com o payload aninhado (IDs existentes)', async () => {
             mockAtualizarDadosBasicos.mockResolvedValueOnce(undefined)
             const {onSalvou, onOpenChange} = renderModal()
 
@@ -120,14 +148,71 @@ describe('ModalEditarDadosBasicos (UC07-FE)', () => {
                 expect(mockAtualizarDadosBasicos).toHaveBeenCalledWith(7, {
                     nome: 'Sala 102',
                     capacidade: 30,
-                    // LocalizacaoReq NÃO tem id — enviar { bloco, unidade, andar }
-                    localizacao: {bloco: 'BLOCO_1', unidade: 'SEDE', andar: 2},
+                    // LocalizacaoReq não tem id de localização; cada nível usa
+                    // {id} para existente ou {nome} para find-or-create.
+                    localizacao: {
+                        campus: {id: 1, nome: null},
+                        unidade: {id: 1, nome: null},
+                        bloco: {id: 1, nome: null},
+                        andar: 2,
+                    },
                 })
             })
             const {toast} = await import('sonner')
             expect(toast.success).toHaveBeenCalledWith('Dados básicos atualizados.')
             expect(onSalvou).toHaveBeenCalledTimes(1)
             expect(onOpenChange).toHaveBeenCalledWith(false)
+        })
+
+        it('trocar o campus reseta unidade/bloco e envia a nova cascata', async () => {
+            mockAtualizarDadosBasicos.mockResolvedValueOnce(undefined)
+            const user = userEvent.setup()
+            renderModal()
+
+            await user.click(screen.getByLabelText('Campus'))
+            await user.click(await screen.findByRole('option', {name: 'CIDADE ALTA'}))
+
+            expect(screen.getByLabelText('Unidade')).not.toHaveTextContent('SEDE')
+            expect(screen.getByLabelText('Bloco')).not.toHaveTextContent('BLOCO 1')
+
+            await user.click(screen.getByLabelText('Unidade'))
+            await user.click(await screen.findByRole('option', {name: 'UNIDADE NORTE'}))
+            await user.click(screen.getByLabelText('Bloco'))
+            await user.click(await screen.findByRole('option', {name: 'BLOCO A'}))
+            await user.click(screen.getByRole('button', {name: 'Salvar'}))
+
+            await waitFor(() => {
+                expect(mockAtualizarDadosBasicos).toHaveBeenCalledWith(7, {
+                    nome: 'Sala 101',
+                    capacidade: 30,
+                    localizacao: {
+                        campus: {id: 2, nome: null},
+                        unidade: {id: 3, nome: null},
+                        bloco: {id: 4, nome: null},
+                        andar: 2,
+                    },
+                })
+            })
+        })
+
+        it('campus novo força o cadastro da unidade e, depois, do bloco', async () => {
+            const user = userEvent.setup()
+            renderModal()
+
+            await user.click(screen.getByLabelText('Campus'))
+            await user.click(await screen.findByRole('option', {name: '+ Cadastrar novo'}))
+            await user.type(screen.getByLabelText('Campus (novo)'), 'CAMPUS NOVO')
+
+            // Campus ainda sem id: a unidade só pode ser criada por nome.
+            expect(screen.getByLabelText('Unidade (novo)')).toBeInTheDocument()
+            expect(screen.queryByLabelText('Unidade')).not.toBeInTheDocument()
+            // Sem unidade resolvida, o bloco continua desabilitado (select).
+            expect(screen.getByLabelText('Bloco')).toBeDisabled()
+
+            await user.type(screen.getByLabelText('Unidade (novo)'), 'UNIDADE NOVA')
+
+            expect(screen.getByLabelText('Bloco (novo)')).toBeInTheDocument()
+            expect(screen.queryByLabelText('Bloco')).not.toBeInTheDocument()
         })
 
         it('envia o nome trimado no payload', async () => {

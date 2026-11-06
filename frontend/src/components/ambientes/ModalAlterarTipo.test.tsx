@@ -2,7 +2,7 @@ import {fireEvent, render, screen, waitFor} from '@testing-library/react'
 import {describe, it, expect, vi, beforeEach} from 'vitest'
 import {ModalAlterarTipo} from './ModalAlterarTipo'
 import type {AmbienteDetalhe} from '@/types/ambientes/response'
-import {Bloco, MaterialEsquadria, StatusAmbiente, TipoAmbiente, TipoEsquadria, TipoGeometria, Unidade} from '@/types/ambientes/enums'
+import {MaterialEsquadria, StatusAmbiente, TipoAmbiente, TipoEsquadria, TipoGeometria} from '@/types/ambientes/enums'
 
 vi.mock('sonner', () => ({
     toast: {success: vi.fn(), error: vi.fn()},
@@ -13,14 +13,30 @@ vi.mock('@/lib/api/api-naopublicados', () => ({
     alterarTipo: (...args: unknown[]) => mockAlterarTipo(...args),
 }))
 
+vi.mock('@/hooks/useReferencias', () => ({
+    useCampus: () => ({
+        data: [{id: 1, nome: 'LIMOEIRO DO NORTE'}],
+        isLoading: false,
+    }),
+    useUnidades: () => ({
+        data: [{id: 1, nome: 'SEDE'}],
+        isLoading: false,
+    }),
+    useBlocos: () => ({
+        data: [{id: 1, nome: 'BLOCO 1'}],
+        isLoading: false,
+    }),
+}))
+
 const AMBIENTE: AmbienteDetalhe = {
     id: 7,
     nome: 'Sala 101',
     tipo: TipoAmbiente.SALA_AULA,
     localizacao: {
         id: 3,
-        bloco: Bloco.BLOCO_1,
-        unidade: Unidade.SEDE,
+        campus: {id: 1, nome: 'LIMOEIRO DO NORTE'},
+        unidade: {id: 1, nome: 'SEDE'},
+        bloco: {id: 1, nome: 'BLOCO 1'},
         andar: 2,
     },
     capacidade: 30,
@@ -47,14 +63,18 @@ const AMBIENTE: AmbienteDetalhe = {
     status: StatusAmbiente.NAO_PUBLICADO,
 }
 
-// Payload completo (AmbienteReq) esperado no POST /{id} — nomes técnicos. O
-// tipo segue o valor pré-preenchido (SALA_AULA): a conversão rótulo→técnico é
-// responsabilidade dos mappers (coberta em mappers.test.ts).
+// Payload completo (AmbienteReq) esperado no POST /{id}. Localização usa os
+// IDs existentes com nome null; o tipo segue o valor pré-preenchido.
 const PAYLOAD_ESPERADO = {
     nome: 'Sala 101',
     tipo: 'SALA_AULA',
     capacidade: 30,
-    localizacao: {bloco: 'BLOCO_1', unidade: 'SEDE', andar: 2},
+    localizacao: {
+        campus: {id: 1, nome: null},
+        unidade: {id: 1, nome: null},
+        bloco: {id: 1, nome: null},
+        andar: 2,
+    },
     geometrias: [{tipo: 'RETANGULAR', base: 4, altura: 3, repeticao: 2}],
     pesDireitos: [3],
     esquadrias: [
@@ -124,10 +144,11 @@ describe('ModalAlterarTipo (UC16-FE)', () => {
         expect(screen.getByLabelText('Nome')).toHaveValue('Sala 101')
         expect(screen.getByLabelText('Capacidade')).toHaveValue(30)
         expect(screen.getByLabelText('Andar')).toHaveValue(2)
-        // Selects exibem o rótulo do enum (sem items abertos); o valor técnico
-        // pré-preenchido no form é garantido pelo payload do spec de submissão
-        expect(screen.getByLabelText('Bloco')).toHaveTextContent('Bloco 1')
-        expect(screen.getByLabelText('Unidade')).toHaveTextContent('Sede')
+        // Os selects de referência exibem o nome da opção selecionada; o valor
+        // pré-preenchido no form é garantido pelo payload do spec de submissão.
+        expect(screen.getByLabelText('Campus')).toHaveTextContent('LIMOEIRO DO NORTE')
+        expect(screen.getByLabelText('Unidade')).toHaveTextContent('SEDE')
+        expect(screen.getByLabelText('Bloco')).toHaveTextContent('BLOCO 1')
         expect(screen.getByLabelText('Tipo')).toHaveTextContent('Sala de Aula')
     })
 

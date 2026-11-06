@@ -32,7 +32,7 @@ export function PublicadoDetalhePage() {
 
     async function confirmar() {
         if (!ambiente) return
-        // O ModalConfirmacao já trata o erro e mantém o modal aberto (parte 10 §4)
+        // O ModalConfirmacao já trata o erro e mantém o modal aberto (arquitetura-frontend.md §15.9; casos-uso-frontend.md UC19-FE)
         await privarAmbiente(ambiente.id)
         toast.success('Ambiente privado.')
         void queryClient.invalidateQueries({queryKey: ['ambientes', 'publicados']})

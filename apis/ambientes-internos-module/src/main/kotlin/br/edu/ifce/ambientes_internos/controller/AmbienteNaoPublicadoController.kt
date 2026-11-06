@@ -116,18 +116,20 @@ class AmbienteNaoPublicadoController(
         return ResponseEntity.ok(useCasesNaoPublicado.atualizarEsquadriasAmbiente(id, esquadrias))
     }
 
+    // Corpo vazio é válido e representa limpar a informação adicional (UC14).
+    // Sem `required = false`, o Spring rejeita o corpo vazio antes do service.
     @PatchMapping("/{id}/informacao-adicional")
     fun atualizarInformacaoAdicionalAmbiente(
         @PathVariable @Positive(message = MSG_POSITIVO)
         id: Long,
-        @RequestBody @Size(
+        @RequestBody(required = false) @Size(
             max = 255,
             message = MSG_MAX_CARACTERES
         )
-        informacaoAdicional: String
+        informacaoAdicional: String?
     ): ResponseEntity<String> {
         return ResponseEntity
-            .ok(useCasesNaoPublicado.atualizarInformacaoAdicionalAmbiente(id, informacaoAdicional))
+            .ok(useCasesNaoPublicado.atualizarInformacaoAdicionalAmbiente(id, informacaoAdicional ?: ""))
     }
 
     @PostMapping("/{id}")

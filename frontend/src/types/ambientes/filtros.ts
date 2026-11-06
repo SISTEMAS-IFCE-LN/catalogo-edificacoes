@@ -2,16 +2,18 @@ import { z } from 'zod'
 
 export interface Filtros {
     nome: string
-    bloco: string
-    unidade: string
+    campusId: number | null
+    unidadeId: number | null
+    blocoId: number | null
     andar: number | null
     tipo: string
 }
 
 export const FILTROS_VAZIOS: Filtros = {
     nome: '',
-    bloco: '',
-    unidade: '',
+    campusId: null,
+    unidadeId: null,
+    blocoId: null,
     andar: null,
     tipo: '',
 }
@@ -23,11 +25,12 @@ const NomeFiltroSchema = z.string()
 const TipoFiltroSchema = z.string()
     .max(50, 'Máximo 50 caracteres')
 
-const BlocoFiltroSchema = z.string()
-    .max(50, 'Máximo 50 caracteres')
-
-const UnidadeFiltroSchema = z.string()
-    .max(50, 'Máximo 50 caracteres')
+// IDs de referência vêm da URL como string; null/'' significam "sem filtro".
+// Valores ≤0 ou não inteiros são inválidos e derrubam o parse para o fallback.
+const IdFiltroSchema = z.preprocess(
+    (val) => (val === null || val === '' || val === undefined ? undefined : val),
+    z.coerce.number().int().positive().nullable().default(null)
+)
 
 const AndarFiltroSchema = z.coerce.number()
     .int()
@@ -42,8 +45,9 @@ export const UrlFiltrosSchema = z.object({
     size: z.preprocess((val) => val === null ? undefined : val, z.coerce.number().int().positive().default(20)),
     nome: z.preprocess((val) => val === null ? undefined : val, NomeFiltroSchema.default('')),
     tipo: z.preprocess((val) => val === null ? undefined : val, TipoFiltroSchema.default('')),
-    bloco: z.preprocess((val) => val === null ? undefined : val, BlocoFiltroSchema.default('')),
-    unidade: z.preprocess((val) => val === null ? undefined : val, UnidadeFiltroSchema.default('')),
+    campusId: IdFiltroSchema,
+    unidadeId: IdFiltroSchema,
+    blocoId: IdFiltroSchema,
     andar: z.preprocess((val) => val === null ? undefined : val, AndarFiltroSchema.default(null)),
 })
 

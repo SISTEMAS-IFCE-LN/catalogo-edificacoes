@@ -55,17 +55,14 @@ abstract class BaseController<RES : Any>(protected val useCases: IAmbienteUseCas
     @GetMapping("/localizacao")
     fun listarAmbientesPorLocalizacao(
         @RequestParam
-        @Size(
-            max = 50,
-            message = MSG_MAX_CARACTERES
-        )
-        bloco: String?,
+        @Positive(message = MSG_POSITIVO)
+        campusId: Long?,
         @RequestParam
-        @Size(
-            max = 50,
-            message = MSG_MAX_CARACTERES
-        )
-        unidade: String?,
+        @Positive(message = MSG_POSITIVO)
+        unidadeId: Long?,
+        @RequestParam
+        @Positive(message = MSG_POSITIVO)
+        blocoId: Long?,
         @RequestParam
         @Min(
             value = 0,
@@ -74,7 +71,7 @@ abstract class BaseController<RES : Any>(protected val useCases: IAmbienteUseCas
         andar: Int?,
         pageable: Pageable
     ): ResponseEntity<AmbientesBasicosPaginadosRes> {
-        val localizacao = LocalizacaoPesquisaReq(bloco, unidade, andar)
+        val localizacao = LocalizacaoPesquisaReq(campusId, unidadeId, blocoId, andar)
         return ResponseEntity.ok(useCases.listarAmbientesPorLocalizacao(localizacao, pageable))
     }
 

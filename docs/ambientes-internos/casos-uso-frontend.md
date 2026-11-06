@@ -1,6 +1,6 @@
 # Casos de Uso — Frontend (Ambientes Internos)
 
-Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/casos-uso.md`) em fluxos, telas e comportamentos esperados do frontend. O foco é a experiência do usuário, interações de UI, validações no cliente, estados e critérios de aceitação.
+Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/casos-uso-backend.md`) em fluxos, telas e comportamentos esperados do frontend. O foco é a experiência do usuário, interações de UI, validações no cliente, estados e critérios de aceitação.
 
 ## Visão Geral
 
@@ -16,12 +16,13 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 
 ## Componentes
 
-- TabelaPadrao — exibe Nome, Localização, Tipo, Capacidade, Área; suporte a paginação e seleção múltipla.
+- TabelaPadrao — exibe Nome, Localização (`campus • unidade • bloco`), Tipo, Capacidade, Área; suporte a paginação e seleção múltipla.
 - AguardandoValidacao - tela específica para listar ambientes aguardando validação.
 - NaoPublicados - tela específica para listar ambientes não publicados.
 - Publicados - tela específica para listar ambientes publicados.
-- PesquisaBarAmbientes — inputs para filtrar ambientes por `nome`, `localizacao`, `tipo` e botão para limpar filtros.
-- DetalheAmbiente — visão detalhada com geometrias, pés-direitos, lista de esquadrias (portas/janelas) e áreas.
+- PesquisaBarAmbientes — inputs para filtrar ambientes por `nome`, `tipo` e localização em cascata `Campus → Unidade → Bloco → Andar` (selects por ID, sem cadastro de novas referências) e botão para limpar filtros.
+- CampoReferencia — campo genérico de referência de localização (campus/unidade/bloco): select com opções vindas dos endpoints públicos e alternativa `+ Cadastrar novo` para criar por nome. No filtro o cadastro é desabilitado; nos formulários, quando o pai é novo o filho é criação obrigatória (sem lista de opções).
+- DetalheAmbiente — visão detalhada com geometrias, pés-direitos, lista de esquadrias (portas/janelas) e áreas; a localização é exibida como `campus • unidade • bloco • andar` (nomes normalizados).
 - FormAmbiente (multistep) — criação/atualização de ambiente: dados básicos, geometrias, pés-direitos, esquadrias, informação adicional.
 - ModalConfirmacao — confirmações para deletar, publicar/privar, duplicar.
 - ModalFormulario — shell padrão dos modais de edição (UC07–UC17): Dialog + validação Zod + tratamento de erro via useAsyncAction; montagem condicional na página de detalhe.
@@ -59,7 +60,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - Pré-condições: Usuário logado com role `validador`.
 - Fluxo principal (UI):
   1. O usuário acessa a rota `/ambientes/validacao`, é exibido o componente `TabelaPadrao` com os ambientes cujo `status = AGUARDANDO_VALIDACAO` (chamada GET `/api/ambientes/validacao`).
-  2. Uma barra de pesquisa (`PesquisaBarAmbientes`) também é exibida para filtrar os ambientes por `nome`, `localizacao` e `tipo`. Cada filtro utiliza endpoints específicos do backend: `/api/ambientes/validacao/nome?nome={nome}`, `/api/ambientes/validacao/localizacao?bloco={bloco}&unidade={unidade}&andar={andar}` e `/api/ambientes/validacao/tipo?tipo={tipo}` — filtro aplicado via botão "Aplicar", sem debounce, estado na URL.
+  2. Uma barra de pesquisa (`PesquisaBarAmbientes`) também é exibida para filtrar os ambientes por `nome`, `tipo` e localização. Cada filtro utiliza endpoints específicos do backend: `/api/ambientes/validacao/nome?nome={nome}`, `/api/ambientes/validacao/localizacao?campusId={id}&unidadeId={id}&blocoId={id}&andar={andar}` e `/api/ambientes/validacao/tipo?tipo={tipo}` — filtro aplicado via botão "Aplicar", sem debounce, estado na URL. A localização é uma cascata `Campus → Unidade → Bloco → Andar` em selects por ID (as opções vêm dos endpoints de referência — UC31 do backend): unidade só aparece com campus selecionado, bloco só com unidade selecionada; não há cadastro de novas referências no filtro. IDs opcionais, mas pelo menos um campo de localização é necessário para acionar o filtro (sem campos, a API responde `400 Bad Request`, então o frontend não dispara a query nesse estado); ID inexistente ou fora do pai resulta em lista vazia.
   3. A Tabela exibida possui paginação e o usuário pode definir quantos registros serão exibidos até o máximo de 100. 
   4. Cada item tem um botão para visualizar seus detalhes (`DetalheAmbiente`).
 - Estados e erros:
@@ -107,7 +108,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 
 - Tela: `Ambientes > NãoPublicados` (rota `/ambientes/nao-publicados`) (semelhante ao UC01-FE). Filtragem, paginação e seleção múltipla.
 - Pré-condições: Usuário logado com role `gestor`.
-- Fluxo principal (UI): Similar ao UC01-FE, mas chamando GET `/api/ambientes/nao-publicados` e possuindo um botão `Criar Novo` para criação de novos ambientes. Os filtros utilizam endpoints específicos: `/api/ambientes/nao-publicados/nome?nome={nome}`, `/api/ambientes/nao-publicados/localizacao?bloco={bloco}&unidade={unidade}&andar={andar}` e `/api/ambientes/nao-publicados/tipo?tipo={tipo}`.
+- Fluxo principal (UI): Similar ao UC01-FE, mas chamando GET `/api/ambientes/nao-publicados` e possuindo um botão `Criar Novo` para criação de novos ambientes. Os filtros utilizam endpoints específicos: `/api/ambientes/nao-publicados/nome?nome={nome}`, `/api/ambientes/nao-publicados/localizacao?campusId={id}&unidadeId={id}&blocoId={id}&andar={andar}` e `/api/ambientes/nao-publicados/tipo?tipo={tipo}`, com a mesma cascata e regras de IDs do UC01-FE.
   1. Cada item tem um checkbox para seleção múltipla, além do botão para visualizar seus detalhes (`DetalheAmbiente`).
   2. Um botão de seleção também está disponível para execução de ações em lote (`AcoesLote`): `Deletar` (UC15-FE) e `Enviar p/ Validação` (UC18-FE).
 - Estados e erros: Os mesmos do UC01-FE.
@@ -127,18 +128,19 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - Pré-condições: Usuário logado com role `gestor`.
 - Fluxo principal (UI):
   - Multistep (formulário dividido em etapas):
-    1. Dados básicos: `nome`, `localizacao`, `tipo`, `capacidade`.
+    1. Dados básicos: `nome`, `localizacao`, `tipo`, `capacidade`. A localização usa a cascata `Campus → Unidade → Bloco → Andar` com o campo genérico `CampoReferencia` em cada nível: as opções vêm dos endpoints públicos `GET /api/campus`, `GET /api/unidades?campusId={id}` e `GET /api/blocos?unidadeId={id}` (UC31 do backend); a alternativa `+ Cadastrar novo` cria por nome (find-or-create sob o pai, RN-1.18). Quando o pai é novo, o filho é criação obrigatória — não há lista de opções.
     2. Geometrias: lista editável com `tipo`, `repetição`, `comprimento` e `largura` ou `base` e `altura`.
     3. Pés-direitos: lista editável com alturas.
     4. Esquadrias: lista com `tipo`, `repetição`, `largura`, `altura`, `material`, `peitoril`, `info adicional`.
     5. Informação Adicional: campo de texto opcional (`informacaoAdicional` do ambiente), máx. 255 caracteres. Pode ser deixado vazio e preenchido depois via UC14-FE (`ModalInfoAdicional` no detalhe).
     6. Exibir erros inline para cada etapa conforme validações.
-    7. Botão `Salvar` para submeter o formulário completo. (requisição POST para `/api/ambientes/nao-publicados`).
+    7. Botão `Salvar` para submeter o formulário completo. (requisição POST para `/api/ambientes/nao-publicados`, com `localizacao` aninhada `{campus, unidade, bloco, andar}`; cada nível envia exatamente um de `id` ou `nome`, conforme UC06 do backend).
     8. Desabilitar botão `Salvar` e mostrar estado de loading durante a submissão.
 - Validações client-side:
   - Campos obrigatórios (dados básicos, pelo menos uma geometria, pelo menos uma porta nas esquadrias).
   - Informação adicional do ambiente: opcional; quando preenchida, máx. 255 caracteres (espelha `@Size(max = 255)` de `AmbienteReq.kt`).
   - Regras RN-1.6 / RN-1.7 aplicadas no cliente quando possível.
+  - Localização: exatamente um de `id` ou `nome` por nível; andar inteiro ≥ 0 (RN-1.16); nomes normalizados antes da comparação (RN-1.17).
 - Estados e erros:
   - Durante submissão, mostrar loading e desabilitar botões.
   - Ao sucesso, exibir toast de sucesso e redirecionar para `DetalheAmbiente` do novo ambiente.
@@ -151,7 +153,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - Modal: Modal acionado pelo botão `Editar Dados Básicos` em `DetalheAmbiente` (rota `/ambientes/nao-publicados/{id}`).
 - Pré-condições: Usuário logado com role `gestor` e ambiente com `status = NAO_PUBLICADO`.
 - Fluxo principal (UI): 
-  1. O usuário abre um modal com formulário simples contendo os campos `nome`, `localizacao` e `capacidade`.
+  1. O usuário abre um modal com formulário simples contendo os campos `nome`, `localizacao` e `capacidade`. A localização usa a mesma cascata do UC06-FE (`CampoReferencia` em cada nível, com `+ Cadastrar novo`).
   2. O usuário atualiza os campos, cada um é validado no cliente e exibem erros inline conforme validações.
   3. O usuário submete as alterações clicando em `Salvar` (requisição PATCH para `/api/ambientes/nao-publicados/{id}/dados-basicos`).
 - Validações client-side:
@@ -299,7 +301,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 - Modal: acionado pela ação correspondente no componente `AcoesAmbiente` (select de ações no topo) da página de detalhes (rota `/ambientes/nao-publicados/{id}`).
 - Pré-condições: Usuário logado com role `gestor` e ambiente com `status = NAO_PUBLICADO`.
 - Fluxo principal (UI):
-  1. Usuário fornece novo `tipo` e dados complementares no formulário exibido.
+  1. Usuário fornece novo `tipo` e dados complementares no formulário exibido, incluindo a localização em cascata com cadastro nos três níveis, conforme UC06-FE.
   2. O usuário clica em salvar e os dados são submetidos via requisição POST para `/api/ambientes/nao-publicados/{id}` para criar novo ambiente do tipo especificado.
   3. Caso a operação seja bem-sucedida o usuário é redirecionado para `DetalheAmbiente` do novo registro.
 - Estados e erros:
@@ -310,7 +312,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 
 ### UC17-FE: Duplicar Ambiente Não Publicados
 
-- Modal: acionado pela ação correspondente no componente `AcoesAmbiente` (select de ações no topo) da página de detalhes (rota `/ambientes/nao-publicados/{id}`), que abre modal para `nome` e `localizacao` do novo ambiente.
+- Modal: acionado pela ação correspondente no componente `AcoesAmbiente` (select de ações no topo) da página de detalhes (rota `/ambientes/nao-publicados/{id}`), que abre modal para `nome` e `localizacao` do novo ambiente, com a cascata `Campus → Unidade → Bloco → Andar` e `+ Cadastrar novo` nos níveis, conforme UC06-FE.
 - Pré-condições: Usuário logado com role `gestor` e ambiente com `status = NAO_PUBLICADO`.
 - Fluxo principal (UI):
   1. Usuário fornece `nome`/`localizacao` no modal e confirma.
@@ -357,7 +359,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
   1. O usuário seleciona um ou mais ambientes na lista e seleciona `Detalhes Esquadrias`.
   2. O frontend envia `GET /api/ambientes/publicados/esquadrias?ids=1,2,3` passando a lista de ids por parâmetro.
   3. O backend retorna os detalhes das esquadrias de forma paginada (100 registros por página), incluindo `dadosPaginacao`; o frontend exibe:
-     - Nome e Localização de cada ambiente consultado;
+     - Nome e Localização (`campus • unidade • bloco`) de cada ambiente consultado;
      - Lista de esquadrias de cada ambiente com: tipo, largura, altura, material, peitoril (se houver), info adicional (se houver), área da esquadria;
      - Resumo por Tipo e Material para cada ambiente;
      - Resumo global de Esquadrias por Tipo e Material (`totalTipoMaterial`): tipo, material e área total agregada de todos os ambientes da página.
@@ -381,7 +383,7 @@ Este documento traduz os casos de uso do backend (ver `docs/ambientes-internos/c
 
 - Tela: `Ambientes > Publicados` (semelhante ao UC01-FE). Filtragem e paginação.
 - Pré-condições: Acesso público (não autenticado).
-- Fluxo principal (UI): Similar ao UC01-FE, mas chamando GET `/api/ambientes/publicados` e não possuindo botões de ação ou seleção. Os filtros utilizam endpoints específicos: `/api/ambientes/publicados/nome?nome={nome}`, `/api/ambientes/publicados/localizacao?bloco={bloco}&unidade={unidade}&andar={andar}` e `/api/ambientes/publicados/tipo?tipo={tipo}`.
+- Fluxo principal (UI): Similar ao UC01-FE, mas chamando GET `/api/ambientes/publicados` e não possuindo botões de ação ou seleção. Os filtros utilizam endpoints específicos: `/api/ambientes/publicados/nome?nome={nome}`, `/api/ambientes/publicados/localizacao?campusId={id}&unidadeId={id}&blocoId={id}&andar={andar}` e `/api/ambientes/publicados/tipo?tipo={tipo}`, com a mesma cascata e regras de IDs do UC01-FE.
 - Estados e erros: Os mesmos do UC01-FE.
 - Critérios de aceitação: Os mesmos do UC01-FE, mas para `status = PUBLICADO`.
 

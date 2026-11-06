@@ -2,7 +2,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useState } from 'react'
 import { type Filtros, FILTROS_VAZIOS } from '@/types/ambientes/filtros'
-import { TipoAmbiente, Bloco, Unidade, TipoFiltro } from '@/types/ambientes/enums'
+import { TipoAmbiente, TipoFiltro } from '@/types/ambientes/enums'
 import {
   Select,
   SelectContent,
@@ -11,6 +11,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useFiltroLocal } from '@/hooks/useFiltroLocal'
+import { CampoReferencia } from '@/components/ambientes/CampoReferencia'
+import { useCampus, useUnidades, useBlocos } from '@/hooks/useReferencias'
 
 // Converte o nome do enum (ex.: "SALA_AULA") no rótulo exibido (ex.: "Sala de Aula")
 function rotuloTipo(tipo: string): string {
@@ -39,7 +41,8 @@ export function PesquisaBarAmbientes({
   const [tipoFiltro, setTipoFiltro] = useState<TipoFiltro>(() => {
     if (initial.nome) return TipoFiltro.NOME
     if (initial.tipo) return TipoFiltro.TIPO
-    if (initial.bloco || initial.unidade || initial.andar !== null) return TipoFiltro.LOCALIZACAO
+    if (initial.campusId !== null || initial.unidadeId !== null ||
+        initial.blocoId !== null || initial.andar !== null) return TipoFiltro.LOCALIZACAO
     return TipoFiltro.NENHUM
   })
 
@@ -47,9 +50,14 @@ export function PesquisaBarAmbientes({
     // Re-derivar tipo de filtro quando initial muda externamente (back/forward)
     if (initial.nome) setTipoFiltro(TipoFiltro.NOME)
     else if (initial.tipo) setTipoFiltro(TipoFiltro.TIPO)
-    else if (initial.bloco || initial.unidade || initial.andar !== null) setTipoFiltro(TipoFiltro.LOCALIZACAO)
+    else if (initial.campusId !== null || initial.unidadeId !== null ||
+             initial.blocoId !== null || initial.andar !== null) setTipoFiltro(TipoFiltro.LOCALIZACAO)
     else setTipoFiltro(TipoFiltro.NENHUM)
   })
+
+  const {data: campi = [], isLoading: carregandoCampi} = useCampus()
+  const {data: unidades = [], isLoading: carregandoUnidades} = useUnidades(local.campusId)
+  const {data: blocos = [], isLoading: carregandoBlocos} = useBlocos(local.unidadeId)
 
   function handleTipoFiltroChange(value: string | null) {
     setTipoFiltro((value ?? '') as TipoFiltro)
@@ -78,8 +86,9 @@ export function PesquisaBarAmbientes({
 
   const temFiltros =
     initial.nome !== '' ||
-    initial.bloco !== '' ||
-    initial.unidade !== '' ||
+    initial.campusId !== null ||
+    initial.unidadeId !== null ||
+    initial.blocoId !== null ||
     initial.andar !== null ||
     initial.tipo !== ''
 
@@ -141,41 +150,43 @@ export function PesquisaBarAmbientes({
 
       {tipoFiltro === TipoFiltro.LOCALIZACAO && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <Select
-            value={local.bloco}
-            onValueChange={(value) => setLocal({ ...local, bloco: value ?? '' })}
-          >
-            <SelectTrigger aria-label="Filtrar por bloco">
-              {local.bloco && Bloco[local.bloco as keyof typeof Bloco]
-                ? <span>{Bloco[local.bloco as keyof typeof Bloco]}</span>
-                : <SelectValue placeholder="Bloco" />}
-            </SelectTrigger>
-            <SelectContent>
-              {Object.entries(Bloco).map(([key, rotulo]) => (
-                <SelectItem key={key} value={key}>
-                  {rotulo}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <CampoReferencia
+            label="Campus"
+            value={{ id: local.campusId, nome: null }}
+            opcoes={campi}
+            carregando={carregandoCampi}
+            permitirCadastro={false}
+            onChange={(v) => setLocal({
+              ...local,
+              campusId: v.id,
+              unidadeId: null,
+              blocoId: null,
+            })}
+          />
 
-          <Select
-            value={local.unidade}
-            onValueChange={(value) => setLocal({ ...local, unidade: value ?? '' })}
-          >
-            <SelectTrigger aria-label="Filtrar por unidade">
-              {local.unidade && Unidade[local.unidade as keyof typeof Unidade]
-                ? <span>{Unidade[local.unidade as keyof typeof Unidade]}</span>
-                : <SelectValue placeholder="Unidade" />}
-            </SelectTrigger>
-            <SelectContent>
-              {Object.entries(Unidade).map(([key, rotulo]) => (
-                <SelectItem key={key} value={key}>
-                  {rotulo}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <CampoReferencia
+            label="Unidade"
+            value={{ id: local.unidadeId, nome: null }}
+            opcoes={unidades}
+            carregando={carregandoUnidades}
+            permitirCadastro={false}
+            disabled={local.campusId === null}
+            onChange={(v) => setLocal({
+              ...local,
+              unidadeId: v.id,
+              blocoId: null,
+            })}
+          />
+
+          <CampoReferencia
+            label="Bloco"
+            value={{ id: local.blocoId, nome: null }}
+            opcoes={blocos}
+            carregando={carregandoBlocos}
+            permitirCadastro={false}
+            disabled={local.unidadeId === null}
+            onChange={(v) => setLocal({ ...local, blocoId: v.id })}
+          />
 
           <Input
             type="number"
