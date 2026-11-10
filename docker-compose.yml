@@ -31,7 +31,7 @@ services:
       - POSTGRES_USER=${DB_USERNAME}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U catalogo -d catalogo_edificacoes"]
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
       start_period: 1m
       interval: 5s
       timeout: 10s
@@ -43,6 +43,34 @@ services:
         limits:
           cpus: "1"
           memory: 2G
+
+  backup:
+    image: postgres:17-trixie
+    user: postgres
+    restart: "no"
+    logging: *default-logging
+    environment:
+      - TZ=America/Fortaleza
+      - PGHOST=db
+      - PGPORT=5432
+      - PGDATABASE=${DB_NAME}
+      - PGUSER=${DB_USERNAME}
+      - PGPASSWORD=${DB_PASSWORD}
+      - BACKUP_DIR=/backup
+    volumes:
+      - ./db/backup:/backup
+      - ./db/backup.sh:/scripts/backup.sh:ro
+    entrypoint: ["/bin/sh", "/scripts/backup.sh"]
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - catalogo-internal-net
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
 
   api:
     container_name: catalogo-api
