@@ -385,7 +385,7 @@ Variantes suportadas via env var (sobrescreve o default):
 **Procedimento recomendado para produção:**
 
 1. Antes do primeiro deploy, defina `BOOTSTRAP_ADMIN_EMAIL=ti@ifce.edu.br` (email do setor de TI).
-2. Faça o deploy. O runner cria o usuário e o sistema sobe.
+2. Faça o deploy (`docker compose rm -f && docker compose up -d --build`). O `migrate` aplica o schema; depois o runner cria o usuário e o sistema sobe.
 3. O primeiro admin loga via Google usando esse email e usa o sistema normalmente.
 4. Admins subsequentes podem ser promovidos via `PATCH /api/usuarios/{id}/perfis` com `ROLE_ADMINISTRADOR`.
 

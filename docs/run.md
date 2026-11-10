@@ -150,6 +150,8 @@ Para um módulo específico:
 
 Total atual: **366 testes, 0 falhas, 0 erros** (`common-module` 17, `security-module` 70, `ambientes-internos-module` 279).
 
+Os testes usam H2 in-memory com `create-drop`; eles não executam as migrations Flyway. A validação das migrations é feita contra PostgreSQL 17, separadamente.
+
 ### 3.3. Iniciar a aplicação
 
 Os scripts `run-windows.bat` e `run-linux.sh` já fazem o `cd` correto para o diretório `apis/`, carregam as variáveis do `.env` e invocam o `mvnw` com os parâmetros corretos — inclusive o profile Maven `-Pprod` quando `PROFILE_ACTIVE=prod`.
@@ -160,6 +162,8 @@ Os scripts `run-windows.bat` e `run-linux.sh` já fazem o `cd` correto para o di
 |-----------------|-----------------------------------------------------------------------------------------------------------------|
 | `dev` (default) | `PROFILE_ACTIVE=dev`, `BOOTSTRAP_ADMIN_EMAIL`, chaves RSA (`JWT_PUBLIC_KEY_PATH`, `JWT_PRIVATE_KEY_PATH`).      |
 | `prod`          | `PROFILE_ACTIVE=prod`, `BOOTSTRAP_ADMIN_EMAIL`, chaves RSA, `DB_HOST`, `DB_NAME`, `DB_USERNAME`, `DB_PASSWORD`. |
+
+As variáveis do job de migration (`FLYWAY_*`) têm defaults no `docker-compose.yml` e derivam de `DB_*`; detalhes em `operacao.md` §5.1.
 
 #### Modo dev
 
@@ -178,48 +182,66 @@ A aplicação sobe em `http://localhost:8080` com o profile `dev` ativo e banco 
 #### Modo prod
 
 1. Preencha o `.env` com `PROFILE_ACTIVE=prod` e as credenciais do PostgreSQL.
-2. Execute o mesmo script de dev.
+2. Execute o deploy via Docker Compose (recomendado), para que `backup` e `migrate` rodem antes da API:
 
-```bash
-# Linux/macOS
-cd apis
-./run-linux.sh
+   ```bash
+   docker compose rm -f
+   docker compose up -d --build
+   ```
 
-# Windows
-cd apis
-.\run-windows.bat
-```
+3. Para rodar a API diretamente com `mvnw` (debug), o schema já deve ter sido migrado pelo serviço `migrate`; a aplicação sobe com `ddl-auto: validate`.
+
+   ```bash
+   # Linux/macOS
+   cd apis
+   ./run-linux.sh
+
+   # Windows
+   cd apis
+   .\run-windows.bat
+   ```
 
 > **Nota:** o `.env` (e o `.env.example`) ficam na **raiz do repositório**, junto com o `docker-compose.yml`. Os scripts `run-linux.sh` / `run-windows.bat` e o `docker-compose.yml` leem o mesmo arquivo. O `.env` **não deve ser commitado** (já está no `.gitignore` da raiz).
 
 #### 3.4. Subir via Docker Compose
 
-A partir da **raiz do repositório**:
+A partir da **raiz do repositório**, o comando padrão de deploy é:
 
 ```bash
+docker compose rm -f
 docker compose up -d --build
 ```
 
-Este comando:
+Em PowerShell 5.1, `&&` não funciona; use `docker compose rm -f; if ($?) { docker compose up -d --build }`.
 
+O comando:
+
+- Remove containers parados de todos os serviços (os que estão rodando continuam no ar).
 - Constrói a imagem da API via `apis/Dockerfile` (multi-stage: Maven + distroless).
-- Sobe o `catalogo-db` (Postgres 17-trixie) com o `pgdata` volume nomeado.
-- Sobe o `catalogo-api` aguardando o `db` ficar `service_healthy`.
+- Sobe o `catalogo-db` (Postgres 17-trixie) com o volume nomeado `catalogo-data`.
+- Executa o `backup` (`pg_dump` para `db/backup/`).
+- Executa o `migrate` (Flyway) com as migrations de `db/migration/`.
+- Sobe o `catalogo-api` aguardando `migrate` concluir; a API usa `ddl-auto: validate`.
+- Sobe o `frontend` após a API ficar saudável.
+
+Se a API já estiver rodando e não tiver mudado, ela permanece no ar durante a migration; por isso as migrations devem ser backward-compatible (expand/contract). Para mudanças destrutivas, use uma janela de manutenção (`docker compose rm -sf` ou `docker compose down`/`up`).
 
 O `docker-compose.yml` e o `.env` ficam **na raiz do repositório** (ao lado deste `docs/`). O Compose lê as variáveis do `.env` para interpolação dos blocos `environment:` dos serviços. **Não confundir** com `apis/.env` (não existe mais — o `.env` foi unificado na raiz para alimentar tanto o Compose quanto os scripts `run-linux.sh` / `run-windows.bat`).
 
 **Primeira inicialização:**
 
-O `pgdata` é criado do zero na primeira vez. Se você já subiu o stack antes (com variáveis erradas ou senha vazia), o `pgdata` retém a inicialização antiga — o Postgres ignora `POSTGRES_USER`/`POSTGRES_PASSWORD` em boots subsequentes. Para re-inicializar:
+O volume `catalogo-data` é criado do zero na primeira vez. Se você já subiu a stack antes (com variáveis erradas ou senha vazia), o volume retém a inicialização antiga — o Postgres ignora `POSTGRES_USER`/`POSTGRES_PASSWORD` em boots subsequentes. Para re-inicializar (destrutivo):
 
 ```bash
-docker compose down -v          # remove containers E o volume pgdata
+docker compose down -v          # remove containers E o volume catalogo-data
 docker compose up -d --build
 ```
 
 **Verificação:**
 
 ```bash
+docker compose logs -f backup
+docker compose logs -f migrate
 docker compose logs -f api      # deve mostrar "Bootstrap admin pré-cadastrado..."
 ```
 
@@ -238,6 +260,8 @@ cd apis
 ./mvnw -Pprod clean install
 ./mvnw -Pprod spring-boot:run -pl main-app
 ```
+
+> Os comandos acima não executam `backup` nem `migrate`. Use-os apenas para debug com o schema já migrado; o deploy de produção é feito pelo Docker Compose (seção 3.4).
 
 ### 3.5. Endpoints úteis para smoke test
 
@@ -301,6 +325,31 @@ Contratos de localização nos requests da coleção:
 
   Os IDs são opcionais, mas pelo menos um campo de localização deve ser enviado (nenhum campo → `400 Bad Request`); ID inexistente ou
   unidade/bloco fora do pai retorna página vazia.
+
+### 3.7. Migrations e backup
+
+As migrations ficam em `db/migration/` e são aplicadas pelo serviço `migrate` (imagem oficial do Flyway). O `backup` roda antes e grava os dumps em `db/backup/`.
+
+Com a stack no ar, comandos úteis:
+
+```bash
+# acompanhar o deploy
+docker compose logs -f backup
+docker compose logs -f migrate
+
+# inspecionar o estado das migrations
+docker compose run --rm --no-deps migrate info
+
+# validar os scripts sem aplicar
+docker compose run --rm --no-deps migrate validate
+
+# executar um backup manual
+docker compose run --rm backup
+```
+
+O deploy padrão (`docker compose rm -f` + `docker compose up -d --build`) já executa `backup` e `migrate` antes da API. `docker compose run --rm` é usado apenas para diagnóstico ou backup manual.
+
+Detalhes de forward-fix, backup/restore, expand/contract e runbook: [`migrations.md`](./migrations.md).
 
 ---
 
@@ -367,3 +416,14 @@ Configuração de conexão (preenchida automaticamente):
 
 - Atualização manual: `npm install @base-ui/react@^X.Y.Z` e regressão (`npm run audit`, `npm test`, `npm run lint`, `npm run build`).
 - Não há automação de CI nem CLI/gerador de componentes: os wrappers ficam em `src/components/ui/` (convenções no README local).
+
+### 6.5. Adicionar uma migration
+
+1. Crie o próximo arquivo em `db/migration/` (`V2__descricao.sql`, `V3__descricao.sql`...).
+2. Prefira mudanças aditivas; para mudanças destrutivas, use expand/contract em releases separados.
+3. Teste em PostgreSQL 17 limpo e suba a API com `ddl-auto: validate`.
+4. Atualize o checklist de PR e o runbook em [`migrations.md`](./migrations.md).
+5. Faça o deploy com `docker compose rm -f` + `docker compose up -d --build`.
+6. Confira `docker compose logs migrate`, `docker compose ps` e `flyway_schema_history`.
+
+Se o último `migrate` falhou, inspecione os logs antes de rodar `rm -f`; o comando remove o container e seus logs.

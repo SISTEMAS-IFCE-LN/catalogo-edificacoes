@@ -39,3 +39,6 @@ build/
 .env
 .env.local
 .env.*.local
+
+# Catálogo de Edificações - backups de banco (dumps lógicos)
+db/backup/
