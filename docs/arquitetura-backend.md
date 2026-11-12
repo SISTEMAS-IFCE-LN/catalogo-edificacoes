@@ -36,7 +36,8 @@ segurança e as diferentes regras de negócio de domínio coexistam sem gerar de
     * Consolidar `security-module`, `common-module` e `ambientes-internos-module` em uma única unidade executável final.
     * Conter a classe `CatalogoEdificacoesApp` anotada com
       `@SpringBootApplication(scanBasePackages = ["br.edu.ifce.ambientes_internos", "br.edu.ifce.security"])`.
-    * Centralizar `application.yml`, `application-dev.yml` e `data-dev.sql` (seed de dev: 1 campus, 3 unidades, 24 blocos, localizações e 120 ambientes fake).
+    * Centralizar `application.yml`, `application-dev.yml`, `application-prod.yml` e `data-dev.sql` (seed de dev: 1 campus, 3 unidades, 24 blocos, localizações e 120 ambientes fake).
+    * O schema do sistema é versionado em `db/migration/` (Flyway) e aplicado pelo serviço `migrate`; a aplicação não contém Flyway e sobe com `ddl-auto: validate`. Detalhes em [`docs/migrations.md`](./migrations.md).
     * Definir as propriedades globais de OAuth2 (Google), das chaves RSA para JWT, das configurações de cookie
       (`HttpOnly`, `Secure`, `SameSite`) e das regras de CORS para SPA/mobile.
     * Expor o pacote executável de entrada do sistema (ponto único de inicialização).
@@ -110,8 +111,8 @@ de testes do projeto.
 
 ### 1.5. Bootstrap do administrador institucional
 
-`BootstrapAdminRunner` (em `br.edu.ifce.security.config`) é um `ApplicationRunner` que roda após o JPA criar o
-schema. Seu comportamento está documentado em [`docs/seguranca.md`](./seguranca.md#9-bootstrap-do-administrador-institucional) e [`docs/operacao.md`](./operacao.md#4-procedimento-de-bootstrap-em-produção).
+`BootstrapAdminRunner` (em `br.edu.ifce.security.config`) é um `ApplicationRunner` que roda após o schema estar
+disponível (migrations aplicadas pelo job `migrate` e compatibilidade validada pelo JPA). Seu comportamento está documentado em [`docs/seguranca.md`](./seguranca.md#10-bootstrap-do-administrador-institucional) e [`docs/operacao.md`](./operacao.md#4-procedimento-de-bootstrap-em-produção).
 
 Em resumo:
 
@@ -176,6 +177,10 @@ de serviço lida com autenticação, tokens e gestão de identidade em vez de re
    consultas ao banco de dados.
 4. **Camada de Domínio (Entidades):** Representação pura dos modelos conceituais do sistema, contendo seus atributos e
    comportamentos fundamentais.
+
+Em produção, o schema não é criado nem alterado pelo Hibernate. As migrations em `db/migration/` são a fonte de
+verdade; a aplicação sobe com `ddl-auto: validate` e os repositórios apenas consultam/persistem dados. Ver
+[`docs/migrations.md`](./migrations.md).
 
 ### 2.1. Hierarquia de localização no `ambientes-internos-module`
 

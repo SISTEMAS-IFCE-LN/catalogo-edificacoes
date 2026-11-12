@@ -10,7 +10,8 @@ Este diretório concentra toda a documentação técnica e de negócio do projet
 | [Arquitetura Frontend](arquitetura-frontend.md)                       | Visão geral da arquitetura do frontend, incluindo componentes e fluxos de navegação.                                         |
 | [Domínio](./dominio.md)                                               | Conceitos de negócio, subdomínios, atores e a hierarquia de localização (Campus/Unidade/Bloco/Localização).                  |
 | [Segurança](./seguranca.md)                                           | Fluxos de autenticação OAuth2 + JWT, perfis cumulativos, lockout prevention, mapeamento de endpoints, env vars de segurança. |
-| [Operação](./operacao.md)                                             | Perfis, comportamento de `data.sql`/`data-dev.sql`, geração de chaves RSA, procedimento de bootstrap em produção.            |
+| [Operação](./operacao.md)                                             | Perfis, seeds de dev, geração de chaves RSA, bootstrap, Docker Compose e operação de produção.                               |
+| [Migrations](./migrations.md)                                         | Flyway, estrutura dos scripts, backup/restore, expand/contract e runbook de deploy.                                          |
 | [Execução](./run.md)                                                  | Comandos para rodar a aplicação e os testes localmente, smoke test via Postman.                                              |
 | [Ambientes Internos](./ambientes-internos/regras-negocio.md)          | Regras de negócio (RN-1.x, RN-2.x, RN-3.x, RN-4.x) do subdomínio de ambientes internos.                                      |
 | [Casos de Uso — Backend](./ambientes-internos/casos-uso-backend.md)   | Especificação dos casos de uso do backend (referência histórica; revisar antes de alterar fluxos).                           |
@@ -27,9 +28,9 @@ Este diretório concentra toda a documentação técnica e de negócio do projet
 
 ## Convenções de nomenclatura adotadas
 
-| Conceito | Nome usado | Observação |
-|---|---|---|
-| Usuário do sistema | `Usuario` (classe), `usuarios` (tabela) | Singular consistente em código e SQL. |
-| Ator de negócio "Servidor" | Renomeado para **Gestor do Sistema** | Alinhado com `ROLE_GESTOR_SISTEMA`. |
-| Ator de negócio "Administrador" | `Administrador` (em `dominio.md` e RN-4.x) | Mapeado para `ROLE_ADMINISTRADOR`. |
-| Níveis de localização | `Campus`, `Unidade`, `Bloco`, `Localizacao` (entidades JPA / tabelas SQL) | Nomes normalizados em caixa alta e únicos no escopo do pai; `Localizacao` guarda só `(bloco, andar)`. |
+| Conceito                        | Nome usado                                                                | Observação                                                                                            |
+|---------------------------------|---------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------|
+| Usuário do sistema              | `Usuario` (classe), `usuarios` (tabela)                                   | Singular consistente em código e SQL.                                                                 |
+| Ator de negócio "Servidor"      | Renomeado para **Gestor do Sistema**                                      | Alinhado com `ROLE_GESTOR_SISTEMA`.                                                                   |
+| Ator de negócio "Administrador" | `Administrador` (em `dominio.md` e RN-4.x)                                | Mapeado para `ROLE_ADMINISTRADOR`.                                                                    |
+| Níveis de localização           | `Campus`, `Unidade`, `Bloco`, `Localizacao` (entidades JPA / tabelas SQL) | Nomes normalizados em caixa alta e únicos no escopo do pai; `Localizacao` guarda só `(bloco, andar)`. |

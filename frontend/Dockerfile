@@ -35,4 +35,4 @@ USER nginx
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=3s \
-    CMD wget -qO- http://localhost:8000/health-frontend || exit 1
+    CMD wget -qO- http://127.0.0.1:8000/health-frontend || exit 1
