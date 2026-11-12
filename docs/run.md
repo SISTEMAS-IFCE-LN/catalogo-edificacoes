@@ -349,6 +349,14 @@ docker compose run --rm backup
 
 O deploy padrão (`docker compose rm -f` + `docker compose up -d --build`) já executa `backup` e `migrate` antes da API. `docker compose run --rm` é usado apenas para diagnóstico ou backup manual.
 
+Para validar todas as migrations em um PostgreSQL 17 descartável, sem tocar no banco do Compose:
+
+```bash
+FLYWAY_IMAGE=flyway/flyway:13.12.1 ./db/verify.sh
+```
+
+Use a mesma tag fixada no `docker-compose.yml`. O script cria rede/container temporários, aplica as migrations, roda `info`/`validate`, falha se houver `success=false` e limpa tudo via `trap`.
+
 Detalhes de forward-fix, backup/restore, expand/contract e runbook: [`migrations.md`](./migrations.md).
 
 ---
