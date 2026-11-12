@@ -1,4 +1,25 @@
 --
+-- Baseline do schema do Catálogo de Edificações (V1).
+--
+-- Objetivo: registrar o schema inicial do banco, gerado a partir das
+-- entidades JPA com Hibernate `ddl-auto: create` em um PostgreSQL 17 limpo
+-- e capturado com `pg_dump --schema-only --no-owner --no-privileges`.
+-- É a primeira migration do repositório; o banco de produção é criado do
+-- zero, sem baseline.
+--
+-- Impacto: cria 11 tabelas (ambiente, ambiente_pes_direitos, bloco, campus,
+-- esquadria, geometria, localizacao, refresh_token, unidade, usuario_perfis,
+-- usuarios), sequences/identity por tabela, constraints (PK, uniques
+-- conhecidas, FKs e CHECKs de enums), element collections
+-- (ambiente_pes_direitos, usuario_perfis) e a herança SINGLE_TABLE
+-- (discriminadores `tipo` em ambiente, esquadria e geometria).
+--
+-- Não contém dados: o dump é somente schema. O usuário administrador
+-- inicial é criado pelo BootstrapAdminRunner na aplicação, não por esta
+-- migration.
+--
+
+--
 -- PostgreSQL database dump
 --
 
