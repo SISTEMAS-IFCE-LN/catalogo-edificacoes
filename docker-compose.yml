@@ -92,6 +92,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      backup:
+        condition: service_completed_successfully
     networks:
       - catalogo-internal-net
     deploy:
@@ -133,8 +135,8 @@ services:
       timeout: 5s
       retries: 5
     depends_on:
-      db:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     networks:
       - catalogo-net
       - catalogo-internal-net
