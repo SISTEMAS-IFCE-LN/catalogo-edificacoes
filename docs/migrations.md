@@ -173,7 +173,15 @@ O banco de produção é criado do zero; não há `baseline-on-migrate`.
      -h <host> -U <usuario> -d <banco> > V1__baseline.sql
    ```
 
-4. Revise o dump: uniques, CHECKs, defaults, sequences, element collections e a herança `SINGLE_TABLE`.
+   **Nota:** desde o PostgreSQL **17.6** (CVE-2025-8714), o `pg_dump` emite os
+   meta-comandos `psql` `\restrict <chave>` e `\unrestrict <chave>` nos dumps
+   plain-text. Remova essas linhas antes de versionar o arquivo — e confira a
+   ausência de qualquer outro meta-comando `psql` (por exemplo, `\connect`) —
+   porque o Flyway não os executa e a migration falharia. A remoção é segura
+   para dumps plain-text gerados de um banco local confiável, consumidos pelo
+   Flyway.
+
+4. Revise o dump: uniques, CHECKs, defaults, sequences, element collections, a herança `SINGLE_TABLE` e a ausência de meta-comandos `psql` (`\restrict`, `\unrestrict`, `\connect`).
 5. Coloque o arquivo em `db/migration/V1__baseline.sql`.
 6. Teste em um banco vazio: aplique `V1`, suba a API com `validate` e rode o smoke test.
 
