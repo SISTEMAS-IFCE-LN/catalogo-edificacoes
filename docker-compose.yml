@@ -72,6 +72,34 @@ services:
           cpus: "0.25"
           memory: 256M
 
+  migrate:
+    image: flyway/flyway:13.12.1
+    restart: "no"
+    command: ["migrate"]
+    logging: *default-logging
+    environment:
+      - TZ=America/Fortaleza
+      - FLYWAY_URL=jdbc:postgresql://db:5432/${DB_NAME}
+      - FLYWAY_USER=${DB_USERNAME}
+      - FLYWAY_PASSWORD=${DB_PASSWORD}
+      - FLYWAY_LOCATIONS=filesystem:/flyway/sql
+      - FLYWAY_CLEAN_DISABLED=true
+      - FLYWAY_BASELINE_ON_MIGRATE=false
+      - FLYWAY_OUT_OF_ORDER=false
+      - FLYWAY_CONNECT_RETRIES=60
+    volumes:
+      - ./db/migration:/flyway/sql:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - catalogo-internal-net
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: 256M
+
   api:
     container_name: catalogo-api
     build:
